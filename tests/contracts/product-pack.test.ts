@@ -15,7 +15,7 @@ describe('product packs', () => {
       expect(result.months).toHaveLength(12);
       expect(result.finalMonth.rankName).toBeTruthy();
       expect(product.brand.name).toContain(product.brand.shortName);
-      expect(product.legal.contactEmail).toContain(product.domain);
+      expect(product.legal.contactEmail).toMatch(/^info@/);
     }
   });
 });

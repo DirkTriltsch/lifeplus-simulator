@@ -11,7 +11,7 @@ export const eqologyProduct: ProductDefinition = {
   },
   legal: {
     siteName: 'EqoFlow360',
-    contactEmail: 'info@eqoflow360.de',
+    contactEmail: 'info@lifeflow360.app',
   },
   terminology: {
     productName: 'Eqology',

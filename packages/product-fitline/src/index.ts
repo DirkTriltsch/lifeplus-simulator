@@ -11,7 +11,7 @@ export const fitlineProduct: ProductDefinition = {
   },
   legal: {
     siteName: 'FitFlow360',
-    contactEmail: 'info@fitflow360.de',
+    contactEmail: 'info@lifeflow360.app',
   },
   terminology: {
     productName: 'FitLine',

@@ -11,7 +11,7 @@ export const lifeplusProduct: ProductDefinition = {
   },
   legal: {
     siteName: 'LifeFlow360',
-    contactEmail: 'info@lifeflow360.de',
+    contactEmail: 'info@lifeflow360.app',
   },
   terminology: {
     productName: 'LifePlus',
