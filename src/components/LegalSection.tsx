@@ -1,42 +1,81 @@
-import { useState } from 'react';
+import { MouseEvent, useEffect, useRef, useState } from 'react';
 
 type LegalView = 'imprint' | 'privacy';
 
 export function LegalSection() {
-  const [activeView, setActiveView] = useState<LegalView | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [activeView, setActiveView] = useState<LegalView | null>(() =>
+    getLegalViewFromHash(window.location.hash),
+  );
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setActiveView(getLegalViewFromHash(window.location.hash));
+    };
+
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeView) return;
+
+    sectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, [activeView]);
+
+  const handleLegalLinkClick =
+    (view: LegalView) => (event: MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+
+      if (activeView === view) {
+        window.history.pushState(null, '', window.location.pathname);
+        setActiveView(null);
+        return;
+      }
+
+      window.history.pushState(null, '', `#${getLegalHash(view)}`);
+      setActiveView(view);
+    };
 
   return (
     <footer className="max-w-4xl mx-auto px-4 sm:px-6 pb-8">
       <div className="border-t border-gray-200 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
         <span>© 2026 LifePlus Vergütungs-Simulator. Alle Rechte vorbehalten.</span>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              setActiveView((view) => (view === 'imprint' ? null : 'imprint'))
-            }
+          <a
+            href="#impressum"
+            onClick={handleLegalLinkClick('imprint')}
             className={`transition hover:text-brand-700 ${
               activeView === 'imprint' ? 'text-brand-800 font-medium' : ''
             }`}
           >
             Impressum
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setActiveView((view) => (view === 'privacy' ? null : 'privacy'))
-            }
+          </a>
+          <a
+            href="#datenschutz"
+            onClick={handleLegalLinkClick('privacy')}
             className={`transition hover:text-brand-700 ${
               activeView === 'privacy' ? 'text-brand-800 font-medium' : ''
             }`}
           >
             Datenschutz
-          </button>
+          </a>
         </div>
       </div>
 
       {activeView && (
-        <section className="mt-5 bg-white border border-gray-200 rounded-xl shadow-sm p-5 sm:p-7">
+        <section
+          ref={sectionRef}
+          id={getLegalHash(activeView)}
+          className="mt-5 bg-white border border-gray-200 rounded-xl shadow-sm p-5 sm:p-7 scroll-mt-20"
+        >
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
               <p className="text-xs uppercase tracking-wider text-gray-500">
@@ -48,7 +87,10 @@ export function LegalSection() {
             </div>
             <button
               type="button"
-              onClick={() => setActiveView(null)}
+              onClick={() => {
+                window.history.pushState(null, '', window.location.pathname);
+                setActiveView(null);
+              }}
               aria-label="Rechtliche Informationen schließen"
               className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
             >
@@ -71,6 +113,16 @@ export function LegalSection() {
       )}
     </footer>
   );
+}
+
+function getLegalHash(view: LegalView) {
+  return view === 'imprint' ? 'impressum' : 'datenschutz';
+}
+
+function getLegalViewFromHash(hash: string): LegalView | null {
+  if (hash === '#impressum') return 'imprint';
+  if (hash === '#datenschutz') return 'privacy';
+  return null;
 }
 
 function ImprintContent() {
