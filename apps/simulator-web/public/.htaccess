@@ -1,0 +1,78 @@
+# .htaccess - Vorab-Sperre fuer nicht oeffentliche Produktstaende
+# Upload-Ort: Root-Verzeichnis der jeweiligen Produktdomain.
+
+# TDM-Nutzungsvorbehalt nach Paragraph 44b UrhG als HTTP-Header.
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noai, noimageai, noindex, nofollow, noarchive, nosnippet"
+    Header set Tdm-Reservation "1"
+</IfModule>
+
+# Bekannte KI- und Scraper-Bots blockieren, normale Suchmaschinen aber zulassen.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{HTTP_USER_AGENT} ClaudeBot              [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Claude-Web             [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} anthropic-ai           [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Claude-SearchBot       [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Claude-User            [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} GPTBot                 [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} ChatGPT-User           [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} OAI-SearchBot          [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Google-Extended        [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} GoogleOther            [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} CCBot                  [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} PerplexityBot          [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Perplexity-User        [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Bytespider             [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Amazonbot              [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Meta-ExternalAgent     [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Meta-ExternalFetcher   [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} FacebookBot            [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} facebookexternalhit    [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Applebot-Extended      [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} cohere-ai              [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} cohere-training-data-crawler [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} MistralAI-User         [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} YouBot                 [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Diffbot                [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} DuckAssistBot          [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} omgili                 [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} omgilibot              [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} ImagesiftBot           [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Timpibot               [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} PanguBot               [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} AI2Bot                 [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Ai2Bot-Dolma           [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Webzio-Extended        [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} VelenPublicWebCrawler  [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} Sidetrade              [NC]
+
+    RewriteRule ^.*$ - [F,L]
+</IfModule>
+
+# Robots-/AI-/LLMs-Dateien explizit zugaenglich halten.
+<FilesMatch "^(robots\.txt|ai\.txt|llms\.txt)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule mod_headers.c>
+        Header set X-Robots-Tag "noindex"
+    </IfModule>
+</FilesMatch>
+
+Options -Indexes
+
+# Versteckte Dateien schuetzen, .htaccess wird von Apache weiterhin gelesen.
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# Optional HTTPS erzwingen, sobald SSL fuer die jeweilige Domain aktiv ist.
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>

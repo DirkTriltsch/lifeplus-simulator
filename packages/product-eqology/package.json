@@ -1,0 +1,13 @@
+{
+  "name": "@mlm/product-eqology",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@mlm/product-lifeplus": "*",
+    "@mlm/simulator-core": "*"
+  }
+}

@@ -1,0 +1,13 @@
+# llms.txt
+#
+# Diese Domain stellt keine Inhalte fuer Large Language Models
+# oder andere KI-Systeme zur Verfuegung.
+#
+# Jegliche automatisierte Erfassung, Speicherung, Indexierung,
+# Verarbeitung oder Nutzung der Inhalte dieser Domain fuer das
+# Training, Fine-Tuning, Retrieval-Augmented Generation (RAG)
+# oder die Evaluierung von KI-/ML-Modellen ist untersagt.
+#
+# Rechtlicher Nutzungsvorbehalt nach Paragraph 44b Abs. 3 UrhG.
+
+# Keine Ressourcen freigegeben.

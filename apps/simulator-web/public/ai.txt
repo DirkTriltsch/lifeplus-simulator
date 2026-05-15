@@ -1,0 +1,36 @@
+# ai.txt - Opt-out fuer KI-Trainingsdaten
+# Format-Vorschlag: https://spawning.ai/ai-txt
+#
+# Untersagt wird die Nutzung saemtlicher Inhalte dieser Domain
+# fuer Training, Fine-Tuning oder Evaluierung von KI-/ML-Modellen.
+#
+# Rechtsgrundlage in der EU: Paragraph 44b UrhG (DE) bzw. Art. 4 DSM-RL.
+
+User-Agent: *
+Disallow: *
+
+Disallow: /*.txt
+Disallow: /*.html
+Disallow: /*.htm
+Disallow: /*.md
+Disallow: /*.pdf
+Disallow: /*.doc
+Disallow: /*.docx
+Disallow: /*.xls
+Disallow: /*.xlsx
+Disallow: /*.ppt
+Disallow: /*.pptx
+Disallow: /*.csv
+Disallow: /*.json
+Disallow: /*.xml
+Disallow: /*.jpg
+Disallow: /*.jpeg
+Disallow: /*.png
+Disallow: /*.gif
+Disallow: /*.webp
+Disallow: /*.svg
+Disallow: /*.mp3
+Disallow: /*.mp4
+Disallow: /*.wav
+Disallow: /*.mov
+Disallow: /*.avi

@@ -1,0 +1,17 @@
+{
+  "name": "@mlm/simulator-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p ../../tsconfig.json && vite build"
+  },
+  "dependencies": {
+    "@mlm/product-registry": "*",
+    "@mlm/simulator-core": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.4"
+  }
+}

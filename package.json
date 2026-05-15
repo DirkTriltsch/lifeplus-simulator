@@ -1,21 +1,24 @@
 {
-  "name": "lifeplus-sim",
+  "name": "mlm-simulator-platform",
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "recharts": "^2.15.4"
+    "dev:lifeplus": "npm run dev --workspace @mlm/simulator-web -- --mode lifeplus",
+    "dev:fitline": "npm run dev --workspace @mlm/simulator-web -- --mode fitline",
+    "dev:eqology": "npm run dev --workspace @mlm/simulator-web -- --mode eqology",
+    "build:lifeplus": "npm run build --workspace @mlm/simulator-web -- --mode lifeplus",
+    "build:fitline": "npm run build --workspace @mlm/simulator-web -- --mode fitline",
+    "build:eqology": "npm run build --workspace @mlm/simulator-web -- --mode eqology",
+    "build": "npm run build:lifeplus",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "^22.15.21",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",

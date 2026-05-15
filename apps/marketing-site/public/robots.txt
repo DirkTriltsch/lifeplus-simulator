@@ -1,0 +1,21 @@
+# robots.txt - Vorab-Vollsperre fuer alle Crawler
+# Diese Policy gilt, solange der jeweilige Produktstand noch nicht oeffentlich
+# freigegeben ist. Spaeter wird sie pro Produkt gezielt gelockert.
+
+User-agent: *
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+User-agent: ChatGPT-User
+Disallow: /
+User-agent: OAI-SearchBot
+Disallow: /
+User-agent: ClaudeBot
+Disallow: /
+User-agent: Claude-Web
+Disallow: /
+User-agent: Google-Extended
+Disallow: /
+User-agent: CCBot
+Disallow: /
