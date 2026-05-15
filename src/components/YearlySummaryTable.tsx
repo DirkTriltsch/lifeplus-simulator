@@ -22,10 +22,12 @@ export function YearlySummaryTable({ years }: YearlySummaryTableProps) {
         <thead className="bg-gray-50">
           <tr>
             <HeaderCell>Jahr</HeaderCell>
-            <HeaderCell>Beine</HeaderCell>
+            <HeaderCell>Beine (GL)</HeaderCell>
             <HeaderCell>Members</HeaderCell>
             <HeaderCell>Shopper</HeaderCell>
             <HeaderCell>Netzwerk</HeaderCell>
+            <HeaderCell align="right">AV</HeaderCell>
+            <HeaderCell align="right">QGV</HeaderCell>
             <HeaderCell>Status</HeaderCell>
             <HeaderCell align="right">Provision/Monat</HeaderCell>
           </tr>
@@ -50,6 +52,8 @@ export function YearlySummaryTable({ years }: YearlySummaryTableProps) {
                 />
               </BodyCell>
               <BodyCell>{numberFormat.format(Math.round(year.networkSize))}</BodyCell>
+              <BodyCell align="right">{numberFormat.format(Math.round(year.av))}</BodyCell>
+              <BodyCell align="right">{numberFormat.format(Math.round(year.qgv))}</BodyCell>
               <BodyCell>
                 <span className="inline-flex rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
                   {year.rankName}

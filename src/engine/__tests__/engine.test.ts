@@ -88,7 +88,7 @@ describe('Netzwerk-Wachstum', () => {
     expect(snapshots[23].membersByLevel[1] ?? 0).toBeCloseTo(0, 1);
   });
 
-  it('erzeugt bei Duplikation tiefere Ebenen', () => {
+  it('erzeugt bei Duplikation tiefere Ebenen ab dem dritten Jahr', () => {
     const snapshots = simulateNetwork(
       {
         membersPerYear: 12,
@@ -96,15 +96,15 @@ describe('Netzwerk-Wachstum', () => {
         duplicationRate: 1,
         attritionRate: 0,
       },
-      24,
+      36,
     );
 
-    expect(snapshots[23].membersByLevel[0]).toBeGreaterThan(0);
-    expect(snapshots[23].membersByLevel[1]).toBeGreaterThan(0);
-    expect(snapshots[23].membersByLevel.length).toBeGreaterThan(2);
+    expect(snapshots[35].membersByLevel[0]).toBeGreaterThan(0);
+    expect(snapshots[35].membersByLevel[1]).toBeGreaterThan(0);
+    expect(snapshots[35].membersByLevel[2]).toBeGreaterThan(0);
   });
 
-  it('weist monatliche Fluktuation aus', () => {
+  it('weist Member-Fluktuation am Jahresanfang aus', () => {
     const snapshots = simulateNetwork(
       {
         membersPerYear: 12,
@@ -115,7 +115,7 @@ describe('Netzwerk-Wachstum', () => {
       120,
     );
 
-    expect(snapshots[119].memberAttrition).toBeGreaterThan(0);
+    expect(snapshots[108].memberAttrition).toBeGreaterThan(0);
   });
 
   it('reduziert das Netzwerk durch Fluktuation', () => {

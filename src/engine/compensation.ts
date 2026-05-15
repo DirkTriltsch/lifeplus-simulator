@@ -2,7 +2,14 @@
  * Verguetungsberechnung fuer einen Monat.
  */
 
-import { PHASE1, PHASE1_QUALIFICATION, REFERRAL_THRESHOLD_IP } from './constants';
+import {
+  PHASE1,
+  PHASE1_QUALIFICATION,
+  PHASE2_RANKS,
+  PHASE3_RANKS,
+  PRELIM_RANKS,
+  REFERRAL_THRESHOLD_IP,
+} from './constants';
 import type { NetworkSnapshot } from './network';
 import { determineRank, estimateLegRank, type RankResult } from './ranks';
 
@@ -21,6 +28,8 @@ export interface MonthlyCompensation {
   phase3IP: number;
   totalIP: number;
   rank: RankResult;
+  av: number;
+  qgv: number;
   networkSize: number;
   members: number;
   shoppers: number;
@@ -93,7 +102,7 @@ export function calculateMonthlyCompensation(
   snapshot: NetworkSnapshot,
   inputs: CompensationInputs,
 ): MonthlyCompensation {
-  const { personalMonthlyIP, memberMonthlyIP, shopperMonthlyIP } = inputs;
+  const { memberMonthlyIP, shopperMonthlyIP } = inputs;
 
   const totalMembers = snapshot.membersByLevel.reduce((a, b) => a + b, 0);
   const totalShoppers = snapshot.shoppersByLevel.reduce((a, b) => a + b, 0);
@@ -101,6 +110,13 @@ export function calculateMonthlyCompensation(
   const directMembers = snapshot.directLegs;
   const qualifiedLegs = Math.floor(directMembers + 1e-9);
   const legStructure = estimateQualifiedLegStructure(snapshot, inputs, qualifiedLegs);
+  const personalMonthlyIP = determineEffectivePersonalAV({
+    requestedAV: inputs.personalMonthlyIP,
+    qgv,
+    qualifiedLegs,
+    bronzeLegs: legStructure.bronzeLegs,
+    diamondLegs: legStructure.diamondLegs,
+  });
 
   const rank = determineRank({
     av: personalMonthlyIP,
@@ -121,6 +137,8 @@ export function calculateMonthlyCompensation(
     phase3IP,
     totalIP: phase1IP + phase2IP + phase3IP,
     rank,
+    av: personalMonthlyIP,
+    qgv,
     networkSize: totalMembers + totalShoppers,
     members: totalMembers,
     shoppers: totalShoppers,
@@ -161,4 +179,46 @@ function estimateQualifiedLegStructure(
   const diamondLegs = estimatedRank === 'Diamond' ? qualifiedLegs : 0;
 
   return { bronzeLegs, diamondLegs };
+}
+
+function determineEffectivePersonalAV({
+  requestedAV,
+  qgv,
+  qualifiedLegs,
+  bronzeLegs,
+  diamondLegs,
+}: {
+  requestedAV: number;
+  qgv: number;
+  qualifiedLegs: number;
+  bronzeLegs: number;
+  diamondLegs: number;
+}): number {
+  let requiredAV = 40;
+
+  for (const rank of PRELIM_RANKS) {
+    if (qgv >= rank.minQGV && qualifiedLegs >= rank.minQL) {
+      requiredAV = Math.max(requiredAV, rank.minAV);
+    }
+  }
+
+  for (const rank of PHASE2_RANKS) {
+    if (qgv >= rank.minQGV && qualifiedLegs >= rank.minQL) {
+      requiredAV = Math.max(requiredAV, rank.minAV);
+    }
+  }
+
+  for (const rank of PHASE3_RANKS) {
+    const hasVolumeAndLegs =
+      qgv >= rank.minQGV &&
+      qualifiedLegs >= rank.minQL &&
+      diamondLegs >= rank.minDiamondLegs &&
+      bronzeLegs >= rank.minBronzeLegs;
+
+    if (hasVolumeAndLegs) {
+      requiredAV = Math.max(requiredAV, rank.minAV);
+    }
+  }
+
+  return Math.max(requestedAV, requiredAV);
 }

@@ -26,11 +26,15 @@ export interface MonthResult {
   monthIndex: number;
   year: number;
   monthInYear: number;
+  membersByLevel: number[];
+  shoppersByLevel: number[];
   totalEUR: number;
   phase1EUR: number;
   phase2EUR: number;
   phase3EUR: number;
   rankName: string;
+  av: number;
+  qgv: number;
   networkSize: number;
   directLegs: number;
   members: number;
@@ -47,6 +51,8 @@ export interface YearSummary {
   directLegs: number;
   shoppers: number;
   networkSize: number;
+  av: number;
+  qgv: number;
   memberGrowth: number;
   memberAttrition: number;
   shopperGrowth: number;
@@ -93,11 +99,15 @@ export function runSimulation(
       monthIndex,
       year: Math.floor(monthIndex / MONTHS_PER_YEAR) + 1,
       monthInYear: (monthIndex % MONTHS_PER_YEAR) + 1,
+      membersByLevel: snapshot.membersByLevel,
+      shoppersByLevel: snapshot.shoppersByLevel,
       totalEUR: comp.totalIP * ipToEur,
       phase1EUR: comp.phase1IP * ipToEur,
       phase2EUR: comp.phase2IP * ipToEur,
       phase3EUR: comp.phase3IP * ipToEur,
       rankName: comp.rank.name,
+      av: comp.av,
+      qgv: comp.qgv,
       networkSize: comp.networkSize,
       directLegs: comp.directLegs,
       members: comp.members,
@@ -119,6 +129,8 @@ export function runSimulation(
       directLegs: yearEnd.directLegs,
       shoppers: yearEnd.shoppers,
       networkSize: yearEnd.networkSize,
+      av: yearEnd.av,
+      qgv: yearEnd.qgv,
       memberGrowth: sum(yearMonths.map((m) => m.memberGrowth)),
       memberAttrition: sum(yearMonths.map((m) => m.memberAttrition)),
       shopperGrowth: sum(yearMonths.map((m) => m.shopperGrowth)),
