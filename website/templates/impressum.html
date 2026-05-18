@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impressum – {{SITE_NAME}}</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>:root { --brand: {{ACCENT_COLOR}}; --brand-dark: {{ACCENT_COLOR_DARK}}; }</style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <div class="brand-mark">
+        <span class="dot"></span>
+        <span><a href="index.html" style="color:inherit;">{{SITE_NAME}}</a></span>
+      </div>
+      <a class="nav-cta" href="{{APP_URL}}">Simulator starten</a>
+    </div>
+  </header>
+
+  <main class="legal-page">
+    <div class="container">
+      <p class="legal-meta-top">Rechtliche Informationen</p>
+      <h1>Impressum</h1>
+
+      <h2>Anbieter</h2>
+      <address>
+        {{CONTACT_NAME}}<br />
+        betreibt diese Web-App<br />
+        {{CONTACT_ADDR1}}<br />
+        {{CONTACT_ADDR2}}<br />
+        {{CONTACT_ADDR3}}
+      </address>
+
+      <h2>Kontakt</h2>
+      <p>
+        Telefon: {{CONTACT_PHONE}}<br />
+        E-Mail: <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>
+      </p>
+
+      <h2>Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+      <p>
+        Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren
+        vor einer Verbraucherschlichtungsstelle teilzunehmen.
+      </p>
+
+      <p class="legal-meta">Grundlage: angepasst aus dem bestehenden eRecht24-Text.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2026 {{SITE_NAME}}</span>
+      <nav>
+        <a href="index.html">Startseite</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="mailto:{{CONTACT_EMAIL}}">Kontakt</a>
+      </nav>
+    </div>
+  </footer>
+
+</body>
+</html>

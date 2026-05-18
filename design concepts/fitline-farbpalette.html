@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitLine Farbpalette</title>
+    <style>
+      :root {
+        --core: #cd0039;
+        --deep: #53090a;
+        --gray: #a7a9ac;
+        --surface: #f7f7f8;
+        --white: #ffffff;
+        --ink: #2a1016;
+        --muted: #6d6670;
+        --line: #e6e3e6;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .page { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
+      h1, h2, p { margin: 0; }
+      .hero { display: grid; gap: 10px; margin-bottom: 24px; }
+      .hero h1 { font-size: 30px; }
+      .hero p { color: var(--muted); line-height: 1.5; }
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        margin-top: 16px;
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .swatch { display: grid; gap: 8px; }
+      .color {
+        height: 68px;
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,.08);
+      }
+      .swatch strong, .role strong { display:block; font-size:14px; }
+      .swatch span, .role span { color:var(--muted); font-size:12px; }
+      .roles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .role { background:var(--surface); border-radius:12px; padding:12px; }
+      .mock { border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+      .mock-head { display:flex; justify-content:space-between; align-items:center; padding:14px; border-bottom:1px solid var(--line); }
+      .brand { display:flex; align-items:center; gap:10px; font-weight:600; }
+      .dot { width:24px; height:24px; border-radius:7px; background:var(--core); }
+      .button { border-radius:999px; background:var(--core); color:white; padding:8px 13px; font-size:13px; }
+      .mock-body { padding:14px; display:grid; gap:14px; }
+      .chips { display:flex; gap:8px; }
+      .chip { border-radius:999px; padding:7px 11px; font-size:13px; }
+      .chip.active { background:var(--surface); color:var(--core); }
+      .chip.hint { background:var(--deep); color:white; }
+      .provision { border-top:1px solid var(--line); border-bottom:1px solid var(--line); text-align:center; padding:14px 0; }
+      .provision span { display:block; font-size:13px; }
+      .provision strong { display:block; color:var(--core); font-size:28px; }
+      .links { display:flex; gap:16px; color:var(--core); font-size:14px; }
+      .chart {
+        height:88px;
+        border-radius:12px;
+        background:
+          linear-gradient(to top, rgba(205,0,57,.14), transparent 70%),
+          linear-gradient(135deg, transparent 0 10%, rgba(205,0,57,.5) 10% 12%, transparent 12% 26%, rgba(205,0,57,.5) 26% 28%, transparent 28% 45%, rgba(205,0,57,.5) 45% 47%, transparent 47% 64%, rgba(205,0,57,.5) 64% 66%, transparent 66%);
+      }
+      @media (max-width:700px){.swatches,.roles{grid-template-columns:1fr;}}
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>FitLine Farbpalette</h1>
+        <p>Basis: Option A - markennah.</p>
+      </section>
+      <section class="panel">
+        <h2>Farben</h2>
+        <div class="swatches">
+          <div class="swatch"><div class="color" style="background:#cd0039"></div><strong>Kernfarbe</strong><span>#CD0039</span></div>
+          <div class="swatch"><div class="color" style="background:#53090a"></div><strong>Tiefenakzent</strong><span>#53090A</span></div>
+          <div class="swatch"><div class="color" style="background:#a7a9ac"></div><strong>Neutral</strong><span>#A7A9AC</span></div>
+          <div class="swatch"><div class="color" style="background:#f7f7f8"></div><strong>Hintergrund hell</strong><span>#F7F7F8</span></div>
+          <div class="swatch"><div class="color" style="background:#ffffff"></div><strong>Weiss</strong><span>#FFFFFF</span></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Rollen</h2>
+        <div class="roles">
+          <div class="role"><strong>Logo / App-Icon</strong><span>#CD0039</span></div>
+          <div class="role"><strong>Buttons / Steuerelemente</strong><span>#CD0039</span></div>
+          <div class="role"><strong>Aktive Menueeintraege</strong><span>#F7F7F8 auf #CD0039</span></div>
+          <div class="role"><strong>Hinweis-Chips</strong><span>#53090A</span></div>
+          <div class="role"><strong>Provision / Links / Chart</strong><span>#CD0039</span></div>
+          <div class="role"><strong>Neutrale UI</strong><span>#A7A9AC</span></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>UI-Anwendung</h2>
+        <div class="mock">
+          <div class="mock-head">
+            <div class="brand"><span class="dot"></span>FitFlow360</div>
+            <span class="button">Start</span>
+          </div>
+          <div class="mock-body">
+            <div class="chips">
+              <span class="chip active">Aktiv</span>
+              <span class="chip hint">Hinweis</span>
+            </div>
+            <div class="provision">
+              <span>Provision</span>
+              <strong>4.280 EUR</strong>
+            </div>
+            <div class="links">
+              <span>Mehr erfahren</span>
+              <span>Kontakt</span>
+            </div>
+            <div class="chart"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

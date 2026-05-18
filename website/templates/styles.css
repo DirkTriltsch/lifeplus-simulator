@@ -1,0 +1,174 @@
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #1f2937;
+  background: #ffffff;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- Layout ---------- */
+.container { max-width: 960px; margin: 0 auto; padding: 0 1.25rem; }
+.section { padding: 4rem 0; }
+.section + .section { border-top: 1px solid #f1f5f9; }
+
+/* ---------- Header ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e5e7eb;
+}
+.site-header .container {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+}
+.brand-mark {
+  display: flex; align-items: center; gap: 0.55rem;
+  font-weight: 600; color: #0f172a;
+}
+.brand-mark .dot {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--brand);
+}
+.nav-cta {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  background: var(--brand);
+  color: #fff !important;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.nav-cta:hover { background: var(--brand-dark); text-decoration: none; }
+
+/* ---------- Hero ---------- */
+.hero { padding: 5rem 0 3.5rem; text-align: center; }
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+.hero .sub {
+  font-size: 1.15rem;
+  color: #475569;
+  max-width: 38rem;
+  margin: 0 auto 2rem;
+}
+.btn-primary {
+  display: inline-block;
+  padding: 0.85rem 1.6rem;
+  background: var(--brand);
+  color: #fff !important;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.btn-primary:hover {
+  background: var(--brand-dark);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.btn-primary::after { content: " →"; }
+
+/* ---------- Features ---------- */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.feature {
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+.feature h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+.feature p { margin: 0; color: #475569; font-size: 0.95rem; }
+
+/* ---------- Generic sections ---------- */
+.section h2 {
+  font-size: 1.6rem;
+  margin: 0 0 1rem;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.section p { color: #475569; max-width: 42rem; }
+
+/* ---------- Disclaimer ---------- */
+.disclaimer {
+  padding: 1rem 1.25rem;
+  background: #fef9c3;
+  border-left: 3px solid #ca8a04;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #713f12;
+  margin: 2rem 0;
+}
+
+/* ---------- CTA tail ---------- */
+.cta-tail { text-align: center; padding: 3rem 0; background: #f8fafc; }
+.cta-tail h2 { margin-bottom: 1.5rem; }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 1.75rem 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.site-footer .container {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  align-items: center; justify-content: space-between;
+}
+.site-footer nav { display: flex; gap: 1.25rem; }
+.site-footer a { color: #64748b; }
+.site-footer a:hover { color: var(--brand); }
+
+/* ---------- Legal pages ---------- */
+.legal-page { padding: 3rem 0 4rem; }
+.legal-page h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+  color: #0f172a;
+}
+.legal-page .legal-meta-top {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+}
+.legal-page h2 {
+  font-size: 1.15rem;
+  margin: 2rem 0 0.6rem;
+  color: #0f172a;
+}
+.legal-page h3 {
+  font-size: 1rem;
+  margin: 1.5rem 0 0.4rem;
+  color: #1e293b;
+}
+.legal-page p, .legal-page address {
+  font-size: 0.95rem;
+  color: #334155;
+  font-style: normal;
+  margin: 0 0 0.85rem;
+}
+.legal-page .legal-meta {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 2rem;
+}

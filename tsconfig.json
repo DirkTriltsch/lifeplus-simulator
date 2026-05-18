@@ -24,6 +24,6 @@
       "@mlm/product-registry": ["./packages/product-registry/src/index.ts"]
     }
   },
-  "include": ["apps", "packages", "tests"],
+  "include": ["website", "simulator-app", "packages", "tests"],
   "exclude": ["**/vite.config.ts", "vitest.config.ts"]
 }

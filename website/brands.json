@@ -1,0 +1,40 @@
+{
+  "lifeplus": {
+    "siteName": "LifeFlow360",
+    "siteDomain": "lifeflow360.de",
+    "appUrl": "https://app.lifeflow360.de/",
+    "productName": "LifePlus",
+    "accentColor": "#1D9E75",
+    "accentColorDark": "#157a5b",
+    "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
+    "subClaim": "Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann."
+  },
+  "fitline": {
+    "siteName": "FitFlow360",
+    "siteDomain": "fitflow360.de",
+    "appUrl": "https://app.fitflow360.de/",
+    "productName": "FitLine",
+    "accentColor": "#D71920",
+    "accentColorDark": "#a8131a",
+    "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
+    "subClaim": "Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann."
+  },
+  "eqology": {
+    "siteName": "EqoFlow360",
+    "siteDomain": "eqoflow360.de",
+    "appUrl": "https://app.eqoflow360.de/",
+    "productName": "Eqology",
+    "accentColor": "#48664D",
+    "accentColorDark": "#34503a",
+    "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
+    "subClaim": "Simuliere realistisch, was dein Eqology-Netzwerk über zehn Jahre einspielen kann."
+  },
+  "_contact": {
+    "name": "Dirk Triltsch",
+    "addressLine1": "c/o COCENTER",
+    "addressLine2": "Koppoldstr. 1",
+    "addressLine3": "86551 Aichach",
+    "phone": "015678 334022",
+    "email": "info@lifeflow360.app"
+  }
+}

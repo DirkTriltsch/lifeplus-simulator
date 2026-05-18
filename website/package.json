@@ -1,0 +1,12 @@
+{
+  "name": "@mlm/marketing-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:lifeplus": "node scripts/build.mjs lifeplus",
+    "build:fitline": "node scripts/build.mjs fitline",
+    "build:eqology": "node scripts/build.mjs eqology"
+  }
+}

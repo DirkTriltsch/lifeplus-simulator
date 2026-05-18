@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wortmarken-Lockups · Final · LifeFlow360 / FitFlow360 / EqoFlow360</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #F1F5F9; padding: 32px 16px;
+    font-family: 'Inter', system-ui, sans-serif; color: #0F172A;
+  }
+  .page { max-width: 1400px; margin: 0 auto; }
+  .page-header { margin-bottom: 32px; }
+  .page-header h1 { font-size: 24px; font-weight: 500; margin: 0 0 8px; letter-spacing: -0.4px; }
+  .page-header p { font-size: 14px; color: #475569; line-height: 1.6; margin: 0; max-width: 780px; }
+  .page-header code { background: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; border: 0.5px solid #E5E7EB; font-family: 'JetBrains Mono', monospace; }
+
+  .taglines-banner {
+    background: white; border: 0.5px solid #E5E7EB; border-radius: 14px;
+    padding: 14px 18px; margin-top: 20px;
+    display: flex; gap: 28px; align-items: center; flex-wrap: wrap;
+  }
+  .taglines-banner .item { display: flex; flex-direction: column; gap: 2px; }
+  .taglines-banner .label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: #94A3B8; font-weight: 500;
+  }
+  .taglines-banner .value {
+    font-size: 14px; color: #0F172A; font-weight: 500;
+  }
+  .taglines-banner .value b { color: #006F44; }
+
+  .brand-section { margin-top: 36px; }
+  .brand-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; border-radius: 12px;
+    margin-bottom: 18px; color: white;
+  }
+  .brand-bar.lp { background: #006F44; }
+  .brand-bar.fl { background: #CD0039; }
+  .brand-bar.eq { background: #293C94; }
+  .brand-bar h2 { font-size: 18px; font-weight: 500; margin: 0; }
+  .brand-bar h2 .synonym { opacity: 0.7; font-weight: 300; font-size: 14px; margin-left: 8px; }
+  .brand-bar .hint { margin-left: auto; font-size: 12px; opacity: 0.9; }
+
+  .lockup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .lockup-card {
+    border-radius: 14px; overflow: hidden;
+    border: 0.5px solid #E5E7EB;
+  }
+  .lockup-id-bar {
+    background: #0F172A; color: white;
+    padding: 7px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.04em;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lockup-id-bar .name { color: #94A3B8; }
+  .lockup-id-bar .id { font-weight: 500; }
+  .lockup-id-bar.lp .id { color: #9FBA37; }
+  .lockup-id-bar.fl .id { color: #FF4A6B; }
+  .lockup-id-bar.eq .id { color: #EBBF82; }
+
+  .lockup-stage {
+    padding: 36px 32px;
+    min-height: 140px;
+    display: flex; align-items: center;
+  }
+  .lockup-stage.light { background: white; }
+  .lockup-stage.dark.lp { background: #0E1F1A; }
+  .lockup-stage.dark.fl { background: #1A0709; }
+  .lockup-stage.dark.eq { background: #0F1832; }
+
+  /* === Lockup-Layout === */
+  .lockup { display: flex; align-items: center; gap: 18px; }
+  .lockup-mark {
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    overflow: hidden; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .lockup-mark svg { display: block; width: 100%; height: 100%; }
+
+  .lockup-text { display: flex; flex-direction: column; gap: 4px; }
+  .lockup-name {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 28px; font-weight: 600;
+    letter-spacing: -0.6px; line-height: 1;
+    text-transform: lowercase;
+  }
+  .lockup-sub {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Standard-Textfarbe pro Hintergrund */
+  .lockup-stage.dark .lockup-name .neutral { color: white; }
+  .lockup-stage.light .lockup-name .neutral { color: #0F172A; }
+  .lockup-stage.dark .lockup-sub { color: #8FA0B8; }
+  .lockup-stage.light .lockup-sub { color: #64748B; }
+
+  /* Akzent pro Marke */
+  .lockup-stage.dark .lockup-name .lp-accent { color: #1FAE74; }
+  .lockup-stage.light .lockup-name .lp-accent { color: #006F44; }
+  .lockup-stage.dark .lockup-name .fl-accent { color: #FF1F4D; }
+  .lockup-stage.light .lockup-name .fl-accent { color: #CD0039; }
+  .lockup-stage.dark .lockup-name .eq-accent { color: #6E83D9; }
+  .lockup-stage.light .lockup-name .eq-accent { color: #293C94; }
+
+  /* Größen-Demo */
+  .size-demo {
+    background: white;
+    border-radius: 14px;
+    padding: 20px 24px;
+    border: 0.5px solid #E5E7EB;
+    margin-top: 8px;
+  }
+  .size-demo h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: #64748B; margin: 0 0 16px; font-weight: 500;
+  }
+  .size-row { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .size-cell { display: flex; flex-direction: column; align-items: flex-start; }
+  .size-row .size-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: #94A3B8; margin-top: 6px; letter-spacing: 0.05em;
+  }
+
+  .lockup.size-lg .lockup-mark { width: 72px; height: 72px; border-radius: 14px; }
+  .lockup.size-lg .lockup-name { font-size: 36px; }
+  .lockup.size-lg .lockup-sub { font-size: 12px; }
+
+  .lockup.size-md .lockup-mark { width: 40px; height: 40px; border-radius: 8px; }
+  .lockup.size-md .lockup-name { font-size: 20px; }
+  .lockup.size-md .lockup-sub { font-size: 9px; }
+
+  .lockup.size-sm .lockup-mark { width: 28px; height: 28px; border-radius: 6px; }
+  .lockup.size-sm .lockup-name { font-size: 14px; letter-spacing: -0.3px; }
+  .lockup.size-sm .lockup-sub { display: none; }
+
+  .notes {
+    margin-top: 12px; padding: 14px 16px;
+    background: white; border: 0.5px solid #E5E7EB; border-radius: 12px;
+    font-size: 12px; color: #475569; line-height: 1.55;
+  }
+  .notes b { color: #0F172A; font-weight: 600; }
+  .notes p { margin: 0 0 6px; }
+  .notes p:last-child { margin: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>Wortmarken-Lockups · Final</h1>
+    <p>Finale Lockups für alle drei Marken im TraderScope-Stil. Schriftart durchgehend <code>Inter</code>. Wortmarke in Kleinbuchstaben — erster Wortteil neutral, <code>flow360</code> in der Marken-Hauptfarbe. Pro Marke vier Karten: Deutsch und Englisch jeweils auf Light- und Dark-Stage.</p>
+
+    <div class="taglines-banner">
+      <div class="item">
+        <div class="label">Tagline · Deutsch</div>
+        <div class="value">besser verstehen. <b>stärker wachsen.</b></div>
+      </div>
+      <div class="item">
+        <div class="label">Tagline · English</div>
+        <div class="value">Know deeper. <b>Grow stronger.</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LIFEFLOW360 ============ -->
+  <section class="brand-section">
+    <div class="brand-bar lp">
+      <h2>LifeFlow360 <span class="synonym">(LifePlus)</span></h2>
+      <span class="hint">life = neutral · flow360 = #006F44</span>
+    </div>
+
+    <div class="lockup-grid">
+      <!-- Dark · DE -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar lp"><span class="name">Lockup · Dark · DE</span><span class="id">#lp-lockup-dark-de</span></div>
+        <div class="lockup-stage dark lp">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#006F44"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">life</span><span class="lp-accent">flow360</span></div>
+              <div class="lockup-sub">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light · DE -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar lp"><span class="name">Lockup · Light · DE</span><span class="id">#lp-lockup-light-de</span></div>
+        <div class="lockup-stage light">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#FFFFFF" stroke="#006F44" stroke-width="2"/>
+                <text x="29.16" y="158.067" fill="#006F44" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#006F44" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">life</span><span class="lp-accent">flow360</span></div>
+              <div class="lockup-sub">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark · EN -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar lp"><span class="name">Lockup · Dark · EN</span><span class="id">#lp-lockup-dark-en</span></div>
+        <div class="lockup-stage dark lp">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#006F44"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">life</span><span class="lp-accent">flow360</span></div>
+              <div class="lockup-sub">KNOW DEEPER. GROW STRONGER.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light · EN -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar lp"><span class="name">Lockup · Light · EN</span><span class="id">#lp-lockup-light-en</span></div>
+        <div class="lockup-stage light">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#FFFFFF" stroke="#006F44" stroke-width="2"/>
+                <text x="29.16" y="158.067" fill="#006F44" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#006F44" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">life</span><span class="lp-accent">flow360</span></div>
+              <div class="lockup-sub">KNOW DEEPER. GROW STRONGER.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Größen-Kaskade LifeFlow360 -->
+    <div class="size-demo">
+      <h3>Größenkaskade · LifeFlow360 · DE</h3>
+      <div class="size-row">
+        <div class="size-cell">
+          <div class="lockup size-lg">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#006F44"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">life</span><span style="color:#006F44">flow360</span></div>
+              <div class="lockup-sub" style="color:#64748B">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+          <div class="size-label">Header / Hero · 72 px</div>
+        </div>
+
+        <div class="size-cell">
+          <div class="lockup size-md">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#006F44"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">life</span><span style="color:#006F44">flow360</span></div>
+              <div class="lockup-sub" style="color:#64748B">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+          <div class="size-label">Navigation · 40 px</div>
+        </div>
+
+        <div class="size-cell">
+          <div class="lockup size-sm">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#006F44"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">life</span><span style="color:#006F44">flow360</span></div>
+            </div>
+          </div>
+          <div class="size-label">Mobile Header · 28 px</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FITFLOW360 ============ -->
+  <section class="brand-section">
+    <div class="brand-bar fl">
+      <h2>FitFlow360 <span class="synonym">(FitLine)</span></h2>
+      <span class="hint">fit = neutral · flow360 = #CD0039</span>
+    </div>
+
+    <div class="lockup-grid">
+      <!-- Dark · DE -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar fl"><span class="name">Lockup · Dark · DE</span><span class="id">#fl-lockup-dark-de</span></div>
+        <div class="lockup-stage dark fl">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#CD0039"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">fit</span><span class="fl-accent">flow360</span></div>
+              <div class="lockup-sub">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light · DE -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar fl"><span class="name">Lockup · Light · DE</span><span class="id">#fl-lockup-light-de</span></div>
+        <div class="lockup-stage light">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#FFFFFF" stroke="#CD0039" stroke-width="2"/>
+                <text x="29.16" y="158.067" fill="#CD0039" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#CD0039" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">fit</span><span class="fl-accent">flow360</span></div>
+              <div class="lockup-sub">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark · EN -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar fl"><span class="name">Lockup · Dark · EN</span><span class="id">#fl-lockup-dark-en</span></div>
+        <div class="lockup-stage dark fl">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#CD0039"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">fit</span><span class="fl-accent">flow360</span></div>
+              <div class="lockup-sub">KNOW DEEPER. GROW STRONGER.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light · EN -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar fl"><span class="name">Lockup · Light · EN</span><span class="id">#fl-lockup-light-en</span></div>
+        <div class="lockup-stage light">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#FFFFFF" stroke="#CD0039" stroke-width="2"/>
+                <text x="29.16" y="158.067" fill="#CD0039" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#CD0039" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">fit</span><span class="fl-accent">flow360</span></div>
+              <div class="lockup-sub">KNOW DEEPER. GROW STRONGER.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="size-demo">
+      <h3>Größenkaskade · FitFlow360 · DE</h3>
+      <div class="size-row">
+        <div class="size-cell">
+          <div class="lockup size-lg">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#CD0039"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">fit</span><span style="color:#CD0039">flow360</span></div>
+              <div class="lockup-sub" style="color:#64748B">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+          <div class="size-label">Header / Hero · 72 px</div>
+        </div>
+
+        <div class="size-cell">
+          <div class="lockup size-md">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#CD0039"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">fit</span><span style="color:#CD0039">flow360</span></div>
+              <div class="lockup-sub" style="color:#64748B">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+          <div class="size-label">Navigation · 40 px</div>
+        </div>
+
+        <div class="size-cell">
+          <div class="lockup size-sm">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#CD0039"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">F</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">fit</span><span style="color:#CD0039">flow360</span></div>
+            </div>
+          </div>
+          <div class="size-label">Mobile Header · 28 px</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EQOFLOW360 ============ -->
+  <section class="brand-section">
+    <div class="brand-bar eq">
+      <h2>EqoFlow360 <span class="synonym">(Eqology)</span></h2>
+      <span class="hint">eqo = neutral · flow360 = #293C94</span>
+    </div>
+
+    <div class="lockup-grid">
+      <!-- Dark · DE -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar eq"><span class="name">Lockup · Dark · DE</span><span class="id">#eq-lockup-dark-de</span></div>
+        <div class="lockup-stage dark eq">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#293C94"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">eqo</span><span class="eq-accent">flow360</span></div>
+              <div class="lockup-sub">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light · DE -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar eq"><span class="name">Lockup · Light · DE</span><span class="id">#eq-lockup-light-de</span></div>
+        <div class="lockup-stage light">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#FFFFFF" stroke="#293C94" stroke-width="2"/>
+                <text x="29.16" y="158.067" fill="#293C94" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#293C94" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">eqo</span><span class="eq-accent">flow360</span></div>
+              <div class="lockup-sub">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark · EN -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar eq"><span class="name">Lockup · Dark · EN</span><span class="id">#eq-lockup-dark-en</span></div>
+        <div class="lockup-stage dark eq">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#293C94"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">eqo</span><span class="eq-accent">flow360</span></div>
+              <div class="lockup-sub">KNOW DEEPER. GROW STRONGER.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light · EN -->
+      <div class="lockup-card">
+        <div class="lockup-id-bar eq"><span class="name">Lockup · Light · EN</span><span class="id">#eq-lockup-light-en</span></div>
+        <div class="lockup-stage light">
+          <div class="lockup">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#FFFFFF" stroke="#293C94" stroke-width="2"/>
+                <text x="29.16" y="158.067" fill="#293C94" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#293C94" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span class="neutral">eqo</span><span class="eq-accent">flow360</span></div>
+              <div class="lockup-sub">KNOW DEEPER. GROW STRONGER.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="size-demo">
+      <h3>Größenkaskade · EqoFlow360 · DE</h3>
+      <div class="size-row">
+        <div class="size-cell">
+          <div class="lockup size-lg">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#293C94"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">eqo</span><span style="color:#293C94">flow360</span></div>
+              <div class="lockup-sub" style="color:#64748B">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+          <div class="size-label">Header / Hero · 72 px</div>
+        </div>
+
+        <div class="size-cell">
+          <div class="lockup size-md">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#293C94"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">eqo</span><span style="color:#293C94">flow360</span></div>
+              <div class="lockup-sub" style="color:#64748B">BESSER VERSTEHEN. STÄRKER WACHSEN.</div>
+            </div>
+          </div>
+          <div class="size-label">Navigation · 40 px</div>
+        </div>
+
+        <div class="size-cell">
+          <div class="lockup size-sm">
+            <div class="lockup-mark">
+              <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                <rect width="256" height="256" rx="28" fill="#293C94"/>
+                <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+                <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="lockup-text">
+              <div class="lockup-name"><span style="color:#0F172A">eqo</span><span style="color:#293C94">flow360</span></div>
+            </div>
+          </div>
+          <div class="size-label">Mobile Header · 28 px</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="brand-section">
+    <div class="notes">
+      <p><b>ID-Schema:</b> <code style="background:#F1F5F9; padding:1px 5px; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:11px">{marke}-lockup-{stage}-{sprache}</code> — z.B. <code style="background:#F1F5F9; padding:1px 5px; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:11px">#lp-lockup-dark-de</code>. Insgesamt 12 Lockup-Varianten (3 Marken × 2 Stages × 2 Sprachen).</p>
+      <p><b>Farb-Mechanik auf Dark-Stage:</b> Der neutrale Wortteil läuft in Weiß (statt Schwarz), weil reines Schwarz auf dunklem Hintergrund nicht lesbar wäre. Die Akzentfarbe wurde für Dark leicht aufgehellt — gleicher Farbton, höherer Kontrast.</p>
+      <p><b>Nächster Schritt:</b> Wenn die Lockups passen, exportiere ich sie als saubere SVG-Dateien (entweder einzeln pro Sprach-Stage-Kombination oder als kombinierte Variante mit dynamischer Tagline).</p>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

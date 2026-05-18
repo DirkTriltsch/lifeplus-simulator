@@ -7,7 +7,6 @@ import { StatCard } from './components/StatCard';
 import { ProvisionChart } from './components/ProvisionChart';
 import { SettingsDrawer } from './components/SettingsDrawer';
 import { YearlySummaryTable } from './components/YearlySummaryTable';
-import { LegalSection } from './components/LegalSection';
 import {
   NetworkVisualizations,
   type NetworkView,
@@ -147,7 +146,31 @@ export default function App() {
           Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
         </p>
       </main>
-      <LegalSection product={product} />
+      <footer className="max-w-4xl mx-auto px-4 sm:px-6 pb-8 pt-2">
+        <div className="border-t border-gray-200 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+          <span>© 2026 {product.brand.shortName}</span>
+          <div className="flex items-center gap-3">
+            <a
+              href={`https://${product.domain}/impressum.html`}
+              className="hover:text-brand-700 transition"
+            >
+              Impressum
+            </a>
+            <a
+              href={`https://${product.domain}/datenschutz.html`}
+              className="hover:text-brand-700 transition"
+            >
+              Datenschutz
+            </a>
+            <a
+              href={`https://${product.domain}/`}
+              className="hover:text-brand-700 transition"
+            >
+              Zur Webseite
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
