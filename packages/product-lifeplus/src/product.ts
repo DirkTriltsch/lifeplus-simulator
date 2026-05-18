@@ -4,10 +4,21 @@ import { lifeplusPlan } from './plan';
 export const lifeplusProduct: ProductDefinition = {
   id: 'lifeplus',
   domain: 'www.lifeflow360.app',
+  siteUrl: 'https://www.lifeflow360.app/',
   brand: {
     name: 'LifeFlow360 Verguetungs-Simulator',
     shortName: 'LifeFlow360',
     accentColor: '#1D9E75',
+    lockup: {
+      initial: 'L',
+      wordNeutral: 'life',
+      wordAccent: 'flow360',
+      markFill: '#006F44',
+      darkBg: '#0E1F1A',
+      accentOnDark: '#1FAE74',
+      waveColor: '#7FB6A1',
+      taglineDe: 'BESSER VERSTEHEN. STÄRKER WACHSEN.',
+    },
   },
   legal: {
     siteName: 'LifeFlow360',

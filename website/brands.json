@@ -7,27 +7,57 @@
     "accentColor": "#1D9E75",
     "accentColorDark": "#157a5b",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
-    "subClaim": "Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann."
+    "subClaim": "Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann.",
+    "lockup": {
+      "initial": "L",
+      "wordNeutral": "life",
+      "wordAccent": "flow360",
+      "markFill": "#006F44",
+      "darkBg": "#0E1F1A",
+      "accentOnDark": "#1FAE74",
+      "waveColor": "#7FB6A1",
+      "taglineDe": "BESSER VERSTEHEN. STÄRKER WACHSEN."
+    }
   },
   "fitline": {
     "siteName": "FitFlow360",
-    "siteDomain": "fitflow360.de",
-    "appUrl": "https://app.fitflow360.de/",
+    "siteDomain": "fitflow360.triltsch.com",
+    "appUrl": "http://fitflow360.triltsch.com/app/",
     "productName": "FitLine",
     "accentColor": "#D71920",
     "accentColorDark": "#a8131a",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
-    "subClaim": "Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann."
+    "subClaim": "Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann.",
+    "lockup": {
+      "initial": "F",
+      "wordNeutral": "fit",
+      "wordAccent": "flow360",
+      "markFill": "#CD0039",
+      "darkBg": "#1A0709",
+      "accentOnDark": "#FF1F4D",
+      "waveColor": "#EB99B0",
+      "taglineDe": "BESSER VERSTEHEN. STÄRKER WACHSEN."
+    }
   },
   "eqology": {
     "siteName": "EqoFlow360",
-    "siteDomain": "eqoflow360.de",
-    "appUrl": "https://app.eqoflow360.de/",
+    "siteDomain": "eqoflow360.triltsch.com",
+    "appUrl": "http://eqoflow360.triltsch.com/app/",
     "productName": "Eqology",
     "accentColor": "#48664D",
     "accentColorDark": "#34503a",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
-    "subClaim": "Simuliere realistisch, was dein Eqology-Netzwerk über zehn Jahre einspielen kann."
+    "subClaim": "Simuliere realistisch, was dein Eqology-Netzwerk über zehn Jahre einspielen kann.",
+    "lockup": {
+      "initial": "E",
+      "wordNeutral": "eqo",
+      "wordAccent": "flow360",
+      "markFill": "#293C94",
+      "darkBg": "#0F1832",
+      "accentOnDark": "#6E83D9",
+      "waveColor": "#9EA7CF",
+      "taglineDe": "BESSER VERSTEHEN. STÄRKER WACHSEN."
+    }
   },
   "_contact": {
     "name": "Dirk Triltsch",

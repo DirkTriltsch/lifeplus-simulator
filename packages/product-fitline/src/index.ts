@@ -3,11 +3,22 @@ import { lifeplusPlan } from '@mlm/product-lifeplus';
 
 export const fitlineProduct: ProductDefinition = {
   id: 'fitline',
-  domain: 'fitflow360.de',
+  domain: 'fitflow360.triltsch.com',
+  siteUrl: 'http://fitflow360.triltsch.com/',
   brand: {
     name: 'FitFlow360 Verguetungs-Simulator',
     shortName: 'FitFlow360',
     accentColor: '#D71920',
+    lockup: {
+      initial: 'F',
+      wordNeutral: 'fit',
+      wordAccent: 'flow360',
+      markFill: '#CD0039',
+      darkBg: '#1A0709',
+      accentOnDark: '#FF1F4D',
+      waveColor: '#EB99B0',
+      taglineDe: 'BESSER VERSTEHEN. STÄRKER WACHSEN.',
+    },
   },
   legal: {
     siteName: 'FitFlow360',

@@ -13,6 +13,7 @@ const ROOT = resolve(__dirname, '..');
 const REPO_ROOT = resolve(ROOT, '..');
 const TEMPLATES = join(ROOT, 'templates');
 const PUBLIC = join(ROOT, 'public');
+const MARKS = join(ROOT, 'marks');
 const DIST_ROOT = join(REPO_ROOT, 'dist');
 
 const brandsConfig = JSON.parse(await readFile(join(ROOT, 'brands.json'), 'utf8'));
@@ -26,6 +27,7 @@ const brandIds = targetBrand
 const pages = ['index.html', 'impressum.html', 'datenschutz.html'];
 
 function tokensFor(brand) {
+  const lockup = brand.lockup ?? {};
   return {
     SITE_NAME: brand.siteName,
     SITE_DOMAIN: brand.siteDomain,
@@ -35,6 +37,14 @@ function tokensFor(brand) {
     ACCENT_COLOR_DARK: brand.accentColorDark,
     CLAIM: brand.claim,
     SUB_CLAIM: brand.subClaim,
+    LOCKUP_INITIAL: lockup.initial,
+    LOCKUP_NEUTRAL: lockup.wordNeutral,
+    LOCKUP_ACCENT: lockup.wordAccent,
+    LOCKUP_MARK_FILL: lockup.markFill,
+    LOCKUP_DARK_BG: lockup.darkBg,
+    LOCKUP_ACCENT_ON_DARK: lockup.accentOnDark,
+    LOCKUP_WAVE_COLOR: lockup.waveColor,
+    LOCKUP_TAGLINE_DE: lockup.taglineDe,
     CONTACT_NAME: contact.name,
     CONTACT_ADDR1: contact.addressLine1,
     CONTACT_ADDR2: contact.addressLine2,
@@ -81,10 +91,13 @@ for (const brandId of brandIds) {
 
   await mkdir(outDir, { recursive: true });
 
-  // 1. Copy public assets (favicon, robots.txt etc.)
+  // 1. Copy public assets (robots.txt etc.)
   await copyDir(PUBLIC, outDir);
 
-  // 2. Copy shared CSS
+  // 2. Brand-specific favicon
+  await copyFile(join(MARKS, `${brandId}.svg`), join(outDir, 'favicon.svg'));
+
+  // 3. Copy shared CSS
   await copyFile(join(TEMPLATES, 'styles.css'), join(outDir, 'styles.css'));
 
   // 3. Render each HTML template

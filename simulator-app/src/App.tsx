@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getProduct } from '@mlm/product-registry';
 import { runSimulation, type ProductId } from '@mlm/simulator-core';
+import { BrandLockup } from './components/BrandLockup';
 import { Slider } from './components/Slider';
 import { HeroNumber } from './components/HeroNumber';
 import { StatCard } from './components/StatCard';
@@ -56,17 +57,12 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
         <a
-          href={`https://${product.domain}/`}
+          href={product.siteUrl}
           aria-label="Zur Webseite"
-          className="flex items-center gap-2 hover:opacity-80 transition"
+          className="flex items-center gap-3 hover:opacity-80 transition min-w-0"
         >
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-white font-bold text-sm"
-            style={{ backgroundColor: product.brand.accentColor }}
-          >
-            {product.brand.shortName.slice(0, 2)}
-          </div>
-          <h1 className="text-base font-medium text-gray-900">{product.brand.name}</h1>
+          <BrandLockup lockup={product.brand.lockup} size={28} />
+          <h1 className="text-sm font-medium text-gray-600 truncate">Verguetungs-Simulator</h1>
         </a>
         <div className="flex items-center gap-1">
           <button
@@ -155,19 +151,19 @@ export default function App() {
           <span>© 2026 {product.brand.shortName}</span>
           <div className="flex items-center gap-3">
             <a
-              href={`https://${product.domain}/impressum.html`}
+              href={`${product.siteUrl}impressum.html`}
               className="hover:text-brand-700 transition"
             >
               Impressum
             </a>
             <a
-              href={`https://${product.domain}/datenschutz.html`}
+              href={`${product.siteUrl}datenschutz.html`}
               className="hover:text-brand-700 transition"
             >
               Datenschutz
             </a>
             <a
-              href={`https://${product.domain}/`}
+              href={product.siteUrl}
               className="hover:text-brand-700 transition"
             >
               Zur Webseite

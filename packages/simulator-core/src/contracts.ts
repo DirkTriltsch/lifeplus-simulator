@@ -2,10 +2,22 @@ import type { NetworkSnapshot } from './network';
 
 export type ProductId = 'lifeplus' | 'fitline' | 'eqology';
 
+export interface BrandLockup {
+  initial: string;
+  wordNeutral: string;
+  wordAccent: string;
+  markFill: string;
+  darkBg: string;
+  accentOnDark: string;
+  waveColor: string;
+  taglineDe: string;
+}
+
 export interface BrandDefinition {
   name: string;
   shortName: string;
   accentColor: string;
+  lockup: BrandLockup;
 }
 
 export interface LegalDefinition {
@@ -57,6 +69,7 @@ export interface CompensationPlan {
 export interface ProductDefinition {
   id: ProductId;
   domain: string;
+  siteUrl: string;
   brand: BrandDefinition;
   legal: LegalDefinition;
   terminology: Terminology;

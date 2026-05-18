@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
+
 /* ---------- Reset & Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -27,8 +29,10 @@ a:hover { text-decoration: underline; }
 }
 .site-header .container {
   display: flex; align-items: center; justify-content: space-between;
-  height: 56px;
+  gap: 1rem;
 }
+.site-header:not(.site-header--dark) .container { height: 56px; }
+
 .brand-mark {
   display: flex; align-items: center; gap: 0.55rem;
   font-weight: 600; color: #0f172a;
@@ -47,6 +51,68 @@ a:hover { text-decoration: underline; }
   font-weight: 500;
 }
 .nav-cta:hover { background: var(--brand-dark); text-decoration: none; }
+
+/* ---------- Dark Header + Lockup ---------- */
+.site-header--dark {
+  background: var(--lockup-dark-bg);
+  backdrop-filter: none;
+  border-bottom: none;
+}
+.site-header--dark .container { padding-top: 1rem; padding-bottom: 1rem; }
+
+.lockup--header {
+  display: flex; align-items: center; gap: 1rem;
+  text-decoration: none;
+  flex: 0 1 auto;
+}
+.lockup--header:hover { text-decoration: none; opacity: 0.95; }
+
+.lockup-mark {
+  width: 56px; height: 56px;
+  border-radius: 10px;
+  overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  display: block;
+}
+.lockup-mark svg { display: block; width: 100%; height: 100%; }
+
+.lockup-text {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-width: 0;
+}
+.lockup-name {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  line-height: 1;
+  text-transform: lowercase;
+}
+.lockup-neutral { color: #ffffff; }
+.lockup-accent { color: var(--lockup-accent-on-dark); }
+.lockup-sub {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8FA0B8;
+}
+
+@media (max-width: 540px) {
+  .lockup-mark { width: 44px; height: 44px; border-radius: 8px; }
+  .lockup-name { font-size: 1.35rem; letter-spacing: -0.4px; }
+  .lockup-sub { display: none; }
+  .lockup--header { gap: 0.65rem; }
+}
+
+.nav-cta--dark {
+  background: var(--lockup-accent-on-dark);
+  color: #ffffff !important;
+}
+.nav-cta--dark:hover {
+  filter: brightness(1.08);
+  background: var(--lockup-accent-on-dark);
+}
 
 /* ---------- Hero ---------- */
 .hero { padding: 5rem 0 3.5rem; text-align: center; }
