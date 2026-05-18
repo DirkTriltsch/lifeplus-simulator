@@ -19,6 +19,7 @@
     "build:site:fitline": "npm run build:fitline --workspace @mlm/marketing-site",
     "build:site:eqology": "npm run build:eqology --workspace @mlm/marketing-site",
     "build:sites": "npm run build --workspace @mlm/marketing-site",
+    "build:webroot:lifeplus": "npm run build:site:lifeplus && npm run build:lifeplus && node scripts/build-lifeplus-webroot.mjs",
     "build:all": "npm run build:lifeplus && npm run build:fitline && npm run build:eqology && npm run build:sites",
     "build": "npm run build:lifeplus",
     "test": "vitest run"

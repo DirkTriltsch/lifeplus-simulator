@@ -54,14 +54,15 @@ npm run build:sites            # alle drei auf einmal
 
 ```bash
 npm run build:all              # 3 Apps + 3 Microsites
+npm run build:webroot:lifeplus # -> dist/site-lifeplus/ inkl. app/ fuer www.lifeflow360.app
 npm test
 ```
 
 ## Deployment-Mapping
 
-| Brand    | Microsite (lifeflow360.de / …)      | App (app.lifeflow360.de / …) |
+| Brand    | Microsite (www.lifeflow360.app / …) | App (`/app` on the same host) |
 |----------|--------------------------------------|------------------------------|
-| LifePlus | `dist/site-lifeplus/`                | `dist/lifeplus/`             |
+| LifePlus | `dist/site-lifeplus/`                | `dist/site-lifeplus/app/`    |
 | FitLine  | `dist/site-fitline/`                 | `dist/fitline/`              |
 | Eqology  | `dist/site-eqology/`                 | `dist/eqology/`              |
 

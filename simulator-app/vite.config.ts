@@ -8,9 +8,10 @@ const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const product = env.VITE_PRODUCT ?? mode ?? 'lifeplus';
+  const base = env.VITE_BASE_PATH ?? '/';
 
   return {
-    base: '/',
+    base,
     plugins: [
       react(),
       VitePWA({
@@ -24,8 +25,8 @@ export default defineConfig(({ mode }) => {
           background_color: '#ffffff',
           display: 'standalone',
           orientation: 'portrait',
-          start_url: '/',
-          scope: '/',
+          start_url: base,
+          scope: base,
         },
       }),
     ],

@@ -9,6 +9,10 @@
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    RewriteCond %{HTTP_HOST} ^lifeflow360\.app$ [NC]
+    RewriteRule ^ https://www.lifeflow360.app%{REQUEST_URI} [R=301,L]
+
     RewriteCond %{HTTP_USER_AGENT} ClaudeBot              [NC,OR]
     RewriteCond %{HTTP_USER_AGENT} Claude-Web             [NC,OR]
     RewriteCond %{HTTP_USER_AGENT} anthropic-ai           [NC,OR]

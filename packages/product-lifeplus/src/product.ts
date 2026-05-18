@@ -3,7 +3,7 @@ import { lifeplusPlan } from './plan';
 
 export const lifeplusProduct: ProductDefinition = {
   id: 'lifeplus',
-  domain: 'lifeflow360.de',
+  domain: 'www.lifeflow360.app',
   brand: {
     name: 'LifeFlow360 Verguetungs-Simulator',
     shortName: 'LifeFlow360',
