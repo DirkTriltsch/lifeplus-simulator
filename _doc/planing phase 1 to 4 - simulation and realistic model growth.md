@@ -10,7 +10,7 @@ Was steht bereits:
 
 - Click-Dummy `AdvancedSettingsPanel` mit den drei Bereichen `max. Members je Sponsor`, `Reality Simulation`, `Ziele-Leiter`.
 - `GoalIcon`, `GoalsEditorDialog`, `GoalUI` mit 5 Default-Zielen (Produkte, Urlaub, Auto, Mietfrei, Frei leben).
-- `buildLegs()` in `NetworkVisualizations.tsx` ist symmetrisch (alle Beine identisch, `legCount = directLegs`, kein Hardcap).
+- `buildLegs()` in `NetworkVisualizations.tsx` nutzt echte `snapshot.legs`; neue Beine starten frisch, alte Beine koennen voller sein.
 - `HybridTree` skaliert dynamisch und scrollt horizontal bei vielen Beinen.
 - `GoalsEditorDialog` ist mobilfreundlich (mehrzeilig auf Mobile, kompakt ab `sm`).
 - `maxDirectMembersPerMember` wird live auf mindestens 1 geklemmt.

@@ -109,6 +109,142 @@ describe('Netzwerk-Wachstum', () => {
     expect(snapshots[35].membersByLevel[2]).toBeGreaterThan(0);
   });
 
+  it('laesst neue direkte Members erst im Folgejahr werben', () => {
+    // membersPerYear=2, dupRate=1, attrition=0
+    // Jahr 1: L0 = 2 (die 2 frischen werben noch nicht)
+    // Jahr 2: L0 = 4 (2 alt + 2 neu), L1 = 4 (nur die 2 ALTEN werben je 2)
+    // Jahr 3: L0 = 6, L1 = 4 + (4 alte L0 * 2) = 12, L2 = (4 alte L1 * 2) = 8
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 2,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      36,
+    );
+
+    const y1 = snapshots[11];
+    expect(y1.membersByLevel[0]).toBeCloseTo(2, 5);
+    expect(y1.membersByLevel[1] ?? 0).toBeCloseTo(0, 5);
+
+    const y2 = snapshots[23];
+    expect(y2.membersByLevel[0]).toBeCloseTo(4, 5);
+    expect(y2.membersByLevel[1]).toBeCloseTo(4, 5);
+    expect(y2.membersByLevel[2] ?? 0).toBeCloseTo(0, 5);
+
+    const y3 = snapshots[35];
+    expect(y3.membersByLevel[0]).toBeCloseTo(6, 5);
+    expect(y3.membersByLevel[1]).toBeCloseTo(12, 5);
+    expect(y3.membersByLevel[2]).toBeCloseTo(8, 5);
+  });
+
+  it('laesst Shopper aus dem Folgejahr-Recruiting nur von alten Members entstehen', () => {
+    // membersPerYear=2, shoppersPerYear=3, dupRate=1, attrition=0
+    // Jahr 2: Du wirbst 3 neue Shopper auf L0. Die 2 ALTEN Members werben je 3 Shopper auf L1 = 6.
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 2,
+        shoppersPerYear: 3,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      24,
+    );
+
+    const y2 = snapshots[23];
+    // L0 Shopper: 3 (Jahr1) + 3 (Jahr2) = 6
+    expect(y2.shoppersByLevel[0]).toBeCloseTo(6, 5);
+    // L1 Shopper: 2 alte Members * 3 = 6 (nicht 4 * 3 = 12 wie vorher mit Bug)
+    expect(y2.shoppersByLevel[1]).toBeCloseTo(6, 5);
+  });
+
+  it('liefert pro Bein asymmetrische membersByLevel/shoppersByLevel (alte Beine voller als neue)', () => {
+    // membersPerYear=2, shoppersPerYear=3, dupRate=1, attrition=0
+    // Jahr 2 erwartet:
+    //   leg-1, leg-2 (alt, aus Jahr 1): members=[1, 2], shoppers=[1.5, 3]
+    //   leg-3, leg-4 (neu, in Jahr 2): members=[1],    shoppers=[1.5]
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 2,
+        shoppersPerYear: 3,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      24,
+    );
+
+    const y2 = snapshots[23];
+    expect(y2.legs.length).toBe(4);
+
+    const oldLegs = y2.legs.slice(0, 2);
+    const newLegs = y2.legs.slice(2, 4);
+
+    for (const leg of oldLegs) {
+      expect(leg.membersByLevel[0]).toBeCloseTo(1, 5);
+      expect(leg.membersByLevel[1]).toBeCloseTo(2, 5);
+      expect(leg.shoppersByLevel[0]).toBeCloseTo(1.5, 5);
+      expect(leg.shoppersByLevel[1]).toBeCloseTo(3, 5);
+    }
+
+    for (const leg of newLegs) {
+      expect(leg.membersByLevel[0]).toBeCloseTo(1, 5);
+      expect(leg.membersByLevel[1] ?? 0).toBeCloseTo(0, 5);
+      expect(leg.shoppersByLevel[0]).toBeCloseTo(1.5, 5);
+      expect(leg.shoppersByLevel[1] ?? 0).toBeCloseTo(0, 5);
+    }
+  });
+
+  it('haelt jedes Bein bei Fluktuation seine Wurzel (Level 0) ueber alle Jahre', () => {
+    // attrition=0.3 sollte tiefere Ebenen reduzieren, aber jede Bein-Wurzel
+    // bleibt erhalten (sonst loesen sich Beine auf).
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 2,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0.3,
+      },
+      60,
+    );
+
+    for (const snap of [snapshots[23], snapshots[47], snapshots[59]]) {
+      for (const leg of snap.legs) {
+        expect(leg.membersByLevel[0]).toBeCloseTo(1, 5);
+      }
+    }
+  });
+
+  it('reicht asymmetrische Beine durch runSimulation an MonthResult.legs durch (Default-Strategie)', () => {
+    const result = runSimulation(
+      lifeplusProduct,
+      {
+        ...lifeplusProduct.simulator.defaultInputs,
+        membersPerYear: 2,
+        shoppersPerYear: 3,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      24,
+    );
+
+    const y2 = result.yearEnds[1];
+    expect(y2.legs.length).toBe(4);
+
+    const oldLegNodes =
+      (y2.legs[0].membersByLevel[0] ?? 0) +
+      (y2.legs[0].membersByLevel[1] ?? 0) +
+      (y2.legs[0].shoppersByLevel[0] ?? 0) +
+      (y2.legs[0].shoppersByLevel[1] ?? 0);
+    const newLegNodes =
+      (y2.legs[3].membersByLevel[0] ?? 0) +
+      (y2.legs[3].membersByLevel[1] ?? 0) +
+      (y2.legs[3].shoppersByLevel[0] ?? 0) +
+      (y2.legs[3].shoppersByLevel[1] ?? 0);
+
+    expect(oldLegNodes).toBeGreaterThan(newLegNodes);
+  });
+
   it('weist Member-Fluktuation am Jahresanfang aus', () => {
     const snapshots = simulateNetwork(
       {
@@ -146,6 +282,22 @@ describe('Netzwerk-Wachstum', () => {
     expect(totalNetworkSize(withAttrition[119])).toBeLessThan(
       totalNetworkSize(noAttrition[119]),
     );
+  });
+
+  it('wendet Shopper-Fluktuation auf bestehende Shopper an', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 1,
+        shoppersPerYear: 10,
+        duplicationRate: 0,
+        attritionRate: 0.5,
+      },
+      24,
+    );
+
+    expect(snapshots[11].shoppersByLevel[0]).toBeCloseTo(10, 5);
+    expect(snapshots[12].shopperAttrition).toBeCloseTo(5, 5);
+    expect(snapshots[23].shoppersByLevel[0]).toBeCloseTo(15, 5);
   });
 });
 
@@ -236,7 +388,7 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
   });
 });
 
-describe('Symmetrische Beine im NetworkSnapshot', () => {
+describe('Beine im NetworkSnapshot', () => {
   it('liefert genau directLegs Beine', () => {
     const snapshots = simulateNetwork(
       {
@@ -253,11 +405,11 @@ describe('Symmetrische Beine im NetworkSnapshot', () => {
     );
   });
 
-  it('verteilt membersByLevel symmetrisch auf die Beine', () => {
+  it('summiert Beine zu membersByLevel und bewahrt das Geburtsjahr der Beine', () => {
     const snapshots = simulateNetwork(
       {
-        membersPerYear: 4,
-        shoppersPerYear: 0,
+        membersPerYear: 2,
+        shoppersPerYear: 3,
         duplicationRate: 1,
         attritionRate: 0,
       },
@@ -276,15 +428,58 @@ describe('Symmetrische Beine im NetworkSnapshot', () => {
       expect(sumOfLegs).toBeCloseTo(snap.membersByLevel[level], 4);
     }
 
-    const first = snap.legs[0];
-    for (const leg of snap.legs.slice(1)) {
-      for (let level = 0; level < first.membersByLevel.length; level++) {
-        expect(leg.membersByLevel[level]).toBeCloseTo(
-          first.membersByLevel[level],
-          5,
-        );
-      }
-    }
+    expect(snap.legs[0].membersByLevel).toEqual([1, 4, 4]);
+    expect(snap.legs[1].membersByLevel).toEqual([1, 4, 4]);
+    expect(snap.legs[2].membersByLevel).toEqual([1, 2]);
+    expect(snap.legs[3].membersByLevel).toEqual([1, 2]);
+    expect(snap.legs[4].membersByLevel).toEqual([1]);
+    expect(snap.legs[5].membersByLevel).toEqual([1]);
+  });
+
+  it('legt neue Beine im Jahr frisch ohne rueckwirkende Downline an', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 2,
+        shoppersPerYear: 3,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      24,
+    );
+
+    expect(snapshots[23].legs[0]).toMatchObject({
+      membersByLevel: [1, 2],
+      shoppersByLevel: [1.5, 3],
+    });
+    expect(snapshots[23].legs[1]).toMatchObject({
+      membersByLevel: [1, 2],
+      shoppersByLevel: [1.5, 3],
+    });
+    expect(snapshots[23].legs[2]).toMatchObject({
+      membersByLevel: [1],
+      shoppersByLevel: [1.5],
+    });
+    expect(snapshots[23].legs[3]).toMatchObject({
+      membersByLevel: [1],
+      shoppersByLevel: [1.5],
+    });
+  });
+
+  it('bildet auch fractional Members/Jahr als Teil-Bein ab', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 0.25,
+        shoppersPerYear: 1,
+        duplicationRate: 0,
+        attritionRate: 0,
+      },
+      12,
+    );
+
+    expect(snapshots[11].directLegs).toBeCloseTo(0.25, 5);
+    expect(snapshots[11].membersByLevel[0]).toBeCloseTo(0.25, 5);
+    expect(snapshots[11].legs[0].membersByLevel[0]).toBeCloseTo(0.25, 5);
+    expect(snapshots[11].legs[0].shoppersByLevel[0]).toBeCloseTo(1, 5);
   });
 
   it('liefert leere legs-Liste bei membersPerYear = 0', () => {
@@ -367,6 +562,41 @@ describe('Rangbestimmung', () => {
 
     expect(r.name).toBe('3*Diamond');
     expect(r.phase3Rate).toBe(0.08);
+  });
+
+  it('bewertet Phase-3-Beine aus echten legs statt aus Gleichverteilung', () => {
+    const comp = calculateMonthlyCompensation(
+      {
+        membersByLevel: [12, 144],
+        shoppersByLevel: [],
+        directLegs: 12,
+        legs: [
+          {
+            id: 'leg-1',
+            membersByLevel: [1, 144],
+            shoppersByLevel: [],
+          },
+          ...Array.from({ length: 11 }, (_, index) => ({
+            id: `leg-${index + 2}`,
+            membersByLevel: [1],
+            shoppersByLevel: [],
+          })),
+        ],
+        memberGrowth: 0,
+        memberAttrition: 0,
+        shopperGrowth: 0,
+        shopperAttrition: 0,
+      },
+      {
+        personalMonthlyIP: 150,
+        memberMonthlyIP: 1250,
+        shopperMonthlyIP: 0,
+      },
+    );
+
+    expect(comp.rank.name).toBe('Diamond');
+    expect(comp.rank.phase3Rate).toBe(0);
+    expect(comp.phase3IP).toBe(0);
   });
 });
 

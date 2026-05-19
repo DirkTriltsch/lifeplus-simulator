@@ -55,7 +55,7 @@ export function createMomentumStrategy(
       lastLegCount = 0;
       lastYear = 0;
     },
-    splitLegs({ membersByLevel, shoppersByLevel, directLegs, year }): Leg[] {
+    splitLegs({ membersByLevel, shoppersByLevel, directLegs, year, legs }): Leg[] {
       const legCount = Math.round(directLegs);
       if (legCount <= 0) return [];
 
@@ -79,6 +79,10 @@ export function createMomentumStrategy(
       }
 
       const wurzelShare = 1 / legCount;
+
+      if (legs) {
+        return redistributeExistingLegs(legs, lastWeights);
+      }
 
       return Array.from({ length: legCount }, (_, i) => ({
         id: `leg-${i + 1}`,
@@ -118,4 +122,41 @@ export function computeMomentumWeights(
 
   const sum = scores.reduce((a, b) => a + b, 0) || 1;
   return scores.map((s) => s / sum);
+}
+
+function redistributeExistingLegs(
+  legs: ReadonlyArray<Leg>,
+  weights: number[],
+): Leg[] {
+  const next = legs.map((leg) => ({
+    id: leg.id,
+    membersByLevel: [...leg.membersByLevel],
+    shoppersByLevel: [...leg.shoppersByLevel],
+  }));
+
+  redistributeLevels(next, 'membersByLevel', weights);
+  redistributeLevels(next, 'shoppersByLevel', weights);
+
+  return next;
+}
+
+function redistributeLevels(
+  legs: Leg[],
+  key: 'membersByLevel' | 'shoppersByLevel',
+  weights: number[],
+): void {
+  const maxLevels = Math.max(0, ...legs.map((leg) => leg[key].length));
+  for (let level = 1; level < maxLevels; level++) {
+    const candidates = legs
+      .map((leg, index) => ({ leg, index, value: leg[key][level] ?? 0 }))
+      .filter((entry) => entry.value > 0);
+    const total = candidates.reduce((sum, entry) => sum + entry.value, 0);
+    const weightTotal =
+      candidates.reduce((sum, entry) => sum + (weights[entry.index] ?? 0), 0) ||
+      1;
+
+    for (const { leg, index } of candidates) {
+      leg[key][level] = total * ((weights[index] ?? 0) / weightTotal);
+    }
+  }
 }

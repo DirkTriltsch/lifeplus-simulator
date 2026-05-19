@@ -40,6 +40,9 @@ export default defineConfig(async ({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg'],
+        devOptions: {
+          enabled: false,
+        },
         manifest: {
           name: `${product} simulator`,
           short_name: `${product} sim`,

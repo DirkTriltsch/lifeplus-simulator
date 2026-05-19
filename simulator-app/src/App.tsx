@@ -81,11 +81,14 @@ export default function App() {
   );
 
   const growthModulator = useMemo(
-    () =>
-      createGrowthModulator({
-        strategy: realityStrategy === 'standard' ? 'none' : realityStrategy,
+    () => {
+      if (realityStrategy === 'standard') return undefined;
+
+      return createGrowthModulator({
+        strategy: realityStrategy,
         seed: 42,
-      }),
+      });
+    },
     [realityStrategy],
   );
 

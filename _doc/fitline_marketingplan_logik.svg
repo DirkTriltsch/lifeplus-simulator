@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="980" viewBox="0 0 900 980" font-family="Inter, system-ui, sans-serif">
+  <title>FitLine / PM-International Vergütungsplan — Logik</title>
+  <desc>Übersicht der Karrierestufen, sieben Bonusarten, Tiefenbonus-Beispiel und Differential-Mechanik des PM-International-Vergütungsplans.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#0F172A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .t { font-size: 14px; fill: #0F172A; }
+      .ts { font-size: 12px; fill: #475569; }
+      .th { font-size: 14px; font-weight: 500; fill: #0F172A; }
+      .h1 { font-size: 18px; font-weight: 500; fill: #0F172A; }
+      .h2 { font-size: 15px; font-weight: 500; fill: #0F172A; }
+      .num { font-size: 11px; fill: #94A3B8; font-family: 'JetBrains Mono', monospace; }
+      .arr { stroke: #64748B; stroke-width: 1; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="980" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text class="h1" x="40" y="40">FitLine / PM-International — Vergütungsplan-Logik</text>
+  <text class="ts" x="40" y="60">Karrierepfad, sieben Einkommensströme, Tiefenbonus-Beispiel und Differential-Mechanik</text>
+
+  <!-- ============================================ -->
+  <!-- 1. KARRIEREPFAD -->
+  <!-- ============================================ -->
+  <text class="h2" x="40" y="100">1. Karrierepfad — Eigenleistung in Punkten (1 P ≈ 0,51 €)</text>
+
+  <!-- Karriere-Boxen: vertikal gestaffelt in zwei Reihen, damit Untertitel passen -->
+  <!-- Reihe 1: TP, Manager, Sales Mgr, Marketing Mgr -->
+  <g>
+    <rect x="40" y="115" width="195" height="50" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+    <text class="th" x="137" y="138" text-anchor="middle">Teampartner</text>
+    <text class="ts" x="137" y="155" text-anchor="middle">0 P · Einstieg</text>
+  </g>
+  <line x1="237" y1="140" x2="253" y2="140" class="arr" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="255" y="115" width="195" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="352" y="138" text-anchor="middle">Manager</text>
+    <text class="ts" x="352" y="155" text-anchor="middle">600 P · Retail 30 %</text>
+  </g>
+  <line x1="452" y1="140" x2="468" y2="140" class="arr" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="470" y="115" width="195" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="567" y="138" text-anchor="middle">Sales Manager</text>
+    <text class="ts" x="567" y="155" text-anchor="middle">2 500 P · 1× M · MB 2 %</text>
+  </g>
+  <line x1="667" y1="140" x2="683" y2="140" class="arr" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="685" y="115" width="195" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="782" y="138" text-anchor="middle">Marketing Manager</text>
+    <text class="ts" x="782" y="155" text-anchor="middle">5 000 P · 2× M · MB 5 %</text>
+  </g>
+
+  <!-- Konnektor von MM (Reihe 1) nach IMM (Reihe 2): senkrecht nach unten, dann links -->
+  <path d="M 782 165 L 782 178 L 137 178 L 137 188" class="arr" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Reihe 2: IMM, VP→CL -->
+  <g>
+    <rect x="40" y="190" width="195" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+    <text class="th" x="137" y="213" text-anchor="middle">IMM</text>
+    <text class="ts" x="137" y="230" text-anchor="middle">10 000 P · 3× M · MB 9 %</text>
+  </g>
+  <line x1="237" y1="215" x2="253" y2="215" class="arr" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="255" y="190" width="625" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+    <text class="th" x="567" y="213" text-anchor="middle">VP → EVP → P → SP → GP → PP → CL  (Top-Management)</text>
+    <text class="ts" x="567" y="230" text-anchor="middle">25 000 P bis 1 000 000 P · MB 12 – 21 %  ·  ab IMM: Auto, Pension, Reise, Training</text>
+  </g>
+
+  <text class="ts" x="40" y="265">Höhere Stufen verlangen qualifizierte Vorderleute in der Erstlinie (≥ 3 SM, ≥ 3 MM, ≥ 3 IMM, ≥ 3 VP …)</text>
+  <text class="ts" x="40" y="280">Die 4-Bein-Varianten (12,5 %, 15,5 %, 18,5 %, 19,5 %) lösen jeweils einen höheren MB-Satz aus.</text>
+
+  <!-- ============================================ -->
+  <!-- 2. SIEBEN EINKOMMENSARTEN -->
+  <!-- ============================================ -->
+  <text class="h2" x="40" y="320">2. Die sieben Einkommensströme — was wann gezahlt wird</text>
+
+  <!-- Row 1 -->
+  <g>
+    <rect x="40" y="335" width="270" height="62" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+    <text class="th" x="55" y="357">1 · Einzelhandels-Verdienst (EV)</text>
+    <text class="ts" x="55" y="375">EK → VK-Marge · 20 – 40 %</text>
+    <text class="ts" x="55" y="391">Basis: directRetailCustomerPoints</text>
+  </g>
+
+  <g>
+    <rect x="320" y="335" width="270" height="62" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+    <text class="th" x="335" y="357">2 · Kunden Direktprogramm (KDP)</text>
+    <text class="ts" x="335" y="375">Direktverkauf via PM · 15 – 25 %</text>
+    <text class="ts" x="335" y="391">Basis: directKdpCustomerPoints</text>
+  </g>
+
+  <g>
+    <rect x="600" y="335" width="260" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+    <text class="th" x="615" y="357">3 · TOP-Verkäufer-Bonus (TVB)</text>
+    <text class="ts" x="615" y="375">≥ 2 500 P: 3 %  /  ≥ 5 000 P: 5 %</text>
+    <text class="ts" x="615" y="391">Basis: personalSalesPoints</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g>
+    <rect x="40" y="407" width="270" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+    <text class="th" x="55" y="429">4 · Erstlinien-Bonus (EB)</text>
+    <text class="ts" x="55" y="447">10 % auf direkte TPs · ab eigenem 100-P-Abo</text>
+    <text class="ts" x="55" y="463">Basis: directTeamPartnerBusinessPoints</text>
+  </g>
+
+  <g>
+    <rect x="320" y="407" width="270" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+    <text class="th" x="335" y="429">5 · Einarbeitungs-Bonus (EAB)</text>
+    <text class="ts" x="335" y="447">50 € pauschal · pro Schnellstarter</text>
+    <text class="ts" x="335" y="463">Einzige Bonusart ohne pointToBonusEUR</text>
+  </g>
+
+  <g>
+    <rect x="600" y="407" width="260" height="62" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+    <text class="th" x="615" y="429">6 · Tiefen-Bonus (TB)</text>
+    <text class="ts" x="615" y="447">5 / 3 / 3 / 3 / 5 / 5 % · Ebenen 1 – 6</text>
+    <text class="ts" x="615" y="463">Basis: Volumen pro Ebene</text>
+  </g>
+
+  <!-- Row 3 — MB als breite Karte -->
+  <g>
+    <rect x="40" y="479" width="820" height="62" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+    <text class="th" x="55" y="501">7 · Management-Bonus (MB) — differenziell</text>
+    <text class="ts" x="55" y="519">2 – 21 % nach Rang. = (eigene Stufenrate) − (bereits in der Substruktur ausgezahlte Boni)</text>
+    <text class="ts" x="55" y="535">Bei gleicher oder höherer Stufe in der Linie entfällt der MB-Anteil (Differential = 0)</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- 3. TB-BEISPIEL: IMM PRO EBENE -->
+  <!-- ============================================ -->
+  <text class="h2" x="40" y="580">3. Beispiel — IMM-Auszahlung pro Ebene (TB-Sockel + MB-Differential)</text>
+
+  <g>
+    <rect x="40" y="595" width="110" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="95" y="615" text-anchor="middle">Ebene 1</text>
+    <text class="ts" x="95" y="634" text-anchor="middle">5 % + 9 % = 14 %</text>
+  </g>
+
+  <g>
+    <rect x="160" y="595" width="110" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="215" y="615" text-anchor="middle">Ebene 2</text>
+    <text class="ts" x="215" y="634" text-anchor="middle">3 % + 9 % = 12 %</text>
+  </g>
+
+  <g>
+    <rect x="280" y="595" width="110" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="335" y="615" text-anchor="middle">Ebenen 3 – 4</text>
+    <text class="ts" x="335" y="634" text-anchor="middle">je 12 %</text>
+  </g>
+
+  <g>
+    <rect x="400" y="595" width="110" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="455" y="615" text-anchor="middle">Ebene 5</text>
+    <text class="ts" x="455" y="634" text-anchor="middle">14 %</text>
+  </g>
+
+  <g>
+    <rect x="520" y="595" width="110" height="50" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="575" y="615" text-anchor="middle">Ebene 6</text>
+    <text class="ts" x="575" y="634" text-anchor="middle">max. 9 %</text>
+  </g>
+
+  <g>
+    <rect x="640" y="595" width="220" height="50" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+    <text class="th" x="750" y="615" text-anchor="middle">∞ weitere Ebenen</text>
+    <text class="ts" x="750" y="634" text-anchor="middle">max. 9 % · nur via qualif. Generationen</text>
+  </g>
+
+  <text class="ts" x="40" y="665">Trifft auf einer Ebene ein gleichrangiger IMM, entfällt der MB-Anteil — nur TB-Sockel zahlt.</text>
+
+  <!-- ============================================ -->
+  <!-- 4. DIFFERENTIAL-MECHANIK -->
+  <!-- ============================================ -->
+  <text class="h2" x="40" y="705">4. Differential-Mechanik — die Kern-Berechnung</text>
+
+  <g>
+    <rect x="40" y="720" width="820" height="180" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+    <text class="th" x="60" y="746">1. Berechne pro Ebene den Tiefenbonus-Sockel (3 % oder 5 % × Punktevolumen).</text>
+    <text class="th" x="60" y="768">2. Berechne den Management-Anteil = (eigene Stufenrate − Stufenrate der Person auf dieser Ebene).</text>
+    <text class="th" x="60" y="790">3. Summiere: Auszahlung_Ebene = (TB-Sockel + MB-Differential) × Punkte × pointToBonusEUR.</text>
+    <text class="th" x="60" y="812">4. Bei gleichrangiger / höherer Person auf Ebene → kein MB-Anteil. Differential ist 0.</text>
+    <text class="th" x="60" y="834">5. Komprimierung: Inaktive TPs (kein 100-P-Abo) werden übersprungen, untere Ebenen rücken nach.</text>
+    <text class="th" x="60" y="856">6. Ab Ebene 6+ läuft MB nur noch über qualifizierte Manager-Generationen (∞ Tiefe, gedeckelt).</text>
+    <text class="ts" x="60" y="880">Punktwerte: 1 P ≈ 0,51 € laut PDF — pointToRetailEUR und pointToBonusEUR werden im Simulator getrennt geführt.</text>
+  </g>
+
+  <!-- Bottom hint -->
+  <text class="ts" x="40" y="935">Diagramm: vereinfachte Übersicht. Vollständige Logik im Review-Dokument fitline_business_plan_review.md.</text>
+  <text class="num" x="40" y="955">Quelle: MarketingplanDE_100918 / PM-International AG · Stand 2018</text>
+</svg>

@@ -3,7 +3,15 @@ import type { GrowthModulator, Leg } from '@mlm/simulator-core';
 export function createNoneStrategy(): GrowthModulator {
   return {
     id: 'none',
-    splitLegs({ membersByLevel, shoppersByLevel, directLegs }): Leg[] {
+    splitLegs({ membersByLevel, shoppersByLevel, directLegs, legs }): Leg[] {
+      if (legs) {
+        return legs.map((leg) => ({
+          id: leg.id,
+          membersByLevel: [...leg.membersByLevel],
+          shoppersByLevel: [...leg.shoppersByLevel],
+        }));
+      }
+
       const legCount = Math.round(directLegs);
       if (legCount <= 0) return [];
       const share = 1 / legCount;

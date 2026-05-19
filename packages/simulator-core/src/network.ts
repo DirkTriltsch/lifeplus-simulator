@@ -22,9 +22,10 @@ const DEFAULT_MAX_DIRECT_MEMBERS_PER_MEMBER = 29;
 /**
  * Ein einzelnes Bein des Users, d. h. ein direkter Member plus seine vollstaendige Downline.
  *
- * In der Standard-Strategie sind alle Beine identisch (symmetrische Verteilung), und
- * dieses Array ist eine 1:1-Aufteilung von `membersByLevel` / `shoppersByLevel`.
- * Realistic-Growth-Strategien koennen die Beine asymmetrisch befuellen.
+ * In der Standard-Strategie bleiben Beine deterministisch und behalten ihr
+ * Geburtsjahr: frische Beine starten ohne rueckwirkende Downline, alte Beine
+ * koennen dadurch voller sein. Realistic-Growth-Strategien koennen diese echte
+ * Bein-Struktur zusaetzlich asymmetrisch modulieren.
  */
 export interface Leg {
   id: string;
@@ -39,18 +40,12 @@ export interface NetworkSnapshot {
   shoppersByLevel: number[];
   /** Direkte Members des Users = Beine */
   directLegs: number;
-  /** Beine des Users mit Sub-Baum. Bei Standard-Strategie symmetrisch verteilt. */
+  /** Beine des Users mit Sub-Baum. Frische Beine starten ohne rueckwirkende Downline. */
   legs: Leg[];
   memberGrowth: number;
   memberAttrition: number;
   shopperGrowth: number;
   shopperAttrition: number;
-}
-
-interface ShopperCohort {
-  level: number;
-  count: number;
-  ageMonths: number;
 }
 
 export interface SimulateNetworkOptions {
@@ -68,11 +63,9 @@ export function simulateNetwork(
     1,
     inputs.maxDirectMembersPerMember ?? DEFAULT_MAX_DIRECT_MEMBERS_PER_MEMBER,
   );
-  const monthlyShopperAttritionRate = Math.max(0, attritionRate / 12);
   const modulator = options.growthModulator;
 
-  let membersByLevel: number[] = [];
-  let shopperCohorts: ShopperCohort[] = [];
+  let legs: Leg[] = [];
   const snapshots: NetworkSnapshot[] = [];
   modulator?.reset?.();
 
@@ -88,104 +81,94 @@ export function simulateNetwork(
       modulator?.beforeYear?.(year);
     }
 
-    shopperCohorts = shopperCohorts.map((cohort) => ({
-      ...cohort,
-      ageMonths: cohort.ageMonths + 1,
-    }));
-
-    shopperCohorts = shopperCohorts
-      .map((cohort) => {
-        if (cohort.ageMonths <= 13 || monthlyShopperAttritionRate <= 0) {
-          return cohort;
-        }
-
-        const leaving = cohort.count * monthlyShopperAttritionRate;
-        shopperAttrition += leaving;
-
-        return {
-          ...cohort,
-          count: Math.max(0, cohort.count - leaving),
-        };
-      })
-      .filter((cohort) => cohort.count > 0);
-
     if (isYearStart) {
-      const hadMembersBeforeRecruiting = sum(membersByLevel) > 0;
+      const shopperAttritionResult = applyLegShopperAttrition(legs, attritionRate);
+      legs = shopperAttritionResult.legs;
+      shopperAttrition += shopperAttritionResult.shopperAttrition;
 
-      const currentDirect = membersByLevel[0] ?? 0;
+      // Snapshot der Members VOR den direct-adds dieses Jahres. Nur diese werben jetzt;
+      // frisch dazugekommene Direkt-Members werben erst ab dem Folgejahr.
+      const sourceLegs = cloneLegs(legs);
+      const membersBeforeGrowth = aggregateLegLevels(legs, 'membersByLevel');
+
+      const currentDirect = sum(legs.map((leg) => leg.membersByLevel[0] ?? 0));
       const directCapacity = Math.max(0, maxDirect - currentDirect);
       const directMembers = Math.min(membersPerYear, directCapacity);
       const directShoppers = shoppersPerYear;
 
+      const newLegs = createDirectLegs(legs.length, directMembers);
       if (directMembers > 0) {
-        addAtLevel(membersByLevel, 0, directMembers);
+        legs.push(...newLegs);
         memberGrowth += directMembers;
       }
 
       if (directShoppers > 0) {
-        shopperCohorts.push({
-          level: 0,
-          count: directShoppers,
-          ageMonths: 0,
-        });
+        distributeAtLevel(
+          directMembers > 0 ? newLegs : legs,
+          'shoppersByLevel',
+          0,
+          directShoppers,
+        );
         shopperGrowth += directShoppers;
       }
 
-      const sourceMembers = hadMembersBeforeRecruiting
-        ? [...membersByLevel]
-        : membersByLevel.map(() => 0);
+      for (let legIndex = 0; legIndex < sourceLegs.length; legIndex++) {
+        const sourceLeg = sourceLegs[legIndex];
+        const targetLeg = legs[legIndex];
+        if (!targetLeg) continue;
 
-      for (let level = 0; level < sourceMembers.length; level++) {
-        const sourceCount = sourceMembers[level];
-        if (sourceCount <= 0) continue;
+        for (let level = 0; level < sourceLeg.membersByLevel.length; level++) {
+          const sourceCount = sourceLeg.membersByLevel[level] ?? 0;
+          if (sourceCount <= 0) continue;
 
-        const existingChildren = membersByLevel[level + 1] ?? 0;
-        const existingPerSource = existingChildren / sourceCount;
-        const availablePerSource = Math.max(0, maxDirect - existingPerSource);
-        const capacity = sourceCount * availablePerSource;
+          const existingChildren = membersBeforeGrowth[level + 1] ?? 0;
+          const totalSourcesAtLevel = membersBeforeGrowth[level] ?? 0;
+          const existingPerSource =
+            totalSourcesAtLevel > 0 ? existingChildren / totalSourcesAtLevel : 0;
+          const availablePerSource = Math.max(0, maxDirect - existingPerSource);
+          const capacity = sourceCount * availablePerSource;
 
-        const rawGrowth = sourceCount * membersPerYear * duplicationRate;
-        const newMembers = Math.min(rawGrowth, capacity);
-        const newShoppers = sourceCount * shoppersPerYear * duplicationRate;
+          const rawGrowth = sourceCount * membersPerYear * duplicationRate;
+          const newMembers = Math.min(rawGrowth, capacity);
+          const newShoppers = sourceCount * shoppersPerYear * duplicationRate;
 
-        if (newMembers > 0) {
-          addAtLevel(membersByLevel, level + 1, newMembers);
-          memberGrowth += newMembers;
-        }
+          if (newMembers > 0) {
+            addAtLevel(targetLeg.membersByLevel, level + 1, newMembers);
+            memberGrowth += newMembers;
+          }
 
-        if (newShoppers > 0) {
-          shopperCohorts.push({
-            level: level + 1,
-            count: newShoppers,
-            ageMonths: 0,
-          });
-          shopperGrowth += newShoppers;
+          if (newShoppers > 0) {
+            addAtLevel(targetLeg.shoppersByLevel, level + 1, newShoppers);
+            shopperGrowth += newShoppers;
+          }
         }
       }
 
-      const attrition = applyMemberAttrition(membersByLevel, attritionRate);
-      membersByLevel = attrition.membersByLevel;
+      const attrition = applyLegMemberAttrition(legs, attritionRate);
+      legs = attrition.legs;
       memberAttrition += attrition.memberAttrition;
     }
 
-    const shoppersByLevel = cohortsToLevels(shopperCohorts);
+    const membersByLevel = aggregateLegLevels(legs, 'membersByLevel');
+    const shoppersByLevel = aggregateLegLevels(legs, 'shoppersByLevel');
     const directLegs = membersByLevel[0] ?? 0;
-    const legs = modulator
+    const snapshotLegs = modulator
       ? modulator.splitLegs({
           year,
           monthIndex: month,
           membersByLevel,
           shoppersByLevel,
           directLegs,
+          legs: cloneLegs(legs),
           inputs,
         })
-      : buildSymmetricLegs(membersByLevel, shoppersByLevel, directLegs);
+      : cloneLegs(legs);
 
     snapshots.push({
       membersByLevel: [...membersByLevel],
       shoppersByLevel,
       directLegs,
-      legs,
+      legs: snapshotLegs,
       memberGrowth,
       memberAttrition,
       shopperGrowth,
@@ -193,27 +176,11 @@ export function simulateNetwork(
     });
 
     if (month % 12 === 11) {
-      modulator?.afterYear?.(year, legs);
+      modulator?.afterYear?.(year, snapshotLegs);
     }
   }
 
   return snapshots;
-}
-
-function buildSymmetricLegs(
-  membersByLevel: number[],
-  shoppersByLevel: number[],
-  directLegs: number,
-): Leg[] {
-  const legCount = Math.round(directLegs);
-  if (legCount <= 0) return [];
-  const share = 1 / legCount;
-
-  return Array.from({ length: legCount }, (_, i) => ({
-    id: `leg-${i + 1}`,
-    membersByLevel: membersByLevel.map((v) => v * share),
-    shoppersByLevel: shoppersByLevel.map((v) => v * share),
-  }));
 }
 
 export function totalNetworkSize(snapshot: NetworkSnapshot): number {
@@ -228,34 +195,84 @@ export function totalShoppers(snapshot: NetworkSnapshot): number {
   return sum(snapshot.shoppersByLevel);
 }
 
-function applyMemberAttrition(
-  membersByLevel: number[],
+/**
+ * Wendet Fluktuation pro Bein an. Level 0 (Wurzel-Member) ist absichtlich geschuetzt:
+ * jeder Bein-Wurzel-Member identifiziert das Bein selbst und darf nicht "austreten",
+ * sonst loest sich das Bein auf und verliert seine Identitaet ueber die Jahre.
+ * Fluktuation wirkt nur auf tiefere Ebenen; Vakanzen werden durch Children kompensiert
+ * (Compression), aber niemals ueber den Cap hinaus.
+ */
+function applyLegMemberAttrition(
+  legs: Leg[],
   attritionRate: number,
-): { membersByLevel: number[]; memberAttrition: number } {
+): { legs: Leg[]; memberAttrition: number } {
   if (attritionRate <= 0) {
-    return { membersByLevel, memberAttrition: 0 };
+    return { legs, memberAttrition: 0 };
   }
 
-  const leavers = membersByLevel.map((count) => count * attritionRate);
-  const next = membersByLevel.map((count, level) =>
-    Math.max(0, count - leavers[level]),
-  );
-  let memberAttrition = sum(leavers);
+  let memberAttrition = 0;
+  const nextLegs = legs.map((leg) => {
+    const leavers = leg.membersByLevel.map((count, level) =>
+      level === 0 ? 0 : count * attritionRate,
+    );
+    const membersByLevel = leg.membersByLevel.map((count, level) =>
+      Math.max(0, count - leavers[level]),
+    );
+    memberAttrition += sum(leavers);
 
-  for (let level = 0; level < membersByLevel.length; level++) {
-    const childLevel = level + 1;
-    const vacancy = leavers[level] ?? 0;
-    const childRemaining = next[childLevel] ?? 0;
-    const promotedFromChildLevel = Math.min(vacancy, childRemaining);
-    if (promotedFromChildLevel <= 0) continue;
+    for (let level = 1; level < leg.membersByLevel.length; level++) {
+      const childLevel = level + 1;
+      const vacancy = leavers[level] ?? 0;
+      const childRemaining = membersByLevel[childLevel] ?? 0;
+      const promotedFromChildLevel = Math.min(vacancy, childRemaining);
+      if (promotedFromChildLevel <= 0) continue;
 
-    next[childLevel] -= promotedFromChildLevel;
-    next[level] += promotedFromChildLevel;
-  }
+      membersByLevel[childLevel] -= promotedFromChildLevel;
+      membersByLevel[level] += promotedFromChildLevel;
+    }
+
+    return {
+      ...leg,
+      membersByLevel: trimLevels(membersByLevel),
+    };
+  });
 
   return {
-    membersByLevel: trimLevels(next.map((value) => Math.max(0, value))),
+    legs: nextLegs,
     memberAttrition,
+  };
+}
+
+/**
+ * Shopper haben keine Downline-Identitaet und keine Compression. Fluktuation
+ * wirkt deshalb direkt auf bestehende Shopper-Bestaende pro Bein und Ebene.
+ * Neue Shopper des aktuellen Jahres werden erst nach diesem Schritt angelegt.
+ */
+function applyLegShopperAttrition(
+  legs: Leg[],
+  attritionRate: number,
+): { legs: Leg[]; shopperAttrition: number } {
+  if (attritionRate <= 0) {
+    return { legs, shopperAttrition: 0 };
+  }
+
+  let shopperAttrition = 0;
+  const nextLegs = legs.map((leg) => {
+    const shoppersByLevel = leg.shoppersByLevel.map((count) => {
+      const leavers = count * attritionRate;
+      shopperAttrition += leavers;
+      return Math.max(0, count - leavers);
+    });
+
+    return {
+      ...leg,
+      shoppersByLevel: trimLevels(shoppersByLevel),
+    };
+  });
+
+  return {
+    legs: nextLegs,
+    shopperAttrition,
   };
 }
 
@@ -265,14 +282,6 @@ function addAtLevel(levels: number[], level: number, count: number): void {
     levels.push(0);
   }
   levels[level] += count;
-}
-
-function cohortsToLevels(cohorts: ShopperCohort[]): number[] {
-  const levels: number[] = [];
-  for (const cohort of cohorts) {
-    addAtLevel(levels, cohort.level, cohort.count);
-  }
-  return trimLevels(levels);
 }
 
 function trimLevels(levels: number[]): number[] {
@@ -285,4 +294,61 @@ function trimLevels(levels: number[]): number[] {
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
+}
+
+function createDirectLegs(existingLegCount: number, count: number): Leg[] {
+  const fullLegs = Math.floor(count);
+  const remainder = count - fullLegs;
+  const legs = Array.from({ length: fullLegs }, (_, index) => ({
+    id: `leg-${existingLegCount + index + 1}`,
+    membersByLevel: [1],
+    shoppersByLevel: [],
+  }));
+
+  if (remainder > 1e-9) {
+    legs.push({
+      id: `leg-${existingLegCount + fullLegs + 1}`,
+      membersByLevel: [remainder],
+      shoppersByLevel: [],
+    });
+  }
+
+  return legs;
+}
+
+function cloneLegs(legs: Leg[]): Leg[] {
+  return legs.map((leg) => ({
+    id: leg.id,
+    membersByLevel: [...leg.membersByLevel],
+    shoppersByLevel: [...leg.shoppersByLevel],
+  }));
+}
+
+function distributeAtLevel(
+  legs: Leg[],
+  key: 'membersByLevel' | 'shoppersByLevel',
+  level: number,
+  count: number,
+): void {
+  if (legs.length <= 0 || count <= 0) return;
+  const rootTotal = sum(legs.map((leg) => leg.membersByLevel[0] ?? 0));
+  const fallbackShare = count / legs.length;
+  for (const leg of legs) {
+    const rootShare =
+      rootTotal > 0 ? ((leg.membersByLevel[0] ?? 0) / rootTotal) * count : fallbackShare;
+    addAtLevel(leg[key], level, rootShare);
+  }
+}
+
+function aggregateLegLevels(
+  legs: Leg[],
+  key: 'membersByLevel' | 'shoppersByLevel',
+): number[] {
+  const levels: number[] = [];
+  for (const leg of legs) {
+    for (let level = 0; level < leg[key].length; level++) {
+      addAtLevel(levels, level, leg[key][level] ?? 0);
+    }
+  }
+  return trimLevels(levels);
 }

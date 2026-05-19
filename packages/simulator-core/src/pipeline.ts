@@ -1,10 +1,11 @@
 /**
  * Pipeline-Hooks fuer Realistic-Growth-Strategien.
  *
- * Der Kern bleibt fuer die Aggregat-Mathematik verantwortlich (`membersByLevel`,
- * `shoppersByLevel`, Cap-Logik, Fluktuation). Strategien steuern, wie diese
- * Aggregate auf einzelne `Leg`s verteilt werden. Bei der Standardstrategie
- * (`noneStrategy`) ist die Verteilung exakt symmetrisch.
+ * Der Kern bleibt fuer die Netzwerk-Mathematik verantwortlich (`membersByLevel`,
+ * `shoppersByLevel`, Cap-Logik, Fluktuation) und fuehrt echte `Leg`s mit
+ * Geburtsjahr-Logik. Strategien bekommen diese Bein-Struktur und koennen sie
+ * fuer realistischere Schwankungen modulieren, ohne die Aggregat-Summen zu
+ * ersetzen.
  */
 
 import type { Leg, NetworkInputs } from './network';
@@ -15,6 +16,7 @@ export interface LegSplitContext {
   membersByLevel: number[];
   shoppersByLevel: number[];
   directLegs: number;
+  legs?: ReadonlyArray<Leg>;
   inputs: NetworkInputs;
 }
 

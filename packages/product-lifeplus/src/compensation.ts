@@ -160,6 +160,10 @@ function estimateQualifiedLegStructure(
     return { bronzeLegs: 0, diamondLegs: 0 };
   }
 
+  if (snapshot.legs.length > 0) {
+    return estimateQualifiedLegStructureFromLegs(snapshot, inputs);
+  }
+
   const downlineMembers = snapshot.membersByLevel
     .slice(1)
     .reduce((a, b) => a + b, 0);
@@ -179,6 +183,43 @@ function estimateQualifiedLegStructure(
   const diamondLegs = estimatedRank === 'Diamond' ? qualifiedLegs : 0;
 
   return { bronzeLegs, diamondLegs };
+}
+
+function estimateQualifiedLegStructureFromLegs(
+  snapshot: NetworkSnapshot,
+  inputs: CompensationInputs,
+): { bronzeLegs: number; diamondLegs: number } {
+  let bronzeLegs = 0;
+  let diamondLegs = 0;
+
+  for (const leg of snapshot.legs) {
+    const rootMembers = leg.membersByLevel[0] ?? 0;
+    if (rootMembers < 1) continue;
+
+    const downlineMembers = leg.membersByLevel
+      .slice(1)
+      .reduce((a, b) => a + b, 0);
+    const downlineShoppers = leg.shoppersByLevel
+      .slice(1)
+      .reduce((a, b) => a + b, 0);
+    const qgv =
+      downlineMembers * inputs.memberMonthlyIP +
+      downlineShoppers * inputs.shopperMonthlyIP;
+    const qualifiedLegs = Math.floor((leg.membersByLevel[1] ?? 0) + 1e-9);
+    const estimatedRank = estimateLegRank(qgv, qualifiedLegs);
+
+    if (['Bronze', 'Silver', 'Gold', 'Diamond'].includes(estimatedRank)) {
+      bronzeLegs++;
+    }
+    if (estimatedRank === 'Diamond') {
+      diamondLegs++;
+    }
+  }
+
+  return {
+    bronzeLegs,
+    diamondLegs,
+  };
 }
 
 function determineEffectivePersonalAV({

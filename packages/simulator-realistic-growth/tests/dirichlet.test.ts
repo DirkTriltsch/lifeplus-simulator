@@ -132,6 +132,25 @@ describe('dirichlet-Strategie', () => {
 
     expect(second[35].legs).toEqual(first[35].legs);
   });
+
+  it('gibt frischen Beinen keine rueckwirkende Downline', () => {
+    const modulator = createDirichletStrategy({ seed: 7, varianceFactor: 1 });
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 2,
+        shoppersPerYear: 3,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      24,
+      { growthModulator: modulator },
+    );
+
+    expect(snapshots[23].legs[2].membersByLevel).toEqual([1]);
+    expect(snapshots[23].legs[2].shoppersByLevel).toEqual([1.5]);
+    expect(snapshots[23].legs[3].membersByLevel).toEqual([1]);
+    expect(snapshots[23].legs[3].shoppersByLevel).toEqual([1.5]);
+  });
 });
 
 describe('createGrowthModulator', () => {

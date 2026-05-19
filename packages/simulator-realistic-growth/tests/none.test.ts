@@ -77,6 +77,27 @@ describe('noneStrategy', () => {
 
     expect(legs).toEqual([]);
   });
+
+  it('reicht vorhandene Bein-Historie unveraendert weiter', () => {
+    const modulator = createNoneStrategy();
+    const legs = modulator.splitLegs({
+      year: 2,
+      monthIndex: 23,
+      membersByLevel: [4, 4],
+      shoppersByLevel: [6, 6],
+      directLegs: 4,
+      legs: [
+        { id: 'leg-1', membersByLevel: [1, 2], shoppersByLevel: [1.5, 3] },
+        { id: 'leg-2', membersByLevel: [1, 2], shoppersByLevel: [1.5, 3] },
+        { id: 'leg-3', membersByLevel: [1], shoppersByLevel: [1.5] },
+        { id: 'leg-4', membersByLevel: [1], shoppersByLevel: [1.5] },
+      ],
+      inputs: baseInputs,
+    });
+
+    expect(legs[2].membersByLevel).toEqual([1]);
+    expect(legs[2].shoppersByLevel).toEqual([1.5]);
+  });
 });
 
 describe('createGrowthModulator', () => {
