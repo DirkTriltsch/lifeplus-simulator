@@ -106,7 +106,7 @@ a:hover { text-decoration: underline; }
 }
 
 .nav-cta--dark {
-  background: #EA7600;
+  background: var(--cta, #EA7600);
   color: #ffffff !important;
   display: inline-flex;
   align-items: center;
@@ -116,13 +116,17 @@ a:hover { text-decoration: underline; }
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: -0.1px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 4px 12px rgba(234,118,0,0.28);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 12px color-mix(in srgb, var(--cta, #EA7600) 30%, transparent);
   transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .nav-cta--dark:hover {
-  background: #C45F00;
+  background: var(--cta-dark, #C45F00);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 6px 18px rgba(234,118,0,0.35);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 6px 18px color-mix(in srgb, var(--cta, #EA7600) 38%, transparent);
   text-decoration: none;
 }
 

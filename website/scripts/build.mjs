@@ -41,6 +41,8 @@ function tokensFor(brand) {
     PRODUCT_NAME: brand.productName,
     ACCENT_COLOR: brand.accentColor,
     ACCENT_COLOR_DARK: brand.accentColorDark,
+    CTA_COLOR: brand.ctaColor ?? brand.accentColor,
+    CTA_COLOR_DARK: brand.ctaColorDark ?? brand.accentColorDark,
     CLAIM: brand.claim,
     SUB_CLAIM: brand.subClaim,
     LOCKUP_INITIAL: lockup.initial,

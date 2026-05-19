@@ -6,6 +6,8 @@
     "productName": "LifePlus",
     "accentColor": "#1D9E75",
     "accentColorDark": "#157a5b",
+    "ctaColor": "#EA7600",
+    "ctaColorDark": "#C45F00",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
     "subClaim": "Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann.",
     "lockup": {
@@ -26,6 +28,8 @@
     "productName": "FitLine",
     "accentColor": "#D71920",
     "accentColorDark": "#a8131a",
+    "ctaColor": "#D71920",
+    "ctaColorDark": "#a8131a",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
     "subClaim": "Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann.",
     "lockup": {
@@ -46,6 +50,8 @@
     "productName": "Eqology",
     "accentColor": "#48664D",
     "accentColorDark": "#34503a",
+    "ctaColor": "#48664D",
+    "ctaColorDark": "#34503a",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
     "subClaim": "Simuliere realistisch, was dein Eqology-Netzwerk über zehn Jahre einspielen kann.",
     "lockup": {

@@ -18,8 +18,8 @@
       --lockup-dark-bg: {{LOCKUP_DARK_BG}};
       --lockup-accent-on-dark: {{LOCKUP_ACCENT_ON_DARK}};
 
-      --cta: #EA7600;
-      --cta-dark: #C45F00;
+      --cta: {{CTA_COLOR}};
+      --cta-dark: {{CTA_COLOR_DARK}};
 
       --serif: 'Fraunces', 'Source Serif 4', Georgia, serif;
       --sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -441,13 +441,15 @@
     }
     .btn-primary {
       background: var(--cta); color: #fff !important;
-      box-shadow: 0 1px 2px rgba(234,118,0,0.2), 0 4px 14px rgba(234,118,0,0.18);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--cta) 22%, transparent),
+                  0 4px 14px color-mix(in srgb, var(--cta) 20%, transparent);
     }
     .btn-primary:hover {
       background: var(--cta-dark);
       transform: translateY(-2px);
       text-decoration: none;
-      box-shadow: 0 2px 4px rgba(234,118,0,0.22), 0 8px 24px rgba(234,118,0,0.25);
+      box-shadow: 0 2px 4px color-mix(in srgb, var(--cta) 24%, transparent),
+                  0 8px 24px color-mix(in srgb, var(--cta) 28%, transparent);
     }
     .btn-primary svg { width: 16px; height: 16px; transition: transform 0.18s; }
     .btn-primary:hover svg { transform: translateX(3px); }
