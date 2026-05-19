@@ -42,6 +42,7 @@ export const fitlineProduct: ProductDefinition = {
       shopperMonthlyVolume: 45,
       unitToCurrency: 1,
       monthlyProductCostEUR: 100,
+      maxDirectMembersPerMember: 29,
     },
     plan: lifeplusPlan,
   },

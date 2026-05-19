@@ -46,7 +46,9 @@ export default function App() {
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
 
-  const [maxDirectMembersPerMember, setMaxDirectMembersPerMember] = useState(29);
+  const [maxDirectMembersPerMember, setMaxDirectMembersPerMember] = useState(
+    defaults.maxDirectMembersPerMember ?? 29,
+  );
   const [realityStrategy, setRealityStrategy] = useState<RealityStrategy>('standard');
   const [goals, setGoals] = useState<GoalUI[]>(DEFAULT_GOALS);
   const [monthlyProductCostEUR, setMonthlyProductCostEUR] = useState(
@@ -63,6 +65,7 @@ export default function App() {
       shopperMonthlyVolume: monthlyIP,
       unitToCurrency: ipToEur,
       monthlyProductCostEUR,
+      maxDirectMembersPerMember,
     }),
     [
       membersPerYear,
@@ -72,6 +75,7 @@ export default function App() {
       attrition,
       ipToEur,
       monthlyProductCostEUR,
+      maxDirectMembersPerMember,
     ],
   );
 

@@ -45,6 +45,8 @@ export interface SimulatorInputs {
   unitToCurrency?: number;
   /** Monatlicher Eigenkonsum in EUR. Basis fuer Refinanzierung und Ueberschuss. */
   monthlyProductCostEUR?: number;
+  /** Maximale Anzahl direkter Members pro Member. Default 29. */
+  maxDirectMembersPerMember?: number;
 }
 
 export interface CompensationResult {

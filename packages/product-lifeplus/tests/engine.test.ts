@@ -147,6 +147,93 @@ describe('Netzwerk-Wachstum', () => {
   });
 });
 
+describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
+  it('begrenzt direkte Members des Users auf den Cap', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 10,
+        shoppersPerYear: 0,
+        duplicationRate: 0,
+        attritionRate: 0,
+        maxDirectMembersPerMember: 5,
+      },
+      24,
+    );
+
+    expect(snapshots[11].directLegs).toBeCloseTo(5, 1);
+    expect(snapshots[23].directLegs).toBeCloseTo(5, 1);
+  });
+
+  it('aendert das Verhalten bei Default 29 und realistischen Inputs nicht', () => {
+    const inputs = {
+      membersPerYear: 2,
+      shoppersPerYear: 3,
+      duplicationRate: 1,
+      attritionRate: 0,
+    };
+    const implicit = simulateNetwork(inputs, 120);
+    const explicit = simulateNetwork(
+      { ...inputs, maxDirectMembersPerMember: 29 },
+      120,
+    );
+
+    expect(explicit[119].directLegs).toBeCloseTo(implicit[119].directLegs, 5);
+    expect(totalNetworkSize(explicit[119])).toBeCloseTo(
+      totalNetworkSize(implicit[119]),
+      5,
+    );
+  });
+
+  it('cappt auch die Duplikation pro Source-Member', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 20,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0,
+        maxDirectMembersPerMember: 10,
+      },
+      24,
+    );
+
+    expect(snapshots[11].membersByLevel[0]).toBeCloseTo(10, 1);
+    expect(snapshots[23].membersByLevel[0]).toBeCloseTo(10, 1);
+    expect(snapshots[23].membersByLevel[1]).toBeCloseTo(100, 1);
+  });
+
+  it('laesst Compression durch Fluktuation nicht ueber den Cap springen', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 10,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0.3,
+        maxDirectMembersPerMember: 5,
+      },
+      36,
+    );
+
+    expect(snapshots[11].directLegs).toBeLessThanOrEqual(5);
+    expect(snapshots[23].directLegs).toBeLessThanOrEqual(5);
+    expect(snapshots[35].directLegs).toBeLessThanOrEqual(5);
+  });
+
+  it('normalisiert nicht-positive Caps auf mindestens einen direkten Member', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 10,
+        shoppersPerYear: 0,
+        duplicationRate: 0,
+        attritionRate: 0,
+        maxDirectMembersPerMember: 0,
+      },
+      12,
+    );
+
+    expect(snapshots[11].directLegs).toBeCloseTo(1, 1);
+  });
+});
+
 describe('Rangbestimmung', () => {
   it('vergibt keinen Rang bei zu wenig QGV', () => {
     const r = determineRank({

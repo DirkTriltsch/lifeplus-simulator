@@ -67,6 +67,7 @@ export function runSimulation(
     shoppersPerYear: inputs.shoppersPerYear,
     duplicationRate: inputs.duplicationRate,
     attritionRate: inputs.attritionRate,
+    maxDirectMembersPerMember: inputs.maxDirectMembersPerMember,
   };
 
   const snapshots = simulateNetwork(networkInputs, totalMonths);

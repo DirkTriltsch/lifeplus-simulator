@@ -41,6 +41,9 @@ EqoFlow360   -> eqoflow360.triltsch.com  (Zielzustand: eqoflow360.de)
 ```
 
 Entscheidung: **Pro Brand getrennte Identitaeten und getrennte Abrechnung.**
+Cross-Sell ueber mehrere Brands wird bewusst nicht als Kernfunktion gebaut.
+Das ist in diesem Produktkontext eher ungewoehnlich und erzeugt mehr
+Komplexitaet als Nutzen.
 
 Konsequenzen:
 
@@ -58,7 +61,9 @@ Konsequenzen:
   bleibt im Schema als sichernde Spalte fuer Audit/Migration, ist im Alltag
   aber faktisch konstant pro DB.
 - Cross-Brand-Bundles werden bewusst nicht angeboten. Wer LifeFlow360 und
-  FitFlow360 will, kauft zwei Abos, kriegt zwei Rechnungen, hat zwei Konten.
+  FitFlow360 wirklich separat nutzen will, kann das spaeter ueber zwei
+  getrennte Kaufprozesse tun. Es wird aber nicht aktiv als Cross-Sell in der
+  App beworben.
 
 Vorteile:
 
@@ -73,8 +78,67 @@ Nachteile, die akzeptiert werden:
 
 - Cross-Sell ueber das Kundenkonto ist nicht direkt moeglich. Wird ueber die
   Marketing-Sites geloest, nicht ueber die App.
-- Bei Mehrfachkaeufen bekommt der Kunde mehrere Magic-Link-Mails und muss pro
-  Brand getrennt einloggen. Wird in den Mails klar kommuniziert.
+- Kein zentraler Cross-Brand-Account bedeutet: Falls ein Kunde bewusst mehrere
+  Brands nutzt, passiert das ueber getrennte Kauf- und Login-Flows. Innerhalb
+  derselben Brand werden Mehrfachkaeufe aktiv verhindert.
+
+## Kaufstrategie und Mehrfachkaeufe
+
+Mehrfachkaeufe innerhalb derselben Brand sollten verhindert werden. Ein Kunde
+soll nicht versehentlich zweimal dasselbe Jahresabo kaufen koennen. Er soll nur
+dann erneut durch einen Checkout gefuehrt werden, wenn es fachlich ein Upgrade,
+ein Wechsel oder eine Reaktivierung ist.
+
+Empfohlene Regeln:
+
+```text
+1. Ein User darf pro Brand nur ein aktives Abo haben.
+2. Gleiche Price-ID erneut kaufen -> blockieren und zur App/Billing Portal leiten.
+3. Hoeherer Plan -> Upgrade erlauben.
+4. Niedrigerer Plan -> Downgrade zum Periodenende erlauben.
+5. Gekuendigtes, aber noch aktives Abo -> Reaktivierung statt Neukauf.
+6. Vollstaendig abgelaufenes Abo -> neuer Checkout erlaubt.
+```
+
+Die API prueft vor jedem Checkout:
+
+```text
+POST /api/billing/checkout-intent
+
+Input:
+- requested_price_id
+- brand_id
+- optional email, wenn der User noch nicht eingeloggt ist
+
+Output:
+- action = "start_checkout"
+- action = "already_active"
+- action = "upgrade"
+- action = "manage_subscription"
+- action = "login_required"
+```
+
+Beispiele:
+
+```text
+User hat aktives LifeFlow360 Jahresabo
+-> klickt nochmal "Jahresabo kaufen"
+-> API antwortet already_active
+-> UI: "Du hast bereits Zugang. Simulator oeffnen / Abo verwalten"
+
+User hat Basic und klickt Pro
+-> API antwortet upgrade
+-> Paddle Subscription Change oder Checkout fuer Upgrade starten
+
+User hat gekuendigt, Zugang laeuft noch bis 2027-03-01
+-> API antwortet manage_subscription
+-> UI: "Dein Zugang ist noch aktiv. Du kannst die Kuendigung im Portal verwalten."
+```
+
+Wichtig: Die reine `pricing.html` kann einen Paddle Checkout zwar direkt
+oeffnen, aber fuer Mehrfachkauf-Schutz ist ein kurzer API-Schritt davor besser.
+Der Kaufen-Button sollte deshalb nicht direkt `Paddle.Checkout.open()` starten,
+sondern zuerst einen Checkout Intent bei der API anfragen.
 
 ## Was funktioniert gut
 
@@ -86,7 +150,8 @@ Gut geeignet sind:
 
 - `pricing.html` mit Produkt- und Preisuebersicht.
 - Paddle Overlay Checkout per `Paddle.Checkout.open()`.
-- Ein Preis pro Plan, zum Beispiel monatlich, jaehrlich und optional Lifetime.
+- Ein Preis pro Plan. Empfehlung fuer den Start: Jahresabo mit automatischer
+  Verlaengerung. Monatlich und Lifetime erst spaeter pruefen.
 - Ein Produkt-/Preis-Set pro Brand: LifeFlow360, FitFlow360, EqoFlow360.
 - Rueckleitung nach erfolgreichem Checkout auf `/app/`.
 - Serverseitige Freischaltung ueber Paddle Webhooks.
@@ -159,23 +224,19 @@ Beispielstruktur:
 {
   "lifeplus": [
     {
-      "id": "pro-monthly",
-      "name": "Pro Monatlich",
-      "priceLabel": "9 EUR / Monat",
-      "paddlePriceIdSandbox": "pri_...",
-      "paddlePriceIdLive": "pri_...",
-      "features": [
-        "Voller Simulator",
-        "10-Jahres-Prognose",
-        "Netzwerk-Ansichten"
-      ]
-    },
-    {
       "id": "pro-yearly",
       "name": "Pro Jaehrlich",
       "priceLabel": "79 EUR / Jahr",
       "paddlePriceIdSandbox": "pri_...",
       "paddlePriceIdLive": "pri_...",
+      "billingInterval": "year",
+      "renewsAutomatically": true,
+      "features": [
+        "Voller Simulator",
+        "10-Jahres-Prognose",
+        "Netzwerk-Ansichten",
+        "3 aktive Geraete"
+      ],
       "highlight": true
     }
   ]
@@ -330,8 +391,8 @@ webhook_events
 ```
 
 `entitlements` sind wichtig, weil Zahlung und App-Zugang nicht immer dasselbe
-sind. Ein Nutzer kann zum Beispiel ein aktives Abo haben, ein Kulanz-Zugang
-bekommen oder spaeter mehrere Brands freigeschaltet haben.
+sind. Ein Nutzer kann zum Beispiel ein aktives Abo haben, einen Kulanz-Zugang
+bekommen, einen Trial nutzen oder nach einem Upgrade einen anderen Plan haben.
 
 `webhook_events` ist die Single Source of Truth fuer Idempotenz. Jedes Event
 wird vor der Verarbeitung mit `INSERT ... ON CONFLICT DO NOTHING` gesichert.
@@ -706,6 +767,111 @@ status = paused:
 - App zeigt "Abo pausiert".
 ```
 
+### Jahresabo mit automatischer Verlaengerung
+
+Empfehlung fuer dieses Produkt: **Jahresabo mit automatischer Verlaengerung**.
+Das passt besser als ein Monatsabo, weil der Simulator kein taegliches
+Produktivitaetstool ist, sondern eher ein Planungs- und Entscheidungswerkzeug,
+zu dem Kunden phasenweise zurueckkommen.
+
+Die Strategie sollte kundenfreundlich sein:
+
+```text
+Jahresabo
+-> automatische Verlaengerung
+-> klare Erinnerung vor Renewal
+-> einfache Kuendigung ueber Paddle Portal
+-> kulante 14-Tage-Erstattung nach Renewal
+```
+
+Das Ziel ist nicht, den Kunden in der Verlaengerung "zu fangen". Der Kunde soll
+das Gefuehl haben, dass er gefahrlos wiederkommen kann und im Zweifel fair
+behandelt wird.
+
+Empfohlener Ablauf:
+
+```text
+30 Tage vor Renewal:
+- E-Mail: "Dein LifeFlow360 Zugang verlaengert sich am ..."
+- Link: Abo verwalten / kuendigen
+
+7 Tage vor Renewal:
+- Kurze Reminder-Mail, freundlich und unaufgeregt
+- In-App Banner, falls der User die App oeffnet
+
+Renewal Tag:
+- Paddle belastet automatisch
+- Webhook transaction.completed verlaengert Entitlement
+
+0-14 Tage nach Renewal:
+- Kulanzfenster fuer Rueckerstattung, wenn der Kunde sagt:
+  "Die Verlaengerung hat mich erst daran erinnert."
+```
+
+Die bessere Strategie ist also nicht "Reminder oder 14 Tage Widerruf", sondern
+beides:
+
+```text
+1. Rechtzeitig erinnern, damit der Kunde selbst entscheiden kann.
+2. Trotzdem 14 Tage kulant sein, falls die Erinnerung uebersehen wurde.
+```
+
+### Widerruf, Kulanz und Zugriff nach Renewal
+
+Rechtlich muss geklaert werden, welche Widerrufsregeln fuer digitale Inhalte,
+Subscriptions und B2B/B2C-Konstellationen gelten. Produktstrategisch ist aber
+eine klare Kulanzregel sinnvoll:
+
+```text
+Wenn ein Kunde innerhalb von 14 Tagen nach automatischer Jahresverlaengerung
+eine Erstattung wuenscht, wird sie ohne Diskussion gewaehrt, solange keine
+offensichtliche missbraeuchliche Nutzung vorliegt.
+```
+
+Technische Umsetzung:
+
+```text
+1. Renewal kommt als Paddle transaction.completed.
+2. API verlaengert Entitlement um 12 Monate.
+3. API speichert renewal_transaction_id und renewal_at.
+4. Bei Refund innerhalb von 14 Tagen:
+   - Webhook transaction.refunded oder adjustment.created kommt an.
+   - Entitlement valid_until wird auf now gesetzt.
+   - Subscription wird je nach Paddle-Status beendet oder bleibt gemaess Portal.
+5. App zeigt: "Dein Zugang wurde erstattet und ist beendet."
+```
+
+Wenn der Kunde innerhalb der 14 Tage intensiv weiter nutzt, ist eine manuelle
+Pruefung moeglich. Trotzdem sollte die Grundhaltung kulant bleiben. Gerade bei
+einem kleinen Tool ist Vertrauen wertvoller als eine einzelne erzwungene
+Renewal-Zahlung.
+
+### Kuendigungserinnerung statt versteckte Verlaengerung
+
+Die Renewal-Kommunikation sollte offen sein:
+
+```text
+Betreff: Dein LifeFlow360 Jahreszugang verlaengert sich bald
+
+Inhalt:
+- Datum der Verlaengerung
+- Preis
+- Link zum Abo-Portal
+- Hinweis auf 14 Tage Kulanz nach der Verlaengerung
+```
+
+Paddle fuegt in Subscription-E-Mails selbst Kuendigungslinks ein und bietet das
+Customer Portal fuer Aboverwaltung. Laut Paddle bleibt ein ueber Portal
+gekuendigtes Abo bis zum Periodenende aktiv; danach wird es beendet. Das ist
+genau das richtige Verhalten fuer diese App.
+
+Referenzen:
+
+- Paddle Cancel Subscriptions:
+  https://developer.paddle.com/build/subscriptions/cancel-subscriptions/
+- Paddle Payment Recovery / Dunning:
+  https://developer.paddle.com/build/retain/configure-payment-recovery-dunning/
+
 ### Refunds und Chargebacks
 
 Bei `transaction.refunded` oder Chargeback-Adjustments:
@@ -729,6 +895,14 @@ Sollte das Insert auf einen Konflikt laufen, wird die weitere Verarbeitung
 uebersprungen und 200 geantwortet.
 
 ## Rate-Limiting und Anti-Abuse
+
+Das Device-Limit ist der wichtigste Schutz gegen uebermaessiges Teilen. Weitere
+Anti-Abuse-Massnahmen sollten schlank bleiben und vor allem Login, Magic Links
+und Webhooks schuetzen. Ziel ist nicht, normale Kunden zu nerven.
+
+Dieser Abschnitt ist bewusst ein Arbeitsstand. Vor der Implementierung sollten
+die konkreten Grenzwerte noch einmal anhand des finalen Hostings entschieden
+werden.
 
 Sicherheitsmassnahmen, die nicht optional sind:
 
@@ -765,6 +939,31 @@ Schutz:
 Schreib-Endpunkte:          20 Requests pro Minute pro Session.
 Webhook:                    Kein User-Rate-Limit, aber Body-Size Limit (z.B. 256 KB).
 ```
+
+### Noch zu klaeren
+
+Vor Umsetzung sollte konkret entschieden werden:
+
+- Welcher Rate-Limit-Speicher wird genutzt: Cloudflare Turnstile/Rules, D1,
+  KV, Redis, MySQL oder einfache Log-Tabelle?
+- Ab wann wird Captcha/Turnstile angezeigt?
+- Werden IPs gehasht gespeichert, um Datenschutzrisiko zu reduzieren?
+- Wie lange werden Login- und Abuse-Logs aufbewahrt?
+- Was passiert bei auffaelligen Device-Wechseln: blockieren, warnen oder
+  manuelle Pruefung?
+- Wie sieht der Support-Flow aus, wenn ein echter Kunde ausgesperrt wird?
+
+Empfehlung: Erst minimal starten:
+
+```text
+1. Device-Limit: 3 aktive Geraete.
+2. Wechsel-Limit: 3 neue Geraete pro 30 Tage.
+3. Magic-Link Rate-Limits.
+4. Neutrale Auth-Antworten gegen E-Mail-Enumeration.
+5. Webhook-Signaturpruefung und Idempotenz.
+```
+
+Alles Weitere erst nach echten Nutzungsdaten verschaerfen.
 
 ### Session-Sicherheit
 
@@ -932,20 +1131,70 @@ ist: Das aktuelle Deployment laeuft per SFTP zu klassischem Webhosting (siehe
 [.vscode/sftp.json] und [scripts/build-webroot.mjs](scripts/build-webroot.mjs)).
 Fuer den API-Teil gibt es deshalb drei realistische Optionen.
 
-### Option 1: API als eigene Subdomain beim aktuellen Hoster
+### Option 1: API als eigene Subdomain bei IONOS
 
 ```text
-api.lifeflow360.app  ->  PHP/Node am gleichen Server
+api.lifeflow360.app  ->  PHP auf IONOS Webhosting
+MySQL/MariaDB         ->  IONOS Datenbank
 ```
 
 Pro:
 - Keine neue Infrastruktur.
 - Bestehender Deploy-Flow via SFTP.
+- Im vorhandenen IONOS-Vertrag sind PHP 8.3, Datenbankspeicher und
+  MySQL/MariaDB bereits enthalten. Zusatzkosten fuer den API-Start:
+  voraussichtlich 0 EUR.
+- Webhooks von Paddle sind normale HTTPS-POST-Requests und koennen grundsaetzlich
+  auch von PHP verarbeitet werden.
+- 2 GB Datenbankspeicher reichen fuer die ersten Kunden und sehr wahrscheinlich
+  auch fuer deutlich mehr als 50 Produkte, solange nur User, Sessions,
+  Subscriptions, Devices und Webhook-Events gespeichert werden.
+- `18 max_user_connections` ist fuer dieses API-Profil unkritisch, weil die App
+  nur kurze Requests macht und keine dauerhaften DB-Verbindungen offenhalten
+  sollte.
 
 Kontra:
-- Wartung, TLS, Sicherheits-Updates selbst.
-- Cold-Starts und Skalierung muss manuell bedacht werden.
-- Mehr Konfigurationsaufwand fuer Datenbank.
+- Die API muesste wahrscheinlich in PHP gebaut werden, waehrend der Rest des
+  Projekts TypeScript/Node ist.
+- Secrets, Logs, Deployments und lokale Tests sind meist unbequemer.
+- Kein nativer Serverless-Workflow mit Preview-Deployments.
+- Sicherheits-Updates und PHP-Versionen muessen im IONOS-Vertrag sauber
+  beobachtet werden.
+- Wenn keine serverseitigen Cronjobs oder keine brauchbaren Logs verfuegbar sind,
+  wird Betrieb und Debugging schwieriger.
+
+IONOS ist also moeglich, wenn folgende Dinge im Vertrag vorhanden sind:
+
+```text
+[x] PHP 8.3 nutzbar.
+[x] MySQL oder MariaDB vorhanden.
+[x] 2 GB Datenbankspeicher vorhanden.
+[x] 18 max_user_connections vorhanden.
+[ ] HTTPS auf API-Subdomain.
+[ ] Externe eingehende Webhooks erreichbar.
+[ ] Ausgehende HTTPS-Requests zu Paddle und Mailer erlaubt.
+[ ] Cronjobs oder vergleichbarer Scheduler vorhanden.
+[ ] Fehlerlogs einsehbar.
+```
+
+Bewertung der bekannten Limits:
+
+```text
+2 GB Datenbankspeicher:
+- Fuer Auth, Sessions, Devices, Subscriptions und Webhook-Events sehr grosszuegig.
+- Groesster Wachstumstreiber waeren lange Log-Aufbewahrung und Webhook-Event-Archiv.
+- Loesung: Webhook raw payloads nur begrenzt speichern oder nach 90/180 Tagen
+  archivieren/kuerzen.
+
+18 max_user_connections:
+- Fuer wenige bis mittlere Kundenzahlen ausreichend.
+- PHP oeffnet pro Request kurz eine DB-Verbindung und schliesst sie wieder.
+- Wichtig: keine langen Transaktionen, keine Polling-Endpunkte, kein Live-Stream.
+```
+
+Referenz: IONOS nennt fuer Webhosting je nach Paket PHP, MySQL/MariaDB und
+Cronjobs als verfuegbare Funktionen:
+https://www.ionos.com/php-web-hosting
 
 ### Option 2: Vercel oder Netlify
 
@@ -981,17 +1230,140 @@ Kontra:
 - D1 hat aktuell keinen harten EU-Region-Pin.
 - Wenn man mit Cloudflare nicht vertraut ist, gibt es eine Lernkurve.
 
+### Kosten von Option 3
+
+Stand Mai 2026:
+
+```text
+Cloudflare Workers/Pages Functions Free:
+- 100.000 Requests pro Tag.
+- Statische Asset-Requests sind kostenlos/unlimited.
+
+Cloudflare Workers Paid:
+- 5 USD pro Monat Basis.
+- 10 Millionen Worker-Requests pro Monat enthalten.
+- Danach ca. 0,30 USD pro weitere Million Requests.
+- CPU-Zeit oberhalb des Inklusivkontingents wird nutzungsbasiert berechnet.
+
+Cloudflare D1 Free:
+- 5 Millionen gelesene Zeilen pro Tag.
+- 100.000 geschriebene Zeilen pro Tag.
+- 5 GB Speicher gesamt.
+
+Cloudflare D1 Paid:
+- Erste 25 Milliarden gelesene Zeilen pro Monat enthalten.
+- Erste 50 Millionen geschriebene Zeilen pro Monat enthalten.
+- Erste 5 GB Speicher enthalten.
+- Danach nutzungsbasiert.
+```
+
+Fuer 3 bis 50 Kunden liegt diese App sehr wahrscheinlich im Free-Bereich, wenn
+sie sparsam gebaut ist. Realistisch relevante Zusatzkosten:
+
+```text
+Cloudflare Option 3 minimal:
+- 0 USD/Monat, wenn Free-Tier reicht.
+
+Cloudflare Option 3 konservativ:
+- 5 USD/Monat fuer Workers Paid, wenn man Reserven, hoehere Limits oder
+  weniger Free-Tier-Risiko will.
+
+Externe EU-Datenbank statt D1:
+- Neon/Supabase kann zusaetzliche Kosten verursachen, je nach Plan.
+```
+
+Offizielle Preisreferenzen:
+
+- Cloudflare Workers Pricing:
+  https://developers.cloudflare.com/workers/platform/pricing/
+- Cloudflare D1 Pricing:
+  https://developers.cloudflare.com/d1/platform/pricing/
+
+### Kann man alles ueber IONOS loesen?
+
+Ja. Mit den bekannten Vertragsdaten ist IONOS die beste Startloesung:
+
+```text
+PHP 8.3 verfuegbar
+2 GB Speicherkapazitaet fuer Datenbank
+18 max_user_connections
+MariaDB/MySQL unterstuetzt
+```
+
+Wenn zusaetzlich Subdomains, HTTPS, Webhook-Erreichbarkeit, ausgehende
+HTTPS-Requests und brauchbare Logs funktionieren, waere die guenstigste
+Variante:
+
+```text
+Statische Website/App: weiter IONOS Webspace
+API: PHP unter /api oder api.lifeflow360.app
+Datenbank: IONOS MySQL/MariaDB
+Mail: IONOS SMTP oder externer Transactional Mailer
+Paddle: Webhooks an IONOS API
+```
+
+Das ist fuer den Anfang mit wenigen Kunden absolut vertretbar. Der Preis ist
+voraussichtlich 0 EUR extra, weil die wichtigsten Bausteine im Vertrag bereits
+enthalten sind.
+
+Der Tradeoff ist technische Eleganz:
+
+```text
+IONOS:
++ wahrscheinlich keine Zusatzkosten
++ kein Umzug der statischen Sites
++ vorhandener Vertrag wird genutzt
+- PHP/API neben TypeScript-Codebase
+- weniger moderne Deploy-/Log-/Preview-Workflows
+- Skalierung und Betrieb haengen am Hostingpaket
+
+Cloudflare Option 3:
++ moderne Serverless API
++ sehr guenstig
++ gut versionierbar und per Git deploybar
++ statische Assets + API sauber integriert
+- Umzug oder Teilumzug noetig
+- D1 ohne harte EU-Region; alternativ externe DB
+- neue Plattform lernen
+```
+
+Pragmatische Empfehlung:
+
+```text
+Phase 1:
+- IONOS behalten.
+- API-Prototyp mit PHP 8.3 + MySQL/MariaDB bauen.
+- Paddle Webhook und Magic-Link End-to-End testen.
+
+Phase 2:
+- Wenn Betrieb nervt, Logs/Deployments zu unbequem werden oder die Kundenzahl
+  stimmt:
+  API auf Cloudflare Workers/Pages Functions migrieren.
+
+Phase 3:
+- Falls 20-50 Produkte entstehen:
+  Cloudflare oder ein zentrales Node/TypeScript Backend wird attraktiver,
+  weil PHP-Dateien pro Produkt sonst schnell unuebersichtlich werden.
+```
+
 ### Empfehlung
 
-**Option 3 (Cloudflare Pages Functions + Neon EU) ist langfristig die beste
-Loesung**, weil:
+**Kurzfristig IONOS nutzen, langfristig Cloudflare/Node offenhalten.**
+
+Mit PHP 8.3, MySQL/MariaDB, 2 GB Datenbankspeicher und 18
+`max_user_connections` ist Option 1 fuer den Start die beste
+Kosten-/Risiko-Balance. Sie vermeidet neue Fixkosten und nutzt vorhandenen
+Webspace.
+
+**Option 3 (Cloudflare Pages Functions + Neon EU oder D1) ist langfristig die
+bessere Entwicklerplattform**, weil:
 
 - Statische Site und API liegen auf einer Plattform.
 - Skalierung ist quasi gratis.
 - Mit Neon (Frankfurt) ist die Datenresidenz in der EU geklaert.
 
-Wer einen weniger invasiven Schritt will, nimmt **Option 1** und betreibt nur
-die API auf einer Subdomain beim bestehenden Hoster, ohne das Frontend zu
+Wer einen weniger invasiven Schritt will, startet mit **Option 1** und betreibt
+nur die API auf einer Subdomain beim bestehenden Hoster, ohne das Frontend zu
 beruehren.
 
 ### Beispielstruktur Cloudflare Pages
@@ -1037,7 +1409,6 @@ Oeffentliche Frontend-Werte duerfen dagegen in Vite-Env liegen:
 ```text
 VITE_PADDLE_ENV=sandbox
 VITE_PADDLE_CLIENT_TOKEN=test_...
-VITE_PADDLE_PRICE_ID_PRO_MONTHLY=pri_...
 VITE_PADDLE_PRICE_ID_PRO_YEARLY=pri_...
 VITE_API_BASE_URL=https://api.lifeflow360.app
 ```
@@ -1094,8 +1465,8 @@ klein. Die wahrscheinlicheren Kosten am Anfang sind:
 
 - Domain.
 - E-Mail Versanddienst, falls das Free-Kontingent nicht reicht.
-- Paddle-Gebuehren pro Verkauf (5 % + 0,50 USD pro Transaktion typisch,
-  aktuelle Werte beim Paddle-Pricing pruefen).
+- Paddle-Gebuehren pro Verkauf. Aktuelle Werte immer direkt beim
+  Paddle-Pricing pruefen.
 - Optional Datenbank-Paid-Tier fuer Backups/Branching.
 
 Wichtig: Preise und Free-Tiers koennen sich aendern. Vor Livegang die
@@ -1360,18 +1731,20 @@ Ergebnis: Sauberer Live-Betrieb.
 
 ## Offene Entscheidungen
 
-- Monatliches Abo, jaehrliches Abo oder Lifetime-Kauf? (Empfehlung: monatlich
-  und jaehrlich; Lifetime erst, wenn das Produkt klar steht.)
+- Jahresabo ist die Zielstrategie. Noch zu entscheiden: konkreter Preis,
+  Renewal-Reminder-Texte und exakte Kulanzregeln nach automatischer
+  Verlaengerung.
 - Kostenlose Demo: zeitlich begrenzt (z.B. 14 Tage Vollzugang) oder
   funktional begrenzt (z.B. nur 3-Jahres-Prognose)?
 - Konkrete Preise pro Brand: zunaechst gleicher Preis ueber alle Brands,
   oder pro Brand differenziert?
-- Hosting-Option: 1, 2 oder 3 oben? Sofort umziehen oder spaeter migrieren?
-- Datenbank: Cloudflare D1 (mit Datenresidenz-Vorbehalt) oder Neon
-  Frankfurt?
+- Hosting-Option: Start mit IONOS ist gesetzt. Noch zu pruefen sind HTTPS auf
+  API-Subdomain, externe Webhooks, ausgehende HTTPS-Requests, Cronjobs und Logs.
+- Datenbank: Start mit IONOS MySQL/MariaDB ist gesetzt. Spaetere Migration auf
+  Cloudflare/Node + D1/Neon erst bei passender Kundenzahl oder Betriebsdruck.
 - E-Mail-Dienst: Brevo oder Resend?
-- Money-Back-Garantie: Soll Paddle einen automatischen Refund-Zeitraum
-  anbieten (z.B. 14 Tage)?
+- Rate-Limiting und Anti-Abuse: finale Grenzwerte festlegen, aber Device-Limit
+  als Hauptschutz beibehalten.
 
 ## Empfehlung
 
@@ -1379,17 +1752,24 @@ Die beste Balance fuer dieses Projekt:
 
 - `pricing.html` als statische Pricing-Seite pro Brand, mit Paddle
   `PricePreview` fuer lokalisierte Preise.
+- Jahresabo mit automatischer Verlaengerung als Standardangebot.
+- Keine Cross-Sell-Mechanik zwischen Brands.
+- Mehrfachkaeufe derselben Brand blockieren; erneuter Checkout nur fuer
+  Upgrade, Reaktivierung oder abgelaufenes Abo.
 - Paddle Overlay Checkout fuer Mobile und Desktop.
 - Pro Brand getrennte Identitaeten, getrennte API-Instanz, getrennte
   Datenbank.
-- Cloudflare Pages Functions als Serverless API, mit Neon Frankfurt als
-  Datenbank. Wer das vermeiden will: API als Subdomain beim bestehenden
-  Hoster.
+- Kurzfristig IONOS als API-Startloesung nutzen: PHP 8.3 + MySQL/MariaDB,
+  voraussichtlich ohne Zusatzkosten. Langfristig Cloudflare Pages/Workers
+  Functions oder Node/TypeScript Backend offenhalten, sobald Kundenzahl oder
+  Betriebsanforderungen es rechtfertigen.
 - Magic-Link Login statt Passwort, mit Brevo oder Resend als Mailer und
   sauber gesetztem SPF/DKIM/DMARC.
 - 3 aktive Geraete pro User, plus maximal 3 neue Geraete pro 30 Tage.
 - Webhook-basierte Freischaltung mit Idempotenz via `webhook_events`.
 - Rate-Limits und neutrale Antworten an allen Auth-Endpunkten.
+- Renewal-Reminder 30 und 7 Tage vor Jahresverlaengerung.
+- 14 Tage kundenfreundliche Kulanz nach automatischer Jahresverlaengerung.
 - Grace Period bei `past_due` und sauberer Refund-Handler.
 - Datenschutz: DPA mit Paddle und Mailer, Datenresidenz EU, Datenexport-
   und Loesch-Endpunkte.

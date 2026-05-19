@@ -11,7 +11,11 @@ export interface NetworkInputs {
   shoppersPerYear: number;
   duplicationRate: number;
   attritionRate: number;
+  /** Maximale Anzahl direkter Members pro Member. Default 29. */
+  maxDirectMembersPerMember?: number;
 }
+
+const DEFAULT_MAX_DIRECT_MEMBERS_PER_MEMBER = 29;
 
 export interface NetworkSnapshot {
   membersByLevel: number[];
@@ -36,6 +40,10 @@ export function simulateNetwork(
 ): NetworkSnapshot[] {
   const { membersPerYear, shoppersPerYear, duplicationRate, attritionRate } =
     inputs;
+  const maxDirect = Math.max(
+    1,
+    inputs.maxDirectMembersPerMember ?? DEFAULT_MAX_DIRECT_MEMBERS_PER_MEMBER,
+  );
   const monthlyShopperAttritionRate = Math.max(0, attritionRate / 12);
 
   let membersByLevel: number[] = [];
@@ -73,11 +81,15 @@ export function simulateNetwork(
     if (isYearStart) {
       const hadMembersBeforeRecruiting = sum(membersByLevel) > 0;
 
-      const directMembers = membersPerYear;
+      const currentDirect = membersByLevel[0] ?? 0;
+      const directCapacity = Math.max(0, maxDirect - currentDirect);
+      const directMembers = Math.min(membersPerYear, directCapacity);
       const directShoppers = shoppersPerYear;
 
-      addAtLevel(membersByLevel, 0, directMembers);
-      memberGrowth += directMembers;
+      if (directMembers > 0) {
+        addAtLevel(membersByLevel, 0, directMembers);
+        memberGrowth += directMembers;
+      }
 
       if (directShoppers > 0) {
         shopperCohorts.push({
@@ -96,11 +108,19 @@ export function simulateNetwork(
         const sourceCount = sourceMembers[level];
         if (sourceCount <= 0) continue;
 
-        const newMembers = sourceCount * membersPerYear * duplicationRate;
+        const existingChildren = membersByLevel[level + 1] ?? 0;
+        const existingPerSource = existingChildren / sourceCount;
+        const availablePerSource = Math.max(0, maxDirect - existingPerSource);
+        const capacity = sourceCount * availablePerSource;
+
+        const rawGrowth = sourceCount * membersPerYear * duplicationRate;
+        const newMembers = Math.min(rawGrowth, capacity);
         const newShoppers = sourceCount * shoppersPerYear * duplicationRate;
 
-        addAtLevel(membersByLevel, level + 1, newMembers);
-        memberGrowth += newMembers;
+        if (newMembers > 0) {
+          addAtLevel(membersByLevel, level + 1, newMembers);
+          memberGrowth += newMembers;
+        }
 
         if (newShoppers > 0) {
           shopperCohorts.push({
@@ -151,22 +171,21 @@ function applyMemberAttrition(
     return { membersByLevel, memberAttrition: 0 };
   }
 
-  const next = [...membersByLevel];
-  let memberAttrition = 0;
+  const leavers = membersByLevel.map((count) => count * attritionRate);
+  const next = membersByLevel.map((count, level) =>
+    Math.max(0, count - leavers[level]),
+  );
+  let memberAttrition = sum(leavers);
 
   for (let level = 0; level < membersByLevel.length; level++) {
-    const leaving = membersByLevel[level] * attritionRate;
-    if (leaving <= 0) continue;
-
-    next[level] -= leaving;
-    memberAttrition += leaving;
-
     const childLevel = level + 1;
-    const promotedFromChildLevel = membersByLevel[childLevel] * attritionRate;
-    if (promotedFromChildLevel > 0) {
-      next[childLevel] -= promotedFromChildLevel;
-      next[level] += promotedFromChildLevel;
-    }
+    const vacancy = leavers[level] ?? 0;
+    const childRemaining = next[childLevel] ?? 0;
+    const promotedFromChildLevel = Math.min(vacancy, childRemaining);
+    if (promotedFromChildLevel <= 0) continue;
+
+    next[childLevel] -= promotedFromChildLevel;
+    next[level] += promotedFromChildLevel;
   }
 
   return {
