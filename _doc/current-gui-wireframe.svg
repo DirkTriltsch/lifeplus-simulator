@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1400" font-family="-apple-system, Segoe UI, sans-serif">
+  <!-- Background -->
+  <rect width="900" height="1400" fill="#f9fafb"/>
+
+  <!-- ============ HEADER ============ -->
+  <rect x="0" y="0" width="900" height="56" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <!-- Brand mark (circle) -->
+  <circle cx="42" cy="28" r="14" fill="#006F44"/>
+  <text x="42" y="33" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">L</text>
+
+  <!-- Brand text -->
+  <text x="65" y="26" font-size="15" font-weight="600" fill="#111827">lifeflow360</text>
+  <text x="65" y="42" font-size="11" fill="#6b7280">Verguetungs-Simulator</text>
+
+  <!-- Header icons (right) -->
+  <rect x="780" y="14" width="28" height="28" rx="6" fill="#f3f4f6"/>
+  <g transform="translate(786, 20)" stroke="#1D9E75" stroke-width="1.7" fill="none">
+    <path d="M2 14V2"/><path d="M2 14h12"/><path d="M5 12V8"/><path d="M8 12V5"/><path d="M11 12V7"/>
+  </g>
+
+  <rect x="816" y="14" width="28" height="28" rx="6" fill="#ffffff"/>
+  <g transform="translate(822, 20)" stroke="#6b7280" stroke-width="1.5" fill="none">
+    <circle cx="8" cy="3" r="1.8"/><circle cx="3" cy="13" r="1.8"/><circle cx="13" cy="13" r="1.8"/>
+    <path d="M7 5L4 11"/><path d="M9 5l3 6"/><path d="M5 13h6"/>
+  </g>
+
+  <rect x="852" y="14" width="28" height="28" rx="6" fill="#ffffff"/>
+  <g transform="translate(858, 20)" stroke="#6b7280" stroke-width="1.5" fill="none">
+    <circle cx="8" cy="8" r="2.5"/>
+    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/>
+  </g>
+
+  <!-- Header label -->
+  <text x="450" y="76" font-size="10" fill="#9ca3af" text-anchor="middle">Header (sticky)  ·  Brand links  ·  Chart / Netzwerk / Settings rechts</text>
+
+  <!-- ============ MAIN CARD ============ -->
+  <rect x="100" y="100" width="700" height="1180" rx="12" fill="#ffffff" stroke="#e5e7eb"/>
+
+  <!-- 5 Sliders Row -->
+  <text x="120" y="135" font-size="11" font-weight="600" fill="#6b7280">EINGABEN</text>
+
+  <!-- Slider 1 -->
+  <g transform="translate(120, 150)">
+    <text x="0" y="0" font-size="11" fill="#374151">Members / Jahr</text>
+    <text x="120" y="0" font-size="11" font-weight="600" fill="#111827" text-anchor="end">2.00</text>
+    <line x1="0" y1="18" x2="120" y2="18" stroke="#e5e7eb" stroke-width="4" stroke-linecap="round"/>
+    <line x1="0" y1="18" x2="40" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="40" cy="18" r="6" fill="#1D9E75"/>
+  </g>
+
+  <!-- Slider 2 -->
+  <g transform="translate(258, 150)">
+    <text x="0" y="0" font-size="11" fill="#374151">Shopper / Jahr</text>
+    <text x="120" y="0" font-size="11" font-weight="600" fill="#111827" text-anchor="end">3.00</text>
+    <line x1="0" y1="18" x2="120" y2="18" stroke="#e5e7eb" stroke-width="4" stroke-linecap="round"/>
+    <line x1="0" y1="18" x2="60" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="60" cy="18" r="6" fill="#1D9E75"/>
+  </g>
+
+  <!-- Slider 3 -->
+  <g transform="translate(396, 150)">
+    <text x="0" y="0" font-size="11" fill="#374151">Umsatz / Monat</text>
+    <text x="120" y="0" font-size="11" font-weight="600" fill="#111827" text-anchor="end">45 IP</text>
+    <line x1="0" y1="18" x2="120" y2="18" stroke="#e5e7eb" stroke-width="4" stroke-linecap="round"/>
+    <line x1="0" y1="18" x2="15" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="15" cy="18" r="6" fill="#1D9E75"/>
+  </g>
+
+  <!-- Slider 4 -->
+  <g transform="translate(534, 150)">
+    <text x="0" y="0" font-size="11" fill="#374151">Duplikation</text>
+    <text x="120" y="0" font-size="11" font-weight="600" fill="#111827" text-anchor="end">100%</text>
+    <line x1="0" y1="18" x2="120" y2="18" stroke="#e5e7eb" stroke-width="4" stroke-linecap="round"/>
+    <line x1="0" y1="18" x2="120" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="120" cy="18" r="6" fill="#1D9E75"/>
+  </g>
+
+  <!-- Slider 5 -->
+  <g transform="translate(672, 150)">
+    <text x="0" y="0" font-size="11" fill="#374151">Fluktuation</text>
+    <text x="100" y="0" font-size="11" font-weight="600" fill="#111827" text-anchor="end">0%</text>
+    <line x1="0" y1="18" x2="100" y2="18" stroke="#e5e7eb" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="0" cy="18" r="6" fill="#1D9E75"/>
+  </g>
+
+  <!-- Hero Number -->
+  <g transform="translate(120, 230)">
+    <text x="0" y="14" font-size="11" fill="#6b7280">Provision nach 10 Jahren</text>
+    <text x="0" y="80" font-size="64" font-weight="800" fill="#111827">3.247</text>
+    <text x="240" y="80" font-size="48" font-weight="700" fill="#1D9E75">EUR</text>
+    <text x="0" y="110" font-size="13" fill="#6b7280">pro Monat im Jahr 10</text>
+  </g>
+
+  <!-- Stat Cards -->
+  <g transform="translate(120, 380)">
+    <rect x="0" y="0" width="330" height="80" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+    <text x="20" y="28" font-size="11" fill="#6b7280">Netzwerk-Groesse</text>
+    <text x="20" y="60" font-size="28" font-weight="700" fill="#111827">3.486</text>
+  </g>
+  <g transform="translate(470, 380)">
+    <rect x="0" y="0" width="330" height="80" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+    <text x="20" y="28" font-size="11" fill="#6b7280">Aktueller Rang</text>
+    <text x="20" y="60" font-size="28" font-weight="700" fill="#111827">Diamond</text>
+  </g>
+
+  <!-- Chart -->
+  <text x="120" y="500" font-size="10" font-weight="600" fill="#6b7280">PROVISIONSVERLAUF - 10 JAHRE</text>
+  <g transform="translate(120, 520)">
+    <rect x="0" y="0" width="680" height="240" rx="8" fill="#ffffff" stroke="#e5e7eb"/>
+    <!-- Y axis -->
+    <line x1="40" y1="20" x2="40" y2="220" stroke="#e5e7eb"/>
+    <!-- X axis -->
+    <line x1="40" y1="220" x2="660" y2="220" stroke="#e5e7eb"/>
+    <!-- Curve (simulated growth) -->
+    <path d="M 50 215 Q 130 210 200 195 Q 290 175 370 145 Q 460 100 540 70 Q 600 50 650 35"
+          fill="none" stroke="#1D9E75" stroke-width="2.5"/>
+    <!-- Area fill -->
+    <path d="M 50 215 Q 130 210 200 195 Q 290 175 370 145 Q 460 100 540 70 Q 600 50 650 35 L 650 220 L 50 220 Z"
+          fill="#1D9E75" fill-opacity="0.12"/>
+    <!-- Year labels -->
+    <text x="50"  y="235" font-size="9" fill="#9ca3af" text-anchor="middle">J1</text>
+    <text x="180" y="235" font-size="9" fill="#9ca3af" text-anchor="middle">J3</text>
+    <text x="310" y="235" font-size="9" fill="#9ca3af" text-anchor="middle">J5</text>
+    <text x="440" y="235" font-size="9" fill="#9ca3af" text-anchor="middle">J7</text>
+    <text x="570" y="235" font-size="9" fill="#9ca3af" text-anchor="middle">J9</text>
+    <text x="660" y="235" font-size="9" fill="#9ca3af" text-anchor="middle">J10</text>
+  </g>
+
+  <!-- Yearly Summary Table -->
+  <text x="120" y="800" font-size="10" font-weight="600" fill="#6b7280">JAHRESUEBERSICHT</text>
+  <g transform="translate(120, 820)">
+    <!-- Header -->
+    <rect x="0" y="0" width="680" height="32" fill="#f9fafb" stroke="#e5e7eb"/>
+    <text x="20"  y="20" font-size="10" font-weight="600" fill="#374151">Jahr</text>
+    <text x="100" y="20" font-size="10" font-weight="600" fill="#374151">Members</text>
+    <text x="200" y="20" font-size="10" font-weight="600" fill="#374151">Shopper</text>
+    <text x="300" y="20" font-size="10" font-weight="600" fill="#374151">Netzwerk</text>
+    <text x="410" y="20" font-size="10" font-weight="600" fill="#374151">Rang</text>
+    <text x="540" y="20" font-size="10" font-weight="600" fill="#374151">EUR/Monat</text>
+
+    <!-- Rows -->
+    <g font-size="11" fill="#111827">
+      <rect x="0" y="32"  width="680" height="28" fill="#ffffff" stroke="#f3f4f6"/>
+      <text x="20" y="50">J1</text><text x="100" y="50">5</text><text x="200" y="50">8</text>
+      <text x="300" y="50">13</text><text x="410" y="50">Starter</text><text x="540" y="50">42</text>
+
+      <rect x="0" y="60"  width="680" height="28" fill="#ffffff" stroke="#f3f4f6"/>
+      <text x="20" y="78">J2</text><text x="100" y="78">23</text><text x="200" y="78">38</text>
+      <text x="300" y="78">61</text><text x="410" y="78">Bronze</text><text x="540" y="78">187</text>
+
+      <rect x="0" y="88"  width="680" height="28" fill="#ffffff" stroke="#f3f4f6"/>
+      <text x="20" y="106">J3</text><text x="100" y="106">93</text><text x="200" y="106">152</text>
+      <text x="300" y="106">245</text><text x="410" y="106">Silver</text><text x="540" y="106">624</text>
+
+      <rect x="0" y="116" width="680" height="28" fill="#ffffff" stroke="#f3f4f6"/>
+      <text x="20" y="134">...</text><text x="100" y="134">...</text><text x="200" y="134">...</text>
+      <text x="300" y="134">...</text><text x="410" y="134">...</text><text x="540" y="134">...</text>
+
+      <rect x="0" y="144" width="680" height="28" fill="#f0fdf4" stroke="#bbf7d0"/>
+      <text x="20" y="162" font-weight="700">J10</text>
+      <text x="100" y="162" font-weight="700">1.286</text>
+      <text x="200" y="162" font-weight="700">2.200</text>
+      <text x="300" y="162" font-weight="700">3.486</text>
+      <text x="410" y="162" font-weight="700">Diamond</text>
+      <text x="540" y="162" font-weight="700">3.247</text>
+    </g>
+  </g>
+
+  <!-- Disclaimer -->
+  <text x="450" y="1240" font-size="10" fill="#9ca3af" text-anchor="middle">
+    Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
+  </text>
+
+  <!-- ============ FOOTER ============ -->
+  <line x1="100" y1="1320" x2="800" y2="1320" stroke="#e5e7eb"/>
+  <text x="120" y="1345" font-size="11" fill="#6b7280">© 2026 LifeFlow360</text>
+  <text x="600" y="1345" font-size="11" fill="#6b7280">Impressum</text>
+  <text x="680" y="1345" font-size="11" fill="#6b7280">Datenschutz</text>
+  <text x="760" y="1345" font-size="11" fill="#6b7280">Zur Webseite</text>
+
+  <!-- ============ ANNOTATIONS (right side) ============ -->
+  <g font-size="10" fill="#9ca3af" font-style="italic">
+    <text x="105" y="125" fill="#9ca3af">5 Slider in einer Reihe (grid 5 Spalten lg)</text>
+    <text x="125" y="218" fill="#9ca3af">HeroNumber - grosser EUR-Betrag</text>
+    <text x="125" y="370" fill="#9ca3af">2 StatCards nebeneinander</text>
+    <text x="125" y="490" fill="#9ca3af">Recharts AreaChart, 10 Jahre</text>
+    <text x="125" y="795" fill="#9ca3af">Tabelle pro Jahr</text>
+  </g>
+
+  <!-- Note: alternative network page -->
+  <g transform="translate(820, 100)">
+    <text x="0" y="0" font-size="10" font-weight="700" fill="#374151" transform="rotate(90)">
+      ALTERNATIVE: 'network' page
+    </text>
+  </g>
+</svg>

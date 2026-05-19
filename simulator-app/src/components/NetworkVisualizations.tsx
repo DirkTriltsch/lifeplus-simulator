@@ -267,15 +267,29 @@ function HybridTree({
   selectedLeg: LegData;
   onSelectLeg: (id: number) => void;
 }) {
+  const slotWidth = 157.5;
+  const padX = 115;
+  const firstLegX = padX;
+  const lastLegX = padX + Math.max(0, legs.length - 1) * slotWidth;
+  const centerX = (firstLegX + lastLegX) / 2;
+  const treeWidth = Math.max(860, lastLegX + padX);
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
       <div className="overflow-x-auto pb-2">
-        <svg viewBox="0 0 860 360" className="min-w-[820px]" role="img" aria-label="Hybrid Tree Netzwerk">
-          <line x1="430" y1="78" x2="430" y2="118" stroke="#d1d5db" strokeWidth="2" />
-          <TreeNode x={430} y={52} title="Du" subtitle={`${snapshot.rankName} · ${formatCurrency(snapshot.totalEUR)}`} color="#0f766e" />
-          <line x1="115" y1="118" x2="745" y2="118" stroke="#d1d5db" strokeWidth="2" />
+        <svg
+          viewBox={`0 0 ${treeWidth} 360`}
+          style={{ width: `${treeWidth}px`, minWidth: `${treeWidth}px` }}
+          role="img"
+          aria-label="Hybrid Tree Netzwerk"
+        >
+          <line x1={centerX} y1="78" x2={centerX} y2="118" stroke="#d1d5db" strokeWidth="2" />
+          <TreeNode x={centerX} y={52} title="Du" subtitle={`${snapshot.rankName} · ${formatCurrency(snapshot.totalEUR)}`} color="#0f766e" />
+          {legs.length > 1 && (
+            <line x1={firstLegX} y1="118" x2={lastLegX} y2="118" stroke="#d1d5db" strokeWidth="2" />
+          )}
           {legs.map((leg, index) => {
-            const x = 115 + index * 157.5;
+            const x = padX + index * slotWidth;
             const selected = leg.id === selectedLeg.id;
             return (
               <g key={leg.id} onClick={() => onSelectLeg(leg.id)} className="cursor-pointer">
@@ -412,33 +426,24 @@ function TreeNode({
 }
 
 function buildLegs(snapshot: MonthResult): LegData[] {
-  const legCount = Math.max(1, Math.min(5, Math.round(snapshot.directLegs || 1)));
-  const weights = [1.12, 1, 0.9, 0.82, 0.74].slice(0, legCount);
-  const totalWeight = sum(weights);
+  const legCount = Math.max(1, Math.round(snapshot.directLegs || 1));
+  const share = 1 / legCount;
   const levelTotals = buildLevelTotals(snapshot);
+  const qgvPerLeg = snapshot.qgv * share;
+  const rank = estimateRank(qgvPerLeg, legCount);
+  const color = RANK_COLORS[rank] ?? RANK_COLORS.Member;
 
-  return weights.map((weight, index) => {
-    const share = weight / totalWeight;
-    const qgv = snapshot.qgv * share;
-    const eur = snapshot.totalEUR * share;
-    const nodes = snapshot.networkSize * share;
-    const rank = estimateRank(qgv, Math.max(0, legCount - index));
-
-    return {
-      id: index + 1,
-      label: `Bein ${index + 1}`,
-      rank,
-      nodes,
-      qgv,
-      eur,
-      activity: Math.max(8, Math.min(100, (qgv / Math.max(1, snapshot.qgv / legCount)) * 82)),
-      color: RANK_COLORS[rank] ?? RANK_COLORS.Member,
-      levels: levelTotals.map((levelTotal, levelIndex) => {
-        const taper = 1 + (index * 0.06) - (levelIndex * 0.015);
-        return Math.max(0, levelTotal * share * taper);
-      }),
-    };
-  });
+  return Array.from({ length: legCount }, (_, index) => ({
+    id: index + 1,
+    label: `Bein ${index + 1}`,
+    rank,
+    nodes: snapshot.networkSize * share,
+    qgv: qgvPerLeg,
+    eur: snapshot.totalEUR * share,
+    activity: 100,
+    color,
+    levels: levelTotals.map((levelTotal) => levelTotal * share),
+  }));
 }
 
 function buildLevelTotals(snapshot: MonthResult): number[] {

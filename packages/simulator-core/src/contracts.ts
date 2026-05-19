@@ -43,6 +43,8 @@ export interface SimulatorInputs {
   shopperMonthlyVolume: number;
   personalMonthlyVolume?: number;
   unitToCurrency?: number;
+  /** Monatlicher Eigenkonsum in EUR. Basis fuer Refinanzierung und Ueberschuss. */
+  monthlyProductCostEUR?: number;
 }
 
 export interface CompensationResult {

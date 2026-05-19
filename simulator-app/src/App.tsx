@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getProduct } from '@mlm/product-registry';
 import { runSimulation, type ProductId } from '@mlm/simulator-core';
+import { evaluateGoals } from '@mlm/simulator-goals';
 import { BrandLockup } from './components/BrandLockup';
 import { Slider } from './components/Slider';
 import { HeroNumber } from './components/HeroNumber';
@@ -12,6 +13,19 @@ import {
   NetworkVisualizations,
   type NetworkView,
 } from './components/NetworkVisualizations';
+import {
+  AdvancedSettingsPanel,
+  type RealityStrategy,
+} from './components/AdvancedSettingsPanel';
+import type { GoalUI } from './components/GoalsEditorDialog';
+
+const DEFAULT_GOALS: GoalUI[] = [
+  { id: 'products-refinanced', label: 'Produkte refinanziert', icon: 'leaf',   kind: 'productsRefinanced', amountEUR: 100 },
+  { id: 'holiday',             label: 'Urlaub',                 icon: 'plane',  kind: 'yearlySurplus',      amountEUR: 2000, requiresRefinanced: true },
+  { id: 'car',                 label: 'Auto',                   icon: 'car',    kind: 'monthlySurplus',     amountEUR: 500,  requiresRefinanced: true },
+  { id: 'rent-free',           label: 'Mietfrei wohnen',        icon: 'home',   kind: 'monthlySurplus',     amountEUR: 1400, requiresRefinanced: true },
+  { id: 'free-life',           label: 'Frei leben',             icon: 'crown',  kind: 'monthlyIncome',      amountEUR: 5000, requiresRefinanced: true },
+];
 
 export default function App() {
   const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
@@ -32,18 +46,43 @@ export default function App() {
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
 
+  const [maxDirectMembersPerMember, setMaxDirectMembersPerMember] = useState(29);
+  const [realityStrategy, setRealityStrategy] = useState<RealityStrategy>('standard');
+  const [goals, setGoals] = useState<GoalUI[]>(DEFAULT_GOALS);
+  const [monthlyProductCostEUR, setMonthlyProductCostEUR] = useState(
+    defaults.monthlyProductCostEUR ?? 100,
+  );
+
+  const inputs = useMemo(
+    () => ({
+      membersPerYear,
+      shoppersPerYear,
+      duplicationRate: duplication / 100,
+      attritionRate: attrition / 100,
+      memberMonthlyVolume: monthlyIP,
+      shopperMonthlyVolume: monthlyIP,
+      unitToCurrency: ipToEur,
+      monthlyProductCostEUR,
+    }),
+    [
+      membersPerYear,
+      shoppersPerYear,
+      monthlyIP,
+      duplication,
+      attrition,
+      ipToEur,
+      monthlyProductCostEUR,
+    ],
+  );
+
   const result = useMemo(
-    () =>
-      runSimulation(product, {
-        membersPerYear,
-        shoppersPerYear,
-        duplicationRate: duplication / 100,
-        attritionRate: attrition / 100,
-        memberMonthlyVolume: monthlyIP,
-        shopperMonthlyVolume: monthlyIP,
-        unitToCurrency: ipToEur,
-      }),
-    [product, membersPerYear, shoppersPerYear, monthlyIP, duplication, attrition, ipToEur],
+    () => runSimulation(product, inputs),
+    [product, inputs],
+  );
+
+  const goalProgress = useMemo(
+    () => evaluateGoals(result, activeGoals(goals), inputs),
+    [result, goals, inputs],
   );
 
   const finalMonth = result.finalMonth;
@@ -120,7 +159,19 @@ export default function App() {
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
         {page === 'chart' ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
+          <>
+            <AdvancedSettingsPanel
+              maxDirectMembersPerMember={maxDirectMembersPerMember}
+              onMaxDirectChange={setMaxDirectMembersPerMember}
+              monthlyProductCostEUR={monthlyProductCostEUR}
+              onMonthlyProductCostChange={setMonthlyProductCostEUR}
+              realityStrategy={realityStrategy}
+              onRealityStrategyChange={setRealityStrategy}
+              goals={goals}
+              onGoalsChange={setGoals}
+              goalProgress={goalProgress}
+            />
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-4 mb-5">
               <Slider label={`${product.terminology.memberLabel} / Jahr`} value={membersPerYear} min={0} max={6} step={0.25} onChange={setMembersPerYear} />
               <Slider label={`${product.terminology.shopperLabel} / Jahr`} value={shoppersPerYear} min={0} max={6} step={0.25} onChange={setShoppersPerYear} />
@@ -135,10 +186,15 @@ export default function App() {
             </div>
             <div className="mt-4">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Provisionsverlauf - 10 Jahre</p>
-              <ProvisionChart yearEnds={result.yearEnds} />
+              <ProvisionChart
+                yearEnds={result.yearEnds}
+                goalProgress={goalProgress}
+                goals={goals}
+              />
             </div>
             <YearlySummaryTable years={result.yearSummaries} />
-          </div>
+            </div>
+          </>
         ) : (
           <NetworkVisualizations yearEnds={result.yearEnds} selectedView={networkView} />
         )}
@@ -173,6 +229,10 @@ export default function App() {
       </footer>
     </div>
   );
+}
+
+function activeGoals(goals: GoalUI[]): GoalUI[] {
+  return goals.filter((goal) => goal.amountEUR > 0);
 }
 
 function NetworkMenuItem({ label, active, icon, onClick }: { label: string; active: boolean; icon: 'sunburst' | 'columns' | 'tree'; onClick: () => void }) {

@@ -56,6 +56,7 @@ export default defineConfig(async ({ mode }) => {
     resolve: {
       alias: {
         '@mlm/simulator-core': `${repoRoot}packages/simulator-core/src/index.ts`,
+        '@mlm/simulator-goals': `${repoRoot}packages/simulator-goals/src/index.ts`,
         '@mlm/product-lifeplus': `${repoRoot}packages/product-lifeplus/src/index.ts`,
         '@mlm/product-fitline': `${repoRoot}packages/product-fitline/src/index.ts`,
         '@mlm/product-eqology': `${repoRoot}packages/product-eqology/src/index.ts`,
