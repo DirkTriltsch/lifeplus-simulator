@@ -4,16 +4,602 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{SITE_NAME}} – Vergütungs-Simulator für {{PRODUCT_NAME}}</title>
-  <meta name="description" content="{{SUB_CLAIM}} Kostenloser, browserbasierter Simulator." />
+  <meta name="description" content="{{SUB_CLAIM}}" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <style>
     :root {
       --brand: {{ACCENT_COLOR}};
       --brand-dark: {{ACCENT_COLOR_DARK}};
+      --brand-soft: {{LOCKUP_WAVE_COLOR}};
       --lockup-dark-bg: {{LOCKUP_DARK_BG}};
       --lockup-accent-on-dark: {{LOCKUP_ACCENT_ON_DARK}};
+
+      --cta: #EA7600;
+      --cta-dark: #C45F00;
+      --accent-vibrant: #9FBA37;
+
+      --serif: 'Fraunces', 'Source Serif 4', Georgia, serif;
+      --sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+      --ink: #0F1B17;
+      --ink-2: #2C4138;
+      --ink-3: #4A5C53;
+      --ink-4: #7A8983;
+      --ink-5: #A8B2AD;
+      --line: #E1E5E2;
+      --line-soft: #EEF1EF;
+      --paper: #FAFBF9;
+      --paper-2: #F4F6F2;
+      --brand-surface: color-mix(in srgb, var(--brand) 8%, white);
     }
+
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+      font-size: 16px;
+    }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+    @media (max-width: 720px) { .wrap { padding: 0 20px; } }
+    .btn-primary::after { content: none; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      padding: 80px 0 90px;
+      overflow: hidden;
+      text-align: left;
+    }
+    @media (max-width: 720px) { .hero { padding: 48px 0 56px; } }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 800px 400px at 85% 20%, color-mix(in srgb, var(--brand) 6%, transparent) 0%, transparent 60%),
+        radial-gradient(ellipse 600px 500px at 15% 80%, color-mix(in srgb, var(--brand-soft) 8%, transparent) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(15,27,23,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,27,23,0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 60% at center, black 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at center, black 30%, transparent 80%);
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 2; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 7px 14px 7px 10px;
+      background: #fff;
+      border: 0.5px solid var(--line);
+      border-radius: 100px;
+      font-size: 12px; color: var(--ink-2);
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(15,27,23,0.04);
+      margin-bottom: 26px;
+    }
+    .hero-eyebrow .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 15%, transparent);
+    }
+    .hero-eyebrow .tag {
+      font-family: var(--sans);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: -0.1px;
+      background: var(--brand-surface);
+      padding: 3px 9px;
+      border-radius: 5px;
+      margin-left: 2px;
+    }
+    .hero-eyebrow .tag .tag-neutral { color: var(--ink-2); }
+    .hero-eyebrow .tag .tag-accent { color: var(--brand); }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 1024px) { .hero-grid { grid-template-columns: 1fr; gap: 44px; } }
+    .hero-h1 {
+      font-family: var(--serif);
+      font-size: clamp(38px, 5.4vw, 68px);
+      line-height: 1.02;
+      letter-spacing: -0.025em;
+      font-weight: 400;
+      color: var(--ink);
+      margin: 0 0 22px;
+    }
+    .hero-h1 em { font-style: italic; font-weight: 400; color: var(--brand); }
+    .hero-h1 .nowrap { white-space: nowrap; }
+    .hero-h1-sub {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.62em;
+      color: var(--ink-3);
+      font-weight: 400;
+      font-style: italic;
+      letter-spacing: -0.015em;
+    }
+    .hero-sub {
+      font-size: 18px; line-height: 1.55;
+      color: var(--ink-3);
+      max-width: 540px;
+      margin: 0 0 32px;
+    }
+    .hero-sub strong { color: var(--ink-2); font-weight: 500; }
+    @media (max-width: 720px) { .hero-sub { font-size: 16px; } }
+    .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 36px; }
+
+    .btn-primary, .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 24px;
+      border-radius: 100px;
+      font-size: 15px; font-weight: 500;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--cta); color: #fff !important;
+      box-shadow: 0 1px 2px rgba(234,118,0,0.2), 0 4px 14px rgba(234,118,0,0.18);
+    }
+    .btn-primary:hover {
+      background: var(--cta-dark);
+      transform: translateY(-2px);
+      text-decoration: none;
+      box-shadow: 0 2px 4px rgba(234,118,0,0.22), 0 8px 24px rgba(234,118,0,0.25);
+    }
+    .btn-primary svg { width: 16px; height: 16px; transition: transform 0.18s; }
+    .btn-primary:hover svg { transform: translateX(3px); }
+    .btn-secondary {
+      color: var(--ink);
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .btn-secondary:hover { border-color: var(--brand); color: var(--brand); text-decoration: none; }
+    .btn-secondary svg { width: 14px; height: 14px; }
+
+    .hero-proof {
+      display: flex; align-items: center; gap: 24px;
+      font-size: 13px; color: var(--ink-4);
+      flex-wrap: wrap;
+    }
+    .hero-proof-item { display: flex; align-items: center; gap: 8px; }
+    .hero-proof-item svg { color: var(--brand); width: 14px; height: 14px; flex-shrink: 0; }
+    @media (max-width: 540px) { .hero-proof { flex-direction: column; align-items: flex-start; gap: 10px; } }
+
+    /* Product preview frame */
+    .product-frame {
+      background: #fff;
+      border-radius: 20px;
+      border: 0.5px solid var(--line);
+      padding: 22px;
+      box-shadow:
+        0 1px 2px rgba(15,27,23,0.04),
+        0 8px 24px rgba(15,27,23,0.06),
+        0 24px 60px color-mix(in srgb, var(--brand-dark) 8%, transparent);
+      position: relative;
+    }
+    .pf-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px; padding-bottom: 14px;
+      border-bottom: 0.5px solid var(--line-soft);
+    }
+    .pf-dots { display: flex; gap: 6px; }
+    .pf-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+    .pf-title { font-family: var(--mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.05em; }
+    .pf-badge {
+      background: var(--brand-surface);
+      color: var(--brand);
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+    }
+    .pf-hero-num-label { font-size: 11px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; font-weight: 500; }
+    .pf-hero-num {
+      font-family: var(--serif);
+      font-size: 56px; font-weight: 400;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 6px;
+      display: flex; align-items: baseline; gap: 4px;
+    }
+    .pf-hero-num .currency { font-size: 32px; color: var(--ink-3); font-weight: 300; }
+    .pf-hero-num .unit { font-family: var(--sans); font-size: 14px; color: var(--ink-4); margin-left: 6px; font-weight: 400; }
+    .pf-hero-delta {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--brand);
+      background: var(--brand-surface);
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+    .pf-hero-delta svg { width: 11px; height: 11px; }
+    .pf-chart { height: 120px; margin-bottom: 18px; position: relative; }
+    .pf-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .pf-sliders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .pf-slider-tile { background: var(--paper-2); border-radius: 10px; padding: 10px 12px; }
+    .pf-slider-label { font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; font-weight: 500; }
+    .pf-slider-value {
+      font-family: var(--serif);
+      font-size: 18px; font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+    .pf-slider-bar { height: 3px; background: var(--line); border-radius: 100px; position: relative; overflow: hidden; }
+    .pf-slider-bar::after {
+      content: ""; position: absolute; left: 0; top: 0;
+      height: 100%; width: var(--w, 60%);
+      background: var(--brand);
+      border-radius: 100px;
+    }
+
+    /* Floating annotations on product frame */
+    .pf-annotation {
+      position: absolute;
+      background: var(--lockup-dark-bg); color: #fff;
+      font-family: var(--mono); font-size: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      white-space: nowrap;
+      z-index: 3;
+    }
+    .pf-annotation::after {
+      content: ""; position: absolute;
+      width: 0; height: 0;
+      border-style: solid;
+    }
+    .pf-annotation.a1 { top: 28%; right: -16px; }
+    .pf-annotation.a1::after {
+      left: -6px; top: 50%; transform: translateY(-50%);
+      border-width: 5px 6px 5px 0;
+      border-color: transparent var(--lockup-dark-bg) transparent transparent;
+    }
+    .pf-annotation.a2 {
+      bottom: 18%; left: -22px;
+      background: var(--cta);
+    }
+    .pf-annotation.a2::after {
+      right: -6px; top: 50%; transform: translateY(-50%);
+      border-width: 5px 0 5px 6px;
+      border-color: transparent transparent transparent var(--cta);
+    }
+    @media (max-width: 540px) {
+      .pf-annotation.a1, .pf-annotation.a2 { display: none; }
+    }
+
+    /* ===== Trust strip ===== */
+    .trust-strip {
+      border-top: 0.5px solid var(--line);
+      border-bottom: 0.5px solid var(--line);
+      background: #fff;
+      padding: 28px 0;
+    }
+    .trust-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 32px; flex-wrap: wrap;
+    }
+    .trust-label { font-family: var(--mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
+    .trust-items { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: baseline; gap: 8px; font-family: var(--sans); }
+    .trust-num { font-family: var(--serif); font-size: 26px; font-weight: 400; color: var(--brand); letter-spacing: -0.02em; }
+    .trust-num.trust-num-text { font-size: 18px; font-style: italic; white-space: nowrap; }
+    .trust-num .trust-arrow { font-family: var(--sans); font-style: normal; font-size: 14px; margin: 0 4px; color: var(--brand-soft); font-weight: 400; }
+    .trust-cap { font-size: 13px; color: var(--ink-3); font-weight: 500; }
+
+    /* ===== Section utils ===== */
+    .sec-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--brand);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .sec-eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--brand); }
+    .sec-h {
+      font-family: var(--serif);
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      font-weight: 400;
+      color: var(--ink);
+      margin: 0 0 18px;
+      max-width: 760px;
+    }
+    .sec-h em { font-style: italic; color: var(--brand); }
+    .sec-sub {
+      font-size: 17px;
+      color: var(--ink-3);
+      line-height: 1.6;
+      max-width: 640px;
+      margin: 0 0 36px;
+    }
+
+    /* ===== Core panel ===== */
+    .core {
+      background: var(--lockup-dark-bg);
+      color: #fff;
+      padding: 90px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    @media (max-width: 720px) { .core { padding: 64px 0 72px; } }
+    .core::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 600px 300px at 10% 0%, color-mix(in srgb, var(--brand) 40%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse 700px 400px at 100% 100%, color-mix(in srgb, var(--brand-soft) 18%, transparent) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .core-inner { position: relative; }
+    .core-grid-intro {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-bottom: 72px;
+    }
+    @media (max-width: 1024px) { .core-grid-intro { grid-template-columns: 1fr; gap: 40px; margin-bottom: 52px; } }
+    .core-eyebrow {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--brand-soft);
+      margin-bottom: 18px;
+      font-weight: 500;
+    }
+    .core-h {
+      font-family: var(--serif);
+      font-size: clamp(30px, 4.4vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      font-weight: 400;
+      color: #fff;
+      margin: 0 0 22px;
+    }
+    .core-h em { font-style: italic; color: var(--brand-soft); font-weight: 400; }
+    .core-sub { font-size: 17px; color: rgba(255,255,255,0.72); line-height: 1.6; }
+
+    .core-viz-frame {
+      background: rgba(255,255,255,0.04);
+      border: 0.5px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 22px 22px 14px;
+      backdrop-filter: blur(8px);
+    }
+    .core-viz-frame svg { width: 100%; height: auto; display: block; margin-bottom: 12px; }
+    .core-viz-cap {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      font-style: italic;
+      padding: 6px 0 4px;
+      border-top: 0.5px solid rgba(255,255,255,0.08);
+    }
+    .core-divider { height: 0.5px; background: rgba(255,255,255,0.1); margin: 0 0 48px; }
+    .core-paths-head { margin-bottom: 40px; }
+    .core-paths-h {
+      font-family: var(--serif);
+      font-size: clamp(26px, 3.4vw, 38px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      font-weight: 400;
+      color: #fff;
+      max-width: 760px;
+      margin: 0;
+    }
+    .core-paths-h em { font-style: italic; color: var(--brand-soft); }
+    .core-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+    @media (max-width: 900px) { .core-grid { grid-template-columns: 1fr; gap: 24px; } }
+    .core-card { padding: 26px 0; border-top: 0.5px solid rgba(255,255,255,0.18); }
+    .core-card-num { font-family: var(--mono); font-size: 11px; color: var(--brand-soft); letter-spacing: 0.16em; margin-bottom: 16px; font-weight: 500; }
+    .core-card-h { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.22; color: #fff; margin: 0 0 12px; letter-spacing: -0.01em; }
+    .core-card-p { font-size: 15px; color: rgba(255,255,255,0.62); line-height: 1.65; margin: 0; }
+
+    /* ===== Feature teaser ===== */
+    .feat-teaser { padding: 88px 0; }
+    @media (max-width: 720px) { .feat-teaser { padding: 56px 0; } }
+    .feat-teaser-head { text-align: center; margin-bottom: 44px; }
+    .feat-teaser-head .sec-h, .feat-teaser-head .sec-sub { margin-left: auto; margin-right: auto; }
+    .feat-teaser-head .sec-eyebrow { justify-content: center; }
+    .feat-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) { .feat-cards { grid-template-columns: 1fr; } }
+    .feat-card {
+      background: #fff;
+      border: 0.5px solid var(--line);
+      border-radius: 14px;
+      padding: 26px 24px;
+      text-decoration: none !important;
+      color: inherit;
+      display: flex; flex-direction: column;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    }
+    .feat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(15,27,23,0.08); border-color: var(--brand); }
+    .feat-card-num { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--brand); margin-bottom: 14px; font-weight: 500; }
+    .feat-card-h { font-family: var(--serif); font-size: 20px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 10px; color: var(--ink); }
+    .feat-card-p { font-size: 14px; color: var(--ink-3); line-height: 1.55; margin: 0 0 16px; flex: 1; }
+    .feat-card-arrow {
+      font-size: 13px; color: var(--brand);
+      font-weight: 500;
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: auto;
+    }
+    .feat-card-arrow svg { width: 13px; height: 13px; transition: transform 0.18s; }
+    .feat-card:hover .feat-card-arrow svg { transform: translateX(3px); }
+    .feat-teaser-cta { text-align: center; margin-top: 36px; }
+
+    /* ===== Pricing teaser ===== */
+    .pricing-teaser {
+      padding: 96px 0;
+      background: var(--paper);
+      border-top: 0.5px solid var(--line);
+      border-bottom: 0.5px solid var(--line);
+    }
+    @media (max-width: 720px) { .pricing-teaser { padding: 64px 0; } }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 900px) { .pricing-grid { grid-template-columns: 1fr; gap: 36px; } }
+    .pricing-intro .sec-h { font-size: clamp(28px, 3.6vw, 40px); }
+    .pricing-intro .sec-sub { max-width: 460px; }
+    .pricing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 540px) { .pricing-cards { grid-template-columns: 1fr; } }
+    .pricing-card {
+      background: #fff;
+      border: 0.5px solid var(--line);
+      border-radius: 14px;
+      padding: 26px 24px 24px;
+      position: relative;
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .pricing-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(15,27,23,0.06); }
+    .pricing-card.pc-featured {
+      border: 1.5px solid var(--brand);
+      background: linear-gradient(180deg, white 0%, var(--brand-surface) 100%);
+    }
+    .pc-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-4);
+      background: var(--paper-2);
+      padding: 4px 10px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+    .pc-tag.pc-tag-highlight { color: #fff; background: var(--brand); }
+    .pc-name { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); margin: 0 0 10px; letter-spacing: -0.01em; }
+    .pc-price { font-family: var(--serif); color: var(--ink); display: flex; align-items: baseline; gap: 2px; margin-bottom: 4px; letter-spacing: -0.02em; }
+    .pc-price-cur { font-size: 22px; color: var(--ink-3); font-weight: 300; }
+    .pc-price-val { font-size: 44px; font-weight: 400; line-height: 1; }
+    .pc-price-unit { font-family: var(--sans); font-size: 14px; color: var(--ink-4); margin-left: 6px; font-weight: 400; }
+    .pc-bill { font-size: 12px; color: var(--ink-4); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 0.5px solid var(--line-soft); }
+    .pc-featured .pc-bill { color: var(--brand); font-weight: 500; }
+    .pc-features { list-style: none; display: grid; gap: 10px; padding: 0; margin: 0; }
+    .pc-features li {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 13px; color: var(--ink-2);
+      line-height: 1.45;
+    }
+    .pc-features li svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--brand); margin-top: 2px; }
+    .pc-features li strong { color: var(--ink); font-weight: 600; }
+    .pricing-note {
+      margin-top: 28px;
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 16px 20px;
+      background: var(--paper-2);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--ink-3);
+      line-height: 1.55;
+    }
+    .pricing-note svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--brand); margin-top: 1px; }
+    .pricing-note strong { color: var(--ink); font-weight: 600; }
+
+    /* ===== FAQ ===== */
+    .faq { padding: 96px 0; }
+    @media (max-width: 720px) { .faq { padding: 64px 0; } }
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 72px;
+      align-items: flex-start;
+    }
+    @media (max-width: 900px) { .faq-grid { grid-template-columns: 1fr; gap: 32px; } }
+    .faq-list { border-top: 0.5px solid var(--line); }
+    .faq-item { border-bottom: 0.5px solid var(--line); }
+    .faq-q {
+      width: 100%;
+      text-align: left;
+      padding: 22px 0;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 24px;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .faq-q:hover { color: var(--brand); }
+    .faq-icon {
+      width: 22px; height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      margin-top: 1px;
+    }
+    .faq-icon svg { width: 10px; height: 10px; transition: transform 0.25s; }
+    .faq-item.open .faq-icon { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .faq-item.open .faq-icon svg { transform: rotate(45deg); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1); }
+    .faq-a-inner { padding: 0 32px 24px 0; font-size: 15px; line-height: 1.65; color: var(--ink-3); }
+    .faq-a-inner p + p { margin-top: 10px; }
+    .faq-a-inner a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+    .faq-item.open .faq-a { max-height: 360px; }
+
+    /* ===== Final CTA ===== */
+    .final-cta {
+      padding: 96px 0;
+      text-align: center;
+      background: linear-gradient(180deg, var(--paper) 0%, var(--brand-surface) 100%);
+      border-top: 0.5px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+    .final-cta::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 500px 240px at 50% 100%, color-mix(in srgb, var(--brand) 14%, transparent) 0%, transparent 70%);
+    }
+    .final-h {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4.4vw, 52px);
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      font-weight: 400;
+      color: var(--ink);
+      margin: 0 auto 18px;
+      max-width: 720px;
+      position: relative;
+    }
+    .final-h em { font-style: italic; color: var(--brand); }
+    .final-sub { font-size: 17px; color: var(--ink-3); max-width: 540px; margin: 0 auto 32px; line-height: 1.6; position: relative; }
+    .final-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
   </style>
 </head>
 <body>
@@ -34,60 +620,425 @@
           <span class="lockup-sub">{{LOCKUP_TAGLINE_DE}}</span>
         </span>
       </a>
-      <a class="nav-cta nav-cta--dark" href="{{APP_URL}}">Simulator starten</a>
+      <nav class="site-nav-links">
+        <a href="#kernbotschaft">Konzept</a>
+        <a href="features.html">Funktionen</a>
+        <a href="pricing.html">Preise</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="nav-cta nav-cta--dark" href="{{APP_URL}}">
+        Simulator starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="14" height="14"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
     </div>
   </header>
 
+  <!-- ===== Hero ===== -->
   <section class="hero">
-    <div class="container">
-      <h1>{{CLAIM}}</h1>
-      <p class="sub">{{SUB_CLAIM}}</p>
-      <a class="btn-primary" href="{{APP_URL}}">Simulator starten</a>
-    </div>
-  </section>
+    <div class="wrap hero-inner">
+      <div class="hero-grid">
+        <div>
+          <div class="hero-eyebrow">
+            <span class="dot"></span>
+            Für {{PRODUCT_NAME}}-Sponsoren
+            <span class="tag"><span class="tag-neutral">{{LOCKUP_NEUTRAL}}</span><span class="tag-accent">{{LOCKUP_ACCENT}}</span></span>
+          </div>
 
-  <section class="section">
-    <div class="container">
-      <h2>Was der Simulator macht</h2>
-      <div class="features">
-        <div class="feature">
-          <h3>Vergütung simulieren</h3>
-          <p>Schiebe an fünf Reglern und siehe in Echtzeit, was am Monatsende rauskommt – Phase 1, 2 und 3 sauber getrennt.</p>
+          <h1 class="hero-h1">
+            Niemand sieht <em>exponentielles Wachstum</em>
+            <span class="nowrap">im voraus.</span>
+            <span class="hero-h1-sub">Wir machen es sichtbar.</span>
+          </h1>
+
+          <p class="hero-sub">
+            Ein Netzwerk wächst nicht linear. Jahre 1 bis 3 fühlen sich langsam an — und dann kommt der Schwung. Genau das versteht im Gespräch <strong>niemand intuitiv.</strong> {{SITE_NAME}} zeigt es auf einer Kurve, in Echtzeit, mit den Werten deines Interessenten.
+          </p>
+
+          <div class="hero-ctas">
+            <a href="{{APP_URL}}" class="btn-primary">
+              Jetzt im Pitch nutzen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="features.html" class="btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21" fill="currentColor" stroke-linejoin="round"/></svg>
+              Funktionen ansehen
+            </a>
+          </div>
+
+          <div class="hero-proof">
+            <div class="hero-proof-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Mobil &amp; Desktop
+            </div>
+            <div class="hero-proof-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Abo · als Betriebsausgabe absetzbar
+            </div>
+            <div class="hero-proof-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Sofort einsatzbereit
+            </div>
+          </div>
         </div>
-        <div class="feature">
-          <h3>Netzwerk visualisieren</h3>
-          <p>Sunburst, Bein-Spalten oder Hybrid-Tree – drei Perspektiven auf dieselbe Downline-Struktur.</p>
-        </div>
-        <div class="feature">
-          <h3>10-Jahres-Prognose</h3>
-          <p>Provisionsverlauf, Netzwerkgröße und Rang über zehn Jahre – inklusive Jahresübersicht als Tabelle.</p>
+
+        <!-- Product preview -->
+        <div class="hero-illu">
+          <div class="product-frame">
+            <div class="pf-toolbar">
+              <div class="pf-dots"><span></span><span></span><span></span></div>
+              <div class="pf-title">{{SITE_DOMAIN}}</div>
+              <div class="pf-badge">LIVE</div>
+            </div>
+
+            <div class="pf-hero-num-label">Provision · Jahr 10 · pro Monat</div>
+            <div class="pf-hero-num">
+              <span class="currency">€</span>8.420<span class="unit">/Mon</span>
+            </div>
+            <div class="pf-hero-delta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16 7 22 7 22 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Realistisch · 30% Dup · 20% Fluk
+            </div>
+
+            <div class="pf-chart">
+              <svg viewBox="0 0 480 120" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="pf-area" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="{{ACCENT_COLOR}}" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="{{ACCENT_COLOR}}" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <line x1="0" y1="30" x2="480" y2="30" stroke="#EEF1EF" stroke-width="0.5" stroke-dasharray="2 3"/>
+                <line x1="0" y1="60" x2="480" y2="60" stroke="#EEF1EF" stroke-width="0.5" stroke-dasharray="2 3"/>
+                <line x1="0" y1="90" x2="480" y2="90" stroke="#EEF1EF" stroke-width="0.5" stroke-dasharray="2 3"/>
+                <path d="M 24 108 L 74 104 L 124 96 L 174 84 L 224 70 L 274 55 L 324 42 L 374 30 L 424 20 L 456 14 L 456 120 L 24 120 Z" fill="url(#pf-area)" opacity="0.85"/>
+                <path d="M 24 108 L 74 104 L 124 96 L 174 84 L 224 70 L 274 55 L 324 42 L 374 30 L 424 20 L 456 14" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="74" cy="104" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="124" cy="96" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="174" cy="84" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="224" cy="70" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="274" cy="55" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="324" cy="42" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="374" cy="30" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="424" cy="20" r="2.5" fill="{{ACCENT_COLOR}}"/>
+                <circle cx="456" cy="14" r="6" fill="{{ACCENT_COLOR}}" stroke="white" stroke-width="3"/>
+                <text x="24" y="118" font-family="JetBrains Mono" font-size="9" fill="#7A8983">J1</text>
+                <text x="170" y="118" font-family="JetBrains Mono" font-size="9" fill="#7A8983">J4</text>
+                <text x="316" y="118" font-family="JetBrains Mono" font-size="9" fill="#7A8983">J7</text>
+                <text x="442" y="118" font-family="JetBrains Mono" font-size="9" fill="#7A8983">J10</text>
+              </svg>
+            </div>
+
+            <div class="pf-sliders">
+              <div class="pf-slider-tile">
+                <div class="pf-slider-label">Member/J</div>
+                <div class="pf-slider-value">2</div>
+                <div class="pf-slider-bar" style="--w:25%"></div>
+              </div>
+              <div class="pf-slider-tile">
+                <div class="pf-slider-label">Shopper/J</div>
+                <div class="pf-slider-value">3</div>
+                <div class="pf-slider-bar" style="--w:38%"></div>
+              </div>
+              <div class="pf-slider-tile">
+                <div class="pf-slider-label">IP/Monat</div>
+                <div class="pf-slider-value">200</div>
+                <div class="pf-slider-bar" style="--w:60%"></div>
+              </div>
+            </div>
+
+            <div class="pf-annotation a1">Hero-Zahl · live</div>
+            <div class="pf-annotation a2">5 Slider</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <h2>Für wen das gemacht ist</h2>
-      <p>
-        Für {{PRODUCT_NAME}}-Partner, die ihren Karriereverlauf <strong>realistisch durchrechnen</strong> wollen,
-        bevor sie planen. Keine Marketingfolien, keine Schönrechnerei – nur der hinterlegte Vergütungsplan
-        und deine eigenen Annahmen.
-      </p>
-      <p>
-        Die Eingaben bleiben lokal im Browser. Keine Anmeldung, keine Tracker, keine Cookies.
-      </p>
-      <div class="disclaimer">
-        <strong>Hinweis:</strong> Schätzung auf Basis des aktuell hinterlegten Vergütungsplans.
-        Keine Garantie für tatsächliche Provisionen.
+  <!-- ===== Trust strip ===== -->
+  <section class="trust-strip">
+    <div class="wrap trust-inner">
+      <div class="trust-label">Eingebaute Logik</div>
+      <div class="trust-items">
+        <div class="trust-item"><span class="trust-num">5</span><span class="trust-cap">Slider</span></div>
+        <div class="trust-item"><span class="trust-num">10</span><span class="trust-cap">Jahre Verlauf</span></div>
+        <div class="trust-item"><span class="trust-num">3</span><span class="trust-cap">Phasen-Vergütung</span></div>
+        <div class="trust-item"><span class="trust-num trust-num-text">Believer <span class="trust-arrow">→</span> 3* Diamond</span><span class="trust-cap">alle Stufen abgedeckt</span></div>
+        <div class="trust-item"><span class="trust-num">&lt;100ms</span><span class="trust-cap">Reaktion</span></div>
       </div>
     </div>
   </section>
 
-  <section class="cta-tail">
-    <div class="container">
-      <h2>Bereit, durchzurechnen?</h2>
-      <a class="btn-primary" href="{{APP_URL}}">Zum Simulator</a>
+  <!-- ===== Core Message ===== -->
+  <section class="core" id="kernbotschaft">
+    <div class="wrap core-inner">
+      <div class="core-grid-intro">
+        <div>
+          <div class="core-eyebrow">DAS PROBLEM</div>
+          <h2 class="core-h">
+            Der Vergütungsplan ist transparent —<br>
+            <em>Wachstum im Netzwerk ist es nicht.</em>
+          </h2>
+          <p class="core-sub">
+            {{SITE_NAME}} ändert das. Eine Live-Simulation mit wenigen Parametern, die den Vergütungsplan visualisiert — und zwar genau dort, wo Menschen aussteigen: bei der mentalen Vorstellung, wie ein Netzwerk über 10 Jahre wächst.
+          </p>
+        </div>
+
+        <div>
+          <div class="core-viz-frame">
+            <svg viewBox="0 0 360 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="core-area" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#9FBA37" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#9FBA37" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line x1="0" y1="170" x2="360" y2="170" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+              <text x="60" y="30" fill="rgba(255,255,255,0.65)" font-family="JetBrains Mono" font-size="10" letter-spacing="0.5">FLACH</text>
+              <line x1="5" y1="35" x2="55" y2="35" stroke="rgba(255,255,255,0.35)" stroke-width="0.5" stroke-dasharray="2 2"/>
+              <line x1="120" y1="35" x2="220" y2="35" stroke="rgba(255,255,255,0.35)" stroke-width="0.5" stroke-dasharray="2 2"/>
+              <text x="265" y="30" fill="#9FBA37" font-family="JetBrains Mono" font-size="10" letter-spacing="0.5">HOCKEYSTICK</text>
+              <line x1="240" y1="35" x2="260" y2="35" stroke="#9FBA37" stroke-width="0.5" stroke-dasharray="2 2"/>
+              <line x1="320" y1="35" x2="355" y2="35" stroke="#9FBA37" stroke-width="0.5" stroke-dasharray="2 2"/>
+              <path d="M 20 168 L 56 167 L 92 165 L 128 162 L 164 156 L 200 145 L 236 124 L 272 92 L 308 56 L 344 22 L 344 200 L 20 200 Z" fill="url(#core-area)"/>
+              <path d="M 20 168 L 56 167 L 92 165 L 128 162 L 164 156 L 200 145 L 236 124 L 272 92 L 308 56 L 344 22" fill="none" stroke="#9FBA37" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <text x="20" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J1</text>
+              <text x="92" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J3</text>
+              <text x="164" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J5</text>
+              <text x="236" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J7</text>
+              <text x="308" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J9</text>
+              <line x1="200" y1="42" x2="200" y2="180" stroke="#9FBA37" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+              <text x="200" y="50" fill="#9FBA37" font-family="Inter" font-size="9" text-anchor="middle" font-style="italic">Wendepunkt</text>
+              <circle cx="344" cy="22" r="5" fill="#9FBA37" stroke="white" stroke-width="2"/>
+            </svg>
+            <div class="core-viz-cap">Genau dieses Bild sieht dein Interessent — in seiner Hand, mit seinen Werten.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="core-divider"></div>
+
+      <div class="core-paths-head">
+        <div class="core-eyebrow">DREI PFADE · EIN TOOL</div>
+        <h3 class="core-paths-h">Der Simulator zeigt jedem das <em>seine.</em></h3>
+      </div>
+
+      <div class="core-grid">
+        <div class="core-card">
+          <div class="core-card-num">01 — Geduld &amp; Kontinuität</div>
+          <h3 class="core-card-h">Dranbleiben ist die einzige Voraussetzung.</h3>
+          <p class="core-card-p">Die Simulation macht sichtbar, was jeder erfahrene Sponsor weiß: Wer das Tempo aushält und kontinuierlich aufbaut, gewinnt. Es ist kein Versprechen — es ist Mathematik.</p>
+        </div>
+        <div class="core-card">
+          <div class="core-card-num">02 — Der ruhige Pfad</div>
+          <h3 class="core-card-h">Nebenher gestartet — Rentenlücke in 10 Jahren geschlossen.</h3>
+          <p class="core-card-p">Schon mit moderaten Werten — wenige neue Member pro Jahr, eine ruhige Shopper-Basis — zeigt der Simulator nach 10 Jahren eine Summe, die als Zusatzeinkommen den Unterschied macht.</p>
+        </div>
+        <div class="core-card">
+          <div class="core-card-num">03 — Der ambitionierte Pfad</div>
+          <h3 class="core-card-h">Wer Gas gibt, ersetzt sein Vollzeit-Einkommen in 4–7 Jahren.</h3>
+          <p class="core-card-p">Mit höherer Dynamik im Aufbau verschiebt sich der Wendepunkt nach vorn. Der Simulator zeigt es ohne Übertreibung — nur die Slider stehen anders, die Kurve macht den Rest.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Feature Teaser ===== -->
+  <section class="feat-teaser" id="funktionen">
+    <div class="wrap">
+      <div class="feat-teaser-head">
+        <div class="sec-eyebrow">Funktionen im Überblick</div>
+        <h2 class="sec-h">Drei Bausteine. <em>Ein Gespräch.</em></h2>
+        <p class="sec-sub">Slider, Verlauf und Pitch-Modus greifen ineinander — der Rest sind komfortable Helfer. Details auf der Funktionsseite.</p>
+      </div>
+      <div class="feat-cards">
+        <a href="features.html#slider" class="feat-card">
+          <div class="feat-card-num">01 / SLIDER</div>
+          <h3 class="feat-card-h">Fünf Regler, kein Vergütungsplan-Vortrag</h3>
+          <p class="feat-card-p">Member, Shopper, IP, Duplikation, Fluktuation — er stellt selbst ein, was er sich zutraut. Jede Bewegung ist eine Frage.</p>
+          <span class="feat-card-arrow">
+            Funktion ansehen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+        <a href="features.html#chart" class="feat-card">
+          <div class="feat-card-num">02 / VERLAUF</div>
+          <h3 class="feat-card-h">10 Jahre auf einer Kurve</h3>
+          <p class="feat-card-p">Der Sprung von Jahr 3 zu Jahr 7 wird sichtbar — als Bild, nicht als Tabelle. Monats- oder Jahresansicht in einem Tap.</p>
+          <span class="feat-card-arrow">
+            Funktion ansehen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+        <a href="features.html#pitch" class="feat-card">
+          <div class="feat-card-num">03 / PITCH-MODUS</div>
+          <h3 class="feat-card-h">Eine Zahl. Riesig. Teilbar.</h3>
+          <p class="feat-card-p">Im Gespräch zählt die Zahl, nicht die Tabelle. Pitch-Modus blendet alles aus — und packt das Szenario in einen Link.</p>
+          <span class="feat-card-arrow">
+            Funktion ansehen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+      </div>
+      <div class="feat-teaser-cta">
+        <a href="features.html" class="btn-secondary">
+          Alle Funktionen ansehen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Pricing Teaser ===== -->
+  <section class="pricing-teaser" id="pricing">
+    <div class="wrap">
+      <div class="pricing-grid">
+        <div class="pricing-intro">
+          <div class="sec-eyebrow">Preise</div>
+          <h2 class="sec-h">Faires Werkzeug, <em>fairer Preis.</em></h2>
+          <p class="sec-sub">
+            {{SITE_NAME}} ist ein Abo-Werkzeug für Sponsoren. Monatlich kündbar — oder im Jahresabo mit spürbarem Rabatt. Beide Pläne sind als <strong>Betriebsausgabe absetzbar.</strong>
+          </p>
+          <a href="pricing.html" class="btn-secondary">
+            Alle Preise &amp; Details ansehen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+
+        <div class="pricing-cards">
+          <div class="pricing-card">
+            <div class="pc-tag">Flexibel</div>
+            <div class="pc-name">Monatlich</div>
+            <div class="pc-price">
+              <span class="pc-price-cur">€</span><span class="pc-price-val">19</span><span class="pc-price-unit">/Monat</span>
+            </div>
+            <div class="pc-bill">€19 monatlich abgerechnet</div>
+            <ul class="pc-features">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Voller Funktionsumfang</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Mobil, Tablet &amp; Desktop</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Monatlich kündbar</li>
+            </ul>
+          </div>
+
+          <div class="pricing-card pc-featured">
+            <div class="pc-tag pc-tag-highlight">2 Monate gespart</div>
+            <div class="pc-name">Jährlich</div>
+            <div class="pc-price">
+              <span class="pc-price-cur">€</span><span class="pc-price-val">15</span><span class="pc-price-unit">/Monat</span>
+            </div>
+            <div class="pc-bill">€180 jährlich · Ersparnis €48</div>
+            <ul class="pc-features">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Alles aus Monatlich</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>~21 % günstiger</strong> als Monatsabo</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Eine Rechnung pro Jahr</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="pricing-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
+        <span>Alle Preise inkl. MwSt. Als Sponsor setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="faq" id="faq">
+    <div class="wrap faq-grid">
+      <div>
+        <div class="sec-eyebrow">FAQ</div>
+        <h2 class="sec-h">Was Sponsoren <em>am häufigsten</em> fragen.</h2>
+        <p class="sec-sub">Wenn deine Frage fehlt — kurze Mail an den Support, dann landet sie hier. Und wird beantwortet.</p>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item open">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Sind die Zahlen wirklich realistisch — oder Marketing?</span>
+            <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              <p>Realistisch heißt: realistisch für die Eingabewerte. Setzt du 100 % Duplikation und 0 % Fluktuation, kommt eine Milliarden-Zahl raus — und die ist mathematisch korrekt, aber praktisch unmöglich. Setzt du 30 % Duplikation und 20 % Fluktuation, landest du bei den ehrlichen €4.000–€10.000/Monat, die ein engagierter Sponsor nach 10 Jahren realistisch erreicht.</p>
+              <p>Der Simulator lügt nicht. Er rechnet exakt das, was du eingibst.</p>
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Welche Vergütungen sind eingerechnet?</span>
+            <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              <p>Alle drei Phasen des Vergütungsplans sind in der Engine abgebildet — <b>Phase 1</b> mit der Ebenen-Vergütung (40 % auf Ebenen 1–3, inkl. Empfehlung, Shop-Rabatt und Shop), <b>Phase 2</b> Leadership (12 % ab Ebene 4), und <b>Phase 3</b> Leadership Development (8 % ab Ebene 4). Komprimierung wird korrekt berücksichtigt.</p>
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Kann ich das im Kundengespräch zeigen — oder ist das zu komplex?</span>
+            <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              <p>Genau dafür ist es gebaut. Fünf Slider sind in 30 Sekunden erklärt. Der Pitch-Modus blendet alles Komplexe aus und zeigt nur die Hero-Zahl. Die Komplexität dahinter sieht der Interessent erst, wenn er sie sehen will.</p>
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Wie werden die Stufen-Jahre berechnet?</span>
+            <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              <p>Pro Jahr prüft die Engine die drei Stufen-Voraussetzungen des Plans: <b>AV</b> (Aktivitätsvolumen), <b>QGV</b> (Qualifiziertes Gruppenvolumen) und Anzahl der <b>QL</b> (Qualifizierte Beine). Sobald ein Jahr die Bedingungen einer Stufe — von Believer bis Diamond — erfüllt, wird sie als „erreicht in Jahr X" markiert.</p>
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Was kostet {{SITE_NAME}}?</span>
+            <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              <p>Zwei Optionen: <strong>€19/Monat</strong> bei monatlicher Abrechnung, oder <strong>€15/Monat</strong> (= €180/Jahr) im Jahresabo — das spart rund 21 %.</p>
+              <p>Beide Stufen haben den vollen Funktionsumfang und sind als <strong>Betriebsausgabe</strong> absetzbar. Details, Zahlungsoptionen und Kündigungsfristen findest du auf der <a href="pricing.html">Preisseite</a>.</p>
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Was passiert, wenn der Vergütungsplan sich ändert?</span>
+            <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              <p>Die Engine wird nachgezogen, sobald ein offizielles Update erscheint. Du arbeitest immer mit dem aktuellen Stand — kein manuelles Update auf deiner Seite.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Final CTA ===== -->
+  <section class="final-cta" id="cta">
+    <div class="wrap">
+      <h2 class="final-h">
+        Sein nächstes <em>„Ja"</em> ist eine Zahl entfernt.
+      </h2>
+      <p class="final-sub">
+        Öffne den Simulator, setz dich zu ihm, lass ihn die Slider bewegen. Du brauchst keine Folien mehr.
+      </p>
+      <div class="final-ctas">
+        <a href="{{APP_URL}}" class="btn-primary">
+          Simulator öffnen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="features.html" class="btn-secondary">Funktionen ansehen</a>
+      </div>
     </div>
   </section>
 
@@ -95,12 +1046,23 @@
     <div class="container">
       <span>© 2026 {{SITE_NAME}}</span>
       <nav>
+        <a href="features.html">Funktionen</a>
+        <a href="pricing.html">Preise</a>
         <a href="impressum.html">Impressum</a>
         <a href="datenschutz.html">Datenschutz</a>
         <a href="mailto:{{CONTACT_EMAIL}}">Kontakt</a>
       </nav>
     </div>
   </footer>
+
+  <script>
+    function toggleFaq(btn) {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+  </script>
 
 </body>
 </html>

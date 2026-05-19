@@ -71,65 +71,93 @@
   /* =================== NAVIGATION =================== */
   .nav {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(250, 251, 249, 0.78);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 0.5px solid var(--line);
+    background: #000;
+    padding: 6px 0;
+    border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  }
+  .nav-band {
+    background: var(--lp-dark);
+    width: 100%;
   }
   .nav-inner {
     display: flex; align-items: center; justify-content: space-between;
-    height: 68px;
+    gap: 24px;
+    height: 76px;
   }
   .logo {
-    display: flex; align-items: center; gap: 12px;
+    display: flex; align-items: center; gap: 14px;
   }
   .logo-mark {
-    width: 36px; height: 36px; border-radius: 8px;
+    width: 50px; height: 50px;
+    border-radius: 10px;
+    background: var(--lp-primary);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .logo-mark svg { width: 100%; height: 100%; display: block; }
+  .logo-text-wrap {
+    display: flex; flex-direction: column; gap: 5px;
+  }
   .logo-text {
     font-family: var(--sans);
     font-weight: 600;
-    font-size: 18px;
-    letter-spacing: -0.3px;
+    font-size: 26px;
+    letter-spacing: -0.5px;
     line-height: 1;
   }
-  .logo-text .neutral { color: var(--ink); }
-  .logo-text .accent { color: var(--lp-primary); }
+  .logo-text .neutral { color: white; }
+  .logo-text .accent { color: var(--lp-primary-soft); }
   .logo-sub {
     font-family: var(--sans);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    color: var(--ink-4);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--lp-primary-soft);
     text-transform: uppercase;
-    margin-top: 3px;
     font-weight: 500;
+    line-height: 1;
   }
 
   .nav-links {
     display: flex; align-items: center; gap: 36px;
-    font-size: 14px; color: var(--ink-3);
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
     font-weight: 500;
+    margin-left: auto;
+    margin-right: 28px;
   }
   .nav-links a {
     transition: color 0.15s;
-    position: relative;
   }
-  .nav-links a:hover { color: var(--lp-primary); }
+  .nav-links a:hover { color: white; }
   @media (max-width: 900px) { .nav-links { display: none; } }
 
   .nav-cta {
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; align-items: center; gap: 10px;
     background: var(--lp-cta); color: white;
-    padding: 10px 20px; border-radius: 100px;
+    padding: 12px 22px;
+    border-radius: 100px;
     font-size: 14px; font-weight: 500;
     letter-spacing: -0.1px;
-    transition: background 0.15s, transform 0.15s;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(234,118,0,0.28);
   }
-  .nav-cta:hover { background: var(--lp-cta-dark); transform: translateY(-1px); }
-  .nav-cta svg { width: 14px; height: 14px; }
+  .nav-cta:hover {
+    background: var(--lp-cta-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 6px 18px rgba(234,118,0,0.35);
+  }
+  .nav-cta svg {
+    width: 14px; height: 14px;
+    transition: transform 0.18s;
+  }
+  .nav-cta:hover svg { transform: translateX(3px); }
+
+  @media (max-width: 540px) {
+    .logo-sub { display: none; }
+    .logo-text { font-size: 22px; }
+    .logo-mark { width: 42px; height: 42px; }
+  }
 
   /* =================== HERO =================== */
   .hero {
@@ -1089,6 +1117,274 @@
     letter-spacing: -0.01em;
   }
 
+  /* =================== MULTI-DEVICE VISUAL =================== */
+  .multidevice {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 0.65fr;
+    gap: 18px;
+    align-items: end;
+    padding: 32px 12px 56px;
+  }
+
+  /* Desktop */
+  .md-desktop {
+    position: relative;
+  }
+  .md-d-frame {
+    background: #1A1F1C;
+    border-radius: 10px 10px 4px 4px;
+    padding: 8px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.06),
+      0 12px 28px rgba(15,27,23,0.12);
+    border: 0.5px solid var(--line);
+  }
+  .md-d-toolbar {
+    background: white;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 10px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .md-dots { display: flex; gap: 4px; flex-shrink: 0; }
+  .md-dots span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+  .md-d-url {
+    flex: 1;
+    background: var(--paper-2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .md-d-url .url-prot { color: var(--ink-3); }
+  .md-d-url .url-params { color: var(--lp-primary); font-weight: 500; }
+  .md-d-body {
+    background: white;
+    border-radius: 0 0 6px 6px;
+    padding: 24px 22px 22px;
+  }
+  .md-d-num {
+    font-family: var(--serif);
+    font-size: 46px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    display: flex; align-items: baseline; gap: 2px;
+    margin-bottom: 4px;
+  }
+  .md-d-num .cur {
+    font-size: 28px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .md-d-unit {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-4);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+  .md-d-cap {
+    font-size: 11px;
+    color: var(--ink-4);
+    margin-bottom: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .md-d-chart {
+    width: 100%; height: 60px; display: block;
+  }
+  .md-stand {
+    width: 50%;
+    margin: 0 auto;
+    height: 14px;
+    background: linear-gradient(180deg, #1A1F1C 0%, #0B0E0D 100%);
+    border-radius: 0 0 4px 4px;
+    position: relative;
+  }
+  .md-stand::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: -4px; left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 3px;
+    background: var(--ink-5);
+    border-radius: 100px;
+    opacity: 0.35;
+  }
+
+  /* Tablet */
+  .md-tablet { position: relative; }
+  .md-t-frame {
+    background: #1A1F1C;
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.06),
+      0 8px 22px rgba(15,27,23,0.1);
+    border: 0.5px solid var(--line);
+  }
+  .md-t-body {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 14px 16px;
+    min-height: 150px;
+  }
+  .md-t-num {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.025em;
+    line-height: 1;
+    display: flex; align-items: baseline; gap: 1px;
+    margin-bottom: 2px;
+  }
+  .md-t-num .cur {
+    font-size: 18px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .md-t-cap {
+    font-size: 9px;
+    color: var(--ink-4);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .md-t-chart {
+    width: 100%; height: 36px; display: block;
+    margin-bottom: 12px;
+  }
+  .md-t-mini { display: grid; gap: 6px; }
+  .md-t-mb {
+    height: 3px;
+    background: var(--line);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .md-t-mb-fill {
+    height: 100%;
+    background: var(--lp-primary);
+    border-radius: 100px;
+  }
+
+  /* Phone */
+  .md-phone { position: relative; }
+  .md-p-frame {
+    background: #1A1F1C;
+    border-radius: 16px;
+    padding: 4px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.06),
+      0 6px 18px rgba(15,27,23,0.1);
+    border: 0.5px solid var(--line);
+    position: relative;
+  }
+  .md-p-notch {
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 28px; height: 5px;
+    background: #000;
+    border-radius: 100px;
+    z-index: 2;
+  }
+  .md-p-body {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 10px 14px;
+    min-height: 110px;
+  }
+  .md-p-num {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    display: flex; align-items: baseline; gap: 1px;
+    margin-bottom: 2px;
+  }
+  .md-p-num .cur {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .md-p-cap {
+    font-size: 8px;
+    color: var(--ink-4);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .md-p-chart {
+    width: 100%; height: 24px; display: block;
+  }
+
+  .md-label {
+    margin-top: 10px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.05em;
+  }
+
+  .md-sync {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--lp-surface);
+    padding: 7px 14px;
+    border-radius: 100px;
+    color: var(--lp-primary);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 0.5px solid rgba(0,111,68,0.12);
+  }
+  .md-sync svg {
+    width: 13px; height: 13px;
+    animation: md-spin 4s linear infinite;
+  }
+  @keyframes md-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 540px) {
+    .multidevice {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .md-sync {
+      position: static;
+      transform: none;
+      margin: 0 auto;
+      display: flex;
+      width: fit-content;
+    }
+  }
+
   /* =================== FEATURE GRID (4 lite cards) =================== */
   .lite-features {
     background: var(--paper-2);
@@ -1134,7 +1430,146 @@
     line-height: 1.55;
   }
 
-  /* =================== FAQ =================== */
+  /* =================== PRICING TEASER =================== */
+  .pricing-teaser {
+    padding: 110px 0;
+    background: var(--paper);
+    border-bottom: 0.5px solid var(--line);
+  }
+  @media (max-width: 720px) { .pricing-teaser { padding: 72px 0; } }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 72px;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .pricing-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  .pricing-intro .sec-h { font-size: clamp(30px, 4vw, 44px); margin-bottom: 18px; }
+  .pricing-intro .sec-sub { font-size: 16px; margin-bottom: 28px; max-width: 460px; }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 540px) { .pricing-cards { grid-template-columns: 1fr; } }
+
+  .pricing-card {
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 14px;
+    padding: 26px 24px 24px;
+    position: relative;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .pricing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(15,27,23,0.06);
+  }
+  .pricing-card.pc-featured {
+    border: 1.5px solid var(--lp-primary);
+    background: linear-gradient(180deg, white 0%, var(--lp-surface) 100%);
+  }
+  .pc-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-4);
+    background: var(--paper-2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+  .pc-tag.pc-tag-highlight {
+    color: white;
+    background: var(--lp-primary);
+  }
+  .pc-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .pc-price {
+    font-family: var(--serif);
+    color: var(--ink);
+    display: flex; align-items: baseline; gap: 2px;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .pc-price-cur {
+    font-size: 22px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .pc-price-val {
+    font-size: 44px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .pc-price-unit {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink-4);
+    margin-left: 6px;
+    font-weight: 400;
+  }
+  .pc-bill {
+    font-size: 12px;
+    color: var(--ink-4);
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .pc-featured .pc-bill {
+    color: var(--lp-primary);
+    font-weight: 500;
+  }
+  .pc-features {
+    list-style: none;
+    display: grid; gap: 10px;
+  }
+  .pc-features li {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .pc-features li svg {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    color: var(--lp-primary);
+    margin-top: 2px;
+  }
+  .pc-features li strong { color: var(--ink); font-weight: 600; }
+
+  .pricing-note {
+    margin-top: 32px;
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 16px 20px;
+    background: var(--paper-2);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.55;
+    max-width: 720px;
+  }
+  .pricing-note svg {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    color: var(--lp-primary);
+    margin-top: 1px;
+  }
+  .pricing-note strong { color: var(--ink); font-weight: 600; }
   .faq {
     padding: 110px 0;
   }
@@ -1267,31 +1702,33 @@
 
 <!-- =================== NAV =================== -->
 <nav class="nav">
-  <div class="wrap nav-inner">
-    <a class="logo" href="#">
-      <div class="logo-mark">
-        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-          <rect width="256" height="256" rx="44" fill="#006F44"/>
-          <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="600" letter-spacing="-3" style="font-size:145.9px" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
-          <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
-        </svg>
+  <div class="nav-band">
+    <div class="wrap nav-inner">
+      <a class="logo" href="#">
+        <div class="logo-mark">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="0" fill="#006F44"/>
+            <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="600" letter-spacing="-3" style="font-size:145.9px" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">L</text>
+            <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#7FB6A1" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+        </div>
+        <div class="logo-text-wrap">
+          <div class="logo-text"><span class="neutral">life</span><span class="accent">flow360</span></div>
+          <div class="logo-sub">Besser&nbsp;verstehen. Stärker&nbsp;wachsen.</div>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="#kernbotschaft">Konzept</a>
+        <a href="#features">Funktionen</a>
+        <a href="pricing.html">Preise</a>
+        <a href="#faq">FAQ</a>
       </div>
-      <div>
-        <div class="logo-text"><span class="neutral">life</span><span class="accent">flow360</span></div>
-        <div class="logo-sub">Vergütungsplan-Simulator</div>
-      </div>
-    </a>
-    <div class="nav-links">
-      <a href="#kernbotschaft">Konzept</a>
-      <a href="#features">Funktionen</a>
-      <a href="#anwendung">Anwendung</a>
-      <a href="#faq">FAQ</a>
+      <a class="nav-cta" href="#cta">
+        Simulator starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
     </div>
-    <a class="nav-cta" href="#cta">
-      Simulator starten
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
   </div>
 </nav>
 
@@ -1302,7 +1739,7 @@
       <div>
         <div class="hero-eyebrow">
           <span class="dot"></span>
-          Für Berater &amp; Sponsoren
+          Für Sponsoren
           <span class="tag"><span class="tag-neutral">life</span><span class="tag-accent">flow360</span></span>
         </div>
 
@@ -1504,7 +1941,7 @@
       <div class="core-card">
         <div class="core-card-num">01 — Geduld &amp; Kontinuität</div>
         <h3 class="core-card-h">Dranbleiben ist die einzige Voraussetzung.</h3>
-        <p class="core-card-p">Die Simulation macht sichtbar, was jeder erfahrene Berater weiß: Wer das Tempo aushält und kontinuierlich aufbaut, gewinnt. Es ist kein Versprechen — es ist Mathematik.</p>
+        <p class="core-card-p">Die Simulation macht sichtbar, was jeder erfahrene Sponsor weiß: Wer das Tempo aushält und kontinuierlich aufbaut, gewinnt. Es ist kein Versprechen — es ist Mathematik.</p>
       </div>
       <div class="core-card">
         <div class="core-card-num">02 — Der ruhige Pfad</div>
@@ -1867,7 +2304,108 @@
   </div>
 </section>
 
-<!-- =================== LITE FEATURES =================== -->
+<!-- =================== FEATURE 5 — URL-Sharing / Multi-Device =================== -->
+<section class="feature" id="sharing">
+  <div class="wrap feature-row">
+    <div class="feature-text">
+      <div class="feature-num">05 / FEATURE</div>
+      <h3 class="feature-h">Ein Link. Sein Szenario. <em>Überall.</em></h3>
+      <p class="feature-p">
+        Jeder Slider-Wert steckt in der URL. Kopier den Link, schick ihn per WhatsApp — und auf seinem Handy öffnet sich die exakt gleiche Berechnung. Auf dem Tablet im Wohnzimmer. Auf dem Notebook im Büro.
+      </p>
+      <p class="feature-p feature-p-highlight">
+        Im <b>Zoom-Call</b>: Bildschirm teilen, Slider live bewegen, er sieht jede Veränderung in Echtzeit. Auch wenn ihr nicht im selben Raum seid, sitzt ihr nebeneinander.
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Handy, Tablet, Desktop</b> — gleicher Link, gleiche Zahl, jedes Display.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Nachfass-fähig</b> — er kann das Szenario zuhause in Ruhe nachrechnen.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Zoom- &amp; Teams-tauglich</b> — Bildschirm teilen, gemeinsam justieren.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="feature-visual">
+      <div class="multidevice">
+        <!-- Desktop -->
+        <div class="md-desktop">
+          <div class="md-d-frame">
+            <div class="md-d-toolbar">
+              <div class="md-dots"><span></span><span></span><span></span></div>
+              <div class="md-d-url"><span class="url-prot">lifeflow360.app/?</span><span class="url-params">m=2&amp;s=3&amp;ip=200&amp;d=30&amp;f=20</span></div>
+            </div>
+            <div class="md-d-body">
+              <div class="md-d-num"><span class="cur">€</span>8.420<span class="md-d-unit">/Mon</span></div>
+              <div class="md-d-cap">Jahr 10 · realistisch</div>
+              <svg class="md-d-chart" viewBox="0 0 280 60" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="md-grad" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#006F44" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="#006F44" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M 10 55 L 38 53 L 66 49 L 94 43 L 122 35 L 150 26 L 178 18 L 206 11 L 234 6 L 262 4 L 262 60 L 10 60 Z" fill="url(#md-grad)"/>
+                <path d="M 10 55 L 38 53 L 66 49 L 94 43 L 122 35 L 150 26 L 178 18 L 206 11 L 234 6 L 262 4" fill="none" stroke="#006F44" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="262" cy="4" r="3" fill="#006F44" stroke="white" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+          <div class="md-stand"></div>
+          <div class="md-label">Desktop · 27"</div>
+        </div>
+
+        <!-- Tablet -->
+        <div class="md-tablet">
+          <div class="md-t-frame">
+            <div class="md-t-body">
+              <div class="md-t-num"><span class="cur">€</span>8.420</div>
+              <div class="md-t-cap">/Monat · Jahr 10</div>
+              <svg class="md-t-chart" viewBox="0 0 140 36" preserveAspectRatio="none">
+                <path d="M 6 32 L 22 30 L 38 27 L 54 23 L 70 18 L 86 13 L 102 8 L 118 5 L 134 3" fill="none" stroke="#006F44" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="134" cy="3" r="2.5" fill="#006F44" stroke="white" stroke-width="1.2"/>
+              </svg>
+              <div class="md-t-mini">
+                <div class="md-t-mb"><div class="md-t-mb-fill" style="width:25%"></div></div>
+                <div class="md-t-mb"><div class="md-t-mb-fill" style="width:38%"></div></div>
+                <div class="md-t-mb"><div class="md-t-mb-fill" style="width:50%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="md-label">Tablet · 10"</div>
+        </div>
+
+        <!-- Phone -->
+        <div class="md-phone">
+          <div class="md-p-frame">
+            <div class="md-p-notch"></div>
+            <div class="md-p-body">
+              <div class="md-p-num"><span class="cur">€</span>8.420</div>
+              <div class="md-p-cap">Jahr 10/Mon</div>
+              <svg class="md-p-chart" viewBox="0 0 80 24" preserveAspectRatio="none">
+                <path d="M 4 20 L 14 19 L 24 17 L 34 14 L 44 11 L 54 7 L 64 4 L 76 2" fill="none" stroke="#006F44" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="76" cy="2" r="2" fill="#006F44" stroke="white" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>
+          <div class="md-label">Handy</div>
+        </div>
+
+        <!-- Sync indicator -->
+        <div class="md-sync">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Live synchronisiert über URL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 <section class="lite-features">
   <div class="wrap" style="padding-top:80px; padding-bottom:30px;">
     <div class="sec-eyebrow">Weitere Funktionen</div>
@@ -1876,25 +2414,99 @@
   <div class="wrap" style="padding-left:0; padding-right:0;">
     <div class="lite-grid">
       <div class="lite-card">
-        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20" stroke-linecap="round"/></svg></div>
-        <h4 class="lite-h">URL-Sharing</h4>
-        <p class="lite-p">Slider-Werte stecken in der URL. Ein Link, ein exaktes Szenario — perfekt für Nachfass-Mails.</p>
-      </div>
-      <div class="lite-card">
-        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18" stroke-linecap="round"/></svg></div>
-        <h4 class="lite-h">Mobile-first</h4>
-        <p class="lite-p">Funktioniert auf dem Handy genauso wie auf dem Notebook. Du zeigst, er tippt, alles direkt im Café.</p>
-      </div>
-      <div class="lite-card">
         <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h4 class="lite-h">Sub-100ms-Reaktion</h4>
         <p class="lite-p">Slider bewegen, Zahl springt. Keine Wartezeit unterbricht den Gesprächsfluss.</p>
       </div>
       <div class="lite-card">
-        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 11l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12" stroke-linecap="round"/></svg></div>
         <h4 class="lite-h">Annahmen einsehbar</h4>
         <p class="lite-p">Alle Modell-Annahmen im Settings-Drawer. Kein Hokuspokus, alles transparent.</p>
       </div>
+      <div class="lite-card">
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" stroke-linecap="round"/></svg></div>
+        <h4 class="lite-h">Light- &amp; Dark-Mode</h4>
+        <p class="lite-p">Wechselt automatisch mit der Systemeinstellung. Hell am Cafétisch, dunkel im Hotelzimmer.</p>
+      </div>
+      <div class="lite-card">
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h4 class="lite-h">DSGVO-konform</h4>
+        <p class="lite-p">Keine Tracking-Cookies, keine Drittparteien. Daten bleiben zwischen dir und ihm.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PRICING TEASER =================== -->
+<section class="pricing-teaser" id="pricing">
+  <div class="wrap">
+    <div class="pricing-grid">
+      <div class="pricing-intro">
+        <div class="sec-eyebrow">Preise</div>
+        <h2 class="sec-h">Faires Werkzeug, <em>fairer Preis.</em></h2>
+        <p class="sec-sub">
+          lifeflow360 ist ein Abo-Werkzeug für Sponsoren. Monatlich kündbar — oder im Jahresabo mit spürbarem Rabatt. Beide Pläne sind als <strong>Betriebsausgabe absetzbar.</strong>
+        </p>
+        <a href="pricing.html" class="btn-secondary">
+          Alle Preise &amp; Details ansehen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="pricing-cards">
+        <!-- Monthly -->
+        <div class="pricing-card">
+          <div class="pc-tag">Flexibel</div>
+          <div class="pc-name">Monatlich</div>
+          <div class="pc-price">
+            <span class="pc-price-cur">€</span><span class="pc-price-val">19</span><span class="pc-price-unit">/Monat</span>
+          </div>
+          <div class="pc-bill">€19 monatlich abgerechnet</div>
+          <ul class="pc-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Voller Funktionsumfang
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Mobil, Tablet &amp; Desktop
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Monatlich kündbar
+            </li>
+          </ul>
+        </div>
+
+        <!-- Yearly -->
+        <div class="pricing-card pc-featured">
+          <div class="pc-tag pc-tag-highlight">2 Monate gespart</div>
+          <div class="pc-name">Jährlich</div>
+          <div class="pc-price">
+            <span class="pc-price-cur">€</span><span class="pc-price-val">15</span><span class="pc-price-unit">/Monat</span>
+          </div>
+          <div class="pc-bill">€180 jährlich · Ersparnis €48</div>
+          <ul class="pc-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Alles aus Monatlich
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <strong>~21 % günstiger</strong> als Monatsabo
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Eine Rechnung pro Jahr
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="pricing-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
+      <span>Alle Preise inkl. MwSt. Als Sponsor setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater.</span>
     </div>
   </div>
 </section>
@@ -1904,7 +2516,7 @@
   <div class="wrap faq-grid">
     <div>
       <div class="sec-eyebrow">FAQ</div>
-      <h2 class="sec-h">Was Berater <em>am häufigsten</em> fragen.</h2>
+      <h2 class="sec-h">Was Sponsoren <em>am häufigsten</em> fragen.</h2>
       <p class="sec-sub">Wenn deine Frage fehlt — kurze Mail an den Support, dann landet sie hier. Und wird beantwortet.</p>
     </div>
     <div class="faq-list">
@@ -1915,7 +2527,7 @@
         </button>
         <div class="faq-a">
           <div class="faq-a-inner">
-            <p>Realistisch heißt: realistisch für die Eingabewerte. Setzt du 100 % Duplikation und 0 % Fluktuation, kommt eine Milliarden-Zahl raus — und die ist mathematisch korrekt, aber praktisch unmöglich. Setzt du 30 % Duplikation und 20 % Fluktuation, landest du bei den ehrlichen €4.000–€10.000/Monat, die ein engagierter LifePlus-Berater nach 10 Jahren realistisch erreicht.</p>
+            <p>Realistisch heißt: realistisch für die Eingabewerte. Setzt du 100 % Duplikation und 0 % Fluktuation, kommt eine Milliarden-Zahl raus — und die ist mathematisch korrekt, aber praktisch unmöglich. Setzt du 30 % Duplikation und 20 % Fluktuation, landest du bei den ehrlichen €4.000–€10.000/Monat, die ein engagierter Sponsor nach 10 Jahren realistisch erreicht.</p>
             <p>Der Simulator lügt nicht. Er rechnet exakt das, was du eingibst.</p>
           </div>
         </div>
@@ -1960,8 +2572,11 @@
         </button>
         <div class="faq-a">
           <div class="faq-a-inner">
-            <p><span class="brand-inline"><span class="b-life">life</span><span class="b-flow">flow360</span></span> ist ein kostenpflichtiges Werkzeug mit Abo-Modell. Du bezahlst es als Berater — und du setzt es als <strong>Betriebsausgabe</strong> ab, weil es Teil deiner beruflichen Akquisetätigkeit ist. Die genauen Konditionen findest du beim Klick auf „Simulator öffnen".</p>
-            <p>Im Vergleich zu klassischen Akquise-Werkzeugen — gedruckte Broschüren, bezahlte Anzeigen, Veranstaltungen — ist <span class="brand-inline"><span class="b-life">life</span><span class="b-flow">flow360</span></span> günstig und skaliert mit jeder Nutzung.</p>
+            <p>Zwei Optionen: <strong>€19/Monat</strong> bei monatlicher Abrechnung, oder <strong>€15/Monat</strong> (= €180/Jahr) im Jahresabo — das spart rund 21 %.</p>
+            <p>Beide Stufen haben den vollen Funktionsumfang und sind als <strong>Betriebsausgabe</strong> absetzbar. Details, Zahlungsoptionen und Kündigungsfristen findest du auf der <a href="pricing.html" style="color: var(--lp-primary); text-decoration: underline; text-underline-offset: 3px;">Preisseite</a>.</p>
+          </div>
+        </div>
+      </div>
           </div>
         </div>
       </div>

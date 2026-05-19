@@ -1,0 +1,2646 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eqoflow360 · klarer sehen. weiter kommen.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Inline brand mention */
+  .brand-inline {
+    font-family: var(--sans);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .brand-inline .b-life { color: inherit; }
+  .brand-inline .b-flow { color: var(--eq-primary); }
+
+  /* On the dark core block, life-Teil hellt auf */
+  .core .brand-inline .b-life { color: white; }
+  .core .brand-inline .b-flow { color: var(--eq-primary-soft); }
+  :root {
+    /* Brand */
+    --eq-primary: #293C94;
+    --eq-gold: #EBBF82;
+    --eq-gold-dark: #C99A5E;
+    --eq-primary-dark: #1D274B;
+    --eq-primary-soft: #9EA7CF;
+    --eq-dark: #1D274B;
+    --eq-accent: #5B7438;
+    --eq-cta: #293C94;
+    --eq-cta-dark: #1D274B;
+    --eq-surface: #DAF1FA;
+    --eq-surface-warm: #E9F9FF;
+
+    /* Neutrals */
+    --ink: #0F1432;
+    --ink-2: #1D2746;
+    --ink-3: #3E4A6F;
+    --ink-4: #61708A;
+    --ink-5: #A4ADC2;
+    --line: #DFE6F0;
+    --line-soft: #E9EEF6;
+    --paper: #FAFBFE;
+    --paper-2: #F2F5FA;
+
+    /* Type */
+    --serif: 'Fraunces', 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+  @media (max-width: 720px) { .wrap { padding: 0 20px; } }
+
+  /* =================== NAVIGATION =================== */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--eq-dark);
+    border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  }
+  .nav-band {
+    background: var(--eq-dark);
+    width: 100%;
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+    height: 76px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .logo-mark {
+    width: 50px; height: 50px;
+    border-radius: 10px;
+    background: var(--eq-primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .logo-mark svg { width: 100%; height: 100%; display: block; }
+  .logo-text-wrap {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .logo-text {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .logo-text .neutral { color: white; }
+  .logo-text .accent { color: var(--eq-primary-soft); }
+  .logo-sub {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--eq-primary-soft);
+    text-transform: uppercase;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 36px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    margin-left: auto;
+    margin-right: 28px;
+  }
+  .nav-links a {
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: white; }
+  @media (max-width: 900px) { .nav-links { display: none; } }
+
+  .nav-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--eq-cta); color: white;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.1px;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(41,60,148,0.28);
+  }
+  .nav-cta:hover {
+    background: var(--eq-cta-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 6px 18px rgba(41,60,148,0.35);
+  }
+  .nav-cta svg {
+    width: 14px; height: 14px;
+    transition: transform 0.18s;
+  }
+  .nav-cta:hover svg { transform: translateX(3px); }
+
+  @media (max-width: 540px) {
+    .logo-sub { display: none; }
+    .logo-text { font-size: 22px; }
+    .logo-mark { width: 42px; height: 42px; }
+  }
+
+  /* =================== HERO =================== */
+  .hero {
+    position: relative;
+    padding: 80px 0 100px;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) { .hero { padding: 56px 0 64px; } }
+
+  /* atmospheric background */
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 800px 400px at 85% 20%, rgba(41,60,148,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 500px at 15% 80%, rgba(91,116,56,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(15,27,23,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,27,23,0.03) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: center;
+    mask-image: radial-gradient(ellipse 80% 60% at center, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at center, black 30%, transparent 80%);
+    pointer-events: none;
+  }
+
+  .hero-inner { position: relative; z-index: 2; }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 7px 14px 7px 10px;
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 100px;
+    font-size: 12px; color: var(--ink-2);
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(15,27,23,0.04);
+    margin-bottom: 28px;
+    animation: fade-up 0.7s 0.05s both;
+  }
+  .hero-eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--eq-primary);
+    box-shadow: 0 0 0 4px rgba(41,60,148,0.15);
+    animation: pulse 2.4s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(41,60,148,0.15); }
+    50% { box-shadow: 0 0 0 7px rgba(41,60,148,0.06); }
+  }
+  .hero-eyebrow .tag {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    background: var(--eq-surface);
+    padding: 3px 9px;
+    border-radius: 5px;
+    margin-left: 2px;
+  }
+  .hero-eyebrow .tag .tag-neutral { color: var(--ink-2); }
+  .hero-eyebrow .tag .tag-accent { color: var(--eq-primary); }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 72px;
+    align-items: center;
+  }
+  @media (max-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+  }
+
+  .hero-h1 {
+    font-family: var(--serif);
+    font-size: clamp(40px, 5.6vw, 72px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 24px;
+    animation: fade-up 0.7s 0.15s both;
+  }
+  .hero-h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--eq-primary);
+  }
+  .hero-h1 .nowrap { white-space: nowrap; }
+  .hero-h1 .hero-h1-sub {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.62em;
+    color: var(--ink-3);
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.015em;
+  }
+
+  .hero-sub {
+    font-size: 18px; line-height: 1.55;
+    color: var(--ink-3);
+    max-width: 540px;
+    margin-bottom: 36px;
+    animation: fade-up 0.7s 0.25s both;
+  }
+  .hero-sub strong { color: var(--ink-2); font-weight: 500; }
+  @media (max-width: 720px) { .hero-sub { font-size: 16px; } }
+
+  .hero-ctas {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 44px;
+    animation: fade-up 0.7s 0.35s both;
+  }
+  .btn-primary, .btn-secondary {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px;
+    border-radius: 100px;
+    font-size: 15px; font-weight: 500;
+    transition: all 0.18s;
+    letter-spacing: -0.1px;
+  }
+  .btn-primary {
+    background: var(--eq-cta); color: white;
+    box-shadow: 0 1px 2px rgba(41,60,148,0.2), 0 4px 14px rgba(41,60,148,0.18);
+  }
+  .btn-primary:hover {
+    background: var(--eq-cta-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(41,60,148,0.2), 0 8px 24px rgba(41,60,148,0.22);
+  }
+  .btn-primary svg { width: 16px; height: 16px; transition: transform 0.18s; }
+  .btn-primary:hover svg { transform: translateX(3px); }
+  .btn-secondary {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: white;
+  }
+  .btn-secondary:hover { border-color: var(--eq-primary); color: var(--eq-primary); }
+  .btn-secondary svg { width: 14px; height: 14px; }
+
+  .hero-proof {
+    display: flex; align-items: center; gap: 24px;
+    font-size: 13px; color: var(--ink-4);
+    animation: fade-up 0.7s 0.45s both;
+  }
+  .hero-proof-item {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-proof-item svg { color: var(--eq-primary); width: 14px; height: 14px; flex-shrink: 0; }
+  @media (max-width: 540px) { .hero-proof { flex-direction: column; align-items: flex-start; gap: 10px; } }
+
+  /* hero illustration - the actual product */
+  .hero-illu {
+    position: relative;
+    animation: fade-up 0.9s 0.3s both;
+  }
+  .product-frame {
+    background: white;
+    border-radius: 20px;
+    border: 0.5px solid var(--line);
+    padding: 22px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.04),
+      0 8px 24px rgba(15,27,23,0.06),
+      0 24px 60px rgba(0,85,58,0.08);
+    position: relative;
+  }
+  .product-frame::before {
+    content: ""; position: absolute; inset: -1px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--eq-primary-soft), transparent 40%);
+    z-index: -1;
+    opacity: 0.3;
+  }
+
+  .pf-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .pf-dots { display: flex; gap: 6px; }
+  .pf-dots span {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--line);
+  }
+  .pf-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.05em;
+  }
+  .pf-badge {
+    background: var(--eq-surface);
+    color: var(--eq-primary);
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+
+  .pf-hero-num-label {
+    font-size: 11px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .pf-hero-num {
+    font-family: var(--serif);
+    font-size: 56px; font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 6px;
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .pf-hero-num .currency {
+    font-size: 32px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .pf-hero-num .unit {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink-4);
+    margin-left: 6px;
+    font-weight: 400;
+  }
+  .pf-hero-delta {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--eq-primary);
+    background: var(--eq-surface);
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 500;
+    margin-bottom: 18px;
+  }
+  .pf-hero-delta svg { width: 11px; height: 11px; }
+
+  /* mini chart */
+  .pf-chart {
+    height: 120px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .pf-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .pf-chart-line { fill: none; stroke: var(--eq-primary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .pf-chart-area { fill: url(#area-gradient); opacity: 0.85; }
+  .pf-chart-dot { fill: var(--eq-primary); }
+  .pf-chart-dot-end { fill: var(--eq-primary); stroke: white; stroke-width: 3; }
+  .pf-chart-grid { stroke: var(--line-soft); stroke-width: 0.5; stroke-dasharray: 2 3; }
+  .pf-chart-label { font-family: var(--mono); font-size: 9px; fill: var(--ink-4); }
+
+  /* mini sliders */
+  .pf-sliders {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .pf-slider-tile {
+    background: var(--paper-2);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .pf-slider-label {
+    font-size: 10px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .pf-slider-value {
+    font-family: var(--serif);
+    font-size: 18px; font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .pf-slider-bar {
+    height: 3px; background: var(--line);
+    border-radius: 100px; position: relative;
+    overflow: hidden;
+  }
+  .pf-slider-bar::after {
+    content: ""; position: absolute; left: 0; top: 0;
+    height: 100%; width: var(--w, 60%);
+    background: var(--eq-primary);
+    border-radius: 100px;
+  }
+
+  /* floating annotations */
+  .pf-annotation {
+    position: absolute;
+    background: var(--eq-dark); color: white;
+    font-family: var(--mono); font-size: 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    animation: fade-in 0.6s 1.2s both;
+  }
+  .pf-annotation::after {
+    content: ""; position: absolute;
+    width: 0; height: 0;
+    border-style: solid;
+  }
+  .pf-annotation.a1 {
+    top: 28%; right: -16px;
+  }
+  .pf-annotation.a1::after {
+    left: -6px; top: 50%; transform: translateY(-50%);
+    border-width: 5px 6px 5px 0;
+    border-color: transparent var(--eq-dark) transparent transparent;
+  }
+  .pf-annotation.a2 {
+    bottom: 18%; left: -22px;
+    background: var(--eq-cta);
+  }
+  .pf-annotation.a2::after {
+    right: -6px; top: 50%; transform: translateY(-50%);
+    border-width: 5px 0 5px 6px;
+    border-color: transparent transparent transparent var(--eq-cta);
+  }
+  @media (max-width: 540px) {
+    .pf-annotation.a1, .pf-annotation.a2 { display: none; }
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* =================== TRUST STRIP =================== */
+  .trust-strip {
+    border-top: 0.5px solid var(--line);
+    border-bottom: 0.5px solid var(--line);
+    background: white;
+    padding: 28px 0;
+  }
+  .trust-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 32px; flex-wrap: wrap;
+  }
+  .trust-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .trust-items {
+    display: flex; gap: 40px; align-items: center;
+    flex-wrap: wrap;
+  }
+  .trust-item {
+    display: flex; align-items: baseline; gap: 8px;
+    font-family: var(--sans);
+  }
+  .trust-num {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--eq-primary);
+    letter-spacing: -0.02em;
+  }
+  .trust-num.trust-num-text {
+    font-size: 18px;
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .trust-num .trust-arrow {
+    font-family: var(--sans);
+    font-style: normal;
+    font-size: 14px;
+    margin: 0 4px;
+    color: var(--eq-primary-soft);
+    font-weight: 400;
+  }
+  .trust-cap {
+    font-size: 13px; color: var(--ink-3);
+    font-weight: 500;
+  }
+
+  /* =================== SECTION HEADERS =================== */
+  section { position: relative; }
+  .section-pad { padding: 110px 0; }
+  @media (max-width: 720px) { .section-pad { padding: 72px 0; } }
+
+  .sec-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--eq-primary);
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .sec-eyebrow::before {
+    content: ""; width: 24px; height: 1px;
+    background: var(--eq-primary);
+  }
+  .sec-h {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4.4vw, 52px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 20px;
+    max-width: 760px;
+  }
+  .sec-h em { font-style: italic; color: var(--eq-primary); font-weight: 400; }
+  .sec-sub {
+    font-size: 18px;
+    color: var(--ink-3);
+    line-height: 1.55;
+    max-width: 640px;
+    margin-bottom: 56px;
+  }
+  @media (max-width: 720px) { .sec-sub { font-size: 16px; margin-bottom: 40px; } }
+
+  /* =================== CORE-MESSAGE PANEL =================== */
+  .core {
+    background: var(--eq-dark);
+    color: white;
+    padding: 100px 0 110px;
+    position: relative;
+    overflow: hidden;
+  }
+  .core::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 600px 300px at 10% 0%, rgba(41,60,148,0.4) 0%, transparent 50%),
+      radial-gradient(ellipse 700px 400px at 100% 100%, rgba(91,116,56,0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .core-grid-intro {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 72px;
+    align-items: center;
+    position: relative;
+    margin-bottom: 80px;
+  }
+  @media (max-width: 1024px) {
+    .core-grid-intro { grid-template-columns: 1fr; gap: 48px; margin-bottom: 60px; }
+  }
+  .core-eyebrow {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--eq-primary-soft);
+    margin-bottom: 18px;
+    font-weight: 500;
+  }
+  .core-h {
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.8vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    color: white;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .core-h em {
+    font-style: italic;
+    color: var(--eq-primary-soft);
+    font-weight: 400;
+  }
+  .core-sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* visualization */
+  .core-viz {
+    position: relative;
+  }
+  .core-viz-frame {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 22px 22px 14px;
+    backdrop-filter: blur(8px);
+  }
+  .core-viz-frame svg {
+    width: 100%; height: auto; display: block;
+    margin-bottom: 12px;
+  }
+  .core-viz-cap {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    font-style: italic;
+    padding: 6px 0 4px;
+    border-top: 0.5px solid rgba(255,255,255,0.08);
+  }
+
+  .core-divider {
+    height: 0.5px;
+    background: rgba(255,255,255,0.1);
+    margin: 0 0 56px;
+    position: relative;
+  }
+
+  .core-paths-head {
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .core-paths-h {
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.6vw, 42px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    color: white;
+    max-width: 760px;
+  }
+  .core-paths-h em {
+    font-style: italic;
+    color: var(--eq-primary-soft);
+  }
+
+  .core-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    position: relative;
+  }
+  @media (max-width: 900px) { .core-grid { grid-template-columns: 1fr; gap: 28px; } }
+
+  .core-card {
+    padding: 28px 0;
+    border-top: 0.5px solid rgba(255,255,255,0.18);
+  }
+  .core-card-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--eq-primary-soft);
+    letter-spacing: 0.16em;
+    margin-bottom: 18px;
+    font-weight: 500;
+  }
+  .core-card-h {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.22;
+    color: white;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+  .core-card-p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.65;
+  }
+
+  /* =================== FEATURE SECTIONS =================== */
+  .feature {
+    padding: 100px 0;
+    border-bottom: 0.5px solid var(--line);
+  }
+  @media (max-width: 720px) { .feature { padding: 64px 0; } }
+
+  .feature-row {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .feature-row.reverse {
+    grid-template-columns: 1.15fr 1fr;
+  }
+  .feature-row.reverse .feature-text {
+    order: 2;
+  }
+  .feature-row.reverse .feature-visual {
+    order: 1;
+  }
+  @media (max-width: 900px) {
+    .feature-row, .feature-row.reverse {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .feature-row.reverse .feature-text { order: 1; }
+    .feature-row.reverse .feature-visual { order: 2; }
+  }
+
+  .feature-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--eq-primary);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .feature-h {
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+  .feature-h em { font-style: italic; color: var(--eq-primary); }
+  .feature-p {
+    font-size: 16px;
+    color: var(--ink-3);
+    line-height: 1.65;
+    margin-bottom: 24px;
+  }
+  .feature-p-highlight {
+    background: var(--eq-surface);
+    border-left: 3px solid var(--eq-primary);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    color: var(--ink-2);
+    font-size: 15.5px;
+  }
+  .feature-p-highlight b { color: var(--ink); font-weight: 600; }
+  .feature-list {
+    list-style: none;
+  }
+  .feature-list li {
+    padding: 14px 0;
+    border-top: 0.5px solid var(--line-soft);
+    display: flex; gap: 14px;
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+  .feature-list li:last-child { border-bottom: 0.5px solid var(--line-soft); }
+  .feature-list .marker {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border-radius: 6px;
+    background: var(--eq-surface);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--eq-primary);
+  }
+  .feature-list .marker svg { width: 12px; height: 12px; }
+  .feature-list b {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* feature visuals - "screenshots" */
+  .visual-frame {
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.03),
+      0 8px 20px rgba(15,27,23,0.05);
+    position: relative;
+  }
+  .visual-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 14px; margin-bottom: 16px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .visual-bar .dots span {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--line); margin-right: 5px;
+  }
+  .visual-bar .file {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--ink-4); letter-spacing: 0.04em;
+  }
+
+  /* VISUAL 1 — Sliders */
+  .v-sliders {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .v-slider {
+    padding: 14px;
+    background: var(--paper-2);
+    border-radius: 10px;
+  }
+  .v-slider-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .v-slider-label {
+    font-size: 11px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+  .v-slider-val {
+    font-family: var(--serif);
+    font-size: 18px; font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .v-slider-val sup { font-size: 11px; color: var(--ink-4); margin-left: 2px; }
+  .v-slider-track {
+    height: 4px; background: var(--line);
+    border-radius: 100px; position: relative;
+  }
+  .v-slider-fill {
+    position: absolute; left: 0; top: 0; height: 100%;
+    background: var(--eq-primary);
+    border-radius: 100px;
+  }
+  .v-slider-thumb {
+    position: absolute; top: 50%;
+    width: 14px; height: 14px;
+    background: white;
+    border: 2px solid var(--eq-primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(41,60,148,0.25);
+  }
+  .v-slider-scale {
+    display: flex; justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--ink-5);
+  }
+
+  /* VISUAL 2 — Chart big */
+  .v-chart-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 14px;
+  }
+  .v-chart-h-label {
+    font-size: 11px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .v-chart-h-num {
+    font-family: var(--serif);
+    font-size: 38px; font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.025em;
+    line-height: 1;
+  }
+  .v-chart-h-num .cur { color: var(--ink-3); font-weight: 300; font-size: 24px; }
+  .v-chart-tabs {
+    display: flex; gap: 4px;
+    background: var(--paper-2);
+    padding: 3px;
+    border-radius: 100px;
+  }
+  .v-chart-tab {
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--ink-4);
+    border-radius: 100px;
+    font-weight: 500;
+  }
+  .v-chart-tab.active {
+    background: white;
+    color: var(--eq-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .v-chart-body {
+    height: 220px;
+    position: relative;
+  }
+  .v-chart-body svg { width: 100%; height: 100%; overflow: visible; }
+  .v-chart-tooltip {
+    position: absolute;
+    background: var(--eq-dark);
+    color: white;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    pointer-events: none;
+  }
+  .v-chart-tooltip .label {
+    font-family: var(--mono);
+    color: var(--eq-primary-soft);
+    margin-bottom: 3px;
+    letter-spacing: 0.05em;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .v-chart-tooltip .val {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* VISUAL 3 — KPI grid + rank ladder */
+  .v-kpi-row {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 14px;
+  }
+  .v-kpi {
+    background: var(--paper-2);
+    padding: 14px;
+    border-radius: 10px;
+  }
+  .v-kpi-label {
+    font-size: 10px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .v-kpi-val {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .v-kpi-delta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--eq-primary);
+    letter-spacing: 0.04em;
+  }
+  .v-rank {
+    background: var(--paper-2);
+    padding: 16px;
+    border-radius: 10px;
+  }
+  .v-rank-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .v-rank-title {
+    font-size: 11px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+  .v-rank-row {
+    display: grid;
+    grid-template-columns: 10px 80px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 0.5px solid var(--line);
+    font-size: 13px;
+  }
+  .v-rank-row:first-of-type { border-top: none; }
+  .v-rank-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    transition: background 0.2s;
+  }
+  .v-rank-row.achieved .v-rank-dot {
+    background: var(--eq-primary);
+    box-shadow: 0 0 0 3px rgba(41,60,148,0.12);
+  }
+  .v-rank-name {
+    color: var(--ink-2);
+    font-weight: 500;
+    font-size: 13px;
+  }
+  .v-rank-row.achieved .v-rank-name { color: var(--eq-primary); font-weight: 600; }
+  .v-rank-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.02em;
+  }
+  .v-rank-row.achieved .v-rank-meta { color: var(--ink-3); }
+  .v-rank-year {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-4);
+    font-weight: 500;
+  }
+  .v-rank-row.achieved .v-rank-year {
+    color: var(--eq-primary);
+    font-weight: 600;
+  }
+  @media (max-width: 540px) {
+    .v-rank-row {
+      grid-template-columns: 10px 1fr auto;
+    }
+    .v-rank-meta { display: none; }
+  }
+
+  /* VISUAL 4 — Pitch view */
+  .v-pitch-hero {
+    background: linear-gradient(135deg, var(--eq-primary) 0%, var(--eq-primary-dark) 100%);
+    border-radius: 14px;
+    padding: 32px 28px;
+    color: white;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .v-pitch-hero::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 90% 10%, rgba(255,255,255,0.12) 0%, transparent 60%);
+  }
+  .v-pitch-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .v-pitch-num {
+    font-family: var(--serif);
+    font-size: 56px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .v-pitch-num .cur { color: rgba(255,255,255,0.7); font-weight: 300; }
+  .v-pitch-cap {
+    font-size: 13px;
+    color: rgba(255,255,255,0.78);
+    position: relative;
+  }
+  .v-pitch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .v-pitch-cell {
+    background: var(--paper-2);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .v-pitch-cell-label {
+    font-size: 9px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .v-pitch-cell-val {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  /* =================== MULTI-DEVICE VISUAL =================== */
+  .multidevice {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 0.65fr;
+    gap: 18px;
+    align-items: end;
+    padding: 32px 12px 56px;
+  }
+
+  /* Desktop */
+  .md-desktop {
+    position: relative;
+  }
+  .md-d-frame {
+    background: #1A1F1C;
+    border-radius: 10px 10px 4px 4px;
+    padding: 8px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.06),
+      0 12px 28px rgba(15,27,23,0.12);
+    border: 0.5px solid var(--line);
+  }
+  .md-d-toolbar {
+    background: white;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 10px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .md-dots { display: flex; gap: 4px; flex-shrink: 0; }
+  .md-dots span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+  .md-d-url {
+    flex: 1;
+    background: var(--paper-2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .md-d-url .url-prot { color: var(--ink-3); }
+  .md-d-url .url-params { color: var(--eq-primary); font-weight: 500; }
+  .md-d-body {
+    background: white;
+    border-radius: 0 0 6px 6px;
+    padding: 24px 22px 22px;
+  }
+  .md-d-num {
+    font-family: var(--serif);
+    font-size: 46px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    display: flex; align-items: baseline; gap: 2px;
+    margin-bottom: 4px;
+  }
+  .md-d-num .cur {
+    font-size: 28px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .md-d-unit {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-4);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+  .md-d-cap {
+    font-size: 11px;
+    color: var(--ink-4);
+    margin-bottom: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .md-d-chart {
+    width: 100%; height: 60px; display: block;
+  }
+  .md-stand {
+    width: 50%;
+    margin: 0 auto;
+    height: 14px;
+    background: linear-gradient(180deg, #1A1F1C 0%, #0B0E0D 100%);
+    border-radius: 0 0 4px 4px;
+    position: relative;
+  }
+  .md-stand::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: -4px; left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 3px;
+    background: var(--ink-5);
+    border-radius: 100px;
+    opacity: 0.35;
+  }
+
+  /* Tablet */
+  .md-tablet { position: relative; }
+  .md-t-frame {
+    background: #1A1F1C;
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.06),
+      0 8px 22px rgba(15,27,23,0.1);
+    border: 0.5px solid var(--line);
+  }
+  .md-t-body {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 14px 16px;
+    min-height: 150px;
+  }
+  .md-t-num {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.025em;
+    line-height: 1;
+    display: flex; align-items: baseline; gap: 1px;
+    margin-bottom: 2px;
+  }
+  .md-t-num .cur {
+    font-size: 18px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .md-t-cap {
+    font-size: 9px;
+    color: var(--ink-4);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .md-t-chart {
+    width: 100%; height: 36px; display: block;
+    margin-bottom: 12px;
+  }
+  .md-t-mini { display: grid; gap: 6px; }
+  .md-t-mb {
+    height: 3px;
+    background: var(--line);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .md-t-mb-fill {
+    height: 100%;
+    background: var(--eq-primary);
+    border-radius: 100px;
+  }
+
+  /* Phone */
+  .md-phone { position: relative; }
+  .md-p-frame {
+    background: #1A1F1C;
+    border-radius: 16px;
+    padding: 4px;
+    box-shadow:
+      0 1px 2px rgba(15,27,23,0.06),
+      0 6px 18px rgba(15,27,23,0.1);
+    border: 0.5px solid var(--line);
+    position: relative;
+  }
+  .md-p-notch {
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 28px; height: 5px;
+    background: #000;
+    border-radius: 100px;
+    z-index: 2;
+  }
+  .md-p-body {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 10px 14px;
+    min-height: 110px;
+  }
+  .md-p-num {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    display: flex; align-items: baseline; gap: 1px;
+    margin-bottom: 2px;
+  }
+  .md-p-num .cur {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .md-p-cap {
+    font-size: 8px;
+    color: var(--ink-4);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .md-p-chart {
+    width: 100%; height: 24px; display: block;
+  }
+
+  .md-label {
+    margin-top: 10px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.05em;
+  }
+
+  .md-sync {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--eq-surface);
+    padding: 7px 14px;
+    border-radius: 100px;
+    color: var(--eq-primary);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 0.5px solid rgba(41,60,148,0.12);
+  }
+  .md-sync svg {
+    width: 13px; height: 13px;
+    animation: md-spin 4s linear infinite;
+  }
+  @keyframes md-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 540px) {
+    .multidevice {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .md-sync {
+      position: static;
+      transform: none;
+      margin: 0 auto;
+      display: flex;
+      width: fit-content;
+    }
+  }
+
+  /* =================== FEATURE GRID (4 lite cards) =================== */
+  .lite-features {
+    background: var(--paper-2);
+    border-top: 0.5px solid var(--line);
+    border-bottom: 0.5px solid var(--line);
+  }
+  .lite-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-left: 0.5px solid var(--line);
+  }
+  @media (max-width: 900px) { .lite-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .lite-grid { grid-template-columns: 1fr; } }
+
+  .lite-card {
+    padding: 32px 28px;
+    border-right: 0.5px solid var(--line);
+    border-bottom: 0.5px solid var(--line);
+    background: white;
+  }
+  .lite-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--eq-surface);
+    color: var(--eq-primary);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .lite-icon svg { width: 18px; height: 18px; }
+  .lite-h {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+  .lite-p {
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.55;
+  }
+
+  /* =================== PRICING TEASER =================== */
+  .pricing-teaser {
+    padding: 110px 0;
+    background: var(--paper);
+    border-bottom: 0.5px solid var(--line);
+  }
+  @media (max-width: 720px) { .pricing-teaser { padding: 72px 0; } }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 72px;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .pricing-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  .pricing-intro .sec-h { font-size: clamp(30px, 4vw, 44px); margin-bottom: 18px; }
+  .pricing-intro .sec-sub { font-size: 16px; margin-bottom: 28px; max-width: 460px; }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 540px) { .pricing-cards { grid-template-columns: 1fr; } }
+
+  .pricing-card {
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 14px;
+    padding: 26px 24px 24px;
+    position: relative;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .pricing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(15,27,23,0.06);
+  }
+  .pricing-card.pc-featured {
+    border: 1.5px solid var(--eq-gold);
+    background: linear-gradient(180deg, white 0%, var(--eq-surface) 100%);
+  }
+  .pc-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-4);
+    background: var(--paper-2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+  .pc-tag.pc-tag-highlight {
+    color: var(--eq-dark);
+    background: var(--eq-gold);
+  }
+  .pc-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .pc-price {
+    font-family: var(--serif);
+    color: var(--ink);
+    display: flex; align-items: baseline; gap: 2px;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .pc-price-cur {
+    font-size: 22px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .pc-price-val {
+    font-size: 44px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .pc-price-unit {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink-4);
+    margin-left: 6px;
+    font-weight: 400;
+  }
+  .pc-bill {
+    font-size: 12px;
+    color: var(--ink-4);
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .pc-featured .pc-bill {
+    color: var(--eq-gold-dark);
+    font-weight: 600;
+  }
+  .pc-features {
+    list-style: none;
+    display: grid; gap: 10px;
+  }
+  .pc-features li {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .pc-features li svg {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    color: var(--eq-primary);
+    margin-top: 2px;
+  }
+  .pc-features li strong { color: var(--ink); font-weight: 600; }
+
+  .pricing-note {
+    margin-top: 32px;
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 16px 20px;
+    background: var(--paper-2);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.55;
+    max-width: 720px;
+  }
+  .pricing-note svg {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    color: var(--eq-primary);
+    margin-top: 1px;
+  }
+  .pricing-note strong { color: var(--ink); font-weight: 600; }
+  .faq {
+    padding: 110px 0;
+  }
+  @media (max-width: 720px) { .faq { padding: 64px 0; } }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 80px;
+    align-items: flex-start;
+  }
+  @media (max-width: 900px) { .faq-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+  .faq-list {
+    border-top: 0.5px solid var(--line);
+  }
+  .faq-item {
+    border-bottom: 0.5px solid var(--line);
+  }
+  .faq-q {
+    width: 100%;
+    text-align: left;
+    padding: 22px 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 24px;
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: color 0.15s;
+  }
+  .faq-q:hover { color: var(--eq-primary); }
+  .faq-icon {
+    width: 22px; height: 22px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    margin-top: 1px;
+  }
+  .faq-icon svg { width: 10px; height: 10px; transition: transform 0.25s; }
+  .faq-item.open .faq-icon { background: var(--eq-primary); border-color: var(--eq-primary); color: white; }
+  .faq-item.open .faq-icon svg { transform: rotate(45deg); }
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .faq-a-inner {
+    padding: 0 32px 24px 0;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink-3);
+  }
+  .faq-a-inner p + p { margin-top: 10px; }
+  .faq-item.open .faq-a {
+    max-height: 320px;
+  }
+
+  /* =================== FINAL CTA =================== */
+  .final-cta {
+    padding: 110px 0;
+    text-align: center;
+    background:
+      linear-gradient(180deg, var(--paper) 0%, var(--eq-surface) 100%);
+    border-top: 0.5px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 500px 240px at 50% 100%, rgba(41,60,148,0.12) 0%, transparent 70%);
+  }
+  .final-h {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 20px;
+    position: relative;
+    max-width: 760px;
+    margin-left: auto; margin-right: auto;
+  }
+  .final-h em { font-style: italic; color: var(--eq-primary); }
+  .final-sub {
+    font-size: 18px;
+    color: var(--ink-3);
+    max-width: 540px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .final-ctas {
+    display: flex; gap: 14px; justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  /* =================== FOOTER =================== */
+  .footer {
+    border-top: 0.5px solid var(--line);
+    padding: 40px 0;
+    background: white;
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 20px;
+    font-size: 13px;
+    color: var(--ink-4);
+  }
+  .footer-tagline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-3);
+  }
+  .footer-tagline b { color: var(--eq-primary); font-style: normal; font-weight: 500; }
+  .footer-links {
+    display: flex; gap: 24px;
+  }
+  .footer-links a:hover { color: var(--eq-primary); }
+
+</style>
+</head>
+<body>
+
+<!-- =================== NAV =================== -->
+<nav class="nav">
+  <div class="nav-band">
+    <div class="wrap nav-inner">
+      <a class="logo" href="#">
+        <div class="logo-mark">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="0" fill="#293C94"/>
+            <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="600" letter-spacing="-3" style="font-size:145.9px" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+            <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+        </div>
+        <div class="logo-text-wrap">
+          <div class="logo-text"><span class="neutral">eqo</span><span class="accent">flow360</span></div>
+          <div class="logo-sub">Klarer&nbsp;sehen. Weiter&nbsp;kommen.</div>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="#kernbotschaft">Konzept</a>
+        <a href="#features">Funktionen</a>
+        <a href="pricing.html">Preise</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <a class="nav-cta" href="#cta">
+        Simulator starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- =================== HERO =================== -->
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-eyebrow">
+          <span class="dot"></span>
+          Für Business Partner
+          <span class="tag"><span class="tag-neutral">eqo</span><span class="tag-accent">flow360</span></span>
+        </div>
+
+        <h1 class="hero-h1">
+          Niemand sieht <em>exponentielles Wachstum</em>
+          <span class="nowrap">im voraus.</span>
+          <span class="hero-h1-sub">Wir machen es sichtbar.</span>
+        </h1>
+
+        <p class="hero-sub">
+          Ein Eqology-Team wächst nicht linear. Die ersten Jahre erfordern Geduld — und dann beschleunigt die Duplikation. Genau diesen Sprung versteht im Gespräch <strong>niemand intuitiv.</strong> <span class="brand-inline"><span class="b-life">eqo</span><span class="b-flow">flow360</span></span> macht ihn sichtbar — als Kurve, in Echtzeit, mit den Werten deines Interessenten.
+        </p>
+
+        <div class="hero-ctas">
+          <a href="#cta" class="btn-primary">
+            Jetzt im Pitch nutzen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#features" class="btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21" fill="currentColor" stroke-linejoin="round"/></svg>
+            Funktionen ansehen
+          </a>
+        </div>
+
+        <div class="hero-proof">
+          <div class="hero-proof-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Mobil &amp; Desktop
+          </div>
+          <div class="hero-proof-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Abo · als Betriebsausgabe absetzbar
+          </div>
+          <div class="hero-proof-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sofort einsatzbereit
+          </div>
+        </div>
+      </div>
+
+      <!-- product preview -->
+      <div class="hero-illu">
+        <div class="product-frame">
+          <div class="pf-toolbar">
+            <div class="pf-dots"><span></span><span></span><span></span></div>
+            <div class="pf-title">eqoflow360.app</div>
+            <div class="pf-badge">LIVE</div>
+          </div>
+
+          <div class="pf-hero-num-label">Provision · Jahr 10 · pro Monat</div>
+          <div class="pf-hero-num">
+            <span class="currency">€</span>8.420<span class="unit">/Mon</span>
+          </div>
+          <div class="pf-hero-delta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16 7 22 7 22 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Realistisch · 30% Dup · 20% Fluk
+          </div>
+
+          <div class="pf-chart">
+            <svg viewBox="0 0 480 120" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="area-gradient" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#293C94" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="#293C94" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line class="pf-chart-grid" x1="0" y1="30" x2="480" y2="30"/>
+              <line class="pf-chart-grid" x1="0" y1="60" x2="480" y2="60"/>
+              <line class="pf-chart-grid" x1="0" y1="90" x2="480" y2="90"/>
+              <path class="pf-chart-area" d="M 24 108 L 74 104 L 124 96 L 174 84 L 224 70 L 274 55 L 324 42 L 374 30 L 424 20 L 456 14 L 456 120 L 24 120 Z"/>
+              <path class="pf-chart-line" d="M 24 108 L 74 104 L 124 96 L 174 84 L 224 70 L 274 55 L 324 42 L 374 30 L 424 20 L 456 14"/>
+              <circle class="pf-chart-dot" cx="74" cy="104" r="2.5"/>
+              <circle class="pf-chart-dot" cx="124" cy="96" r="2.5"/>
+              <circle class="pf-chart-dot" cx="174" cy="84" r="2.5"/>
+              <circle class="pf-chart-dot" cx="224" cy="70" r="2.5"/>
+              <circle class="pf-chart-dot" cx="274" cy="55" r="2.5"/>
+              <circle class="pf-chart-dot" cx="324" cy="42" r="2.5"/>
+              <circle class="pf-chart-dot" cx="374" cy="30" r="2.5"/>
+              <circle class="pf-chart-dot" cx="424" cy="20" r="2.5"/>
+              <circle class="pf-chart-dot-end" cx="456" cy="14" r="6"/>
+              <text class="pf-chart-label" x="24" y="118">J1</text>
+              <text class="pf-chart-label" x="170" y="118">J4</text>
+              <text class="pf-chart-label" x="316" y="118">J7</text>
+              <text class="pf-chart-label" x="442" y="118">J10</text>
+            </svg>
+          </div>
+
+          <div class="pf-sliders">
+            <div class="pf-slider-tile">
+              <div class="pf-slider-label">Partner/J</div>
+              <div class="pf-slider-value">2</div>
+              <div class="pf-slider-bar" style="--w:25%"></div>
+            </div>
+            <div class="pf-slider-tile">
+              <div class="pf-slider-label">Kunden/J</div>
+              <div class="pf-slider-value">3</div>
+              <div class="pf-slider-bar" style="--w:38%"></div>
+            </div>
+            <div class="pf-slider-tile">
+              <div class="pf-slider-label">QV/Monat</div>
+              <div class="pf-slider-value">200</div>
+              <div class="pf-slider-bar" style="--w:60%"></div>
+            </div>
+          </div>
+
+          <div class="pf-annotation a1">Hero-Zahl · live</div>
+          <div class="pf-annotation a2">5 Slider</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== TRUST STRIP =================== -->
+<section class="trust-strip">
+  <div class="wrap trust-inner">
+    <div class="trust-label">Eingebaute Logik</div>
+    <div class="trust-items">
+      <div class="trust-item"><span class="trust-num">5</span><span class="trust-cap">Slider</span></div>
+      <div class="trust-item"><span class="trust-num">10</span><span class="trust-cap">Jahre Verlauf</span></div>
+      <div class="trust-item"><span class="trust-num">3</span><span class="trust-cap">Phasen-Vergütung</span></div>
+      <div class="trust-item"><span class="trust-num trust-num-text">BP <span class="trust-arrow">→</span> 3*&nbsp;Diamond&nbsp;Ambassador</span><span class="trust-cap">alle Stufen abgedeckt</span></div>
+      <div class="trust-item"><span class="trust-num">&lt;100ms</span><span class="trust-cap">Reaktion</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== CORE MESSAGE =================== -->
+<section class="core" id="kernbotschaft">
+  <div class="wrap">
+    <div class="core-grid-intro">
+      <div>
+        <div class="core-eyebrow">DAS PROBLEM</div>
+        <h2 class="core-h">
+          Der Vergütungsplan ist transparent —<br>
+          <em>Wachstum im Netzwerk ist es nicht.</em>
+        </h2>
+        <p class="core-sub">
+          <span class="brand-inline"><span class="b-life">eqo</span><span class="b-flow">flow360</span></span> ändert das. Eine Live-Simulation mit wenigen Parametern, die den Vergütungsplan visualisiert — und zwar genau dort, wo Menschen aussteigen: bei der mentalen Vorstellung, wie ein Netzwerk über 10 Jahre wächst.
+        </p>
+      </div>
+
+      <!-- Visualization: flat → hockey stick -->
+      <div class="core-viz">
+        <div class="core-viz-frame">
+          <svg viewBox="0 0 360 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="core-area" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#5B7438" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#5B7438" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <!-- baseline -->
+            <line x1="0" y1="170" x2="360" y2="170" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+
+            <!-- annotations -->
+            <text x="60" y="30" fill="rgba(255,255,255,0.65)" font-family="JetBrains Mono" font-size="10" letter-spacing="0.5">FLACH</text>
+            <line x1="5" y1="35" x2="55" y2="35" stroke="rgba(255,255,255,0.35)" stroke-width="0.5" stroke-dasharray="2 2"/>
+            <line x1="120" y1="35" x2="220" y2="35" stroke="rgba(255,255,255,0.35)" stroke-width="0.5" stroke-dasharray="2 2"/>
+
+            <text x="265" y="30" fill="#5B7438" font-family="JetBrains Mono" font-size="10" letter-spacing="0.5">HOCKEYSTICK</text>
+            <line x1="240" y1="35" x2="260" y2="35" stroke="#5B7438" stroke-width="0.5" stroke-dasharray="2 2"/>
+            <line x1="320" y1="35" x2="355" y2="35" stroke="#5B7438" stroke-width="0.5" stroke-dasharray="2 2"/>
+
+            <!-- the curve -->
+            <path d="M 20 168 L 56 167 L 92 165 L 128 162 L 164 156 L 200 145 L 236 124 L 272 92 L 308 56 L 344 22 L 344 200 L 20 200 Z"
+                  fill="url(#core-area)"/>
+            <path d="M 20 168 L 56 167 L 92 165 L 128 162 L 164 156 L 200 145 L 236 124 L 272 92 L 308 56 L 344 22"
+                  fill="none" stroke="#5B7438" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+            <!-- year markers on x-axis -->
+            <text x="20" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J1</text>
+            <text x="92" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J3</text>
+            <text x="164" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J5</text>
+            <text x="236" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J7</text>
+            <text x="308" y="190" fill="rgba(255,255,255,0.5)" font-family="JetBrains Mono" font-size="9" text-anchor="middle">J9</text>
+
+            <!-- vertical wendepunkt marker -->
+            <line x1="200" y1="42" x2="200" y2="180" stroke="rgba(91,116,56,0.4)" stroke-width="0.5" stroke-dasharray="3 3"/>
+            <text x="200" y="50" fill="#5B7438" font-family="Inter" font-size="9" text-anchor="middle" font-style="italic">Wendepunkt</text>
+
+            <!-- end dot -->
+            <circle cx="344" cy="22" r="5" fill="#5B7438" stroke="white" stroke-width="2"/>
+          </svg>
+          <div class="core-viz-cap">Genau dieses Bild sieht dein Interessent — in seiner Hand, mit seinen Werten.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="core-divider"></div>
+
+    <div class="core-paths-head">
+      <div class="core-eyebrow">DREI PFADE · EIN TOOL</div>
+      <h3 class="core-paths-h">Der Simulator zeigt jedem das <em>seine.</em></h3>
+    </div>
+
+    <div class="core-grid">
+      <div class="core-card">
+        <div class="core-card-num">01 — Geduld &amp; Kontinuität</div>
+        <h3 class="core-card-h">Dranbleiben ist die einzige Voraussetzung.</h3>
+        <p class="core-card-p">Die Simulation macht sichtbar, was jeder erfahrene Business Partner wissen: Wer das Tempo aushält und kontinuierlich aufbaut, gewinnt. Es ist kein Versprechen — es ist Mathematik.</p>
+      </div>
+      <div class="core-card">
+        <div class="core-card-num">02 — Der ruhige Pfad</div>
+        <h3 class="core-card-h">Nebenher gestartet — Rentenlücke in 10 Jahren geschlossen.</h3>
+        <p class="core-card-p">Schon mit moderaten Werten — wenige neue Business Partner pro Jahr, eine ruhige Kundenbasis — zeigt der Simulator nach 10 Jahren eine Summe, die als Zusatzeinkommen den Unterschied macht.</p>
+      </div>
+      <div class="core-card">
+        <div class="core-card-num">03 — Der ambitionierte Pfad</div>
+        <h3 class="core-card-h">Wer Gas gibt, ersetzt sein Vollzeit-Einkommen in 4–7 Jahren.</h3>
+        <p class="core-card-p">Mit höherer Dynamik im Aufbau verschiebt sich der Wendepunkt nach vorn. Der Simulator zeigt es ohne Übertreibung — nur die Slider stehen anders, die Kurve macht den Rest.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FEATURE 1 — Slider =================== -->
+<section class="feature" id="features">
+  <div class="wrap feature-row">
+    <div class="feature-text">
+      <div class="feature-num">01 / FEATURE</div>
+      <h3 class="feature-h">Fünf Slider. <em>Sein</em> Plan, nicht deiner.</h3>
+      <p class="feature-p">
+        Du brauchst keine Folien-Erklärung des Vergütungsplans. Du brauchst fünf Slider, die er selbst anfasst. Jede Bewegung ist eine Frage, jede Antwort ist eine Zahl.
+      </p>
+      <p class="feature-p feature-p-highlight">
+        Und genau hier nimmst du dem Gespräch den Druck: Selbst mit <b>nur 2 Business Partner pro Jahr</b> zeigt der Simulator nach 7–10 Jahren eine stolze Summe. Das relativiert die Angst, sofort liefern zu müssen.
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Business Partner pro Jahr</b> — wie viele baut er aktiv mit auf?</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Kunden pro Jahr</b> — die ruhige Basis, die regelmäßig Abos bezieht.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>QV pro Monat</b> — wie aktiv ist ein typischer Kunde im Schnitt?</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Duplikation</b> — wie viele seiner Business Partner bauen selbst Teams auf?</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Fluktuation</b> — ehrliche Reibung, statt mathematischer Märchenwelt.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="feature-visual">
+      <div class="visual-frame">
+        <div class="visual-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="file">eingaben · live</div>
+        </div>
+        <div class="v-sliders">
+          <div class="v-slider">
+            <div class="v-slider-head">
+              <span class="v-slider-label">Partner/Jahr</span>
+              <span class="v-slider-val">2</span>
+            </div>
+            <div class="v-slider-track">
+              <div class="v-slider-fill" style="width:22%"></div>
+              <div class="v-slider-thumb" style="left:22%"></div>
+            </div>
+            <div class="v-slider-scale"><span>0</span><span>10</span></div>
+          </div>
+          <div class="v-slider">
+            <div class="v-slider-head">
+              <span class="v-slider-label">Kunden/Jahr</span>
+              <span class="v-slider-val">3</span>
+            </div>
+            <div class="v-slider-track">
+              <div class="v-slider-fill" style="width:35%"></div>
+              <div class="v-slider-thumb" style="left:35%"></div>
+            </div>
+            <div class="v-slider-scale"><span>0</span><span>10</span></div>
+          </div>
+          <div class="v-slider">
+            <div class="v-slider-head">
+              <span class="v-slider-label">QV / Monat</span>
+              <span class="v-slider-val">200</span>
+            </div>
+            <div class="v-slider-track">
+              <div class="v-slider-fill" style="width:50%"></div>
+              <div class="v-slider-thumb" style="left:50%"></div>
+            </div>
+            <div class="v-slider-scale"><span>0</span><span>400</span></div>
+          </div>
+          <div class="v-slider">
+            <div class="v-slider-head">
+              <span class="v-slider-label">Duplikation</span>
+              <span class="v-slider-val">30<sup>%</sup></span>
+            </div>
+            <div class="v-slider-track">
+              <div class="v-slider-fill" style="width:30%"></div>
+              <div class="v-slider-thumb" style="left:30%"></div>
+            </div>
+            <div class="v-slider-scale"><span>0</span><span>100</span></div>
+          </div>
+          <div class="v-slider" style="grid-column: span 2;">
+            <div class="v-slider-head">
+              <span class="v-slider-label">Fluktuation</span>
+              <span class="v-slider-val">20<sup>%</sup></span>
+            </div>
+            <div class="v-slider-track">
+              <div class="v-slider-fill" style="width:20%"></div>
+              <div class="v-slider-thumb" style="left:20%"></div>
+            </div>
+            <div class="v-slider-scale"><span>0</span><span>50</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FEATURE 2 — Chart =================== -->
+<section class="feature">
+  <div class="wrap feature-row reverse">
+    <div class="feature-text">
+      <div class="feature-num">02 / FEATURE</div>
+      <h3 class="feature-h">10 Jahre auf einer <em>Kurve.</em> Nicht auf 30 Folien.</h3>
+      <p class="feature-p">
+        Im 1. Jahr passiert wenig. Im 4. wird's spürbar. Ab dem 7. wird's eindrucksvoll. Das ist die Wahrheit jedes Netzwerks — und die einzige Visualisierung, die diese Geschichte ehrlich erzählt, ist der Verlauf.
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Jahr-für-Jahr-Verlauf</b> mit interaktivem Tooltip — er sieht den Sprung von Jahr 3 zu Jahr 4 selbst.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Monats- und Jahresansicht</b> — gleiche Zahlen, andere Perspektive. „4.000/Monat" wirkt anders als „48.000/Jahr".</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Live-Update</b> — bewegt er einen Slider, biegt sich die Kurve sofort mit. Keine Ladezeit, keine Submit-Buttons.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="feature-visual">
+      <div class="visual-frame">
+        <div class="visual-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="file">verlauf · 10 jahre</div>
+        </div>
+        <div class="v-chart-head">
+          <div>
+            <div class="v-chart-h-label">Provision · Jahr 10</div>
+            <div class="v-chart-h-num"><span class="cur">€</span>8.420</div>
+          </div>
+          <div class="v-chart-tabs">
+            <div class="v-chart-tab active">/Monat</div>
+            <div class="v-chart-tab">/Jahr</div>
+          </div>
+        </div>
+        <div class="v-chart-body">
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="area-gradient-2" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#293C94" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#293C94" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="25" y1="40" x2="490" y2="40" stroke="#E9EEF6" stroke-width="0.5" stroke-dasharray="2 3"/>
+            <line x1="25" y1="90" x2="490" y2="90" stroke="#E9EEF6" stroke-width="0.5" stroke-dasharray="2 3"/>
+            <line x1="25" y1="140" x2="490" y2="140" stroke="#E9EEF6" stroke-width="0.5" stroke-dasharray="2 3"/>
+            <line x1="25" y1="190" x2="490" y2="190" stroke="#DFE6F0" stroke-width="0.5"/>
+
+            <text x="20" y="44" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#61708A">10k</text>
+            <text x="20" y="94" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#61708A">7k</text>
+            <text x="20" y="144" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#61708A">4k</text>
+            <text x="20" y="194" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#61708A">€0</text>
+
+            <path d="M 50 188 L 100 184 L 150 174 L 200 158 L 250 138 L 300 112 L 350 84 L 400 56 L 450 36 L 480 26 L 480 200 L 50 200 Z"
+                  fill="url(#area-gradient-2)"/>
+            <path d="M 50 188 L 100 184 L 150 174 L 200 158 L 250 138 L 300 112 L 350 84 L 400 56 L 450 36 L 480 26"
+                  fill="none" stroke="#293C94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+            <circle cx="50" cy="188" r="3" fill="#293C94"/>
+            <circle cx="100" cy="184" r="3" fill="#293C94"/>
+            <circle cx="150" cy="174" r="3" fill="#293C94"/>
+            <circle cx="200" cy="158" r="3" fill="#293C94"/>
+            <circle cx="250" cy="138" r="3" fill="#293C94"/>
+            <circle cx="300" cy="112" r="3" fill="#293C94"/>
+            <circle cx="350" cy="84" r="3" fill="#293C94"/>
+            <circle cx="400" cy="56" r="3" fill="#293C94"/>
+            <circle cx="450" cy="36" r="3" fill="#293C94"/>
+            <circle cx="480" cy="26" r="6" fill="#293C94" stroke="white" stroke-width="3"/>
+
+            <line x1="350" y1="84" x2="350" y2="200" stroke="#293C94" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+            <circle cx="350" cy="84" r="6" fill="none" stroke="#293C94" stroke-width="1.4"/>
+
+            <text x="50" y="212" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#61708A">J1</text>
+            <text x="200" y="212" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#61708A">J4</text>
+            <text x="350" y="212" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#61708A">J7</text>
+            <text x="480" y="212" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#61708A">J10</text>
+          </svg>
+          <div class="v-chart-tooltip" style="left: 56%; top: 12%">
+            <div class="label">Jahr 7 · /Monat</div>
+            <div class="val">€3.180</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FEATURE 3 — Rank Ladder =================== -->
+<section class="feature">
+  <div class="wrap feature-row">
+    <div class="feature-text">
+      <div class="feature-num">03 / FEATURE</div>
+      <h3 class="feature-h">Vom Team Leader zum <em>Diamond Ambassador.</em> Und wann?</h3>
+      <p class="feature-p">
+        Der Vergütungsplan kennt klare Stufen — vom <b>Team Leader</b> über <b>Director</b>, <b>Vice President</b>, <b>President</b>, <b>Gold</b> &amp; <b>Platinum President</b> bis hin zum <b>Diamond Ambassador</b> und darüber hinaus. <span class="brand-inline"><span class="b-life">eqo</span><span class="b-flow">flow360</span></span> zeigt nicht nur, ob er aufsteigt, sondern in welchem Jahr — basierend auf seinen eigenen Werten.
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Erreichte Stufen markiert</b> — er sieht sofort, wie weit sein Szenario trägt.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Jahresangabe pro Stufe</b> — kein Wischi-Waschi, sondern eine konkrete Wegmarke.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>PQV, GQV und Teams transparent</b> — er sieht, welche Voraussetzungen wann erfüllt sind.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="feature-visual">
+      <div class="visual-frame">
+        <div class="visual-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="file">stufen · aufstiegsprognose</div>
+        </div>
+        <div class="v-kpi-row">
+          <div class="v-kpi">
+            <div class="v-kpi-label">Netzwerk · Jahr 10</div>
+            <div class="v-kpi-val">412</div>
+            <div class="v-kpi-delta">↑ aus 2 BP direkt</div>
+          </div>
+          <div class="v-kpi">
+            <div class="v-kpi-label">Höchste Stufe</div>
+            <div class="v-kpi-val">Gold Pres.</div>
+            <div class="v-kpi-delta">erreicht in Jahr 6</div>
+          </div>
+        </div>
+        <div class="v-rank">
+          <div class="v-rank-head">
+            <span class="v-rank-title">Aufstieg über 10 Jahre</span>
+          </div>
+          <div class="v-rank-row achieved">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Team Leader</span>
+            <span class="v-rank-meta">2.000 GQV · 3 Teams</span>
+            <span class="v-rank-year">J1</span>
+          </div>
+          <div class="v-rank-row achieved">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Director</span>
+            <span class="v-rank-meta">4.000 GQV · 3 Teams</span>
+            <span class="v-rank-year">J2</span>
+          </div>
+          <div class="v-rank-row achieved">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Vice President</span>
+            <span class="v-rank-meta">12.000 GQV · 3 TL</span>
+            <span class="v-rank-year">J3</span>
+          </div>
+          <div class="v-rank-row achieved">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">President</span>
+            <span class="v-rank-meta">36.000 GQV · 3 Director</span>
+            <span class="v-rank-year">J5</span>
+          </div>
+          <div class="v-rank-row achieved">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Gold President</span>
+            <span class="v-rank-meta">90.000 GQV · 3 Director</span>
+            <span class="v-rank-year">J6</span>
+          </div>
+          <div class="v-rank-row">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Platinum President</span>
+            <span class="v-rank-meta">180.000 GQV · 3 Teams</span>
+            <span class="v-rank-year">—</span>
+          </div>
+          <div class="v-rank-row">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Diamond President</span>
+            <span class="v-rank-meta">+ 1 PP im Sponsorbaum</span>
+            <span class="v-rank-year">—</span>
+          </div>
+          <div class="v-rank-row">
+            <span class="v-rank-dot"></span>
+            <span class="v-rank-name">Diamond Ambassador (1*–3*)</span>
+            <span class="v-rank-meta">+ 2–4 PPs in separaten Teams</span>
+            <span class="v-rank-year">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FEATURE 4 — Pitch View =================== -->
+<section class="feature" id="anwendung">
+  <div class="wrap feature-row reverse">
+    <div class="feature-text">
+      <div class="feature-num">04 / FEATURE</div>
+      <h3 class="feature-h">Pitch-Modus: <em>weniger zeigen, mehr wirken.</em></h3>
+      <p class="feature-p">
+        Im Gespräch willst du keine Datentabellen. Du willst eine Zahl, die so groß ist, dass sie wirkt. Der Pitch-Modus blendet alles aus, was ablenkt — und zeigt nur das, was zählt.
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Eine Zahl, riesig dargestellt</b> — auf jedem Display lesbar, vom Handy bis zur Präsentation.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Reduzierte Kennzahlen</b> — Netzwerkgröße, Rang, Bonus auf einen Blick.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Teilbar als Link</b> — die exakten Slider-Werte landen in der URL. Er kann's zuhause nochmal in Ruhe anschauen.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="feature-visual">
+      <div class="visual-frame">
+        <div class="visual-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="file">pitch · ergebnisansicht</div>
+        </div>
+        <div class="v-pitch-hero">
+          <div class="v-pitch-label">DEIN MONATLICHER VERDIENST · JAHR 10</div>
+          <div class="v-pitch-num"><span class="cur">€</span>8.420</div>
+          <div class="v-pitch-cap">Bei 2 Business Partner · 3 Kunden · 300 QV · 30 % Dup · 20 % Fluk</div>
+        </div>
+        <div class="v-pitch-grid">
+          <div class="v-pitch-cell">
+            <div class="v-pitch-cell-label">Netzwerk</div>
+            <div class="v-pitch-cell-val">412</div>
+          </div>
+          <div class="v-pitch-cell">
+            <div class="v-pitch-cell-label">Stufe</div>
+            <div class="v-pitch-cell-val">GP</div>
+          </div>
+          <div class="v-pitch-cell">
+            <div class="v-pitch-cell-label">Jahr</div>
+            <div class="v-pitch-cell-val">10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FEATURE 5 — URL-Sharing / Multi-Device =================== -->
+<section class="feature" id="sharing">
+  <div class="wrap feature-row">
+    <div class="feature-text">
+      <div class="feature-num">05 / FEATURE</div>
+      <h3 class="feature-h">Ein Link. Sein Szenario. <em>Überall.</em></h3>
+      <p class="feature-p">
+        Jeder Slider-Wert steckt in der URL. Kopier den Link, schick ihn per WhatsApp — und auf seinem Handy öffnet sich die exakt gleiche Berechnung. Auf dem Tablet im Wohnzimmer. Auf dem Notebook im Büro.
+      </p>
+      <p class="feature-p feature-p-highlight">
+        Im <b>Zoom-Call</b>: Bildschirm teilen, Slider live bewegen, er sieht jede Veränderung in Echtzeit. Auch wenn ihr nicht im selben Raum seid, sitzt ihr nebeneinander.
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Handy, Tablet, Desktop</b> — gleicher Link, gleiche Zahl, jedes Display.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Nachfass-fähig</b> — er kann das Szenario zuhause in Ruhe nachrechnen.</span>
+        </li>
+        <li>
+          <span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Zoom- &amp; Teams-tauglich</b> — Bildschirm teilen, gemeinsam justieren.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="feature-visual">
+      <div class="multidevice">
+        <!-- Desktop -->
+        <div class="md-desktop">
+          <div class="md-d-frame">
+            <div class="md-d-toolbar">
+              <div class="md-dots"><span></span><span></span><span></span></div>
+              <div class="md-d-url"><span class="url-prot">eqoflow360.app/?</span><span class="url-params">m=2&amp;s=3&amp;ip=200&amp;d=30&amp;f=20</span></div>
+            </div>
+            <div class="md-d-body">
+              <div class="md-d-num"><span class="cur">€</span>8.420<span class="md-d-unit">/Mon</span></div>
+              <div class="md-d-cap">Jahr 10 · realistisch</div>
+              <svg class="md-d-chart" viewBox="0 0 280 60" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="md-grad" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#293C94" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="#293C94" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M 10 55 L 38 53 L 66 49 L 94 43 L 122 35 L 150 26 L 178 18 L 206 11 L 234 6 L 262 4 L 262 60 L 10 60 Z" fill="url(#md-grad)"/>
+                <path d="M 10 55 L 38 53 L 66 49 L 94 43 L 122 35 L 150 26 L 178 18 L 206 11 L 234 6 L 262 4" fill="none" stroke="#293C94" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="262" cy="4" r="3" fill="#293C94" stroke="white" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+          <div class="md-stand"></div>
+          <div class="md-label">Desktop · 27"</div>
+        </div>
+
+        <!-- Tablet -->
+        <div class="md-tablet">
+          <div class="md-t-frame">
+            <div class="md-t-body">
+              <div class="md-t-num"><span class="cur">€</span>8.420</div>
+              <div class="md-t-cap">/Monat · Jahr 10</div>
+              <svg class="md-t-chart" viewBox="0 0 140 36" preserveAspectRatio="none">
+                <path d="M 6 32 L 22 30 L 38 27 L 54 23 L 70 18 L 86 13 L 102 8 L 118 5 L 134 3" fill="none" stroke="#293C94" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="134" cy="3" r="2.5" fill="#293C94" stroke="white" stroke-width="1.2"/>
+              </svg>
+              <div class="md-t-mini">
+                <div class="md-t-mb"><div class="md-t-mb-fill" style="width:25%"></div></div>
+                <div class="md-t-mb"><div class="md-t-mb-fill" style="width:38%"></div></div>
+                <div class="md-t-mb"><div class="md-t-mb-fill" style="width:50%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="md-label">Tablet · 10"</div>
+        </div>
+
+        <!-- Phone -->
+        <div class="md-phone">
+          <div class="md-p-frame">
+            <div class="md-p-notch"></div>
+            <div class="md-p-body">
+              <div class="md-p-num"><span class="cur">€</span>8.420</div>
+              <div class="md-p-cap">Jahr 10/Mon</div>
+              <svg class="md-p-chart" viewBox="0 0 80 24" preserveAspectRatio="none">
+                <path d="M 4 20 L 14 19 L 24 17 L 34 14 L 44 11 L 54 7 L 64 4 L 76 2" fill="none" stroke="#293C94" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="76" cy="2" r="2" fill="#293C94" stroke="white" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>
+          <div class="md-label">Handy</div>
+        </div>
+
+        <!-- Sync indicator -->
+        <div class="md-sync">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Live synchronisiert über URL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="lite-features">
+  <div class="wrap" style="padding-top:80px; padding-bottom:30px;">
+    <div class="sec-eyebrow">Weitere Funktionen</div>
+    <h2 class="sec-h">Alles drin, was im Pitch <em>zählt.</em></h2>
+  </div>
+  <div class="wrap" style="padding-left:0; padding-right:0;">
+    <div class="lite-grid">
+      <div class="lite-card">
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h4 class="lite-h">Sub-100ms-Reaktion</h4>
+        <p class="lite-p">Slider bewegen, Zahl springt. Keine Wartezeit unterbricht den Gesprächsfluss.</p>
+      </div>
+      <div class="lite-card">
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12" stroke-linecap="round"/></svg></div>
+        <h4 class="lite-h">Annahmen einsehbar</h4>
+        <p class="lite-p">Alle Modell-Annahmen im Settings-Drawer. Kein Hokuspokus, alles transparent.</p>
+      </div>
+      <div class="lite-card">
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" stroke-linecap="round"/></svg></div>
+        <h4 class="lite-h">Light- &amp; Dark-Mode</h4>
+        <p class="lite-p">Wechselt automatisch mit der Systemeinstellung. Hell am Cafétisch, dunkel im Hotelzimmer.</p>
+      </div>
+      <div class="lite-card">
+        <div class="lite-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h4 class="lite-h">DSGVO-konform</h4>
+        <p class="lite-p">Keine Tracking-Cookies, keine Drittparteien. Daten bleiben zwischen dir und ihm.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PRICING TEASER =================== -->
+<section class="pricing-teaser" id="pricing">
+  <div class="wrap">
+    <div class="pricing-grid">
+      <div class="pricing-intro">
+        <div class="sec-eyebrow">Preise</div>
+        <h2 class="sec-h">Faires Werkzeug, <em>fairer Preis.</em></h2>
+        <p class="sec-sub">
+          eqoflow360 ist ein Abo-Werkzeug für Business Partner. Monatlich kündbar — oder im Jahresabo mit spürbarem Rabatt. Beide Pläne sind als <strong>Betriebsausgabe absetzbar.</strong>
+        </p>
+        <a href="pricing.html" class="btn-secondary">
+          Alle Preise &amp; Details ansehen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="pricing-cards">
+        <!-- Monthly -->
+        <div class="pricing-card">
+          <div class="pc-tag">Flexibel</div>
+          <div class="pc-name">Monatlich</div>
+          <div class="pc-price">
+            <span class="pc-price-cur">€</span><span class="pc-price-val">19</span><span class="pc-price-unit">/Monat</span>
+          </div>
+          <div class="pc-bill">€19 monatlich abgerechnet</div>
+          <ul class="pc-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Voller Funktionsumfang
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Mobil, Tablet &amp; Desktop
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Monatlich kündbar
+            </li>
+          </ul>
+        </div>
+
+        <!-- Yearly -->
+        <div class="pricing-card pc-featured">
+          <div class="pc-tag pc-tag-highlight">2 Monate gespart</div>
+          <div class="pc-name">Jährlich</div>
+          <div class="pc-price">
+            <span class="pc-price-cur">€</span><span class="pc-price-val">15</span><span class="pc-price-unit">/Monat</span>
+          </div>
+          <div class="pc-bill">€180 jährlich · Ersparnis €48</div>
+          <ul class="pc-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Alles aus Monatlich
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <strong>~21 % günstiger</strong> als Monatsabo
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Eine Rechnung pro Jahr
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="pricing-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
+      <span>Alle Preise inkl. MwSt. Als Business Partner setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater.</span>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FAQ =================== -->
+<section class="faq" id="faq">
+  <div class="wrap faq-grid">
+    <div>
+      <div class="sec-eyebrow">FAQ</div>
+      <h2 class="sec-h">Was Business Partner <em>am häufigsten</em> fragen.</h2>
+      <p class="sec-sub">Wenn deine Frage fehlt — kurze Mail an den Support, dann landet sie hier. Und wird beantwortet.</p>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item open">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Sind die Zahlen wirklich realistisch — oder Marketing?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Realistisch heißt: realistisch für die Eingabewerte. Setzt du 100 % Duplikation und 0 % Fluktuation, kommt eine Milliarden-Zahl raus — und die ist mathematisch korrekt, aber praktisch unmöglich. Setzt du 30 % Duplikation und 20 % Fluktuation, landest du bei den ehrlichen €4.000–€10.000/Monat, die ein engagierter Business Partner nach 10 Jahren realistisch erreicht.</p>
+            <p>Der Simulator lügt nicht. Er rechnet exakt das, was du eingibst.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Welche Bonusarten sind eingerechnet?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Alle Bonusarten des Eqology-Vergütungsplans sind in der Engine abgebildet — <b>FSQ-Bonus</b>, <b>Customer Acquisition Bonus (CAB)</b>, <b>Personal Customer Commission (PCC)</b>, <b>Mentor Bonus</b>, <b>Team Commission</b> über bis zu 10 Team-Leader-Generationen, <b>Leadership Matching Bonus</b> sowie <b>Rank Advancement Bonus</b>. Komprimierung und 60 %-Regel werden korrekt durchgerechnet.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Kann ich das im Kundengespräch zeigen — oder ist das zu komplex?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Genau dafür ist es gebaut. Fünf Slider sind in 30 Sekunden erklärt. Der Pitch-Modus blendet alles Komplexe aus und zeigt nur die Hero-Zahl. Die Komplexität dahinter sieht der Interessent erst, wenn er sie sehen will.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Wie werden die Stufen-Jahre berechnet?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Pro Jahr prüft die Engine die Stufen-Voraussetzungen des Plans: <b>PQV</b> (Persönliches Qualifying Volume), <b>GQV</b> (Group Qualifying Volume), Anzahl aktiver <b>separater Teams</b> sowie die <b>60 %-Regel</b>. Sobald ein Jahr die Bedingungen einer Stufe — vom Team Leader bis zum 3* Diamond Ambassador — erfüllt, wird sie als „erreicht in Jahr X" markiert.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Was kostet <span class="brand-inline"><span class="b-life">eqo</span><span class="b-flow">flow360</span></span>?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Zwei Optionen: <strong>€19/Monat</strong> bei monatlicher Abrechnung, oder <strong>€15/Monat</strong> (= €180/Jahr) im Jahresabo — das spart rund 21 %.</p>
+            <p>Beide Stufen haben den vollen Funktionsumfang und sind als <strong>Betriebsausgabe</strong> absetzbar. Details, Zahlungsoptionen und Kündigungsfristen findest du auf der <a href="pricing.html" style="color: var(--eq-primary); text-decoration: underline; text-underline-offset: 3px;">Preisseite</a>.</p>
+          </div>
+        </div>
+      </div>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Was passiert, wenn der Vergütungsplan sich ändert?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Die Engine wird nachgezogen, sobald ein offizielles Update erscheint. Du arbeitest immer mit dem aktuellen Stand — kein manuelles Update auf deiner Seite.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FINAL CTA =================== -->
+<section class="final-cta" id="cta">
+  <div class="wrap">
+    <h2 class="final-h">
+      Sein nächstes <em>„Ja"</em> ist eine Zahl entfernt.
+    </h2>
+    <p class="final-sub">
+      Öffne den Simulator, setz dich zu ihm, lass ihn die Slider bewegen. Du brauchst keine Folien mehr.
+    </p>
+    <div class="final-ctas">
+      <a href="#" class="btn-primary">
+        Simulator öffnen
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#features" class="btn-secondary">Funktionen nochmal ansehen</a>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FOOTER =================== -->
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-tagline">klarer sehen. <b>weiter kommen.</b></div>
+    <div class="footer-links">
+      <a href="#">Impressum</a>
+      <a href="#">Datenschutz</a>
+      <a href="#">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(btn) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+
+</body>
+</html>

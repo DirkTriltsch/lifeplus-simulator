@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preise · eqoflow360</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Inline brand mention */
+  .brand-inline {
+    font-family: var(--sans);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .brand-inline .b-life { color: inherit; }
+  .brand-inline .b-flow { color: var(--eq-primary); }
+  .core .brand-inline .b-life { color: white; }
+  .core .brand-inline .b-flow { color: var(--eq-primary-soft); }
+
+  :root {
+    --eq-primary: #293C94;
+    --eq-gold: #EBBF82;
+    --eq-gold-dark: #C99A5E;
+    --eq-primary-dark: #1D274B;
+    --eq-primary-soft: #9EA7CF;
+    --eq-dark: #1D274B;
+    --eq-accent: #5B7438;
+    --eq-cta: #293C94;
+    --eq-cta-dark: #1D274B;
+    --eq-surface: #DAF1FA;
+    --eq-surface-warm: #E9F9FF;
+
+    --ink: #0F1432;
+    --ink-2: #1D2746;
+    --ink-3: #3E4A6F;
+    --ink-4: #61708A;
+    --ink-5: #A4ADC2;
+    --line: #DFE6F0;
+    --line-soft: #E9EEF6;
+    --paper: #FAFBFE;
+    --paper-2: #F2F5FA;
+
+    --serif: 'Fraunces', 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+  @media (max-width: 720px) { .wrap { padding: 0 20px; } }
+
+  /* =================== NAV (identisch mit index) =================== */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--eq-dark);
+    border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  }
+  .nav-band {
+    background: var(--eq-dark);
+    width: 100%;
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+    height: 76px;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 50px; height: 50px;
+    border-radius: 10px;
+    background: var(--eq-primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .logo-mark svg { width: 100%; height: 100%; display: block; }
+  .logo-text-wrap {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .logo-text {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .logo-text .neutral { color: white; }
+  .logo-text .accent { color: var(--eq-primary-soft); }
+  .logo-sub {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--eq-primary-soft);
+    text-transform: uppercase;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .nav-links {
+    display: flex; align-items: center; gap: 36px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    margin-left: auto;
+    margin-right: 28px;
+  }
+  .nav-links a { transition: color 0.15s; }
+  .nav-links a:hover, .nav-links a.active { color: white; }
+  .nav-links a.active { font-weight: 600; }
+  @media (max-width: 900px) { .nav-links { display: none; } }
+
+  .nav-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--eq-cta); color: white;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.1px;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(41,60,148,0.28);
+  }
+  .nav-cta:hover {
+    background: var(--eq-cta-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 6px 18px rgba(41,60,148,0.35);
+  }
+  .nav-cta svg { width: 14px; height: 14px; transition: transform 0.18s; }
+  .nav-cta:hover svg { transform: translateX(3px); }
+  @media (max-width: 540px) {
+    .logo-sub { display: none; }
+    .logo-text { font-size: 22px; }
+    .logo-mark { width: 42px; height: 42px; }
+  }
+
+  /* =================== PAGE HEADER =================== */
+  .page-hero {
+    padding: 84px 0 60px;
+    text-align: center;
+    background:
+      radial-gradient(ellipse 700px 300px at 50% 0%, var(--eq-surface) 0%, transparent 70%);
+    position: relative;
+  }
+  .ph-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--eq-primary);
+    margin-bottom: 24px;
+    font-weight: 500;
+  }
+  .ph-eyebrow::before, .ph-eyebrow::after {
+    content: ""; width: 24px; height: 1px;
+    background: var(--eq-primary);
+  }
+  .ph-h1 {
+    font-family: var(--serif);
+    font-size: clamp(40px, 5.4vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  .ph-h1 em { font-style: italic; color: var(--eq-primary); }
+  .ph-sub {
+    font-size: 18px;
+    color: var(--ink-3);
+    max-width: 580px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* =================== TOGGLE =================== */
+  .toggle-wrap {
+    padding: 30px 0 0;
+    display: flex; justify-content: center;
+  }
+  .toggle {
+    display: inline-flex;
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 100px;
+    padding: 4px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(15,27,23,0.03);
+  }
+  .toggle-btn {
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-3);
+    border-radius: 100px;
+    transition: color 0.18s;
+    position: relative;
+    z-index: 2;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .toggle-btn.active { color: white; }
+  .toggle-pill {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    background: var(--eq-primary);
+    border-radius: 100px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+  .toggle-save {
+    display: inline-block;
+    background: var(--eq-gold);
+    color: var(--eq-dark);
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 2px;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .toggle-btn:not(.active) .toggle-save { background: var(--eq-gold); color: var(--eq-dark); }
+
+  /* =================== PRICING CARDS =================== */
+  .pricing-section {
+    padding: 50px 0 100px;
+  }
+  .pricing-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 880px;
+    margin: 0 auto 32px;
+  }
+  @media (max-width: 720px) { .pricing-row { grid-template-columns: 1fr; max-width: 480px; } }
+
+  .price-card {
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 18px;
+    padding: 36px 32px 32px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  }
+  .price-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(15,27,23,0.08);
+  }
+  .price-card.featured {
+    border: 2px solid var(--eq-gold);
+    background: linear-gradient(180deg, white 0%, var(--eq-surface) 100%);
+  }
+  .pc-badge {
+    position: absolute;
+    top: -12px; left: 32px;
+    background: var(--eq-gold);
+    color: var(--eq-dark);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(235, 191, 130, 0.4);
+  }
+  .price-name {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .price-desc {
+    font-size: 14px;
+    color: var(--ink-4);
+    margin-bottom: 28px;
+  }
+  .price-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 6px;
+    letter-spacing: -0.025em;
+  }
+  .price-cur {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--ink-3);
+    font-weight: 300;
+  }
+  .price-val {
+    font-family: var(--serif);
+    font-size: 64px;
+    color: var(--ink);
+    font-weight: 400;
+    line-height: 0.95;
+  }
+  .price-unit {
+    font-family: var(--sans);
+    font-size: 16px;
+    color: var(--ink-4);
+    margin-left: 8px;
+    font-weight: 400;
+  }
+  .price-billed {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 0.5px solid var(--line-soft);
+  }
+  .price-card.featured .price-billed { color: var(--eq-gold-dark); font-weight: 600; }
+
+  .price-feats {
+    list-style: none;
+    display: grid; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .price-feats li {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .price-feats li svg {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    color: var(--eq-primary);
+    margin-top: 2px;
+  }
+  .price-feats li strong { color: var(--ink); font-weight: 600; }
+
+  .price-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    padding: 14px 22px;
+    border-radius: 100px;
+    font-size: 15px; font-weight: 500;
+    transition: all 0.18s;
+  }
+  .price-card:not(.featured) .price-cta {
+    background: white;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .price-card:not(.featured) .price-cta:hover {
+    border-color: var(--eq-primary);
+    color: var(--eq-primary);
+  }
+  .price-card.featured .price-cta {
+    background: var(--eq-cta);
+    color: white;
+    box-shadow: 0 1px 2px rgba(41,60,148,0.2), 0 4px 14px rgba(41,60,148,0.18), 0 0 0 1px rgba(235,191,130,0.4) inset;
+  }
+  .price-card.featured .price-cta:hover {
+    background: var(--eq-cta-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(41,60,148,0.22), 0 8px 24px rgba(41,60,148,0.25), 0 0 0 1px rgba(235,191,130,0.6) inset;
+  }
+  .price-cta svg { width: 15px; height: 15px; transition: transform 0.18s; }
+  .price-cta:hover svg { transform: translateX(3px); }
+
+  .pricing-note {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px 22px;
+    background: white;
+    border: 0.5px solid var(--line);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--ink-3);
+    line-height: 1.55;
+  }
+  .pricing-note svg {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+    color: var(--eq-primary);
+    margin-top: 1px;
+  }
+  .pricing-note strong { color: var(--ink); font-weight: 600; }
+
+  /* =================== COMPARISON TABLE =================== */
+  .compare {
+    padding: 100px 0;
+    background: var(--paper-2);
+    border-top: 0.5px solid var(--line);
+    border-bottom: 0.5px solid var(--line);
+  }
+  @media (max-width: 720px) { .compare { padding: 64px 0; } }
+
+  .compare-h {
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.4vw, 38px);
+    font-weight: 400;
+    text-align: center;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .compare-h em { font-style: italic; color: var(--eq-primary); }
+  .compare-sub {
+    text-align: center;
+    font-size: 16px;
+    color: var(--ink-3);
+    margin-bottom: 48px;
+  }
+
+  .compare-table {
+    max-width: 880px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    border: 0.5px solid var(--line);
+    overflow: hidden;
+  }
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr;
+    gap: 12px;
+    padding: 18px 28px;
+    align-items: center;
+    border-top: 0.5px solid var(--line-soft);
+    font-size: 14px;
+  }
+  .compare-row:first-child {
+    border-top: none;
+    background: var(--paper-2);
+    padding: 22px 28px;
+  }
+  .compare-row.header {
+    border-top: none;
+    background: var(--paper-2);
+  }
+  .compare-feat {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .compare-cell {
+    text-align: center;
+    color: var(--ink-3);
+  }
+  .compare-cell.featured {
+    background: rgba(235, 191, 130, 0.08);
+  }
+  .compare-cell svg {
+    width: 18px; height: 18px;
+    color: var(--eq-primary);
+  }
+  .compare-cell.minus svg { color: var(--ink-5); }
+  .compare-head-name {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .compare-head-name.featured-name {
+    color: var(--eq-gold-dark);
+    font-weight: 600;
+  }
+  .compare-head-sub {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 540px) {
+    .compare-row {
+      grid-template-columns: 1.2fr 0.6fr 0.6fr;
+      padding: 14px 16px;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .compare-feat { font-size: 13px; }
+    .compare-head-name { font-size: 15px; }
+  }
+
+  /* =================== FAQ =================== */
+  .faq-section {
+    padding: 100px 0;
+  }
+  @media (max-width: 720px) { .faq-section { padding: 64px 0; } }
+
+  .faq-h {
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.4vw, 38px);
+    font-weight: 400;
+    text-align: center;
+    letter-spacing: -0.02em;
+    margin-bottom: 48px;
+    color: var(--ink);
+  }
+  .faq-h em { font-style: italic; color: var(--eq-primary); }
+  .faq-list {
+    max-width: 760px;
+    margin: 0 auto;
+    border-top: 0.5px solid var(--line);
+  }
+  .faq-item { border-bottom: 0.5px solid var(--line); }
+  .faq-q {
+    width: 100%;
+    text-align: left;
+    padding: 22px 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 24px;
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: color 0.15s;
+  }
+  .faq-q:hover { color: var(--eq-primary); }
+  .faq-icon {
+    width: 22px; height: 22px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    margin-top: 1px;
+  }
+  .faq-icon svg { width: 10px; height: 10px; transition: transform 0.25s; }
+  .faq-item.open .faq-icon {
+    background: var(--eq-primary);
+    border-color: var(--eq-primary);
+    color: white;
+  }
+  .faq-item.open .faq-icon svg { transform: rotate(45deg); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1); }
+  .faq-a-inner {
+    padding: 0 32px 24px 0;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink-3);
+  }
+  .faq-a-inner p + p { margin-top: 10px; }
+  .faq-item.open .faq-a { max-height: 480px; }
+
+  /* =================== FINAL CTA =================== */
+  .final-cta {
+    padding: 100px 0;
+    text-align: center;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--eq-surface) 100%);
+    border-top: 0.5px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 500px 240px at 50% 100%, rgba(41,60,148,0.12) 0%, transparent 70%);
+  }
+  .final-h {
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.6vw, 52px);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 18px;
+    position: relative;
+    max-width: 680px;
+    margin-left: auto; margin-right: auto;
+  }
+  .final-h em { font-style: italic; color: var(--eq-primary); }
+  .final-sub {
+    font-size: 17px;
+    color: var(--ink-3);
+    max-width: 500px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .final-ctas {
+    display: flex; gap: 14px; justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px;
+    border-radius: 100px;
+    font-size: 15px; font-weight: 500;
+    transition: all 0.18s;
+    background: var(--eq-cta);
+    color: white;
+    box-shadow: 0 1px 2px rgba(41,60,148,0.2), 0 4px 14px rgba(41,60,148,0.18);
+  }
+  .btn-primary:hover {
+    background: var(--eq-cta-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(41,60,148,0.2), 0 8px 24px rgba(41,60,148,0.22);
+  }
+  .btn-primary svg { width: 16px; height: 16px; transition: transform 0.18s; }
+  .btn-primary:hover svg { transform: translateX(3px); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px;
+    border-radius: 100px;
+    font-size: 15px; font-weight: 500;
+    transition: all 0.18s;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: white;
+  }
+  .btn-secondary:hover { border-color: var(--eq-primary); color: var(--eq-primary); }
+
+  /* =================== FOOTER =================== */
+  .footer {
+    border-top: 0.5px solid var(--line);
+    padding: 40px 0;
+    background: white;
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 20px;
+    font-size: 13px;
+    color: var(--ink-4);
+  }
+  .footer-tagline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-3);
+  }
+  .footer-tagline b { color: var(--eq-primary); font-style: normal; font-weight: 500; }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a:hover { color: var(--eq-primary); }
+</style>
+</head>
+<body>
+
+<!-- =================== NAV =================== -->
+<nav class="nav">
+  <div class="nav-band">
+    <div class="wrap nav-inner">
+      <a class="logo" href="index.html">
+        <div class="logo-mark">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="0" fill="#293C94"/>
+            <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="600" letter-spacing="-3" style="font-size:145.9px" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.528847)">E</text>
+            <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#9EA7CF" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+        </div>
+        <div class="logo-text-wrap">
+          <div class="logo-text"><span class="neutral">eqo</span><span class="accent">flow360</span></div>
+          <div class="logo-sub">Klarer&nbsp;sehen. Weiter&nbsp;kommen.</div>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#kernbotschaft">Konzept</a>
+        <a href="index.html#features">Funktionen</a>
+        <a href="pricing.html" class="active">Preise</a>
+        <a href="index.html#faq">FAQ</a>
+      </div>
+      <a class="nav-cta" href="#cta">
+        Simulator starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- =================== PAGE HEADER =================== -->
+<section class="page-hero">
+  <div class="wrap">
+    <div class="ph-eyebrow">Preise &amp; Konditionen</div>
+    <h1 class="ph-h1">Ein Werkzeug.<br><em>Zwei einfache Pläne.</em></h1>
+    <p class="ph-sub">
+      Voller Funktionsumfang in beiden Plänen — wähle nur, wie oft du abrechnen willst. Monatlich kündbar. In jedem Plan als <strong>Betriebsausgabe</strong> absetzbar.
+    </p>
+
+    <div class="toggle-wrap">
+      <div class="toggle">
+        <div class="toggle-pill" id="togglePill" style="width: calc(50% - 4px); transform: translateX(0);"></div>
+        <button class="toggle-btn active" onclick="setBilling('monthly')" id="btnMonthly">Monatlich</button>
+        <button class="toggle-btn" onclick="setBilling('yearly')" id="btnYearly">
+          Jährlich
+          <span class="toggle-save">−21 %</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PRICING CARDS =================== -->
+<section class="pricing-section">
+  <div class="wrap">
+    <div class="pricing-row">
+      <!-- Monthly -->
+      <div class="price-card">
+        <div class="price-name">Monatlich</div>
+        <div class="price-desc">Flexibel, monatlich kündbar.</div>
+        <div class="price-amount">
+          <span class="price-cur">€</span><span class="price-val">19</span><span class="price-unit">/Monat</span>
+        </div>
+        <div class="price-billed">€19 monatlich · jederzeit kündbar</div>
+        <ul class="price-feats">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Voller Funktionsumfang</strong> — alle Slider, alle Stufen, alle Phasen</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Handy, Tablet &amp; Desktop · URL-Sharing inklusive</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>E-Mail-Support innerhalb 48 h</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Monatlich kündbar</span>
+          </li>
+        </ul>
+        <a href="#" class="price-cta">
+          Jetzt monatlich starten
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <!-- Yearly -->
+      <div class="price-card featured">
+        <div class="pc-badge">Empfehlung · 2 Monate gratis</div>
+        <div class="price-name">Jährlich</div>
+        <div class="price-desc">Ein Abo, eine Rechnung, klarer Vorteil.</div>
+        <div class="price-amount">
+          <span class="price-cur">€</span><span class="price-val">15</span><span class="price-unit">/Monat</span>
+        </div>
+        <div class="price-billed">€180 jährlich · Ersparnis €48 / Jahr</div>
+        <ul class="price-feats">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Alles aus Monatlich</strong></span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>~21 % günstiger</strong> als das Monatsabo</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Eine Jahresrechnung — sauber für die Buchhaltung</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Priorisierter Support innerhalb 24 h</span>
+          </li>
+        </ul>
+        <a href="#" class="price-cta">
+          Jetzt jährlich starten
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="pricing-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
+      <span>Alle Preise inkl. MwSt. Als Business Partner setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater. Zahlung per Kreditkarte, SEPA-Lastschrift oder PayPal.</span>
+    </div>
+  </div>
+</section>
+
+<!-- =================== COMPARISON =================== -->
+<section class="compare">
+  <div class="wrap">
+    <h2 class="compare-h">Was ist <em>jeweils</em> enthalten?</h2>
+    <p class="compare-sub">Funktional identisch — der einzige Unterschied ist die Abrechnung.</p>
+
+    <div class="compare-table">
+      <div class="compare-row header">
+        <div></div>
+        <div class="compare-cell"><span class="compare-head-name">Monatlich</span><span class="compare-head-sub">€19/Mon</span></div>
+        <div class="compare-cell featured"><span class="compare-head-name featured-name">Jährlich</span><span class="compare-head-sub">€15/Mon</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-feat">5-Slider-Simulator</div>
+        <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">10-Jahres-Verlauf &amp; Chart</div>
+        <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">Stufen-Prognose (BP → 3* Diamond Ambassador)</div>
+        <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">Pitch-Modus für Gespräche</div>
+        <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">URL-Sharing &amp; Multi-Device-Sync</div>
+        <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">Light- &amp; Dark-Mode</div>
+        <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">Support-Reaktionszeit</div>
+        <div class="compare-cell">≤ 48 h</div>
+        <div class="compare-cell featured" style="color: var(--eq-gold-dark); font-weight: 600;">≤ 24 h · priorisiert</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">Abrechnung</div>
+        <div class="compare-cell">12 Rechnungen / Jahr</div>
+        <div class="compare-cell featured">1 Rechnung / Jahr</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feat">Kündigungsfrist</div>
+        <div class="compare-cell">monatlich</div>
+        <div class="compare-cell featured">zum Vertragsende</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FAQ =================== -->
+<section class="faq-section">
+  <div class="wrap">
+    <h2 class="faq-h">Fragen zur <em>Abrechnung.</em></h2>
+    <div class="faq-list">
+      <div class="faq-item open">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Wie kann ich kündigen?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Im <strong>Monatsabo</strong> kündigst du jederzeit zum Monatsende — ein Klick im Account-Bereich genügt, keine Begründung nötig.</p>
+            <p>Im <strong>Jahresabo</strong> läuft der Vertrag bis zum Ende des bezahlten Jahres und endet automatisch, wenn du nicht verlängerst. Du kannst die automatische Verlängerung jederzeit deaktivieren.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Kann ich vom Monats- aufs Jahresabo wechseln (oder umgekehrt)?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Ja. Beim Wechsel vom Monats- aufs Jahresabo wird der nicht verbrauchte Restmonat angerechnet. Beim umgekehrten Wechsel endet das Jahresabo regulär und das Monatsabo startet direkt im Anschluss.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Ist <span class="brand-inline"><span class="b-life">eqo</span><span class="b-flow">flow360</span></span> als Betriebsausgabe absetzbar?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Für Business Partner, die mit dem Abo ihre Eqology-Geschäftstätigkeit unterstützen, ist es in aller Regel als Betriebsausgabe absetzbar. Die Rechnung enthält alle steuerlich relevanten Angaben.</p>
+            <p>Wir sind keine Steuerberater — sprich im Zweifelsfall mit deinem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Welche Zahlungsmethoden gibt es?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Kreditkarte (Visa, Mastercard, Amex), SEPA-Lastschrift und PayPal. Für das Jahresabo zusätzlich Überweisung auf Anfrage.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Gibt es eine kostenlose Testphase?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Eine reduzierte Demo-Version steht ohne Anmeldung zur Verfügung. Sie zeigt das Konzept und Default-Szenarien — die volle Slider-Steuerung und persönliche URL-Szenarien sind den Abo-Plänen vorbehalten.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Brauche ich für jeden meiner Interessenten ein eigenes Abo?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Nein. Ein Abo ist auf dich als Business Partner lizenziert. Du nutzt es für beliebig viele Gespräche mit beliebig vielen Interessenten — auf deinen Geräten oder per geteiltem URL-Link.</p>
+            <p>Wenn dein Interessent das Tool selbst nutzen möchte (nachdem er Business Partner geworden ist), schließt er ein eigenes Abo ab.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>Was passiert mit meinen Szenarien, wenn ich kündige?</span>
+          <span class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <p>Szenarien werden direkt in der URL kodiert, nicht zentral gespeichert. Deine gespeicherten Links bleiben funktionsfähig — solange ein aktives Abo auf dem öffnenden Endgerät existiert.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FINAL CTA =================== -->
+<section class="final-cta" id="cta">
+  <div class="wrap">
+    <h2 class="final-h">Eine Zahl. <em>Sein nächstes Ja.</em></h2>
+    <p class="final-sub">Wähle deinen Plan, öffne den Simulator, sitz dich zu ihm.</p>
+    <div class="final-ctas">
+      <a href="#" class="btn-primary">
+        Jetzt starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="index.html" class="btn-secondary">Zur Übersicht</a>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FOOTER =================== -->
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-tagline">klarer sehen. <b>weiter kommen.</b></div>
+    <div class="footer-links">
+      <a href="#">Impressum</a>
+      <a href="#">Datenschutz</a>
+      <a href="#">AGB</a>
+      <a href="#">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(btn) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  function setBilling(mode) {
+    const btnM = document.getElementById('btnMonthly');
+    const btnY = document.getElementById('btnYearly');
+    const pill = document.getElementById('togglePill');
+    if (mode === 'monthly') {
+      btnM.classList.add('active');
+      btnY.classList.remove('active');
+      pill.style.transform = 'translateX(0)';
+    } else {
+      btnY.classList.add('active');
+      btnM.classList.remove('active');
+      pill.style.transform = 'translateX(100%)';
+    }
+  }
+</script>
+
+</body>
+</html>

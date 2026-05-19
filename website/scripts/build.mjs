@@ -24,7 +24,13 @@ const brandIds = targetBrand
   ? [targetBrand]
   : Object.keys(brandsConfig).filter((k) => !k.startsWith('_'));
 
-const pages = ['index.html', 'impressum.html', 'datenschutz.html'];
+const pages = [
+  'index.html',
+  'features.html',
+  'pricing.html',
+  'impressum.html',
+  'datenschutz.html',
+];
 
 function tokensFor(brand) {
   const lockup = brand.lockup ?? {};
