@@ -18,6 +18,8 @@
     "types": ["vitest/globals", "vite/client"],
     "paths": {
       "@mlm/simulator-core": ["./packages/simulator-core/src/index.ts"],
+      "@mlm/simulator-goals": ["./packages/simulator-goals/src/index.ts"],
+      "@mlm/simulator-realistic-growth": ["./packages/simulator-realistic-growth/src/index.ts"],
       "@mlm/product-lifeplus": ["./packages/product-lifeplus/src/index.ts"],
       "@mlm/product-fitline": ["./packages/product-fitline/src/index.ts"],
       "@mlm/product-eqology": ["./packages/product-eqology/src/index.ts"],

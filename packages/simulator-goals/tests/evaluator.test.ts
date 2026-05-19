@@ -13,6 +13,7 @@ function makeMonth(monthIndex: number, totalEUR: number): MonthResult {
     monthInYear: (monthIndex % 12) + 1,
     membersByLevel: [],
     shoppersByLevel: [],
+    legs: [],
     totalEUR,
     phase1EUR: totalEUR,
     phase2EUR: 0,

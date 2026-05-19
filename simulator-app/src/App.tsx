@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getProduct } from '@mlm/product-registry';
 import { runSimulation, type ProductId } from '@mlm/simulator-core';
+import { createGrowthModulator } from '@mlm/simulator-realistic-growth';
 import { evaluateGoals } from '@mlm/simulator-goals';
 import { BrandLockup } from './components/BrandLockup';
 import { Slider } from './components/Slider';
@@ -79,9 +80,18 @@ export default function App() {
     ],
   );
 
+  const growthModulator = useMemo(
+    () =>
+      createGrowthModulator({
+        strategy: realityStrategy === 'standard' ? 'none' : realityStrategy,
+        seed: 42,
+      }),
+    [realityStrategy],
+  );
+
   const result = useMemo(
-    () => runSimulation(product, inputs),
-    [product, inputs],
+    () => runSimulation(product, inputs, undefined, { growthModulator }),
+    [product, inputs, growthModulator],
   );
 
   const goalProgress = useMemo(

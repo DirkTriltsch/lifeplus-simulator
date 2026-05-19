@@ -38,6 +38,7 @@ describe('Phase 1 aus dem Verguetungsplan', () => {
         membersByLevel: [1, 0, 0],
         shoppersByLevel: [0, 0, 0],
         directLegs: 1,
+        legs: [],
         memberGrowth: 0,
         memberAttrition: 0,
         shopperGrowth: 0,
@@ -59,6 +60,7 @@ describe('Phase 1 aus dem Verguetungsplan', () => {
         membersByLevel: [2, 0, 1],
         shoppersByLevel: [0, 0, 0],
         directLegs: 2,
+        legs: [],
         memberGrowth: 0,
         memberAttrition: 0,
         shopperGrowth: 0,
@@ -231,6 +233,72 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
     );
 
     expect(snapshots[11].directLegs).toBeCloseTo(1, 1);
+  });
+});
+
+describe('Symmetrische Beine im NetworkSnapshot', () => {
+  it('liefert genau directLegs Beine', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 3,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      24,
+    );
+
+    expect(snapshots[23].legs.length).toBe(
+      Math.round(snapshots[23].directLegs),
+    );
+  });
+
+  it('verteilt membersByLevel symmetrisch auf die Beine', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 4,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0,
+      },
+      36,
+    );
+
+    const snap = snapshots[35];
+    const legCount = snap.legs.length;
+    if (legCount === 0) return;
+
+    for (let level = 0; level < snap.membersByLevel.length; level++) {
+      const sumOfLegs = snap.legs.reduce(
+        (acc, leg) => acc + (leg.membersByLevel[level] ?? 0),
+        0,
+      );
+      expect(sumOfLegs).toBeCloseTo(snap.membersByLevel[level], 4);
+    }
+
+    const first = snap.legs[0];
+    for (const leg of snap.legs.slice(1)) {
+      for (let level = 0; level < first.membersByLevel.length; level++) {
+        expect(leg.membersByLevel[level]).toBeCloseTo(
+          first.membersByLevel[level],
+          5,
+        );
+      }
+    }
+  });
+
+  it('liefert leere legs-Liste bei membersPerYear = 0', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 0,
+        shoppersPerYear: 0,
+        duplicationRate: 0,
+        attritionRate: 0,
+      },
+      12,
+    );
+
+    expect(snapshots[11].legs).toEqual([]);
   });
 });
 

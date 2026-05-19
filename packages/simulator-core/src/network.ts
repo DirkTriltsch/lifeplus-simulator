@@ -6,6 +6,8 @@
  * werden neue Members/Shopper erzeugt und austretende Shopper/Member behandelt.
  */
 
+import type { GrowthModulator } from './pipeline';
+
 export interface NetworkInputs {
   membersPerYear: number;
   shoppersPerYear: number;
@@ -17,11 +19,28 @@ export interface NetworkInputs {
 
 const DEFAULT_MAX_DIRECT_MEMBERS_PER_MEMBER = 29;
 
+/**
+ * Ein einzelnes Bein des Users, d. h. ein direkter Member plus seine vollstaendige Downline.
+ *
+ * In der Standard-Strategie sind alle Beine identisch (symmetrische Verteilung), und
+ * dieses Array ist eine 1:1-Aufteilung von `membersByLevel` / `shoppersByLevel`.
+ * Realistic-Growth-Strategien koennen die Beine asymmetrisch befuellen.
+ */
+export interface Leg {
+  id: string;
+  /** Members im Sub-Baum dieses Beins. Index 0 = direkter Member (Wurzel des Beins). */
+  membersByLevel: number[];
+  /** Shopper im Sub-Baum dieses Beins. */
+  shoppersByLevel: number[];
+}
+
 export interface NetworkSnapshot {
   membersByLevel: number[];
   shoppersByLevel: number[];
   /** Direkte Members des Users = Beine */
   directLegs: number;
+  /** Beine des Users mit Sub-Baum. Bei Standard-Strategie symmetrisch verteilt. */
+  legs: Leg[];
   memberGrowth: number;
   memberAttrition: number;
   shopperGrowth: number;
@@ -34,9 +53,14 @@ interface ShopperCohort {
   ageMonths: number;
 }
 
+export interface SimulateNetworkOptions {
+  growthModulator?: GrowthModulator;
+}
+
 export function simulateNetwork(
   inputs: NetworkInputs,
   totalMonths: number,
+  options: SimulateNetworkOptions = {},
 ): NetworkSnapshot[] {
   const { membersPerYear, shoppersPerYear, duplicationRate, attritionRate } =
     inputs;
@@ -45,17 +69,24 @@ export function simulateNetwork(
     inputs.maxDirectMembersPerMember ?? DEFAULT_MAX_DIRECT_MEMBERS_PER_MEMBER,
   );
   const monthlyShopperAttritionRate = Math.max(0, attritionRate / 12);
+  const modulator = options.growthModulator;
 
   let membersByLevel: number[] = [];
   let shopperCohorts: ShopperCohort[] = [];
   const snapshots: NetworkSnapshot[] = [];
+  modulator?.reset?.();
 
   for (let month = 0; month < totalMonths; month++) {
     const isYearStart = month % 12 === 0;
+    const year = Math.floor(month / 12) + 1;
     let memberGrowth = 0;
     let memberAttrition = 0;
     let shopperGrowth = 0;
     let shopperAttrition = 0;
+
+    if (isYearStart) {
+      modulator?.beforeYear?.(year);
+    }
 
     shopperCohorts = shopperCohorts.map((cohort) => ({
       ...cohort,
@@ -137,18 +168,52 @@ export function simulateNetwork(
       memberAttrition += attrition.memberAttrition;
     }
 
+    const shoppersByLevel = cohortsToLevels(shopperCohorts);
+    const directLegs = membersByLevel[0] ?? 0;
+    const legs = modulator
+      ? modulator.splitLegs({
+          year,
+          monthIndex: month,
+          membersByLevel,
+          shoppersByLevel,
+          directLegs,
+          inputs,
+        })
+      : buildSymmetricLegs(membersByLevel, shoppersByLevel, directLegs);
+
     snapshots.push({
       membersByLevel: [...membersByLevel],
-      shoppersByLevel: cohortsToLevels(shopperCohorts),
-      directLegs: membersByLevel[0] ?? 0,
+      shoppersByLevel,
+      directLegs,
+      legs,
       memberGrowth,
       memberAttrition,
       shopperGrowth,
       shopperAttrition,
     });
+
+    if (month % 12 === 11) {
+      modulator?.afterYear?.(year, legs);
+    }
   }
 
   return snapshots;
+}
+
+function buildSymmetricLegs(
+  membersByLevel: number[],
+  shoppersByLevel: number[],
+  directLegs: number,
+): Leg[] {
+  const legCount = Math.round(directLegs);
+  if (legCount <= 0) return [];
+  const share = 1 / legCount;
+
+  return Array.from({ length: legCount }, (_, i) => ({
+    id: `leg-${i + 1}`,
+    membersByLevel: membersByLevel.map((v) => v * share),
+    shoppersByLevel: shoppersByLevel.map((v) => v * share),
+  }));
 }
 
 export function totalNetworkSize(snapshot: NetworkSnapshot): number {

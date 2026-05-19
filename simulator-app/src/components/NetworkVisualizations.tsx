@@ -426,6 +426,56 @@ function TreeNode({
 }
 
 function buildLegs(snapshot: MonthResult): LegData[] {
+  if (snapshot.legs.length > 0) {
+    const legTotals = snapshot.legs.map((leg) => {
+      const levels = buildLegLevelTotals(leg);
+      return {
+        levels,
+        nodes: sum(levels),
+      };
+    });
+    const totalLegNodes = Math.max(1, sum(legTotals.map((leg) => leg.nodes)));
+    const averageShare = 1 / Math.max(1, snapshot.legs.length);
+
+    return snapshot.legs.map((_, index) => {
+      const { levels, nodes } = legTotals[index];
+      const share = nodes / totalLegNodes;
+      const qgv = snapshot.qgv * share;
+      const rank = estimateRank(qgv, Math.max(0, snapshot.legs.length - index));
+      const color = RANK_COLORS[rank] ?? RANK_COLORS.Member;
+
+      return {
+        id: index + 1,
+        label: `Bein ${index + 1}`,
+        rank,
+        nodes: snapshot.networkSize * share,
+        qgv,
+        eur: snapshot.totalEUR * share,
+        activity: Math.max(8, Math.min(100, (share / averageShare) * 82)),
+        color,
+        levels,
+      };
+    });
+  }
+
+  return buildSymmetricLegData(snapshot);
+}
+
+function buildLevelTotals(snapshot: MonthResult): number[] {
+  const max = Math.max(snapshot.membersByLevel.length, snapshot.shoppersByLevel.length, 1);
+  return Array.from({ length: Math.min(10, max) }, (_, index) => {
+    return (snapshot.membersByLevel[index] ?? 0) + (snapshot.shoppersByLevel[index] ?? 0);
+  });
+}
+
+function buildLegLevelTotals(leg: MonthResult['legs'][number]): number[] {
+  const max = Math.max(leg.membersByLevel.length, leg.shoppersByLevel.length, 1);
+  return Array.from({ length: Math.min(10, max) }, (_, index) => {
+    return (leg.membersByLevel[index] ?? 0) + (leg.shoppersByLevel[index] ?? 0);
+  });
+}
+
+function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
   const legCount = Math.max(1, Math.round(snapshot.directLegs || 1));
   const share = 1 / legCount;
   const levelTotals = buildLevelTotals(snapshot);
@@ -444,13 +494,6 @@ function buildLegs(snapshot: MonthResult): LegData[] {
     color,
     levels: levelTotals.map((levelTotal) => levelTotal * share),
   }));
-}
-
-function buildLevelTotals(snapshot: MonthResult): number[] {
-  const max = Math.max(snapshot.membersByLevel.length, snapshot.shoppersByLevel.length, 1);
-  return Array.from({ length: Math.min(10, max) }, (_, index) => {
-    return (snapshot.membersByLevel[index] ?? 0) + (snapshot.shoppersByLevel[index] ?? 0);
-  });
 }
 
 function estimateRank(qgv: number, qualifiedLegs: number): string {

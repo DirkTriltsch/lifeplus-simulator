@@ -11,6 +11,7 @@
     "@mlm/product-registry": "*",
     "@mlm/simulator-core": "*",
     "@mlm/simulator-goals": "*",
+    "@mlm/simulator-realistic-growth": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.4"

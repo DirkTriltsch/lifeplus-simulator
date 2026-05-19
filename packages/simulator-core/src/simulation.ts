@@ -3,7 +3,8 @@
  */
 
 import type { ProductDefinition, SimulatorInputs } from './contracts';
-import { simulateNetwork, type NetworkInputs } from './network';
+import { simulateNetwork, type Leg, type NetworkInputs } from './network';
+import type { GrowthModulator } from './pipeline';
 
 const DEFAULT_UNIT_TO_CURRENCY = 1;
 const MONTHS_PER_YEAR = 12;
@@ -15,6 +16,7 @@ export interface MonthResult {
   monthInYear: number;
   membersByLevel: number[];
   shoppersByLevel: number[];
+  legs: Leg[];
   totalEUR: number;
   phase1EUR: number;
   phase2EUR: number;
@@ -55,10 +57,15 @@ export interface SimulationResult {
   yearSummaries: YearSummary[];
 }
 
+export interface RunSimulationOptions {
+  growthModulator?: GrowthModulator;
+}
+
 export function runSimulation(
   product: ProductDefinition,
   inputs: SimulatorInputs,
   totalMonths: number = DEFAULT_TOTAL_MONTHS,
+  options: RunSimulationOptions = {},
 ): SimulationResult {
   const unitToCurrency = inputs.unitToCurrency ?? DEFAULT_UNIT_TO_CURRENCY;
 
@@ -70,7 +77,9 @@ export function runSimulation(
     maxDirectMembersPerMember: inputs.maxDirectMembersPerMember,
   };
 
-  const snapshots = simulateNetwork(networkInputs, totalMonths);
+  const snapshots = simulateNetwork(networkInputs, totalMonths, {
+    growthModulator: options.growthModulator,
+  });
 
   const months: MonthResult[] = snapshots.map((snapshot, monthIndex) => {
     const comp = product.simulator.plan.calculateMonth(snapshot, inputs);
@@ -81,6 +90,7 @@ export function runSimulation(
       monthInYear: (monthIndex % MONTHS_PER_YEAR) + 1,
       membersByLevel: snapshot.membersByLevel,
       shoppersByLevel: snapshot.shoppersByLevel,
+      legs: snapshot.legs,
       totalEUR: comp.totalUnits * unitToCurrency,
       phase1EUR: comp.phase1Units * unitToCurrency,
       phase2EUR: comp.phase2Units * unitToCurrency,
