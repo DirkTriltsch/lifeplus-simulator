@@ -13,10 +13,10 @@ export type RealityStrategy =
   | 'lifecycle';
 
 const STRATEGY_OPTIONS: { value: RealityStrategy; label: string }[] = [
-  { value: 'standard', label: 'Standard (gleichmaessig)' },
+  { value: 'standard', label: 'Standard' },
   { value: 'dirichlet', label: 'Zufallsverteilung' },
   { value: 'momentum', label: 'Momentum' },
-  { value: 'lifecycle', label: 'Persoenlichkeitsprofile' },
+  { value: 'lifecycle', label: 'Persoenlichkeitsprofile (bald)' },
 ];
 
 interface AdvancedSettingsPanelProps {
@@ -28,6 +28,8 @@ interface AdvancedSettingsPanelProps {
   onRealityStrategyChange: (s: RealityStrategy) => void;
   goals: GoalUI[];
   onGoalsChange: (goals: GoalUI[]) => void;
+  defaultGoals: GoalUI[];
+  onResetAll: () => void;
   goalProgress?: GoalProgress[];
 }
 
@@ -40,6 +42,8 @@ export function AdvancedSettingsPanel({
   onRealityStrategyChange,
   goals,
   onGoalsChange,
+  defaultGoals,
+  onResetAll,
   goalProgress,
 }: AdvancedSettingsPanelProps) {
   const progressById = new Map(
@@ -63,6 +67,14 @@ export function AdvancedSettingsPanel({
 
       {open && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-5 border-t border-gray-100 pt-4">
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={onResetAll}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Zuruecksetzen
+            </button>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             <div>
               <label className="block text-xs text-gray-600 mb-1">
@@ -117,7 +129,11 @@ export function AdvancedSettingsPanel({
                 className="border border-gray-300 rounded-md px-2 py-1 text-sm w-full bg-white"
               >
                 {STRATEGY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
+                  <option
+                    key={opt.value}
+                    value={opt.value}
+                    disabled={opt.value === 'lifecycle'}
+                  >
                     {opt.label}
                   </option>
                 ))}
@@ -140,22 +156,31 @@ export function AdvancedSettingsPanel({
               </div>
               <ul className="space-y-1">
                 {goals
-                  .filter((g) => g.amountEUR > 0)
+                  .filter((g) => goalVisible(g))
                   .map((g) => {
                     const p = progressById.get(g.id);
                     return (
                       <li
                         key={g.id}
-                        className="flex items-center gap-2 text-xs text-gray-700"
+                        className="flex items-start gap-2 text-xs text-gray-700"
                       >
                         <span
-                          className={`shrink-0 ${p?.achieved ? 'text-brand-700' : 'text-gray-400'}`}
+                          className={`shrink-0 mt-0.5 ${p?.achieved ? 'text-brand-700' : 'text-gray-400'}`}
                         >
                           <GoalIcon name={g.icon} size={14} />
                         </span>
-                        <span className="truncate">{g.label}</span>
-                        <span className="ml-auto text-gray-500 whitespace-nowrap">
-                          {formatAmount(displayAmountForGoal(g, monthlyProductCostEUR))} {shortUnit(g.kind)}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate">{g.label}</span>
+                          {p && (
+                            <span className="block text-[11px] text-gray-500 truncate">
+                              {progressLabel(p, g, monthlyProductCostEUR)}
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-gray-500 whitespace-nowrap text-right">
+                          <span>
+                            {formatAmount(displayAmountForGoal(g, monthlyProductCostEUR))} {shortUnit(g.kind)}
+                          </span>
                           {p?.achieved && p.achievedInYear !== undefined && (
                             <span className="ml-1.5 text-brand-700 font-medium">
                               · J{p.achievedInYear}
@@ -183,6 +208,7 @@ export function AdvancedSettingsPanel({
         open={editorOpen}
         goals={goals}
         onChange={onGoalsChange}
+        defaultGoals={defaultGoals}
         onClose={() => setEditorOpen(false)}
       />
     </div>
@@ -226,7 +252,7 @@ function GearIcon() {
 }
 
 function formatAmount(value: number): string {
-  return value.toLocaleString('de-DE');
+  return Math.round(value).toLocaleString('de-DE');
 }
 
 function displayAmountForGoal(goal: GoalUI, monthlyProductCostEUR: number): number {
@@ -237,4 +263,29 @@ function displayAmountForGoal(goal: GoalUI, monthlyProductCostEUR: number): numb
 
 function shortUnit(kind: GoalKind): string {
   return kind === 'yearlySurplus' ? 'EUR/Jahr' : 'EUR/Mon';
+}
+
+function goalVisible(goal: GoalUI): boolean {
+  return goal.kind === 'productsRefinanced' || goal.amountEUR > 0;
+}
+
+function progressLabel(
+  progress: GoalProgress,
+  goal: GoalUI,
+  monthlyProductCostEUR: number,
+): string {
+  const target = displayAmountForGoal(goal, monthlyProductCostEUR);
+  const current = progress.currentValueEUR;
+  const remaining = Math.max(0, target - current);
+  const percent = Math.max(0, Math.min(999, Math.round(progress.percentage * 100)));
+
+  if (progress.achieved) {
+    return `${formatAmount(Math.max(0, current))} erreicht (${percent}%)`;
+  }
+
+  if (progress.blockedByRefinanced) {
+    return 'Bedingung erfuellt, wartet auf Refinanzierung';
+  }
+
+  return `noch -${formatAmount(remaining)} EUR (${percent}%)`;
 }

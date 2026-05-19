@@ -242,33 +242,44 @@ packages/simulator-realistic-growth/
 
 **Ziel:** Tiefe und Politur, sobald die Infrastruktur steht. Reihenfolge nach Lust und Wert.
 
+**Stand:** Die schnellen UX- und Stabilitaets-Punkte sind umgesetzt. `lifecycle`
+bleibt sichtbar, ist aber bis zur echten Strategie deaktiviert.
+
 ### Schritt 4.1 - `lifecycle`-Strategie
 
 - Bein-Archetypen (`driver`, `steady`, `passive`) mit Verteilung 10/30/60 Prozent.
 - Phasen (`ramp`, `growth`, `plateau`, `fade`, `breakout`).
 - Per-Jahr-Skalierung erhaelt die Gesamtmenge.
 - UI-Ergaenzung: kleine Bein-Charakter-Anzeige unter dem Sunburst.
+- Status: offen. UI-Option ist deaktiviert, damit kein No-op als fertiges Feature wirkt.
 
 ### Schritt 4.2 - Fortschrittsanzeige fuer Ziele
 
 - Neben dem "ab Jahr X" zusaetzlich "noch -340 EUR/Mon" oder Prozentbalken.
 - Im `GoalsEditorDialog` optional sichtbar.
+- Status: umgesetzt in `AdvancedSettingsPanel` ueber `GoalProgress.currentValueEUR`
+  und `percentage`.
 
 ### Schritt 4.3 - Echte Beine in den Visualisierungen
 
 - `NetworkVisualizations` nutzt jetzt `legs[]` aus dem Snapshot.
-- `buildLegs()`-Schaetzung entfaellt.
+- `buildLegs()` nutzt echte Bein-Level, echte Knoten und echtes Bein-QGV.
+- Die Bein-Provision bleibt als anteilige Schaetzung nach Bein-QGV markiert,
+  weil der Verguetungsplan aktuell keine isolierte Per-Bein-Provision berechnet.
 - Bei `dirichlet`/`momentum`/`lifecycle` erscheinen unterschiedlich grosse Segmente und Spalten - die Beine sehen wieder "lebendig" aus, aber jetzt aus echter Mathematik.
+- Status: umgesetzt bis auf echte Per-Bein-Provisionsberechnung.
 
 ### Schritt 4.4 - Eigene Ziele anlegen
 
 - Im `GoalsEditorDialog` einen Button "+ Neues Ziel".
 - Reset-Button "Defaults wiederherstellen".
+- Status: umgesetzt inklusive Zieltyp-Auswahl, Loeschen und Defaults.
 
 ### Schritt 4.5 - Persistenz
 
 - Slider- und Ziel-Werte in `localStorage` speichern, damit die Session erhalten bleibt.
 - Optional: shareable Link mit URL-Parametern.
+- Status: localStorage pro Produkt umgesetzt. Share-URL bleibt optional offen.
 
 ---
 

@@ -6,6 +6,8 @@ export type NetworkView = 'sunburst' | 'legs' | 'hybrid';
 interface NetworkVisualizationsProps {
   yearEnds: MonthResult[];
   selectedView: NetworkView;
+  memberMonthlyVolume: number;
+  shopperMonthlyVolume: number;
 }
 
 interface LegData {
@@ -40,12 +42,17 @@ const RANK_COLORS: Record<string, string> = {
 export function NetworkVisualizations({
   yearEnds,
   selectedView,
+  memberMonthlyVolume,
+  shopperMonthlyVolume,
 }: NetworkVisualizationsProps) {
   const [year, setYear] = useState(10);
   const [selectedLegId, setSelectedLegId] = useState(1);
   const snapshot = yearEnds[Math.min(year - 1, yearEnds.length - 1)] ?? yearEnds[0];
 
-  const legs = useMemo(() => buildLegs(snapshot), [snapshot]);
+  const legs = useMemo(
+    () => buildLegs(snapshot, memberMonthlyVolume, shopperMonthlyVolume),
+    [snapshot, memberMonthlyVolume, shopperMonthlyVolume],
+  );
   const selectedLeg = legs.find((leg) => leg.id === selectedLegId) ?? legs[0];
 
   return (
@@ -249,7 +256,7 @@ function LegColumns({
           <Metric label="Status" value={selectedLeg.rank} />
           <Metric label="QGV" value={`${formatNumber(selectedLeg.qgv)} IP`} />
           <Metric label="Knoten" value={formatNumber(selectedLeg.nodes)} />
-          <Metric label="Provision" value={formatCurrency(selectedLeg.eur)} />
+          <Metric label="Provision*" value={formatCurrency(selectedLeg.eur)} />
         </div>
       </div>
     </div>
@@ -425,22 +432,26 @@ function TreeNode({
   );
 }
 
-function buildLegs(snapshot: MonthResult): LegData[] {
+function buildLegs(
+  snapshot: MonthResult,
+  memberMonthlyVolume: number,
+  shopperMonthlyVolume: number,
+): LegData[] {
   if (snapshot.legs.length > 0) {
     const legTotals = snapshot.legs.map((leg) => {
       const levels = buildLegLevelTotals(leg);
       return {
         levels,
         nodes: sum(levels),
+        qgv: calculateLegQgv(leg, memberMonthlyVolume, shopperMonthlyVolume),
       };
     });
-    const totalLegNodes = Math.max(1, sum(legTotals.map((leg) => leg.nodes)));
+    const totalLegQgv = Math.max(1, sum(legTotals.map((leg) => leg.qgv)));
     const averageShare = 1 / Math.max(1, snapshot.legs.length);
 
     return snapshot.legs.map((_, index) => {
-      const { levels, nodes } = legTotals[index];
-      const share = nodes / totalLegNodes;
-      const qgv = snapshot.qgv * share;
+      const { levels, nodes, qgv } = legTotals[index];
+      const share = qgv / totalLegQgv;
       const rank = estimateRank(qgv, Math.max(0, snapshot.legs.length - index));
       const color = RANK_COLORS[rank] ?? RANK_COLORS.Member;
 
@@ -448,7 +459,7 @@ function buildLegs(snapshot: MonthResult): LegData[] {
         id: index + 1,
         label: `Bein ${index + 1}`,
         rank,
-        nodes: snapshot.networkSize * share,
+        nodes,
         qgv,
         eur: snapshot.totalEUR * share,
         activity: Math.max(8, Math.min(100, (share / averageShare) * 82)),
@@ -470,9 +481,20 @@ function buildLevelTotals(snapshot: MonthResult): number[] {
 
 function buildLegLevelTotals(leg: MonthResult['legs'][number]): number[] {
   const max = Math.max(leg.membersByLevel.length, leg.shoppersByLevel.length, 1);
-  return Array.from({ length: Math.min(10, max) }, (_, index) => {
+  return Array.from({ length: max }, (_, index) => {
     return (leg.membersByLevel[index] ?? 0) + (leg.shoppersByLevel[index] ?? 0);
   });
+}
+
+function calculateLegQgv(
+  leg: MonthResult['legs'][number],
+  memberMonthlyVolume: number,
+  shopperMonthlyVolume: number,
+): number {
+  return (
+    sum(leg.membersByLevel) * memberMonthlyVolume +
+    sum(leg.shoppersByLevel) * shopperMonthlyVolume
+  );
 }
 
 function buildSymmetricLegData(snapshot: MonthResult): LegData[] {

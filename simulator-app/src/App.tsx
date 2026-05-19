@@ -28,33 +28,119 @@ const DEFAULT_GOALS: GoalUI[] = [
   { id: 'free-life',           label: 'Frei leben',             icon: 'crown',  kind: 'monthlyIncome',      amountEUR: 5000, requiresRefinanced: true },
 ];
 
+interface PersistedAppState {
+  membersPerYear?: number;
+  shoppersPerYear?: number;
+  monthlyIP?: number;
+  duplication?: number;
+  attrition?: number;
+  ipToEur?: number;
+  maxDirectMembersPerMember?: number;
+  realityStrategy?: RealityStrategy;
+  goals?: GoalUI[];
+  monthlyProductCostEUR?: number;
+}
+
+const STORAGE_VERSION = 1;
+
 export default function App() {
   const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
   const product = getProduct(productId);
   const defaults = product.simulator.defaultInputs;
+  const persistedState = useMemo(
+    () => loadPersistedState(productId),
+    [productId],
+  );
 
   useEffect(() => {
     document.title = product.brand.name;
   }, [product.brand.name]);
 
-  const [membersPerYear, setMembersPerYear] = useState(defaults.membersPerYear);
-  const [shoppersPerYear, setShoppersPerYear] = useState(defaults.shoppersPerYear);
-  const [monthlyIP, setMonthlyIP] = useState(defaults.memberMonthlyVolume);
-  const [duplication, setDuplication] = useState(defaults.duplicationRate * 100);
-  const [attrition, setAttrition] = useState(defaults.attritionRate * 100);
-  const [ipToEur, setIpToEur] = useState(defaults.unitToCurrency ?? 1);
+  const [membersPerYear, setMembersPerYear] = useState(
+    persistedState?.membersPerYear ?? defaults.membersPerYear,
+  );
+  const [shoppersPerYear, setShoppersPerYear] = useState(
+    persistedState?.shoppersPerYear ?? defaults.shoppersPerYear,
+  );
+  const [monthlyIP, setMonthlyIP] = useState(
+    persistedState?.monthlyIP ?? defaults.memberMonthlyVolume,
+  );
+  const [duplication, setDuplication] = useState(
+    persistedState?.duplication ?? defaults.duplicationRate * 100,
+  );
+  const [attrition, setAttrition] = useState(
+    persistedState?.attrition ?? defaults.attritionRate * 100,
+  );
+  const [ipToEur, setIpToEur] = useState(
+    persistedState?.ipToEur ?? defaults.unitToCurrency ?? 1,
+  );
   const [page, setPage] = useState<'chart' | 'network'>('chart');
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
 
   const [maxDirectMembersPerMember, setMaxDirectMembersPerMember] = useState(
-    defaults.maxDirectMembersPerMember ?? 29,
+    persistedState?.maxDirectMembersPerMember ??
+      defaults.maxDirectMembersPerMember ??
+      29,
   );
-  const [realityStrategy, setRealityStrategy] = useState<RealityStrategy>('standard');
-  const [goals, setGoals] = useState<GoalUI[]>(DEFAULT_GOALS);
+  const [realityStrategy, setRealityStrategy] = useState<RealityStrategy>(
+    normalizeRealityStrategy(persistedState?.realityStrategy),
+  );
+  const [goals, setGoals] = useState<GoalUI[]>(
+    cloneGoals(persistedState?.goals ?? DEFAULT_GOALS),
+  );
   const [monthlyProductCostEUR, setMonthlyProductCostEUR] = useState(
-    defaults.monthlyProductCostEUR ?? 100,
+    persistedState?.monthlyProductCostEUR ??
+      defaults.monthlyProductCostEUR ??
+      100,
   );
+
+  useEffect(() => {
+    savePersistedState(productId, {
+      membersPerYear,
+      shoppersPerYear,
+      monthlyIP,
+      duplication,
+      attrition,
+      ipToEur,
+      maxDirectMembersPerMember,
+      realityStrategy,
+      goals,
+      monthlyProductCostEUR,
+    });
+  }, [
+    productId,
+    membersPerYear,
+    shoppersPerYear,
+    monthlyIP,
+    duplication,
+    attrition,
+    ipToEur,
+    maxDirectMembersPerMember,
+    realityStrategy,
+    goals,
+    monthlyProductCostEUR,
+  ]);
+
+  const resetAll = () => {
+    if (typeof window !== 'undefined') {
+      const confirmed = window.confirm(
+        'Alle Anpassungen verwerfen und auf Produkt-Defaults zuruecksetzen?',
+      );
+      if (!confirmed) return;
+    }
+    clearPersistedState(productId);
+    setMembersPerYear(defaults.membersPerYear);
+    setShoppersPerYear(defaults.shoppersPerYear);
+    setMonthlyIP(defaults.memberMonthlyVolume);
+    setDuplication(defaults.duplicationRate * 100);
+    setAttrition(defaults.attritionRate * 100);
+    setIpToEur(defaults.unitToCurrency ?? 1);
+    setMaxDirectMembersPerMember(defaults.maxDirectMembersPerMember ?? 29);
+    setRealityStrategy('standard');
+    setGoals(cloneGoals(DEFAULT_GOALS));
+    setMonthlyProductCostEUR(defaults.monthlyProductCostEUR ?? 100);
+  };
 
   const inputs = useMemo(
     () => ({
@@ -186,6 +272,8 @@ export default function App() {
               onRealityStrategyChange={setRealityStrategy}
               goals={goals}
               onGoalsChange={setGoals}
+              defaultGoals={DEFAULT_GOALS}
+              onResetAll={resetAll}
               goalProgress={goalProgress}
             />
             <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
@@ -213,7 +301,12 @@ export default function App() {
             </div>
           </>
         ) : (
-          <NetworkVisualizations yearEnds={result.yearEnds} selectedView={networkView} />
+          <NetworkVisualizations
+            yearEnds={result.yearEnds}
+            selectedView={networkView}
+            memberMonthlyVolume={inputs.memberMonthlyVolume}
+            shopperMonthlyVolume={inputs.shopperMonthlyVolume}
+          />
         )}
         <p className="text-xs text-gray-500 text-center mt-4 px-4">
           Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
@@ -249,7 +342,77 @@ export default function App() {
 }
 
 function activeGoals(goals: GoalUI[]): GoalUI[] {
-  return goals.filter((goal) => goal.amountEUR > 0);
+  return goals.filter(
+    (goal) => goal.kind === 'productsRefinanced' || goal.amountEUR > 0,
+  );
+}
+
+function storageKey(productId: ProductId): string {
+  return `mlm-simulator:${productId}:v${STORAGE_VERSION}`;
+}
+
+function loadPersistedState(productId: ProductId): PersistedAppState | undefined {
+  if (typeof window === 'undefined') return undefined;
+
+  try {
+    const raw = window.localStorage.getItem(storageKey(productId));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as PersistedAppState;
+
+    return {
+      ...parsed,
+      realityStrategy: normalizeRealityStrategy(parsed.realityStrategy),
+      goals: sanitizeGoals(parsed.goals),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function savePersistedState(productId: ProductId, state: PersistedAppState): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(storageKey(productId), JSON.stringify(state));
+  } catch {
+    // Storage can be unavailable in private browsing. The simulator still works.
+  }
+}
+
+function clearPersistedState(productId: ProductId): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.removeItem(storageKey(productId));
+  } catch {
+    // Ignore storage failures; state reset in React still applies.
+  }
+}
+
+function normalizeRealityStrategy(strategy: RealityStrategy | undefined): RealityStrategy {
+  if (strategy === 'dirichlet' || strategy === 'momentum') return strategy;
+  return 'standard';
+}
+
+function cloneGoals(goals: GoalUI[]): GoalUI[] {
+  return goals.map((goal) => ({ ...goal }));
+}
+
+function sanitizeGoals(goals: GoalUI[] | undefined): GoalUI[] | undefined {
+  if (!Array.isArray(goals)) return undefined;
+
+  const cleaned = goals
+    .filter((goal) => goal && typeof goal.id === 'string')
+    .map((goal) => ({
+      id: goal.id,
+      label: goal.label || 'Ziel',
+      icon: goal.icon || 'crown',
+      kind: goal.kind || 'monthlySurplus',
+      amountEUR: Math.max(0, Number(goal.amountEUR) || 0),
+      requiresRefinanced: goal.requiresRefinanced,
+    }));
+
+  return cleaned.length > 0 ? cleaned : undefined;
 }
 
 function NetworkMenuItem({ label, active, icon, onClick }: { label: string; active: boolean; icon: 'sunburst' | 'columns' | 'tree'; onClick: () => void }) {
