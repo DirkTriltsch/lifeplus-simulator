@@ -26,6 +26,9 @@ interface PaddleEventData {
   customer?: { email?: string };
   email?: string;
   custom_data?: Record<string, unknown> | null;
+  transaction_id?: string;
+  subscription?: { id?: string };
+  transaction?: { id?: string };
 }
 
 interface PaddleCustomerResponse {
@@ -113,7 +116,9 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
       // Renewals and one-shots. If the transaction is linked to a subscription
       // the subscription.updated event carries the canonical state, so we only
       // act here when there is no subscription_id (i.e. one-shot purchases).
-      if (!data.subscription_id) {
+      if (data.subscription_id) {
+        await storeTransactionForSubscription(env, data);
+      } else {
         await applyOneShotPurchase(env, data);
       }
       break;
@@ -134,6 +139,11 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
 }
 
 async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void> {
+  if (!customDataMatchesBrand(env, data.custom_data)) {
+    console.warn('paddle_webhook_brand_mismatch', data.custom_data);
+    return;
+  }
+
   const customerEmail =
     data.customer?.email ?? data.email ?? (await fetchPaddleCustomerEmail(env, data.customer_id));
   if (!customerEmail) return;
@@ -145,6 +155,11 @@ async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void
   if (!subscriptionId) return;
 
   const planId = data.items?.[0]?.price?.id ?? 'unknown';
+  if (!isAllowedPriceId(env, planId)) {
+    console.warn('paddle_webhook_unknown_price', planId);
+    return;
+  }
+
   const status = data.status ?? 'unknown';
   const periodEndsAt = data.current_billing_period?.ends_at
     ? Date.parse(data.current_billing_period.ends_at)
@@ -191,6 +206,31 @@ async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void
   await recomputeEntitlement(env, user.id, status, periodEndsAt, 'subscription');
 }
 
+async function storeTransactionForSubscription(env: Env, data: PaddleEventData): Promise<void> {
+  if (!customDataMatchesBrand(env, data.custom_data)) {
+    console.warn('paddle_transaction_brand_mismatch', data.custom_data);
+    return;
+  }
+
+  const planId = data.items?.[0]?.price?.id ?? null;
+  if (planId && !isAllowedPriceId(env, planId)) {
+    console.warn('paddle_transaction_unknown_price', planId);
+    return;
+  }
+
+  const subscriptionId = data.subscription_id;
+  const transactionId = data.id ?? data.transaction_id ?? data.transaction?.id ?? null;
+  if (!subscriptionId || !transactionId) return;
+
+  await env.DB.prepare(
+    `UPDATE subscriptions
+     SET paddle_transaction_id = ?, updated_at = ?
+     WHERE paddle_subscription_id = ?`,
+  )
+    .bind(transactionId, nowMs(), subscriptionId)
+    .run();
+}
+
 async function fetchPaddleCustomerEmail(
   env: Env,
   customerId: string | undefined,
@@ -216,6 +256,17 @@ async function fetchPaddleCustomerEmail(
 }
 
 async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<void> {
+  if (!customDataMatchesBrand(env, data.custom_data)) {
+    console.warn('paddle_one_shot_brand_mismatch', data.custom_data);
+    return;
+  }
+
+  const planId = data.items?.[0]?.price?.id ?? null;
+  if (planId && !isAllowedPriceId(env, planId)) {
+    console.warn('paddle_one_shot_unknown_price', planId);
+    return;
+  }
+
   const customerEmail = data.customer?.email ?? data.email ?? null;
   if (!customerEmail) return;
   const now = nowMs();
@@ -227,18 +278,37 @@ async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<vo
 
 async function handleRefund(env: Env, data: PaddleEventData): Promise<void> {
   // Adjustments and refunds reference a transaction or subscription.
-  // For the first version we only revoke when the refund clearly maps to a sub.
-  const subscriptionId = data.subscription_id ?? null;
-  if (!subscriptionId) return;
+  const subscriptionId = data.subscription_id ?? data.subscription?.id ?? null;
+  const transactionId = data.transaction_id ?? data.transaction?.id ?? data.id ?? null;
 
-  const sub = await env.DB.prepare(
-    'SELECT user_id FROM subscriptions WHERE paddle_subscription_id = ? LIMIT 1',
-  )
-    .bind(subscriptionId)
-    .first<{ user_id: string }>();
+  const sub = subscriptionId
+    ? await env.DB.prepare(
+        'SELECT user_id FROM subscriptions WHERE paddle_subscription_id = ? LIMIT 1',
+      )
+        .bind(subscriptionId)
+        .first<{ user_id: string }>()
+    : transactionId
+      ? await env.DB.prepare(
+          'SELECT user_id FROM subscriptions WHERE paddle_transaction_id = ? LIMIT 1',
+        )
+          .bind(transactionId)
+          .first<{ user_id: string }>()
+      : null;
   if (!sub) return;
 
   await writeEntitlement(env, sub.user_id, 'pro', nowMs(), 'refund_revoked');
+}
+
+function isAllowedPriceId(env: Env, priceId: string): boolean {
+  return [env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_YEARLY].filter(Boolean).includes(priceId);
+}
+
+function customDataMatchesBrand(
+  env: Env,
+  customData: Record<string, unknown> | null | undefined,
+): boolean {
+  const brandId = customData?.brand_id;
+  return brandId === undefined || brandId === env.BRAND_ID;
 }
 
 async function recomputeEntitlement(

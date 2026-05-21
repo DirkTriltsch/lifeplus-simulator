@@ -59,7 +59,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     )
     .run();
 
-  const link = `${trimSlash(env.APP_URL)}/auth/callback?token=${encodeURIComponent(token)}`;
+  const link = `${trimSlash(env.APP_URL)}/?token=${encodeURIComponent(token)}`;
   try {
     await sendMagicLink(env, {
       to: email,

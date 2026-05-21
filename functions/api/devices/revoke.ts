@@ -40,14 +40,14 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     .first<{ id: string }>();
   if (!owned) return error(404, 'device_not_found');
 
-  await revokeDevice(env, deviceId);
-
   const isSelfRevoke = deviceId === ctx.device.id;
   const isFromDeviceLimitFlow = ctx.session.kind === 'device_limit_reached';
 
   if (isSelfRevoke && isFromDeviceLimitFlow) {
     return error(400, 'cannot_revoke_current_device_during_limit_flow');
   }
+
+  await revokeDevice(env, deviceId);
 
   // Case A: user revoked their own device -> log out and clear cookie.
   if (isSelfRevoke && !isFromDeviceLimitFlow) {

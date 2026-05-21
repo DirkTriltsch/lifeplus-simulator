@@ -12,6 +12,10 @@ interface Body {
 
 const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+function allowedPriceIds(env: Env): Set<string> {
+  return new Set([env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_YEARLY].filter(Boolean));
+}
+
 // Pre-checkout intent endpoint. The pricing page calls this BEFORE opening the
 // Paddle overlay, so we can short-circuit duplicate purchases.
 //   action = "start_checkout"      -> proceed with Paddle.Checkout.open()
@@ -30,6 +34,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 
   const priceId = (body.priceId ?? '').trim();
   if (!priceId) return error(400, 'missing_price_id');
+  if (!allowedPriceIds(env).has(priceId)) return error(400, 'invalid_price_id');
 
   // Try logged-in user first.
   const cookies = parseCookies(request.headers.get('cookie'));
@@ -57,9 +62,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         return json({ action: 'start_checkout', email: claimedEmail });
       }
     } else {
-      // Anonymous and no email provided. Let the client open the overlay;
-      // Paddle will collect the email itself.
-      return json({ action: 'start_checkout' });
+      return json({ action: 'login_required' });
     }
   }
 

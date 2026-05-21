@@ -9,6 +9,8 @@ export interface Env {
   APP_URL: string;
   ALLOWED_ORIGINS: string;
   PADDLE_ENV: 'sandbox' | 'live';
+  PADDLE_PRICE_MONTHLY: string;
+  PADDLE_PRICE_YEARLY: string;
   COOKIE_DOMAIN: string;
   SESSION_TTL_DAYS: string;
   MAGIC_LINK_TTL_MINUTES: string;

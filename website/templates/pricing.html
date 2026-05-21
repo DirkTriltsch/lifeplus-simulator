@@ -869,11 +869,22 @@
                 window.location.href = appUrl + '?manage=1';
                 return;
               }
+              if (intent.action === 'login_required') {
+                alert('Bitte melde dich zuerst in der App an oder nutze die gleiche E-Mail-Adresse wie fuer dein Konto.');
+                return;
+              }
+              if (intent.action !== 'start_checkout') {
+                alert('Checkout konnte nicht vorbereitet werden. Bitte versuche es gleich noch einmal.');
+                return;
+              }
             } else {
-              console.warn('checkout-intent returned', res.status, '- opening Paddle overlay anyway.');
+              alert('Checkout konnte nicht vorbereitet werden. Bitte versuche es gleich noch einmal.');
+              return;
             }
           } catch (err) {
-            console.warn('checkout-intent unreachable, opening Paddle overlay anyway:', err);
+            console.warn('checkout-intent unreachable:', err);
+            alert('Checkout konnte nicht vorbereitet werden. Bitte pruefe deine Verbindung und versuche es erneut.');
+            return;
           } finally {
             btn.disabled = false;
           }
