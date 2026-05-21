@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
   <style>
     :root {
       --brand: {{ACCENT_COLOR}};
@@ -201,7 +202,11 @@
       font-size: 15px; font-weight: 500;
       transition: all 0.18s;
       text-decoration: none !important;
+      cursor: pointer;
+      font-family: inherit;
     }
+    button.price-cta { background: transparent; }
+    .price-card.featured button.price-cta { border: none; }
     .price-card:not(.featured) .price-cta {
       background: #fff;
       color: var(--ink);
@@ -237,6 +242,39 @@
     }
     .pricing-note svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--brand); margin-top: 1px; }
     .pricing-note strong { color: var(--ink); font-weight: 600; }
+
+    /* ===== USt.-Banner (Netto-Hinweis) ===== */
+    .vat-banner-wrap { padding: 18px 0 4px; }
+    .vat-banner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px 22px;
+      background: var(--brand-surface);
+      border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+      border-radius: 12px;
+      line-height: 1.5;
+    }
+    .vat-banner svg { width: 22px; height: 22px; flex-shrink: 0; color: var(--brand); margin-top: 2px; }
+    .vat-banner-text strong {
+      display: block;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .vat-banner-text span {
+      display: block;
+      color: var(--ink-3);
+      font-size: 13px;
+    }
+    .price-unit em {
+      font-style: normal;
+      font-size: 0.7em;
+      color: var(--ink-4);
+      margin-left: 4px;
+      letter-spacing: 0.02em;
+    }
 
     /* ===== Comparison table ===== */
     .compare {
@@ -462,6 +500,16 @@
           </button>
         </div>
       </div>
+
+      <div class="vat-banner-wrap">
+        <div class="vat-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
+          <div class="vat-banner-text">
+            <strong>Alle Preise verstehen sich netto, zzgl. gesetzlicher USt.</strong>
+            <span>Im Checkout wird die länderspezifische USt. ausgewiesen. Für Unternehmer mit gültiger EU-VAT-ID greift Reverse-Charge.</span>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -473,9 +521,9 @@
           <div class="price-name">Monatlich</div>
           <div class="price-desc">Flexibel, monatlich kündbar.</div>
           <div class="price-amount">
-            <span class="price-cur">€</span><span class="price-val">19</span><span class="price-unit">/Monat</span>
+            <span class="price-cur">€</span><span class="price-val">19</span><span class="price-unit">/Monat <em>netto</em></span>
           </div>
-          <div class="price-billed">€19 monatlich · jederzeit kündbar</div>
+          <div class="price-billed">€19 netto monatlich · zzgl. USt. · jederzeit kündbar</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -494,10 +542,10 @@
               <span>Monatlich kündbar</span>
             </li>
           </ul>
-          <a href="{{APP_URL}}" class="price-cta">
+          <button type="button" class="price-cta" data-plan="monthly" data-price-id="{{PADDLE_PRICE_MONTHLY}}">
             Jetzt monatlich starten
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
+          </button>
         </div>
 
         <div class="price-card featured">
@@ -505,9 +553,9 @@
           <div class="price-name">Jährlich</div>
           <div class="price-desc">Ein Abo, eine Rechnung, klarer Vorteil.</div>
           <div class="price-amount">
-            <span class="price-cur">€</span><span class="price-val">15</span><span class="price-unit">/Monat</span>
+            <span class="price-cur">€</span><span class="price-val">15</span><span class="price-unit">/Monat <em>netto</em></span>
           </div>
-          <div class="price-billed">€180 jährlich · Ersparnis €48 / Jahr</div>
+          <div class="price-billed">€180 netto jährlich · zzgl. USt. · Ersparnis €48 / Jahr</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -526,16 +574,16 @@
               <span>Priorisierter Support innerhalb 24 h</span>
             </li>
           </ul>
-          <a href="{{APP_URL}}" class="price-cta">
+          <button type="button" class="price-cta" data-plan="yearly" data-price-id="{{PADDLE_PRICE_YEARLY}}">
             Jetzt jährlich starten
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
+          </button>
         </div>
       </div>
 
       <div class="pricing-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-        <span>Alle Preise inkl. MwSt. Als Sponsor setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater. Zahlung per Kreditkarte, SEPA-Lastschrift oder PayPal.</span>
+        <span>Als Sponsor setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater. Zahlung per Kreditkarte, SEPA-Lastschrift oder PayPal.</span>
       </div>
     </div>
   </section>
@@ -746,6 +794,101 @@
         pill.style.transform = 'translateX(100%)';
       }
     }
+
+    (function initPaddle() {
+      const clientToken = '{{PADDLE_CLIENT_TOKEN}}';
+      const env = '{{PADDLE_ENV}}';
+      const appUrl = '{{APP_URL}}';
+      const brandId = '{{BRAND_ID}}';
+
+      if (!clientToken || clientToken.startsWith('REPLACE_')) {
+        console.warn('Paddle client token not configured. Checkout disabled.');
+        document.querySelectorAll('[data-price-id]').forEach((btn) => {
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            alert('Checkout ist noch nicht konfiguriert.');
+          });
+        });
+        return;
+      }
+
+      if (typeof Paddle === 'undefined') {
+        console.error('Paddle.js failed to load.');
+        return;
+      }
+
+      if (env === 'sandbox') {
+        Paddle.Environment.set('sandbox');
+      }
+      Paddle.Initialize({
+        token: clientToken,
+        eventCallback: function (event) {
+          if (event && event.name === 'checkout.completed') {
+            window.location.href = appUrl + '?checkout=success';
+          }
+        },
+      });
+
+      document.querySelectorAll('[data-price-id]').forEach((btn) => {
+        btn.addEventListener('click', async function (e) {
+          e.preventDefault();
+          const priceId = btn.getAttribute('data-price-id');
+          if (!priceId || priceId.startsWith('REPLACE_')) {
+            alert('Price-ID ist noch nicht konfiguriert.');
+            return;
+          }
+
+          const checkoutEmail = window.prompt(
+            'Mit welcher E-Mail-Adresse moechtest du kaufen oder deinen bestehenden Zugang pruefen?',
+          );
+          if (!checkoutEmail) return;
+          const normalizedEmail = checkoutEmail.trim().toLowerCase();
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalizedEmail)) {
+            alert('Bitte gib eine gueltige E-Mail-Adresse ein.');
+            return;
+          }
+
+          btn.disabled = true;
+          try {
+            const res = await fetch('/api/billing/checkout-intent', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ priceId, email: normalizedEmail }),
+            });
+            if (res.ok) {
+              const intent = await res.json();
+              if (intent.action === 'already_active') {
+                window.location.href = appUrl;
+                return;
+              }
+              if (intent.action === 'manage_subscription') {
+                window.location.href = appUrl + '?manage=1';
+                return;
+              }
+            } else {
+              console.warn('checkout-intent returned', res.status, '- opening Paddle overlay anyway.');
+            }
+          } catch (err) {
+            console.warn('checkout-intent unreachable, opening Paddle overlay anyway:', err);
+          } finally {
+            btn.disabled = false;
+          }
+
+          Paddle.Checkout.open({
+            items: [{ priceId: priceId, quantity: 1 }],
+            customer: { email: normalizedEmail },
+            customData: { brand_id: brandId, checkout_email: normalizedEmail },
+            settings: {
+              successUrl: appUrl + '?checkout=success',
+              displayMode: 'overlay',
+              theme: 'light',
+              locale: 'de',
+            },
+          });
+        });
+      });
+    })();
   </script>
 
 </body>

@@ -1,0 +1,39 @@
+# Cloudflare Pages + Functions config.
+# One deployment per brand. Use --env to switch.
+# Example:
+#   npx wrangler pages deploy dist/site-lifeplus --project-name lifeflow360 --branch main
+#
+# D1 and secrets are configured per Pages project in the Cloudflare dashboard,
+# so this file is mostly for local dev with `wrangler pages dev`.
+
+name = "lifeplus-simulator-api"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist/site-lifeplus"
+
+[vars]
+BRAND_ID = "lifeplus"
+APP_URL = "http://localhost:5173/"
+PADDLE_ENV = "sandbox"
+COOKIE_DOMAIN = ""
+SESSION_TTL_DAYS = "30"
+MAGIC_LINK_TTL_MINUTES = "15"
+DEVICE_LIMIT = "3"
+MAIL_FROM = "no-reply@lifeflow360.app"
+MAIL_FROM_NAME = "LifeFlow360"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lifeflow360-dev"
+database_id = "REPLACE_AFTER_wrangler_d1_create"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_AFTER_wrangler_kv_create"
+
+# Secrets (set via dashboard or `wrangler pages secret put`):
+#   PADDLE_API_KEY
+#   PADDLE_WEBHOOK_SECRET
+#   APP_SESSION_SECRET
+#   MAGIC_LINK_SECRET
+#   RESEND_API_KEY

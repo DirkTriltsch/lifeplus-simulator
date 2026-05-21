@@ -27,6 +27,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260520.1",
     "@types/node": "^22.15.21",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",

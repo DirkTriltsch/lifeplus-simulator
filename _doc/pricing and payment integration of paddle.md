@@ -1126,10 +1126,13 @@ das:
 
 ## Hosting-Optionen
 
-Das Dokument geht in einem fruehen Entwurf von Cloudflare Pages aus. Tatsache
-ist: Das aktuelle Deployment laeuft per SFTP zu klassischem Webhosting (siehe
-[.vscode/sftp.json] und [scripts/build-webroot.mjs](scripts/build-webroot.mjs)).
-Fuer den API-Teil gibt es deshalb drei realistische Optionen.
+Aktueller Stand: Das statische Frontend wird per SFTP zu klassischem
+Webhosting deployt (siehe [.vscode/sftp.json] und
+[scripts/build-webroot.mjs](scripts/build-webroot.mjs)). Fuer den API-Teil
+sind drei realistische Optionen evaluiert worden. Die getroffene Entscheidung
+ist **Option 3 (Cloudflare Pages Functions)** als Startloesung — Begruendung
+am Ende des Kapitels. Optionen 1 und 2 bleiben dokumentiert, weil sie als
+Fallback relevant sind oder den Vergleich begruenden.
 
 ### Option 1: API als eigene Subdomain bei IONOS
 
@@ -1281,13 +1284,15 @@ Offizielle Preisreferenzen:
 
 ### Kann man alles ueber IONOS loesen?
 
-Ja. Mit den bekannten Vertragsdaten ist IONOS die beste Startloesung:
+Technisch ja. Mit den bekannten Vertragsdaten ist IONOS eine vollstaendig
+gangbare Startloesung:
 
 ```text
 PHP 8.3 verfuegbar
 2 GB Speicherkapazitaet fuer Datenbank
 18 max_user_connections
 MariaDB/MySQL unterstuetzt
+Cronjobs verfuegbar (im Vertrag enthalten)
 ```
 
 Wenn zusaetzlich Subdomains, HTTPS, Webhook-Erreichbarkeit, ausgehende
@@ -1302,11 +1307,17 @@ Mail: IONOS SMTP oder externer Transactional Mailer
 Paddle: Webhooks an IONOS API
 ```
 
-Das ist fuer den Anfang mit wenigen Kunden absolut vertretbar. Der Preis ist
-voraussichtlich 0 EUR extra, weil die wichtigsten Bausteine im Vertrag bereits
+Auch das ist fuer den Anfang mit wenigen Kunden vertretbar und vermutlich
+0 EUR Zusatzkosten, weil die wichtigsten Bausteine im Vertrag bereits
 enthalten sind.
 
-Der Tradeoff ist technische Eleganz:
+**Der entscheidende Punkt ist:** Cloudflare Option 3 ist in der Startphase
+exakt genauso teuer (0 USD im Free-Tier) und vermeidet zugleich den
+Stack-Bruch zwischen PHP und dem TypeScript-Rest des Projekts. Damit ist der
+einzige relevante IONOS-Vorteil — die fehlende Lernkurve — der einzige Grund,
+der ihn noch gegen Cloudflare bringen koennte.
+
+Der Tradeoff in Stichpunkten:
 
 ```text
 IONOS:
@@ -1331,32 +1342,63 @@ Pragmatische Empfehlung:
 
 ```text
 Phase 1:
-- IONOS behalten.
-- API-Prototyp mit PHP 8.3 + MySQL/MariaDB bauen.
+- Cloudflare Pages Functions + Neon Frankfurt aufsetzen.
+- API von Anfang an in TypeScript bauen, durchgaengig mit dem Rest-Codebase.
 - Paddle Webhook und Magic-Link End-to-End testen.
+- Kosten in dieser Phase: 0 EUR / 0 USD pro Monat (Free-Tiers).
 
 Phase 2:
-- Wenn Betrieb nervt, Logs/Deployments zu unbequem werden oder die Kundenzahl
-  stimmt:
-  API auf Cloudflare Workers/Pages Functions migrieren.
+- Wenn Cloudflare Free-Tier-Limits naeher rueckt oder Reserven gewollt sind:
+  Workers Paid Plan fuer 5 USD/Monat aktivieren. Schalter, kein Umbau.
 
 Phase 3:
-- Falls 20-50 Produkte entstehen:
-  Cloudflare oder ein zentrales Node/TypeScript Backend wird attraktiver,
-  weil PHP-Dateien pro Produkt sonst schnell unuebersichtlich werden.
+- Falls Datenbank-Volumen oder Branching-Bedarf waechst:
+  Neon Pro oder Supabase Pro je nach Bedarf.
+- IONOS bleibt als Fallback verfuegbar, falls Cloudflare oder Neon strukturell
+  nicht passen (z.B. wegen harter EU-Region-Anforderung an Workers selbst,
+  nicht nur an die DB).
 ```
 
 ### Empfehlung
 
-**Kurzfristig IONOS nutzen, langfristig Cloudflare/Node offenhalten.**
+**Start direkt mit Cloudflare Option 3, IONOS bleibt als Fallback.**
 
-Mit PHP 8.3, MySQL/MariaDB, 2 GB Datenbankspeicher und 18
-`max_user_connections` ist Option 1 fuer den Start die beste
-Kosten-/Risiko-Balance. Sie vermeidet neue Fixkosten und nutzt vorhandenen
-Webspace.
+Die urspruengliche Empfehlung "kurzfristig IONOS, langfristig Cloudflare"
+wurde nach Kosten- und Aufwandsabwaegung verworfen. Begruendung im Detail:
 
-**Option 3 (Cloudflare Pages Functions + Neon EU oder D1) ist langfristig die
-bessere Entwicklerplattform**, weil:
+1. **Beide Optionen kosten bei wenigen Kunden gleich viel: 0 EUR.** IONOS hat
+   in der Startphase keinen Kostenvorteil, weil die App im Cloudflare Free-Tier
+   muehelos Platz findet (Details siehe Abschnitt "Kosten-Einschaetzung
+   inklusive Nutzer-Szenarien").
+2. **Stack-Bruch vermeiden:** Eine PHP-API fuer die Startphase zu bauen und
+   spaeter eine TypeScript-API zu schreiben ist doppelter Entwicklungsaufwand.
+   Der Rest des Projekts ist TypeScript/Node — Cloudflare Pages Functions
+   bleibt im selben Stack.
+3. **Migration entfaellt:** Wenn die App erfolgreich skaliert, ist der
+   IONOS-zu-Cloudflare-Umzug spaeter teuerer als ein direkter Cloudflare-Start
+   jetzt — sowohl in Code- als auch in Betriebsrisiko.
+4. **Lernkurve frueh einplanen:** Cloudflare Pages Functions in einer ruhigen
+   Aufbauphase zu lernen ist einfacher als unter Produktionsdruck mit
+   Bestandskunden zu migrieren.
+
+**Option 1 (IONOS PHP 8.3 + MySQL/MariaDB) bleibt eine valide Fallback-Option**
+und wird im Dokument bewusst dokumentiert behalten. Sie kommt zum Einsatz,
+wenn einer dieser Faelle eintritt:
+
+- Cloudflare-Setup scheitert an einer konkreten Anforderung (z.B. harter
+  EU-Pin auch fuer Worker-Compute, nicht nur fuer die DB).
+- Neon/Supabase Free-Tier-Limits werden in der DB-Wahl ausgeschlossen.
+- Die Lernkurve fuer Cloudflare wird im Einzelfall zu hoch eingeschaetzt und
+  PHP ist im Moment produktiver.
+
+Mit PHP 8.3, MySQL/MariaDB, 2 GB Datenbankspeicher, 18 `max_user_connections`
+und enthaltenen Cronjobs ist IONOS technisch fuer den Start vollstaendig
+geeignet — die Entscheidung gegen IONOS ist eine strategische
+(Stack-Konsistenz, vermiedene spaetere Migration), keine technische.
+
+**Option 3 (Cloudflare Pages Functions + Neon EU oder D1) ist sowohl
+kurzfristig kostenfrei als auch langfristig die bessere Entwicklerplattform**,
+weil:
 
 - Statische Site und API liegen auf einer Plattform.
 - Skalierung ist quasi gratis.
@@ -1445,7 +1487,7 @@ Nicht ideal als Hauptdatenbank fuer Subscriptions und Geraete, weil
 relationale Abfragen und konsistente Updates fehlen. KV kann fuer Caches oder
 Rate-Limits helfen, aber nicht als einzige Quelle der Wahrheit.
 
-### Kosten-Einschaetzung
+### Kosten-Einschaetzung inklusive Nutzer-Szenarien
 
 Stand Mai 2026 ist Cloudflare fuer einen sehr kleinen Start realistisch
 kostenarm bis kostenlos nutzbar. Offizielle Referenzen:
@@ -1455,19 +1497,187 @@ kostenarm bis kostenlos nutzbar. Offizielle Referenzen:
 - Cloudflare Workers Limits:
   https://developers.cloudflare.com/workers/platform/limits/
 
-Cloudflare Workers/Pages Functions Free Plan: 100.000 Requests pro Tag.
+#### Free-Tier-Kapazitaeten
 
-Cloudflare D1 Free Plan: 5 Millionen Reads/Tag, 100.000 Writes/Tag, 5 GB
-Speicher.
+```text
+Cloudflare Workers / Pages Functions Free:
+- 100.000 Requests pro Tag
+- 10 ms CPU-Zeit pro Invocation
+- Statische Asset-Requests unlimited
 
-Fuer ein Tool mit nur wenigen Kunden ist das API- und Datenbankvolumen sehr
-klein. Die wahrscheinlicheren Kosten am Anfang sind:
+Cloudflare D1 Free:
+- 5 Millionen gelesene Zeilen pro Tag
+- 100.000 geschriebene Zeilen pro Tag
+- 5 GB Speicher gesamt
 
-- Domain.
-- E-Mail Versanddienst, falls das Free-Kontingent nicht reicht.
-- Paddle-Gebuehren pro Verkauf. Aktuelle Werte immer direkt beim
-  Paddle-Pricing pruefen.
-- Optional Datenbank-Paid-Tier fuer Backups/Branching.
+Neon (Postgres, Frankfurt) Free:
+- 1 Compute, 0,5 GB Speicher
+- Branching fuer Tests verfuegbar
+- Auto-Suspend bei Inaktivitaet (Cold Start ~hundertstel Sekunde)
+
+Brevo Free (E-Mail):
+- 300 Mails pro Tag
+
+Resend Free (E-Mail):
+- 3.000 Mails pro Monat, 100 pro Tag
+```
+
+#### Wie viele Nutzer passen ins Free-Tier?
+
+Die Rechnung haengt am Request-Verhalten pro User. Realistische Annahmen pro
+aktivem User pro Tag, basierend auf den geplanten Endpunkten:
+
+```text
+- /api/me bei App-Oeffnung + Session-Refresh:  ~5-20 Requests
+- Magic-Link Request + Klick:                  ~3 Requests (selten, ~1x/Woche)
+- Simulator-Nutzung:                           0-50 Requests
+  (Default: clientseitige Berechnung -> 0)
+- Paddle-Webhooks:                             ~5 Events pro Verkauf, einmalig
+- Billing-Portal-Aufrufe:                      vernachlaessigbar
+```
+
+Daraus ergeben sich drei Bandbreiten:
+
+```text
+Sparsam (Simulator clientseitig, kurze Sessions):
+  ~10 Requests / aktiver User / Tag
+  -> max. ~10.000 DAU im Free-Tier
+
+Normal (mehrfaches Re-Auth, moderate API-Nutzung):
+  ~30 Requests / aktiver User / Tag
+  -> max. ~3.300 DAU im Free-Tier
+
+Intensiv (viele API-Calls pro Session):
+  ~100 Requests / aktiver User / Tag
+  -> max. ~1.000 DAU im Free-Tier
+```
+
+Wichtig: Das sind **taeglich aktive User (DAU)**, nicht zahlende Gesamtkunden.
+Bei einem Planungs-Tool wie dem Simulator liegt die DAU/MAU-Ratio
+erfahrungsgemaess bei 10-20 %, und MAU/Gesamtkunden ebenfalls deutlich unter
+100 % (nicht jeder zahlende Kunde oeffnet die App jeden Monat).
+
+#### Konkrete Szenarien
+
+```text
+Szenario A: 200 zahlende Kunden pro Brand
+- Annahme: 20-30 % DAU-Ratio ueber alle Kunden, normaler Request-Verbrauch
+- DAU: ~40-60
+- Tages-Requests: ~1.200-1.800
+- Free-Tier-Auslastung: ~1-2 %
+- Laufende Kosten Cloudflare/DB:  0 EUR / 0 USD pro Monat
+
+Szenario B: 500 zahlende Kunden pro Brand
+- DAU: ~100-150
+- Tages-Requests: ~3.000-4.500
+- Free-Tier-Auslastung: ~3-5 %
+- Laufende Kosten Cloudflare/DB:  0 EUR / 0 USD pro Monat
+
+Szenario C: 1.000 zahlende Kunden pro Brand
+- DAU: ~200-300
+- Tages-Requests: ~6.000-9.000
+- Free-Tier-Auslastung: ~6-9 %
+- Laufende Kosten Cloudflare/DB:  0 EUR / 0 USD pro Monat
+  (Workers Paid fuer 5 USD/Monat optional als Reserve)
+
+Szenario D: 5.000 zahlende Kunden pro Brand
+- DAU: ~1.000-1.500
+- Tages-Requests: ~30.000-45.000
+- Free-Tier-Auslastung: ~30-45 %
+- Laufende Kosten Cloudflare/DB:  weiterhin im Free-Tier moeglich,
+                                  Workers Paid fuer 5 USD/Monat empfohlen.
+
+Szenario E: 20.000 zahlende Kunden pro Brand
+- DAU: ~4.000-6.000
+- Tages-Requests: ~120.000-180.000
+- Free-Tier reicht nicht mehr.
+- Workers Paid (5 USD/Monat + 10 Mio. Requests inkl.) deckt das ab,
+  CPU-Time-Limits beobachten.
+```
+
+**Einschaetzung fuer die Startphase:**
+
+Bei realistisch erwarteten Kundenzahlen in den ersten 12-24 Monaten — also
+unter 1.000 Kunden pro Brand — entstehen auf Cloudflare und Neon Free-Tier
+**keine laufenden Infrastrukturkosten**. Bei 200 Kunden pro Brand liegt die
+Free-Tier-Auslastung bei wenigen Prozent. Bei drei Brands kommen sogar
+zusammengerechnet drei separate Free-Tier-Kontingente in Frage, falls pro
+Brand ein eigenes Cloudflare-Projekt angelegt wird. (Workers Free-Tier-Limits
+gelten pro Account, nicht pro Projekt — Vorteil entsteht also nur, wenn man
+bewusst getrennte Accounts pro Brand fahren wollte. Im Default reicht ein
+Account problemlos.)
+
+#### Realistische Kostenpositionen
+
+Die wahrscheinlicheren Kostenpositionen am Anfang sind nicht
+Infrastruktur, sondern:
+
+```text
+Position                              Kosten/Monat (geschaetzt)
+-----------------------------------   ------------------------
+Domain pro Brand (3x)                 ~2-5 EUR
+E-Mail Versand (Free reicht initial)  0 EUR -> 0-25 EUR bei Volumen
+Cloudflare Workers/Pages              0 USD -> optional 5 USD
+Cloudflare D1 oder Neon Free          0 USD
+Paddle-Gebuehren pro Verkauf          5 % + 0,50 USD pro Transaktion
+Optional Datenbank-Paid-Tier          ab ~19 USD/Monat (Neon Pro)
+```
+
+**Paddle ist mit Abstand der groesste Kostenblock** — siehe naechster
+Abschnitt zur Tickethoehe und Abrechnungsfrequenz.
+
+#### Paddle-Gebuehren in Relation
+
+Paddle berechnet aktuell (Mai 2026) 5 % + 0,50 USD pro Transaktion ohne
+monatliche Grundgebuehr. Das wirkt sich je nach Tickethoehe und
+Abrechnungsfrequenz sehr unterschiedlich aus:
+
+```text
+Bei 1.000 Kunden mit 3 EUR/Monat Monatsabo:
+- Bruttoumsatz:           3.000 EUR/Monat
+- Paddle 5 % Anteil:        150 EUR
+- Paddle 0,46 EUR x 1.000:  460 EUR
+- Paddle-Last gesamt:       610 EUR (~20 % des Bruttoumsatzes)
+
+Bei 1.000 Kunden mit 36 EUR/Jahr Jahresabo (rechnerisch 3 EUR/Monat):
+- Bruttoumsatz:           3.000 EUR/Monat (umgerechnet)
+- Paddle 5 % Anteil:        150 EUR
+- Paddle 0,46 EUR x ~83:     38 EUR
+- Paddle-Last gesamt:       188 EUR (~6,3 % des Bruttoumsatzes)
+```
+
+Die 0,50-USD-Pauschale wirkt bei niedrigem Ticketpreis dramatisch.
+**Differenz zwischen Monats- und Jahresabo bei 1.000 Kunden: ~420 EUR/Monat
+zugunsten Jahresabo.** Das untermauert die Empfehlung weiter oben ("Jahresabo
+mit automatischer Verlaengerung").
+
+Paddle selbst weist darauf hin, dass fuer Produkte unter 10 USD
+Sonderkonditionen ueber den Sales-Kontakt moeglich sind. Bei einem 3 EUR
+Monatsabo lohnt sich diese Anfrage. Bei einem 36 EUR Jahresabo liegt das
+Ticket ueber der Schwelle und die Standardrate ist akzeptabel.
+
+#### Vergleich mit IONOS-Variante
+
+Zum Vergleich: IONOS verursacht in der Startphase ebenfalls keine
+Zusatzkosten, weil PHP 8.3, MySQL/MariaDB, Datenbankspeicher und Cronjobs
+bereits im bestehenden Vertrag enthalten sind. **Der Kostenvorteil von
+Cloudflare gegenueber IONOS in der Startphase ist also nicht "guenstiger",
+sondern "gleich teuer, aber im selben Stack wie der Rest des Projekts und
+ohne spaetere Migration".**
+
+```text
+Kostenvergleich Startphase (< 1.000 Kunden pro Brand):
+
+                              IONOS Option 1     Cloudflare Option 3
+Hosting/API:                  0 EUR (Vertrag)    0 USD (Free)
+Datenbank:                    0 EUR (Vertrag)    0 USD (Free, D1 oder Neon)
+Cronjobs:                     0 EUR (Vertrag)    0 USD (Cron Triggers)
+TLS auf API-Subdomain:        zu pruefen         enthalten
+EU-Datenresidenz Compute:     ja                 nein (Cloudflare Edge global)
+EU-Datenresidenz DB:          ja                 ja, wenn Neon Frankfurt
+Stack:                        PHP                TypeScript (wie Rest)
+Spaetere Migration noetig:    wahrscheinlich     unwahrscheinlich
+```
 
 Wichtig: Preise und Free-Tiers koennen sich aendern. Vor Livegang die
 aktuellen offiziellen Preis-Seiten pruefen.
@@ -1641,8 +1851,9 @@ Paddle-Portal.
 - KYC-Daten einreichen (Identitaet, Steuerdaten, Bankverbindung,
   Webseiten-URL pro Brand). Achtung: Dieser Schritt kann mehrere Werktage
   dauern.
-- Hosting-Entscheidung treffen (Option 1, 2 oder 3 oben).
-- Datenbank-Wahl treffen (Neon EU empfohlen).
+- Cloudflare Account anlegen, Pages-Projekt pro Brand vorbereiten.
+- Datenbank-Wahl treffen: Neon Frankfurt empfohlen (harter EU-Pin), D1 als
+  Alternative wenn EU-Pin nicht zwingend.
 - E-Mail-Dienst-Wahl treffen (Brevo empfohlen).
 
 Ergebnis: Konten und Dienste sind grundsaetzlich verfuegbar.
@@ -1738,13 +1949,14 @@ Ergebnis: Sauberer Live-Betrieb.
   funktional begrenzt (z.B. nur 3-Jahres-Prognose)?
 - Konkrete Preise pro Brand: zunaechst gleicher Preis ueber alle Brands,
   oder pro Brand differenziert?
-- Hosting-Option: Start mit IONOS ist gesetzt. Noch zu pruefen sind HTTPS auf
-  API-Subdomain, externe Webhooks, ausgehende HTTPS-Requests, Cronjobs und Logs.
-- Datenbank: Start mit IONOS MySQL/MariaDB ist gesetzt. Spaetere Migration auf
-  Cloudflare/Node + D1/Neon erst bei passender Kundenzahl oder Betriebsdruck.
+- Datenbank: Cloudflare D1 (einfacher Einstieg, kein harter EU-Pin) oder
+  Neon Frankfurt (harter EU-Pin, Postgres, Branching)? Empfehlung: Neon
+  Frankfurt fuer DSGVO-Sicherheit.
 - E-Mail-Dienst: Brevo oder Resend?
 - Rate-Limiting und Anti-Abuse: finale Grenzwerte festlegen, aber Device-Limit
   als Hauptschutz beibehalten.
+- IONOS-Fallback: nur ausarbeiten, falls Cloudflare-Setup an einer konkreten
+  Anforderung scheitert. Keine Doppel-Implementierung pflegen.
 
 ## Empfehlung
 
@@ -1752,17 +1964,23 @@ Die beste Balance fuer dieses Projekt:
 
 - `pricing.html` als statische Pricing-Seite pro Brand, mit Paddle
   `PricePreview` fuer lokalisierte Preise.
-- Jahresabo mit automatischer Verlaengerung als Standardangebot.
+- Jahresabo mit automatischer Verlaengerung als Standardangebot. Bei niedrigem
+  Ticketpreis ist Jahresabo gegenueber Monatsabo deutlich guenstiger fuer den
+  Betreiber, weil die 0,50-USD-Pauschale pro Transaktion bei Monatsabos zu
+  einer effektiven Paddle-Last von ~20 % fuehrt (vs. ~6 % bei Jahresabo).
 - Keine Cross-Sell-Mechanik zwischen Brands.
 - Mehrfachkaeufe derselben Brand blockieren; erneuter Checkout nur fuer
   Upgrade, Reaktivierung oder abgelaufenes Abo.
 - Paddle Overlay Checkout fuer Mobile und Desktop.
 - Pro Brand getrennte Identitaeten, getrennte API-Instanz, getrennte
   Datenbank.
-- Kurzfristig IONOS als API-Startloesung nutzen: PHP 8.3 + MySQL/MariaDB,
-  voraussichtlich ohne Zusatzkosten. Langfristig Cloudflare Pages/Workers
-  Functions oder Node/TypeScript Backend offenhalten, sobald Kundenzahl oder
-  Betriebsanforderungen es rechtfertigen.
+- **Start direkt mit Cloudflare Pages Functions + Neon Frankfurt.** Bei
+  Kundenzahlen unter 1.000 pro Brand (Standardszenario in den ersten
+  12-24 Monaten) entstehen keine laufenden Infrastrukturkosten — Cloudflare
+  und Neon Free-Tier reichen. Bei Skalierung darueber hinaus kann Workers Paid
+  fuer 5 USD/Monat als Reserve aktiviert werden. IONOS bleibt als
+  dokumentierter Fallback, kommt aber nur bei konkretem Cloudflare-Hindernis
+  zum Einsatz.
 - Magic-Link Login statt Passwort, mit Brevo oder Resend als Mailer und
   sauber gesetztem SPF/DKIM/DMARC.
 - 3 aktive Geraete pro User, plus maximal 3 neue Geraete pro 30 Tage.
@@ -1776,4 +1994,5 @@ Die beste Balance fuer dieses Projekt:
 
 So bleibt die App leichtgewichtig, mobilfreundlich und statisch deploybar,
 bekommt aber trotzdem eine echte Zahlungs-, Zugriffs- und Datenschicht, die
-auch der ersten Pruefung standhaelt.
+auch der ersten Pruefung standhaelt — und das in einem durchgaengigen
+TypeScript-Stack ohne spaetere Migrations-Schmerzen.

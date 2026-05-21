@@ -34,7 +34,9 @@ const pages = [
 
 function tokensFor(brand) {
   const lockup = brand.lockup ?? {};
+  const paddle = brand.paddle ?? {};
   return {
+    BRAND_ID: brand.id,
     SITE_NAME: brand.siteName,
     SITE_DOMAIN: brand.siteDomain,
     APP_URL: brand.appUrl,
@@ -59,6 +61,10 @@ function tokensFor(brand) {
     CONTACT_ADDR3: contact.addressLine3,
     CONTACT_PHONE: contact.phone,
     CONTACT_EMAIL: contact.email,
+    PADDLE_ENV: paddle.env ?? 'sandbox',
+    PADDLE_CLIENT_TOKEN: paddle.clientToken ?? '',
+    PADDLE_PRICE_MONTHLY: paddle.priceIdMonthly ?? '',
+    PADDLE_PRICE_YEARLY: paddle.priceIdYearly ?? '',
   };
 }
 
@@ -109,7 +115,7 @@ for (const brandId of brandIds) {
   await copyFile(join(TEMPLATES, 'styles.css'), join(outDir, 'styles.css'));
 
   // 3. Render each HTML template
-  const tokens = tokensFor(brand);
+  const tokens = tokensFor({ ...brand, id: brandId });
   for (const page of pages) {
     const template = await readFile(join(TEMPLATES, page), 'utf8');
     const rendered = replaceTokens(template, tokens);

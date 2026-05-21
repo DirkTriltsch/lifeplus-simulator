@@ -10,6 +10,12 @@
     "ctaColorDark": "#C45F00",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
     "subClaim": "Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann.",
+    "paddle": {
+      "env": "sandbox",
+      "clientToken": "test_fee36ee3e68b2f654e1ad01ab59",
+      "priceIdMonthly": "pri_01ks580xcmk17mam0qp9tjkwxg",
+      "priceIdYearly": "pri_01ks5864k3detqr1j2v3cx7dhs"
+    },
     "lockup": {
       "initial": "L",
       "wordNeutral": "life",
@@ -32,6 +38,12 @@
     "ctaColorDark": "#a8131a",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
     "subClaim": "Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann.",
+    "paddle": {
+      "env": "sandbox",
+      "clientToken": "REPLACE_WITH_PADDLE_CLIENT_TOKEN",
+      "priceIdMonthly": "REPLACE_WITH_PRICE_ID_MONTHLY",
+      "priceIdYearly": "REPLACE_WITH_PRICE_ID_YEARLY"
+    },
     "lockup": {
       "initial": "F",
       "wordNeutral": "fit",
@@ -54,6 +66,12 @@
     "ctaColorDark": "#34503a",
     "claim": "Sieh deinen Vergütungsplan, bevor du planst.",
     "subClaim": "Simuliere realistisch, was dein Eqology-Netzwerk über zehn Jahre einspielen kann.",
+    "paddle": {
+      "env": "sandbox",
+      "clientToken": "REPLACE_WITH_PADDLE_CLIENT_TOKEN",
+      "priceIdMonthly": "REPLACE_WITH_PRICE_ID_MONTHLY",
+      "priceIdYearly": "REPLACE_WITH_PRICE_ID_YEARLY"
+    },
     "lockup": {
       "initial": "E",
       "wordNeutral": "eqo",
