@@ -4,11 +4,17 @@ import { requestMagicLink, verifyMagicLink } from '../auth/api';
 
 export function LoginGate(): JSX.Element {
   const { refresh } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return new URL(window.location.href).searchParams.get('email') ?? '';
+  });
   const [phase, setPhase] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'error'>(
     'idle',
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const isCheckoutSuccess =
+    typeof window !== 'undefined' &&
+    new URL(window.location.href).searchParams.get('checkout') === 'success';
 
   // Auto-verify if there is a ?token=... in the URL (magic link redirect).
   useEffect(() => {
@@ -67,9 +73,11 @@ export function LoginGate(): JSX.Element {
   }
 
   return (
-    <CenteredCard title="Anmelden">
+    <CenteredCard title={isCheckoutSuccess ? 'Kauf abgeschlossen' : 'Anmelden'}>
       <p className="text-sm text-gray-600 mb-4">
-        Gib deine E-Mail-Adresse ein. Wir schicken dir einen einmaligen Login-Link.
+        {isCheckoutSuccess
+          ? 'Fast fertig: Melde dich mit der Kauf-E-Mail an, damit wir deinen Zugang diesem Geraet zuordnen koennen.'
+          : 'Gib deine E-Mail-Adresse ein. Wir schicken dir einen einmaligen Login-Link.'}
       </p>
       <form onSubmit={onSubmit} className="space-y-3">
         <input

@@ -31,9 +31,23 @@ export interface DevicesResponse {
 }
 
 // Hybrid topology: API lives on a separate subdomain (e.g. api.lifeflow360.app).
-// VITE_API_BASE_URL is set at build time; if absent we fall back to same-origin
-// for any future "all-on-Cloudflare" rebuild.
-const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+// VITE_API_BASE_URL is set at build time. The hostname fallback protects
+// production builds if an env file is missed or an older build config is used.
+const API_BASE = resolveApiBase();
+
+function resolveApiBase(): string {
+  const configured = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+  if (configured) return configured;
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname.toLowerCase();
+    if (host === 'www.lifeflow360.app' || host === 'lifeflow360.app') {
+      return 'https://api.lifeflow360.app';
+    }
+  }
+
+  return '';
+}
 
 function apiUrl(path: string): string {
   return `${API_BASE}${path}`;
@@ -46,6 +60,12 @@ async function asJson<T>(res: Response): Promise<T> {
       detail = await res.text();
     } catch {
       // ignore
+    }
+    const contentType = res.headers.get('content-type') ?? '';
+    if (contentType.includes('text/html') || detail.trim().startsWith('<!DOCTYPE html')) {
+      throw new Error(
+        `API nicht erreichbar (${res.status}). Bitte pruefe, ob api.lifeflow360.app auf Cloudflare zeigt und die Pages Functions deployed sind.`,
+      );
     }
     throw new Error(`Request failed (${res.status}): ${detail.slice(0, 200)}`);
   }

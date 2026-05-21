@@ -894,7 +894,7 @@
             customer: { email: normalizedEmail },
             customData: { brand_id: brandId, checkout_email: normalizedEmail },
             settings: {
-              successUrl: appUrl + '?checkout=success',
+              successUrl: appUrl + '?checkout=success&email=' + encodeURIComponent(normalizedEmail),
               displayMode: 'overlay',
               theme: 'light',
               locale: 'de',

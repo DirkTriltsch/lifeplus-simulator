@@ -34,6 +34,18 @@ function corsHeaders(origin: string | null, env: Env): Record<string, string> {
 export const onRequest: PagesFunction<Env> = async ({ request, env, next }) => {
   const origin = request.headers.get('origin');
   const cors = corsHeaders(origin, env);
+  const url = new URL(request.url);
+  const isApiPath = url.pathname === '/api' || url.pathname.startsWith('/api/');
+
+  if (!isApiPath) {
+    return new Response('not found', {
+      status: 404,
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'no-store',
+      },
+    });
+  }
 
   if (request.method === 'OPTIONS') {
     return new Response(null, {

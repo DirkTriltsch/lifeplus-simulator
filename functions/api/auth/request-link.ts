@@ -69,7 +69,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     });
   } catch (err) {
     console.error('mailer_failed', err);
-    // Still return ok to avoid enumeration.
+    return error(502, 'mail_send_failed');
   }
 
   return json({ ok: true });

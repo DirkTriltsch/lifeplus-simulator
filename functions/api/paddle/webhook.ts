@@ -109,10 +109,11 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
     case 'subscription.past_due':
     case 'subscription.paused':
     case 'subscription.resumed':
+    case 'subscription.trialing':
       await upsertSubscription(env, data);
       break;
 
-    case 'transaction.completed':
+    case 'transaction.paid':
       // Renewals and one-shots. If the transaction is linked to a subscription
       // the subscription.updated event carries the canonical state, so we only
       // act here when there is no subscription_id (i.e. one-shot purchases).
@@ -124,11 +125,13 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
       break;
 
     case 'transaction.payment_failed':
-      // Soft event — Paddle will follow up with subscription.past_due.
+    case 'transaction.canceled':
+      // Soft events — Paddle will follow up with subscription.* state changes.
       break;
 
-    case 'transaction.refunded':
     case 'adjustment.created':
+    case 'adjustment.updated':
+      // Refunds, credits, chargeback adjustments. Revoke entitlement.
       await handleRefund(env, data);
       break;
 
@@ -145,7 +148,10 @@ async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void
   }
 
   const customerEmail =
-    data.customer?.email ?? data.email ?? (await fetchPaddleCustomerEmail(env, data.customer_id));
+    data.customer?.email ??
+    data.email ??
+    customDataEmail(data.custom_data) ??
+    (await fetchPaddleCustomerEmail(env, data.customer_id));
   if (!customerEmail) return;
 
   const now = nowMs();
@@ -248,7 +254,13 @@ async function fetchPaddleCustomerEmail(
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Paddle customer fetch failed (${res.status}): ${body.slice(0, 200)}`);
+    console.warn('paddle_customer_fetch_failed', {
+      status: res.status,
+      statusText: res.statusText,
+      customerId,
+      body: body.slice(0, 500),
+    });
+    return null;
   }
 
   const customer = (await res.json()) as PaddleCustomerResponse;
@@ -267,7 +279,7 @@ async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<vo
     return;
   }
 
-  const customerEmail = data.customer?.email ?? data.email ?? null;
+  const customerEmail = data.customer?.email ?? data.email ?? customDataEmail(data.custom_data);
   if (!customerEmail) return;
   const now = nowMs();
   const user = await upsertUserByEmail(env, customerEmail, now, () => crypto.randomUUID());
@@ -309,6 +321,11 @@ function customDataMatchesBrand(
 ): boolean {
   const brandId = customData?.brand_id;
   return brandId === undefined || brandId === env.BRAND_ID;
+}
+
+function customDataEmail(customData: Record<string, unknown> | null | undefined): string | null {
+  const email = customData?.checkout_email;
+  return typeof email === 'string' && email.includes('@') ? email.toLowerCase() : null;
 }
 
 async function recomputeEntitlement(

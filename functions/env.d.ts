@@ -23,4 +23,5 @@ export interface Env {
   APP_SESSION_SECRET: string;
   MAGIC_LINK_SECRET: string;
   RESEND_API_KEY: string;
+  DIAGNOSTIC_TOKEN?: string;
 }

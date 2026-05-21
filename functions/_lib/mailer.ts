@@ -29,11 +29,10 @@ interface SendArgs {
 
 async function sendViaResend(env: Env, args: SendArgs): Promise<void> {
   if (!env.RESEND_API_KEY) {
-    // In local dev without a configured mailer, log to console instead of failing.
-    console.log('[mailer:disabled]', args.to, args.subject, args.text);
-    return;
+    throw new Error('RESEND_API_KEY is not configured');
   }
 
+  const from = `${env.MAIL_FROM_NAME} <${env.MAIL_FROM}>`;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -41,8 +40,8 @@ async function sendViaResend(env: Env, args: SendArgs): Promise<void> {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      from: `${env.MAIL_FROM_NAME} <${env.MAIL_FROM}>`,
-      to: args.to,
+      from,
+      to: [args.to],
       subject: args.subject,
       text: args.text,
       html: args.html,
@@ -51,7 +50,21 @@ async function sendViaResend(env: Env, args: SendArgs): Promise<void> {
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Resend send failed (${res.status}): ${body.slice(0, 200)}`);
+    const requestId =
+      res.headers.get('resend-request-id') ??
+      res.headers.get('x-request-id') ??
+      res.headers.get('cf-ray') ??
+      'unknown';
+    const diagnostic = {
+      status: res.status,
+      statusText: res.statusText,
+      requestId,
+      from,
+      toDomain: args.to.split('@')[1] ?? 'unknown',
+      body: body.slice(0, 1000),
+    };
+    console.error('resend_send_failed', diagnostic);
+    throw new Error(`Resend send failed (${res.status} ${res.statusText}) requestId=${requestId}: ${body.slice(0, 500)}`);
   }
 }
 
