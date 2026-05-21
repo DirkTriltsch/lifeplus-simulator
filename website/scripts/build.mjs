@@ -30,6 +30,8 @@ const pages = [
   'pricing.html',
   'impressum.html',
   'datenschutz.html',
+  'agb.html',
+  'widerruf.html',
 ];
 
 function tokensFor(brand) {
