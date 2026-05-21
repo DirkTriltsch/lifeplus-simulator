@@ -32,6 +32,7 @@ const pages = [
   'datenschutz.html',
   'agb.html',
   'widerruf.html',
+  'mein-konto.html',
 ];
 
 function tokensFor(brand) {

@@ -281,3 +281,7 @@ a:hover { text-decoration: underline; }
   color: #94a3b8;
   margin-top: 2rem;
 }
+
+/* ---------- "Mein Konto"-Link visibility ---------- */
+/* Hidden by default. account-link.js adds .is-visible once /api/me returns authenticated. */
+.js-account-link:not(.is-visible) { display: none !important; }

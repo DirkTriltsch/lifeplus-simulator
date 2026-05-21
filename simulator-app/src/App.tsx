@@ -18,6 +18,7 @@ import {
   AdvancedSettingsPanel,
   type RealityStrategy,
 } from './components/AdvancedSettingsPanel';
+import { AccountPanel } from './components/AccountPanel';
 import type { GoalUI } from './components/GoalsEditorDialog';
 
 const DEFAULT_GOALS: GoalUI[] = [
@@ -77,6 +78,9 @@ export default function App() {
   const [page, setPage] = useState<'chart' | 'network'>('chart');
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+
+  const pricingUrl = `${product.siteUrl}pricing.html`;
 
   const [maxDirectMembersPerMember, setMaxDirectMembersPerMember] = useState(
     persistedState?.maxDirectMembersPerMember ??
@@ -257,8 +261,27 @@ export default function App() {
             onIpToEurChange={setIpToEur}
             productName={product.terminology.productName}
           />
+
+          <button
+            onClick={() => setAccountOpen(true)}
+            aria-label="Mein Konto"
+            title="Mein Konto"
+            className="text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <circle cx="12" cy="8" r="3.5" />
+              <path d="M5 20c1.5-3.5 4.5-5 7-5s5.5 1.5 7 5" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
       </header>
+
+      {accountOpen && (
+        <AccountPanel
+          pricingUrl={pricingUrl}
+          onClose={() => setAccountOpen(false)}
+        />
+      )}
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
         {page === 'chart' ? (

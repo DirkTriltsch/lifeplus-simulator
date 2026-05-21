@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mein Konto – {{SITE_NAME}}</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>window.LFL_API_BASE = '{{API_BASE_URL}}';</script>
+  <script src="account-link.js" defer></script>
+  <style>
+    :root {
+      --brand: {{ACCENT_COLOR}};
+      --brand-dark: {{ACCENT_COLOR_DARK}};
+      --cta: {{CTA_COLOR}};
+      --cta-dark: {{CTA_COLOR_DARK}};
+      --lockup-dark-bg: {{LOCKUP_DARK_BG}};
+      --lockup-accent-on-dark: {{LOCKUP_ACCENT_ON_DARK}};
+    }
+    .account-card {
+      max-width: 540px;
+      margin: 0 auto;
+      background: #fff;
+      border: 0.5px solid #E1E5E2;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 1px 2px rgba(15,27,23,0.04);
+    }
+    .account-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 12px 0; border-bottom: 0.5px solid #EEF1EF;
+      font-size: 14px;
+    }
+    .account-row:last-of-type { border-bottom: none; }
+    .account-row .label { color: #4A5C53; }
+    .account-row .value { color: #0F1B17; font-weight: 500; }
+    .account-status-active { color: #1D9E75; font-weight: 600; }
+    .account-status-inactive { color: #B45309; font-weight: 600; }
+    .account-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+    .account-btn-primary, .account-btn-secondary, .account-btn-link {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 18px; border-radius: 100px; font-size: 14px;
+      font-weight: 500; font-family: inherit; cursor: pointer;
+      text-decoration: none !important; transition: all 0.18s;
+      border: 1px solid transparent;
+    }
+    .account-btn-primary { background: var(--brand); color: #fff !important; }
+    .account-btn-primary:hover { background: var(--brand-dark); }
+    .account-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .account-btn-secondary { background: #fff; color: #0F1B17; border-color: #E1E5E2; }
+    .account-btn-secondary:hover { border-color: var(--brand); color: var(--brand); }
+    .account-btn-link { background: none; border: none; color: #7A8983; padding: 8px; }
+    .account-btn-link:hover { color: #2C4138; }
+    .account-input {
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 1px solid #E1E5E2; font-size: 15px; font-family: inherit;
+      box-sizing: border-box;
+    }
+    .account-input:focus { outline: none; border-color: var(--brand); }
+    .account-msg { font-size: 13px; color: #4A5C53; margin-top: 8px; }
+    .account-msg.error { color: #B91C1C; }
+    .account-msg.success { color: #047857; }
+    .account-page { padding: 60px 0 120px; min-height: 60vh; }
+    .account-page h1 { font-family: var(--serif, 'Fraunces', Georgia, serif); font-size: clamp(32px, 4vw, 44px); font-weight: 400; text-align: center; letter-spacing: -0.02em; margin: 0 0 12px; }
+    .account-page h1 em { font-style: italic; color: var(--brand); }
+    .account-page .lead { text-align: center; font-size: 16px; color: #4A5C53; max-width: 520px; margin: 0 auto 36px; line-height: 1.55; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header site-header--dark">
+    <div class="container">
+      <a class="lockup lockup--header" href="index.html" aria-label="{{SITE_NAME}}">
+        <span class="lockup-mark">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="256" height="256" rx="28" fill="{{LOCKUP_MARK_FILL}}"/>
+            <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">{{LOCKUP_INITIAL}}</text>
+            <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="{{LOCKUP_WAVE_COLOR}}" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+        </span>
+        <span class="lockup-text">
+          <span class="lockup-name"><span class="lockup-neutral">{{LOCKUP_NEUTRAL}}</span><span class="lockup-accent">{{LOCKUP_ACCENT}}</span></span>
+          <span class="lockup-sub">{{LOCKUP_TAGLINE_DE}}</span>
+        </span>
+      </a>
+      <nav class="site-nav-links">
+        <a href="index.html#kernbotschaft">Konzept</a>
+        <a href="features.html">Funktionen</a>
+        <a href="pricing.html">Preise</a>
+        <a href="index.html#faq">FAQ</a>
+        <a href="mein-konto.html" class="js-account-link" data-active>Mein Konto</a>
+      </nav>
+      <a class="nav-cta nav-cta--dark" href="{{APP_URL}}">
+        Simulator starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="14" height="14"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main class="account-page">
+    <div class="container">
+      <h1>Mein <em>Konto</em></h1>
+      <p class="lead">Sieh deinen Zugang, verwalte dein Abo oder melde dich an.</p>
+
+      <div class="account-card">
+        <!-- Loading state -->
+        <div id="state-loading">
+          <p style="text-align:center; color:#7A8983; font-size:14px; margin:24px 0;">Lade Konto…</p>
+        </div>
+
+        <!-- Anonymous: login form -->
+        <div id="state-anonymous" class="hidden">
+          <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Anmelden</h2>
+          <p style="font-size:14px; color:#4A5C53; margin:0 0 20px;">
+            Gib die E-Mail-Adresse ein, mit der du gekauft hast. Wir senden dir einen einmaligen Login-Link.
+          </p>
+          <form id="login-form" class="account-actions">
+            <input
+              id="login-email"
+              type="email"
+              required
+              autocomplete="email"
+              inputmode="email"
+              placeholder="du@example.com"
+              class="account-input"
+            />
+            <button type="submit" class="account-btn-primary" id="login-btn">
+              Login-Link senden
+            </button>
+          </form>
+          <p id="login-msg" class="account-msg hidden"></p>
+        </div>
+
+        <!-- Sent -->
+        <div id="state-sent" class="hidden">
+          <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Link gesendet</h2>
+          <p style="font-size:14px; color:#4A5C53;">
+            Falls die E-Mail-Adresse bei uns bekannt ist, hast du in den naechsten Minuten einen Login-Link im Postfach.
+            Du kannst dieses Fenster offen lassen und auf den Link in der Mail klicken.
+          </p>
+        </div>
+
+        <!-- Verifying -->
+        <div id="state-verifying" class="hidden">
+          <p style="text-align:center; color:#4A5C53;">Login wird geprueft…</p>
+        </div>
+
+        <!-- Logged in -->
+        <div id="state-account" class="hidden">
+          <div class="account-row">
+            <span class="label">E-Mail</span>
+            <span class="value" id="account-email">—</span>
+          </div>
+          <div class="account-row">
+            <span class="label">Status</span>
+            <span class="value" id="account-status">—</span>
+          </div>
+          <div class="account-row" id="account-row-plan">
+            <span class="label">Plan</span>
+            <span class="value" id="account-plan">—</span>
+          </div>
+          <div class="account-row" id="account-row-until">
+            <span class="label" id="account-until-label">Gueltig bis</span>
+            <span class="value" id="account-until">—</span>
+          </div>
+          <div class="account-row">
+            <span class="label">Geraete</span>
+            <span class="value" id="account-devices">—</span>
+          </div>
+
+          <div class="account-actions">
+            <a href="{{APP_URL}}" class="account-btn-primary">Zum Simulator</a>
+            <button type="button" id="portal-btn" class="account-btn-secondary">Abo bei Paddle verwalten</button>
+            <a href="pricing.html" class="account-btn-secondary">Plan wechseln</a>
+            <button type="button" id="logout-btn" class="account-btn-link">Abmelden</button>
+          </div>
+          <p id="account-msg" class="account-msg hidden"></p>
+        </div>
+      </div>
+
+      <p style="text-align:center; font-size:12px; color:#7A8983; margin-top:24px; max-width:540px; margin-left:auto; margin-right:auto;">
+        Zahlung, Rechnung und Kuendigung laufen ueber Paddle als Verkaufsabwickler (Merchant of Record).
+        Aktualisiere Karte / SEPA und lade Rechnungen herunter ueber "Abo bei Paddle verwalten".
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2026 {{SITE_NAME}}</span>
+      <nav>
+        <a href="index.html">Startseite</a>
+        <a href="mein-konto.html" class="js-account-link" data-active>Mein Konto</a>
+        <a href="features.html">Funktionen</a>
+        <a href="pricing.html">Preise</a>
+        <a href="agb.html">AGB</a>
+        <a href="widerruf.html">Widerruf</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="mailto:{{CONTACT_EMAIL}}">Kontakt</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const API_BASE = '{{API_BASE_URL}}'.replace(/\/$/, '');
+      const APP_URL = '{{APP_URL}}';
+
+      function show(id) {
+        ['state-loading','state-anonymous','state-sent','state-verifying','state-account']
+          .forEach(s => document.getElementById(s).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+      }
+      function setText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      }
+      function setMsg(id, text, kind) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.classList.remove('hidden', 'error', 'success');
+        if (kind) el.classList.add(kind);
+      }
+      function hideMsg(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      }
+
+      async function apiFetch(path, init) {
+        return fetch(API_BASE + path, Object.assign({ credentials: 'include' }, init || {}));
+      }
+
+      async function loadMe() {
+        try {
+          const res = await apiFetch('/api/me');
+          if (!res.ok) throw new Error('me_failed');
+          return await res.json();
+        } catch (e) {
+          return { authenticated: false };
+        }
+      }
+
+      function renderAccount(me) {
+        setText('account-email', me.email || '—');
+        const ent = (me.entitlements && me.entitlements[0]) || null;
+        if (ent) {
+          if (ent.active) {
+            const el = document.getElementById('account-status');
+            el.innerHTML = '<span class="account-status-active">Aktiv</span>';
+            setText('account-until-label', 'Naechste Verlaengerung');
+          } else {
+            const el = document.getElementById('account-status');
+            el.innerHTML = '<span class="account-status-inactive">Abgelaufen / inaktiv</span>';
+            setText('account-until-label', 'Endete am');
+          }
+          setText('account-plan', ent.plan || '—');
+          if (ent.validUntil) {
+            const d = new Date(ent.validUntil);
+            setText('account-until', d.toLocaleDateString('de-DE'));
+            document.getElementById('account-row-until').classList.remove('hidden');
+          } else {
+            document.getElementById('account-row-until').classList.add('hidden');
+          }
+          document.getElementById('account-row-plan').classList.remove('hidden');
+        } else {
+          const el = document.getElementById('account-status');
+          el.innerHTML = '<span class="account-status-inactive">Kein aktives Abo</span>';
+          document.getElementById('account-row-plan').classList.add('hidden');
+          document.getElementById('account-row-until').classList.add('hidden');
+        }
+        const limit = (me.deviceLimit || 3);
+        const active = (me.activeDevices || 0);
+        setText('account-devices', active + ' von ' + limit);
+      }
+
+      async function verifyMagicLink(token) {
+        show('state-verifying');
+        try {
+          const res = await apiFetch('/api/auth/verify-link', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          if (!res.ok) throw new Error('verify_failed');
+          // Clean URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('token');
+          window.history.replaceState({}, '', url.toString());
+          // Reload state
+          const me = await loadMe();
+          if (me.authenticated) {
+            renderAccount(me);
+            show('state-account');
+          } else {
+            show('state-anonymous');
+          }
+        } catch (e) {
+          show('state-anonymous');
+          setMsg('login-msg', 'Login-Link ungueltig oder abgelaufen. Bitte neuen Link anfordern.', 'error');
+        }
+      }
+
+      async function init() {
+        const url = new URL(window.location.href);
+        const token = url.searchParams.get('token');
+        if (token) {
+          await verifyMagicLink(token);
+          return;
+        }
+        const me = await loadMe();
+        if (me.authenticated) {
+          renderAccount(me);
+          show('state-account');
+        } else {
+          // Prefill email if ?email=... is set
+          const prefill = url.searchParams.get('email');
+          if (prefill) {
+            const input = document.getElementById('login-email');
+            if (input) input.value = prefill;
+          }
+          show('state-anonymous');
+        }
+      }
+
+      document.getElementById('login-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const emailInput = document.getElementById('login-email');
+        const btn = document.getElementById('login-btn');
+        hideMsg('login-msg');
+        const email = (emailInput.value || '').trim();
+        if (!email) return;
+        btn.disabled = true;
+        btn.textContent = 'Sende Link…';
+        try {
+          const res = await apiFetch('/api/auth/request-link', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          if (!res.ok) throw new Error('request_failed');
+          show('state-sent');
+        } catch (err) {
+          setMsg('login-msg', 'Konnte den Link nicht senden. Bitte spaeter erneut versuchen.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Login-Link senden';
+        }
+      });
+
+      document.getElementById('portal-btn').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        hideMsg('account-msg');
+        try {
+          const res = await apiFetch('/api/billing/portal', { method: 'POST' });
+          if (!res.ok) {
+            if (res.status === 404) {
+              setMsg('account-msg', 'Wir konnten dein Kundenkonto bei Paddle nicht finden. Bitte schreibe uns an {{CONTACT_EMAIL}}.', 'error');
+            } else {
+              setMsg('account-msg', 'Das Abo-Portal konnte gerade nicht geoeffnet werden. Bitte spaeter erneut versuchen.', 'error');
+            }
+            btn.disabled = false;
+            return;
+          }
+          const data = await res.json();
+          if (data && data.url) {
+            window.location.href = data.url;
+          } else {
+            setMsg('account-msg', 'Antwort von Paddle ungueltig. Bitte spaeter erneut versuchen.', 'error');
+            btn.disabled = false;
+          }
+        } catch (e) {
+          setMsg('account-msg', 'Netzwerkfehler. Bitte spaeter erneut versuchen.', 'error');
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async function() {
+        this.disabled = true;
+        try {
+          await apiFetch('/api/auth/logout', { method: 'POST' });
+        } catch (e) {
+          // ignore
+        }
+        window.location.href = 'mein-konto.html';
+      });
+
+      init();
+    })();
+  </script>
+
+</body>
+</html>
