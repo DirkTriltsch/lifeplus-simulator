@@ -7,6 +7,7 @@ export interface Env {
 
   BRAND_ID: string;
   APP_URL: string;
+  ALLOWED_ORIGINS: string;
   PADDLE_ENV: 'sandbox' | 'live';
   COOKIE_DOMAIN: string;
   SESSION_TTL_DAYS: string;

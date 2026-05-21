@@ -67,6 +67,7 @@ function tokensFor(brand) {
     PADDLE_CLIENT_TOKEN: paddle.clientToken ?? '',
     PADDLE_PRICE_MONTHLY: paddle.priceIdMonthly ?? '',
     PADDLE_PRICE_YEARLY: paddle.priceIdYearly ?? '',
+    API_BASE_URL: brand.apiBaseUrl ?? '',
   };
 }
 
@@ -112,6 +113,13 @@ for (const brandId of brandIds) {
 
   // 2. Brand-specific favicon
   await copyFile(join(MARKS, `${brandId}.svg`), join(outDir, 'favicon.svg'));
+
+  // 2b. Brand-specific Paddle icon (PNG, 128x128) for invoice emails.
+  //     Optional: skip silently if missing.
+  const paddleIconSrc = join(MARKS, `${brandId}-paddle.png`);
+  if (existsSync(paddleIconSrc)) {
+    await copyFile(paddleIconSrc, join(outDir, 'paddle-icon.png'));
+  }
 
   // 3. Copy shared CSS
   await copyFile(join(TEMPLATES, 'styles.css'), join(outDir, 'styles.css'));

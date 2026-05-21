@@ -3,6 +3,7 @@
     "siteName": "LifeFlow360",
     "siteDomain": "www.lifeflow360.app",
     "appUrl": "https://www.lifeflow360.app/app/",
+    "apiBaseUrl": "https://api.lifeflow360.app",
     "productName": "LifePlus",
     "accentColor": "#1D9E75",
     "accentColorDark": "#157a5b",

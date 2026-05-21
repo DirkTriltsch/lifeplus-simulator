@@ -291,3 +291,173 @@ Sponsor-Preise (Schritt C) entfallen vorerst.
 - Bei spaeterem Live-Gang dasselbe Steuer-Verhalten konsistent uebernehmen
   (`Excludes tax`) – andernfalls weichen Sandbox- und Live-Preise im Checkout
   ab.
+
+---
+
+## I. Test-Ablauf (Sandbox)
+
+Voraussetzungen:
+- Approved Domain in Paddle (z.B. `www.lifeflow360.app`)
+- Marketing-Site mit aktueller `dist/site-lifeplus/` auf die Domain deployt
+- Discount-Code `EARLY2026` aktiv (siehe E)
+- [website/brands.json](../website/brands.json) → `paddle.*` mit echten Sandbox-IDs befuellt
+- pricing.html mit den IDs neu gebaut (`npm run build:site:lifeplus`)
+
+### I.1 Happy-Path mit Discount-Code (kein Geld bewegt)
+
+```text
+1. Browser oeffnet  https://www.lifeflow360.app/pricing.html
+   (mit Strg+F5 fuer Hard-Reload)
+2. Klick auf "Jetzt monatlich starten" oder "Jetzt jaehrlich starten"
+3. Email-Prompt erscheint  -> z.B. mail@example.com
+4. Browser-Konsole zeigt:
+     checkout-intent unreachable, opening Paddle overlay anyway
+   (erwartet — kein Cloudflare-Backend deployt)
+5. Paddle-Overlay oeffnet sich mit dem Sandbox-Checkout
+6. Discount-Code  EARLY2026  eingeben  -> Endpreis 0,00 EUR
+7. Restliche Felder ausfuellen (Email kommt vorbefuellt)
+8. "Pay" klicken
+9. Paddle bestaetigt den Kauf  -> checkout.completed-Event feuert
+10. Browser springt auf  https://www.lifeflow360.app/app/?checkout=success
+    (App noch nicht deployt -> Browser-Fehler, ist OK)
+11. Im Paddle-Sandbox-Dashboard pruefen:
+    - Transactions   -> neue Transaction mit 0,00 EUR sichtbar
+    - Subscriptions  -> neues Abo im Status "active"
+    - Customers      -> neuer Customer mit dieser Email
+```
+
+### I.2 Happy-Path mit Testkarte (Sandbox-Geld bewegt)
+
+```text
+Schritt 1 - 5 wie I.1.
+6. Statt Discount: Zahlungsmethode "Card" waehlen.
+7. Test-Kreditkarte eingeben (siehe I.4 unten).
+8. "Pay" klicken.
+9. Paddle bestaetigt  -> wie I.1.
+10. Im Sandbox-Dashboard ist die Transaction jetzt mit dem vollen Betrag
+    plus laenderspezifischer USt. sichtbar.
+```
+
+### I.3 Negativ-Tests (zum spaeteren Validieren mit echtem Backend)
+
+Diese Tests werden voll erst sinnvoll, wenn der Cloudflare-Webhook aktiv ist.
+Sandbox kann sie aber jetzt schon ausloesen, damit das Verhalten in
+Paddle nachvollziehbar wird.
+
+```text
+- Abgelehnte Karte
+  -> Karte 4000 0000 0000 0002 verwenden  (Generic decline)
+  -> Erwartung: Paddle zeigt Fehler, keine Transaction.
+
+- Karte ohne Deckung
+  -> Karte 4000 0000 0000 9995  (Insufficient funds)
+  -> Erwartung: Paddle zeigt Fehler "insufficient funds".
+
+- 3D-Secure-Pruefung
+  -> Karte 4000 0027 6000 3184
+  -> Erwartung: Paddle blendet 3DS-Fenster ein, mit "Complete" bestaetigen.
+
+- Refund / Erstattung
+  -> Nach erfolgreichem Kauf im Sandbox-Dashboard:
+     Transactions -> Transaction oeffnen -> "Refund" klicken.
+  -> Erwartung: Webhook-Event "transaction.refunded" wird gesendet
+     (geht aktuell ins Leere, weil Cloudflare-Endpunkt fehlt).
+  -> Wenn Webhook aktiv: Entitlement wird entzogen, App zeigt Paywall.
+
+- Kuendigung im Customer Portal
+  -> Customer Portal Link aus Sandbox-Dashboard oeffnen.
+  -> Subscription kuendigen.
+  -> Erwartung: "subscription.canceled"-Event,
+     current_period_ends_at bleibt erhalten, Zugang laeuft bis Periodenende.
+```
+
+### I.4 Paddle-Sandbox-Testdaten
+
+#### Test-Kreditkarten
+
+Alle drei Felder muessen stimmen, sonst lehnt Paddle die Karte sofort ab.
+
+```text
+SUCCESS (sofort erfolgreich, kein 3DS)
+  Nummer       4000 0566 5566 5556
+  Ablauf       beliebiges zukuenftiges Datum   (z.B. 12/30)
+  CVC          100  (3-stellig)
+  Name         beliebig
+
+3D-SECURE SUCCESS  (Sandbox simuliert die 3DS-Challenge, mit "Complete" bestaetigen)
+  Nummer       4000 0027 6000 3184
+  Ablauf       beliebiges zukuenftiges Datum
+  CVC          100
+
+GENERIC DECLINE  (wird mit allgemeiner Ablehnung zurueckgewiesen)
+  Nummer       4000 0000 0000 0002
+  Ablauf       beliebiges zukuenftiges Datum
+  CVC          100
+
+INSUFFICIENT FUNDS
+  Nummer       4000 0000 0000 9995
+  Ablauf       beliebiges zukuenftiges Datum
+  CVC          100
+
+EXPIRED CARD
+  Nummer       4000 0000 0000 0069
+  Ablauf       beliebiges Datum
+  CVC          100
+
+INCORRECT CVC
+  Nummer       4000 0000 0000 0127
+  Ablauf       beliebiges zukuenftiges Datum
+  CVC          100
+```
+
+Falls eine Karte unerwartet abgelehnt wird: in der Paddle-Sandbox-Doku
+gegenpruefen, ob die Nummern noch aktuell sind. Paddle rotiert die Test-Karten
+gelegentlich.
+
+#### Test-SEPA / Test-IBAN
+
+```text
+Standard-Test-IBAN     DE89 3704 0044 0532 0130 00
+Name                   beliebig
+```
+
+In Sandbox wird kein echtes Mandat eingezogen.
+
+#### Test-PayPal
+
+In Paddle Sandbox triggert der "PayPal"-Button einen simulierten Flow ohne
+echten PayPal-Login. Auf "Continue with PayPal" klicken, Paddle simuliert
+automatisch einen erfolgreichen Zahlungs-Return.
+
+#### Test-Discount-Code
+
+```text
+Code        EARLY2026
+Effekt      100% Rabatt auf alle Renewals
+Gilt fuer   LifeFlow-IND-PRO (Einzelplatz Monatlich + Jaehrlich)
+Limit       25 Einloesungen
+Ablauf      2026-12-31
+```
+
+### I.5 Was im Paddle-Dashboard zu pruefen ist
+
+Nach jedem Test sollten diese Datensaetze im Sandbox-Dashboard erscheinen:
+
+```text
+Customers      -> neuer Eintrag mit der Test-Email
+Transactions   -> jede Zahlung (auch 0-EUR-Discount-Kaeufe) erscheint einzeln
+Subscriptions  -> nur bei Recurring-Plans, mit Status "active" / "trialing"
+Invoices       -> PDF-Rechnung wird automatisch generiert,
+                  Sandbox-Watermark "PADDLE SANDBOX"
+```
+
+### I.6 Was lokal nicht funktioniert
+
+- **Localhost / 127.0.0.1**: Paddle akzeptiert nur approved Domains. Lokale
+  Tests des Overlays sind nicht moeglich. Alles ueber die echte Domain.
+- **Webhook-Loop**: solange Cloudflare nicht deployt ist, gehen
+  `subscription.created` etc. ins Leere. Im Paddle-Dashboard sind sie
+  trotzdem als "Notification attempts" mit Status "failed" sichtbar — das ist
+  erwartet.
+- **App-Zugang nach Kauf**: `/app/?checkout=success` produziert noch keinen
+  echten Login. Das kommt mit der Cloudflare-Phase (Magic-Link + `/api/me`).

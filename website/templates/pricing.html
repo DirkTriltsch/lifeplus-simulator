@@ -802,6 +802,7 @@
       const env = '{{PADDLE_ENV}}';
       const appUrl = '{{APP_URL}}';
       const brandId = '{{BRAND_ID}}';
+      const apiBaseUrl = '{{API_BASE_URL}}'.replace(/\/$/, '');
 
       if (!clientToken || clientToken.startsWith('REPLACE_')) {
         console.warn('Paddle client token not configured. Checkout disabled.');
@@ -852,7 +853,7 @@
 
           btn.disabled = true;
           try {
-            const res = await fetch('/api/billing/checkout-intent', {
+            const res = await fetch(apiBaseUrl + '/api/billing/checkout-intent', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               credentials: 'include',

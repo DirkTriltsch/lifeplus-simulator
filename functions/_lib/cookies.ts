@@ -1,6 +1,15 @@
 import type { Env } from '../env';
 
-export const SESSION_COOKIE = '__Host-session';
+// Hybrid topology: cookie must be readable by api.lifeflow360.app AND sent
+// when www.lifeflow360.app calls the API with credentials:include.
+// We therefore set Domain=.lifeflow360.app (parent domain). That rules out
+// the __Host- prefix (which forbids the Domain attribute).
+//
+// SameSite=None is required for cross-site cookie sending (different
+// subdomains count as same-site, but we keep None for safety with
+// app.something or other future origins). It requires Secure.
+
+export const SESSION_COOKIE = 'session';
 
 interface CookieOptions {
   maxAgeSeconds?: number;
@@ -16,17 +25,13 @@ export function serializeCookie(
   value: string,
   options: CookieOptions = {},
 ): string {
-  // __Host- prefix REQUIRES Secure, Path=/, and no Domain attribute.
-  const isHostPrefixed = name.startsWith('__Host-');
   const parts: string[] = [`${name}=${value}`];
-
-  parts.push(`Path=${isHostPrefixed ? '/' : options.path ?? '/'}`);
+  parts.push(`Path=${options.path ?? '/'}`);
   if (options.maxAgeSeconds !== undefined) parts.push(`Max-Age=${options.maxAgeSeconds}`);
   parts.push(`SameSite=${options.sameSite ?? 'Lax'}`);
   if (options.httpOnly !== false) parts.push('HttpOnly');
   if (options.secure !== false) parts.push('Secure');
-  if (!isHostPrefixed && options.domain) parts.push(`Domain=${options.domain}`);
-
+  if (options.domain) parts.push(`Domain=${options.domain}`);
   return parts.join('; ');
 }
 
@@ -49,14 +54,16 @@ export function sessionCookieHeader(env: Env, value: string, maxAgeSeconds: numb
     sameSite: 'Lax',
     httpOnly: true,
     secure: true,
+    domain: env.COOKIE_DOMAIN || undefined,
   });
 }
 
-export function clearedSessionCookieHeader(_env: Env): string {
+export function clearedSessionCookieHeader(env: Env): string {
   return serializeCookie(SESSION_COOKIE, '', {
     maxAgeSeconds: 0,
     sameSite: 'Lax',
     httpOnly: true,
     secure: true,
+    domain: env.COOKIE_DOMAIN || undefined,
   });
 }

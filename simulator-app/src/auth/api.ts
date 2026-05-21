@@ -30,6 +30,15 @@ export interface DevicesResponse {
   devices: DeviceItem[];
 }
 
+// Hybrid topology: API lives on a separate subdomain (e.g. api.lifeflow360.app).
+// VITE_API_BASE_URL is set at build time; if absent we fall back to same-origin
+// for any future "all-on-Cloudflare" rebuild.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+
+function apiUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}
+
 async function asJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let detail = '';
@@ -46,11 +55,11 @@ async function asJson<T>(res: Response): Promise<T> {
 const headers = { 'content-type': 'application/json' } as const;
 
 export function fetchMe(): Promise<MeResponse> {
-  return fetch('/api/me', { credentials: 'include' }).then(asJson<MeResponse>);
+  return fetch(apiUrl('/api/me'), { credentials: 'include' }).then(asJson<MeResponse>);
 }
 
 export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
-  return fetch('/api/auth/request-link', {
+  return fetch(apiUrl('/api/auth/request-link'), {
     method: 'POST',
     headers,
     credentials: 'include',
@@ -59,7 +68,7 @@ export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
 }
 
 export function verifyMagicLink(token: string): Promise<{ ok: boolean; sessionKind: string }> {
-  return fetch('/api/auth/verify-link', {
+  return fetch(apiUrl('/api/auth/verify-link'), {
     method: 'POST',
     headers,
     credentials: 'include',
@@ -68,18 +77,18 @@ export function verifyMagicLink(token: string): Promise<{ ok: boolean; sessionKi
 }
 
 export function logout(): Promise<{ ok: boolean }> {
-  return fetch('/api/auth/logout', {
+  return fetch(apiUrl('/api/auth/logout'), {
     method: 'POST',
     credentials: 'include',
   }).then(asJson<{ ok: boolean }>);
 }
 
 export function listDevices(): Promise<DevicesResponse> {
-  return fetch('/api/devices', { credentials: 'include' }).then(asJson<DevicesResponse>);
+  return fetch(apiUrl('/api/devices'), { credentials: 'include' }).then(asJson<DevicesResponse>);
 }
 
 export function revokeDevice(deviceId: string): Promise<{ ok: boolean; promoted?: boolean; loggedOut?: boolean }> {
-  return fetch('/api/devices/revoke', {
+  return fetch(apiUrl('/api/devices/revoke'), {
     method: 'POST',
     headers,
     credentials: 'include',
@@ -88,7 +97,7 @@ export function revokeDevice(deviceId: string): Promise<{ ok: boolean; promoted?
 }
 
 export function openBillingPortal(): Promise<{ url: string }> {
-  return fetch('/api/billing/portal', {
+  return fetch(apiUrl('/api/billing/portal'), {
     method: 'POST',
     credentials: 'include',
   }).then(asJson<{ url: string }>);

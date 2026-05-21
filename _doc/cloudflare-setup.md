@@ -1,227 +1,382 @@
-# Cloudflare Free-Tier Setup — Erste Version
+# Cloudflare-API-Setup (Hybrid mit IONOS)
 
-Diese Anleitung erklaert, wie die Paddle-Integration auf Cloudflare Pages
-Free-Tier in Betrieb genommen wird. Eine Pages-Instanz pro Brand.
+Diese Anleitung beschreibt das Deployment der LifeFlow360-API auf
+**Cloudflare Pages Free-Tier**, waehrend Marketing-Site und React-App weiter
+ueber IONOS unter `www.lifeflow360.app` ausgeliefert werden.
+
+Architektur:
+
+```text
+www.lifeflow360.app   IONOS (SFTP)
+  /                   Marketing-Site
+  /app/               React-App
+  /pricing.html       Paddle-Checkout-Seite
+
+api.lifeflow360.app   Cloudflare Pages Functions
+  /api/me
+  /api/auth/*
+  /api/paddle/webhook
+  /api/devices/*
+  /api/billing/*
+
+Resend                Versand der Magic-Link-Mails
+                      Absender: no-reply@lifeflow360.app
+                      SPF/DKIM/DMARC liegen in IONOS-DNS
+```
 
 ## Was bereits im Repo liegt
 
-```
+```text
 wrangler.toml                       Pages/D1/KV-Bindings (Vorlage)
 migrations/0001_init.sql            D1-Schema
 functions/                          API-Endpoints (TypeScript)
-  _middleware.ts
-  env.d.ts
-  tsconfig.json
-  _lib/                             db, crypto, session, paddle-sig, mailer, rate-limit
-  api/
-    me.ts
-    auth/request-link.ts
-    auth/verify-link.ts
-    auth/logout.ts
-    paddle/webhook.ts
-    devices/index.ts
-    devices/revoke.ts
-    billing/checkout-intent.ts
-    billing/portal.ts
+public/                             Minimaler Static-Output (placeholder)
 simulator-app/src/auth/             Frontend-Auth (useAuth, api)
 simulator-app/src/components/
   AuthGate.tsx, LoginGate.tsx, Paywall.tsx, DeviceLimitGate.tsx
-website/templates/pricing.html      Marketing-Pricing mit Paddle.Checkout.open
-website/brands.json                 paddle.* pro Brand
+website/templates/pricing.html      Paddle-Checkout mit absoluter API-URL
+website/brands.json                 paddle.* und apiBaseUrl pro Brand
 ```
+
+Code-Anpassungen fuer die Hybrid-Topologie:
+
+- [functions/_middleware.ts](../functions/_middleware.ts): CORS fuer
+  `www.lifeflow360.app` mit `credentials: include`
+- [functions/_lib/cookies.ts](../functions/_lib/cookies.ts):
+  `Domain=.lifeflow360.app` statt `__Host-`-Praefix, damit Cookies von
+  beiden Subdomains gelesen werden koennen
+- [simulator-app/src/auth/api.ts](../simulator-app/src/auth/api.ts):
+  absolute API-URL via `VITE_API_BASE_URL`
+- [website/templates/pricing.html](../website/templates/pricing.html):
+  absolute API-URL via Token `{{API_BASE_URL}}`
 
 ## Voraussetzungen
 
 - Cloudflare-Account (Free)
-- Paddle Sandbox-Account (Live-KYC laeuft parallel)
-- Resend-Account (Free 100 Mails/Tag) oder anderer Mailer
-- `npm install -g wrangler` (optional, Pages-Build geht auch ohne)
-- Git-Repo bei GitHub oder GitLab (fuer Pages-Auto-Deploy)
+- Resend-Account (Free 100 Mails/Tag)
+- IONOS-Zugang fuer DNS-Verwaltung
+- Paddle Sandbox-Account mit fertigen Produkten + Preisen
+- Git-Repo bei GitHub/GitLab fuer Pages-Auto-Deploy (optional, alternativ direkt-upload)
 
-## Schritt 1: Pages-Projekt pro Brand anlegen
+## Schritt 1: Resend einrichten
 
-Im Cloudflare-Dashboard unter Workers & Pages:
+1. https://resend.com → Account anlegen
+2. `Domains → Add Domain → lifeflow360.app`
+3. Resend zeigt 3 DNS-Records (SPF / DKIM / DMARC). Diese kopieren — werden in
+   Schritt 5 gemeinsam mit dem API-CNAME in IONOS gesetzt.
+4. Noch **keinen** API-Key erzeugen — erst nach Domain-Verifikation in Schritt 5.
 
-```text
-Projekt 1: lifeflow360
-Projekt 2: fitflow360
-Projekt 3: eqoflow360
-```
+## Schritt 2: Cloudflare Pages-Projekt anlegen
 
-Pro Projekt das Git-Repo verbinden und folgende Build-Settings setzen:
+Im Cloudflare-Dashboard: `Workers & Pages → Create → Pages → Connect to Git`
+(oder `Direct Upload` ohne Git-Repo).
 
-```text
-Framework preset:   None
-Build command:      npm install && npm run build:webroot:lifeplus
-                    (bzw. fitline / eqology)
-Build output dir:   dist/site-lifeplus
-                    (bzw. site-fitline / site-eqology)
-Root directory:     /
-```
+Projekt-Name: `lifeflow360-api`
 
-Functions werden automatisch aus `functions/` mitgebaut, ohne extra Config.
-
-## Schritt 2: D1-Datenbank pro Brand anlegen
-
-```powershell
-# Lokal mit wrangler (einmalig pro Brand):
-wrangler d1 create lifeflow360-prod
-wrangler d1 create fitflow360-prod
-wrangler d1 create eqoflow360-prod
-```
-
-Die zurueckgegebene `database_id` in der jeweiligen Pages-Projekt-Config
-(Settings -> Functions -> D1 database bindings) als `DB` binden.
-
-Schema einspielen:
-
-```powershell
-wrangler d1 execute lifeflow360-prod --remote --file=migrations/0001_init.sql
-```
-
-## Schritt 3: KV-Namespace fuer Rate-Limits
-
-```powershell
-wrangler kv:namespace create RATE_LIMIT
-```
-
-Im Pages-Projekt unter Settings -> Functions -> KV namespace bindings als
-`RATE_LIMIT` binden.
-
-## Schritt 4: Environment Variables und Secrets
-
-Pro Pages-Projekt unter Settings -> Environment variables:
+Build-Settings:
 
 ```text
-Production-Variablen (plain):
-  BRAND_ID                 lifeplus
-  APP_URL                  https://www.lifeflow360.app/app/
-  PADDLE_ENV               sandbox
-  SESSION_TTL_DAYS         30
-  MAGIC_LINK_TTL_MINUTES   15
-  DEVICE_LIMIT             3
-  MAIL_FROM                no-reply@lifeflow360.app
-  MAIL_FROM_NAME           LifeFlow360
+Framework preset:        None
+Build command:           (leer lassen)
+Build output directory:  public
+Root directory:          (leer / repo root)
 ```
 
-Secrets (Encrypt):
+Pages findet die `functions/` automatisch und mountet sie unter `/api/...`.
 
-```text
-  PADDLE_API_KEY           aus Paddle Dashboard -> Developer Tools -> API Keys
-  PADDLE_WEBHOOK_SECRET    aus Paddle Dashboard -> Notifications -> Endpoint
-  APP_SESSION_SECRET       openssl rand -hex 32
-  MAGIC_LINK_SECRET        openssl rand -hex 32
-  RESEND_API_KEY           aus Resend Dashboard
-```
+## Schritt 3: D1-Datenbank anlegen
 
-## Schritt 5: Paddle Sandbox einrichten
+Im Cloudflare-Dashboard: `Workers & Pages → D1 → Create database`.
 
-1. Sandbox-Login: https://sandbox-vendors.paddle.com
-2. Catalog -> Products: pro Brand ein Produkt anlegen (z.B. "LifeFlow360 Pro")
-3. Pro Produkt zwei Preise:
-   - Monatlich: 19 EUR / Monat, recurring
-   - Jaehrlich: 180 EUR / Jahr, recurring
-4. Preise notieren: die `pri_...`-IDs
-5. Developer Tools -> Authentication -> Client-side Token erzeugen (oeffentlich)
-6. Notifications -> + New Destination:
-   - URL: `https://www.lifeflow360.app/api/paddle/webhook`
-   - Events:
-     - `subscription.created`
-     - `subscription.updated`
-     - `subscription.activated`
-     - `subscription.canceled`
-     - `subscription.past_due`
-     - `subscription.paused`
-     - `subscription.resumed`
-     - `transaction.completed`
-     - `transaction.refunded`
-     - `adjustment.created`
-   - Webhook-Secret notieren -> als `PADDLE_WEBHOOK_SECRET` im Pages-Projekt
-7. Discounts -> + New Discount:
-   - Code: `EARLY2026` (oder Wunsch-Code)
-   - Type: 100% off, recurring (gesamte Abolaufzeit)
-   - Usage limit: z.B. 25
-   - Expires: optional
-   - Applies to: alle Sandbox-Produkte der Brand
+- **Name**: `lifeflow360-prod`
+- **Region**: `Western Europe (WEUR)` (naeher an deutschem Kundenstamm)
+- Anlegen, **Database ID notieren**.
 
-## Schritt 6: brands.json befuellen
-
-[website/brands.json](website/brands.json) pro Brand:
-
-```json
-"paddle": {
-  "env": "sandbox",
-  "clientToken": "test_...",
-  "priceIdMonthly": "pri_...",
-  "priceIdYearly": "pri_..."
-}
-```
-
-## Schritt 7: Resend / Mailer
-
-1. Resend-Account anlegen, Brand-Domain hinzufuegen.
-2. SPF, DKIM, DMARC laut Resend-Anleitung in DNS setzen (bei Cloudflare DNS:
-   einfach kopieren, "Proxy" abschalten fuer MX/TXT).
-3. API-Key erzeugen -> als `RESEND_API_KEY` im Pages-Projekt.
-
-Ohne `RESEND_API_KEY` loggt der Mailer den Magic-Link in die Console statt zu
-versenden (siehe `functions/_lib/mailer.ts`). Bequem fuer ersten lokalen Test.
-
-## Schritt 8: Lokaler Smoke-Test
+Schema einspielen (lokal mit `wrangler`, einmalig):
 
 ```powershell
-# In einem Terminal: Vite-Dev fuer das Frontend.
-npm run dev:lifeplus
-
-# In einem zweiten Terminal: Pages-Functions lokal.
-wrangler pages dev dist/site-lifeplus --d1 DB=lifeflow360-dev --kv RATE_LIMIT
+npx wrangler d1 execute lifeflow360-prod --remote --file=migrations/0001_init.sql
 ```
 
-Frontend laeuft auf http://localhost:5173, API auf dem Wrangler-Port.
-Fuer lokale Tests in der `simulator-app` einen Vite-Proxy fuer `/api` setzen
-(spaeter ergaenzen).
+Falls `wrangler` noch nicht eingerichtet ist:
 
-## Schritt 9: Erster Live-Test mit Discount-Code
+```powershell
+npx wrangler login
+```
 
+Im Pages-Projekt unter `Settings → Functions → D1 database bindings`:
+
+```text
+Variable name:   DB
+D1 database:     lifeflow360-prod
+```
+
+## Schritt 4: KV-Namespace anlegen
+
+Im Cloudflare-Dashboard: `Workers & Pages → KV → Create namespace`.
+
+- **Name**: `lifeflow360-rate-limit`
+- Anlegen, **Namespace ID notieren**.
+
+Im Pages-Projekt unter `Settings → Functions → KV namespace bindings`:
+
+```text
+Variable name:   RATE_LIMIT
+KV namespace:    lifeflow360-rate-limit
+```
+
+## Schritt 5: DNS-Records in IONOS setzen
+
+Im IONOS-Kundenkonto: `Domain & SSL → lifeflow360.app → DNS`.
+
+### 5.1 Subdomain `api` zu Cloudflare zeigen lassen
+
+Vor diesem Schritt ein Cloudflare-Deployment auslosen (Schritt 7) — Pages
+zeigt dann eine URL wie `lifeflow360-api.pages.dev`. Diese als CNAME-Target
+verwenden.
+
+```text
+Typ:     CNAME
+Host:    api
+Wert:    lifeflow360-api.pages.dev   (deine Pages-URL)
+TTL:     standard
+```
+
+### 5.2 Resend-DNS-Records eintragen
+
+Werte exakt aus dem Resend-Dashboard kopieren. Beispiele:
+
+```text
+Typ:     TXT
+Host:    @ (oder leer)
+Wert:    v=spf1 include:_spf.resend.com ~all
+                (Falls schon ein SPF-Record existiert: Resend-Include integrieren,
+                NICHT zwei SPF-Records anlegen.)
+
+Typ:     TXT
+Host:    resend._domainkey
+Wert:    p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...  (von Resend)
+
+Typ:     TXT
+Host:    _dmarc
+Wert:    v=DMARC1; p=quarantine; rua=mailto:dmarc@lifeflow360.app
+```
+
+Nach 5-30 Min sollten alle Records aktiv sein. Im Resend-Dashboard zeigt die
+Domain dann `Verified`. **Jetzt** einen API-Key erzeugen:
+`API Keys → Create API Key`, Permissions `Sending access`. Der Key ist nur
+einmal sichtbar — sofort kopieren.
+
+## Schritt 6: Custom Domain in Cloudflare Pages konfigurieren
+
+Im Pages-Projekt: `Custom domains → Set up a custom domain`.
+
+```text
+Domain: api.lifeflow360.app
+```
+
+Cloudflare verifiziert per DNS-Check (der CNAME aus 5.1 muss bereits stehen).
+Nach Verifikation richtet Cloudflare automatisch das TLS-Zertifikat ein.
+
+## Schritt 7: Environment Variables und Secrets
+
+Im Pages-Projekt: `Settings → Environment variables → Production`.
+
+### Plain variables
+
+```text
+BRAND_ID                 lifeplus
+APP_URL                  https://www.lifeflow360.app/app/
+ALLOWED_ORIGINS          https://www.lifeflow360.app
+COOKIE_DOMAIN            .lifeflow360.app
+PADDLE_ENV               sandbox
+SESSION_TTL_DAYS         30
+MAGIC_LINK_TTL_MINUTES   15
+DEVICE_LIMIT             3
+MAIL_FROM                no-reply@lifeflow360.app
+MAIL_FROM_NAME           LifeFlow360
+```
+
+### Secrets (Encrypted)
+
+```text
+PADDLE_API_KEY            aus Paddle Developer Tools -> API Keys
+PADDLE_WEBHOOK_SECRET     wird in Schritt 9 erzeugt
+APP_SESSION_SECRET        openssl rand -hex 32
+MAGIC_LINK_SECRET         openssl rand -hex 32
+RESEND_API_KEY            aus Schritt 5.2
+```
+
+OpenSSL-Secrets in PowerShell erzeugen:
+
+```powershell
+# 64 Zeichen Hex (32 Bytes)
+-join ((1..32) | ForEach-Object { '{0:X2}' -f (Get-Random -Maximum 256) })
+```
+
+oder ueber Git Bash mit `openssl rand -hex 32`.
+
+## Schritt 8: Erstes Deployment
+
+Wenn Git-Verbindung aktiv: ein Commit auf `main` triggert automatisch das
+Deployment.
+
+Smoke-Test:
+
+```powershell
+curl -i https://api.lifeflow360.app/api/me
+```
+
+Erwartung:
+
+```text
+HTTP/2 200
+content-type: application/json
+{"authenticated":false,"entitlements":[],"deviceLimit":3,"activeDevices":0}
+```
+
+Falls 500: Cloudflare Logs unter `Workers & Pages → lifeflow360-api → Functions → Logs`
+pruefen. Haeufige Fehler:
+- `DB binding missing` → Schritt 3 nicht abgeschlossen
+- `webhook_secret_missing` ist nur fuer den Webhook relevant, nicht fuer `/api/me`
+
+## Schritt 9: Paddle-Webhook-Destination anlegen
+
+Im Paddle-Sandbox-Dashboard: `Notifications → + New Destination`.
+
+```text
+URL:               https://api.lifeflow360.app/api/paddle/webhook
+Description:       LifeFlow360 API Sandbox
+Notification type: Webhook
+Events:
+  - subscription.created
+  - subscription.updated
+  - subscription.activated
+  - subscription.canceled
+  - subscription.past_due
+  - subscription.paused
+  - subscription.resumed
+  - transaction.completed
+  - transaction.refunded
+  - adjustment.created
+```
+
+Nach dem Speichern zeigt Paddle den **Webhook-Secret**. Diesen sofort kopieren
+und im Pages-Projekt als Secret `PADDLE_WEBHOOK_SECRET` eintragen
+(Schritt 7), dann neu deployen (im Pages-Dashboard: `Deployments →
+Redeploy production`).
+
+## Schritt 10: Frontend / App mit API-URL bauen und auf IONOS deployen
+
+Beim App-Build muss `VITE_API_BASE_URL` gesetzt sein:
+
+```powershell
+$env:VITE_API_BASE_URL = "https://api.lifeflow360.app"
+npm run build:lifeplus
+```
+
+Build-Output: `dist/lifeplus/`. Per SFTP auf IONOS hochladen in den
+`/app/`-Ordner.
+
+Marketing-Site neu bauen (zieht `apiBaseUrl` aus `brands.json`):
+
+```powershell
+npm run build:site:lifeplus
+```
+
+Build-Output: `dist/site-lifeplus/`. Per SFTP auf IONOS hochladen ins
+Webroot.
+
+## Schritt 11: End-to-End-Test
+
+```text
 1. https://www.lifeflow360.app/pricing.html oeffnen
 2. "Jetzt jaehrlich starten" klicken
-3. Im Paddle-Overlay den Discount-Code `EARLY2026` eingeben -> 0 EUR
-4. E-Mail eintragen, "Kaufen" klicken
-5. Webhook trifft `/api/paddle/webhook` -> Entitlement gesetzt
-6. Browser springt auf `/app/?checkout=success`
-7. App zeigt LoginGate -> Magic Link anfordern
-8. Magic-Link aus der Mail klicken -> App ist offen, Paywall weg
+3. Email-Adresse angeben (z.B. mail@triltsch-online.de)
+4. Im Paddle-Overlay: Code EARLY2026 -> 0 EUR
+5. "Pay" klicken -> checkout.completed
+6. Browser springt auf https://www.lifeflow360.app/app/?checkout=success
+7. App fragt /api/me ab -> Paywall, weil noch nicht eingeloggt
+8. LoginGate erscheint -> Email eingeben -> "Login-Link senden"
+9. Magic-Link kommt per Resend-Mail
+10. Link in derselben Browser-Session klicken
+    (NICHT in einer In-App-Browser-Ansicht der Mail-App)
+11. App ist freigeschaltet
+12. Paddle-Webhook hat /api/paddle/webhook erreicht
+    -> Entitlement in D1 angelegt
+    -> /api/me sieht jetzt active=true
+```
 
-## Schritt 10: Wechsel auf Live
+Pruefung in D1:
 
-Wenn Paddle KYC durch ist:
+```powershell
+npx wrangler d1 execute lifeflow360-prod --remote --command "SELECT * FROM users"
+npx wrangler d1 execute lifeflow360-prod --remote --command "SELECT * FROM entitlements"
+npx wrangler d1 execute lifeflow360-prod --remote --command "SELECT id, type, processed_at FROM webhook_events ORDER BY received_at DESC LIMIT 10"
+```
 
-1. Live-Produkte und -Preise in Paddle anlegen (parallel zu Sandbox)
-2. `brands.json` -> `paddle.env: "live"` und Live-Price-IDs
-3. Live-Client-Token und Live-Webhook-Secret im Pages-Projekt setzen
-4. `PADDLE_ENV=live` in Pages-Vars
-5. Webhook-Destination im Live-Dashboard anlegen
-6. Kleiner Realkauf mit eigener Karte, danach Refund -> validiert vollen Loop
+## Schritt 12: Test-User sperren
 
-## Wichtige Hinweise
+Drei Wege:
 
-- **Cookies**: Die Session laeuft als `__Host-session`-Cookie mit `Secure` und
-  `SameSite=Lax`. Funktioniert nur unter HTTPS. Lokal auf `http://localhost`
-  versagt Set-Cookie, deshalb lokal mit `wrangler pages dev` ueber HTTPS oder
-  via Tunnel testen.
-- **Same-Domain**: Marketing-Site, App und API muessen denselben Origin haben,
-  damit der Session-Cookie greift. Pages-Projekt erfuellt das automatisch.
-- **Idempotenz**: Webhook-Events werden via `webhook_events`-Tabelle mit
-  `INSERT OR IGNORE` deduptiziert.
-- **Magic-Link aus In-App-Browsern**: Beachte den Hinweis im Pricing-Doc — der
-  LoginGate erkennt `?token=...` und ruft `/api/auth/verify-link` auf. Wenn
-  der Klick aus Gmail/Outlook in einem In-App-Browser landet, ist die Session
-  nur dort gueltig.
+**A — Paddle Subscription sofort kuendigen** (empfohlene Standardroute)
 
-## Naechste Schritte (nicht in dieser ersten Version)
+```text
+Paddle Dashboard -> Subscriptions -> Subscription oeffnen -> Cancel
+Option: Immediately (statt End of period)
+-> Webhook 'subscription.canceled' feuert
+-> /api/paddle/webhook setzt entitlement.valid_until = jetzt
+-> Beim naechsten /api/me liefert App Paywall
+```
 
-- Account-Export und Loeschung (`/api/account/export`, `/api/account/delete`)
-- Admin-Endpunkt fuer manuelle Entitlement-Grants (Backup zum Discount-Code)
-- Refund-Behandlung verfeinern (Teilrueckerstattungen)
-- E-Mail-Bounce-Handling
-- Cookie-Consent in Marketing-Site
+**B — Discount-Code deaktivieren** (nur Neuregistrierungen)
+
+```text
+Catalog -> Discounts -> EARLY2026 -> Disable
+-> Bestehende Subs bleiben aktiv
+-> Keine neuen 100%-Aktivierungen mehr moeglich
+```
+
+**C — Instant-Revoke per Admin-Endpoint** (Notfall / wenn Webhook ausfaellt)
+
+Wird in einer separaten Phase ergaenzt: `POST /api/admin/revoke`
+mit Bearer-Token-Schutz. Direkter DB-Eingriff via Wrangler ist die
+manuelle Variante:
+
+```powershell
+npx wrangler d1 execute lifeflow360-prod --remote --command `
+  "UPDATE entitlements SET valid_until = strftime('%s','now')*1000, source='manual_revoke' WHERE user_id = (SELECT id FROM users WHERE email_lower = 'kunde@example.com')"
+```
+
+## Was bewusst NICHT in diesem Schritt passiert
+
+- **Live-Paddle**: erst nach erfolgreichem Sandbox-Loop. KYC parallel starten.
+- **FitFlow360 / EqoFlow360**: eigene Pages-Projekte + D1 + Resend-Domain
+  pro Brand. Code bleibt identisch, nur Env-Vars unterscheiden sich.
+- **Account-Export / -Loeschung**: Phase 6, DSGVO-Endpoints.
+- **Cookie-Consent in Marketing-Site**: Phase 6.
+
+## Fehler-Cheatsheet
+
+```text
+Symptom: "CORS error" im Browser-Network-Tab beim /api/me-Call
+-> ALLOWED_ORIGINS in Pages-Env enthaelt nicht die App-Origin
+-> Pruefen, dass exakt "https://www.lifeflow360.app" eingetragen ist (kein Trailing-Slash)
+
+Symptom: Cookie wird nicht gesetzt
+-> COOKIE_DOMAIN nicht ".lifeflow360.app" (Punkt vorne!)
+-> Oder Browser blockiert wegen fehlendem Secure (nur HTTPS)
+
+Symptom: Webhook 401 bad_signature
+-> PADDLE_WEBHOOK_SECRET stimmt nicht oder nicht neu deployt
+-> Im Pages-Projekt unter Deployments "Retry deployment"
+
+Symptom: Magic-Link kommt nicht an
+-> Resend-Dashboard -> Logs pruefen
+-> SPF/DKIM in IONOS-DNS noch nicht propagiert (dig +short TXT lifeflow360.app)
+-> Mail im Spam-Ordner
+
+Symptom: 500 von /api/auth/request-link
+-> Cloudflare-Logs pruefen
+-> Haeufig: RESEND_API_KEY nicht gesetzt -> Mailer wirft, request scheitert
+```
