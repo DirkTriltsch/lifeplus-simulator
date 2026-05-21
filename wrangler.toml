@@ -33,11 +33,11 @@ MAIL_FROM_NAME = "LifeFlow360"
 [[d1_databases]]
 binding = "DB"
 database_name = "lifeflow360-prod"
-database_id = "REPLACE_AFTER_wrangler_d1_create"
+database_id = "6229e4e5-aa74-4f23-b24a-85764f5ae210"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "REPLACE_AFTER_wrangler_kv_create"
+id = "c8ed9bb46a544855ab0cb2ba5c565263"
 
 # Secrets (set via dashboard or `wrangler pages secret put`):
 #   PADDLE_API_KEY            from Paddle Developer Tools -> API Keys
