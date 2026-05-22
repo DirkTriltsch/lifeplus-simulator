@@ -73,8 +73,15 @@ Stand: Mai 2026. Sandbox.
 - Funktion: Frei definierbare Metadaten zum Produkt.
 - Eintrag (Key : Value):
   ```text
-  brand : LifeFlow360
+  brand_id : lifeplus
+  public_name : LifeFlow360
   ```
+
+Wichtig: Der aktive Webhook prueft `brand_id` gegen `env.BRAND_ID`. Die
+Checkout-Seite sendet `brand_id` und `checkout_email` zusaetzlich direkt im
+Checkout-`customData`; die Product-/Price-Custom-Data im Paddle-Dashboard ist
+damit nur eine hilfreiche Dashboard-/Audit-Ergaenzung, nicht der einzige
+Zuordnungspfad.
 
 Hinweis zur Konsistenz: in der Namenskonvention ist `LifeFlow` der SKU-Praefix
 (ohne 360). Hier verwenden wir den vollen Marketing-Namen `LifeFlow360`. Beide
@@ -105,10 +112,10 @@ Im neu erstellten Product → Tab `Prices` → `+ New Price`
   brutto**. Bei B2B mit gueltiger VAT-ID greift Reverse-Charge und es bleiben
   19 EUR netto.
 
-  **Anpassungsbedarf in [pricing.html](../website/templates/pricing.html):**
-  Aktuell steht dort `19 EUR/Monat` und `€19 monatlich`. Das muss entweder zu
-  `19 EUR netto / 22,61 EUR brutto` oder zu reinen Brutto-Werten geaendert
-  werden, damit der Preis im Overlay zur Erwartung auf der Seite passt.
+  **Anpassung in [pricing.html](../website/templates/pricing.html) erledigt:**
+  Die Pricing-Seite zeigt heute `€19 /Monat netto` mit dem expliziten
+  USt.-Banner "Alle Preise verstehen sich netto, zzgl. gesetzlicher USt.".
+  Damit passt die Anzeige auf der Seite zum Paddle-Overlay (Brutto + USt.).
 
 **Free trial** *(Optional)*
 - Sichtbar fuer: Endkunden im Checkout als "X Tage kostenlos testen".
@@ -135,6 +142,7 @@ Im neu erstellten Product → Tab `Prices` → `+ New Price`
 - Funktion: Metadaten zur Preisvariante.
 - Eintrag:
   ```text
+  brand_id : lifeplus
   period : MO
   ```
 
@@ -153,7 +161,8 @@ Free trial            0 days
 Price name            Jaehrlich
 Internal description  LifeFlow-IND-PRO-YR
 Min/Max quantity      1 / 1
-Custom Data           period : YR
+Custom Data           brand_id : lifeplus
+                      period : YR
 ```
 
 → Speichern → **Price-ID notieren**
@@ -278,19 +287,17 @@ Sponsor-Preise (Schritt C) entfallen vorerst.
 
 ---
 
-## H. Offene Anpassungen am Code, die aus diesen Eintragungen folgen
+## H. Code-Anpassungen — Status
 
 - [website/templates/pricing.html](../website/templates/pricing.html):
-  Preis-Anzeige von 19/15 EUR umstellen entweder auf
-  - "ab 19 EUR netto / 22,61 EUR brutto"
-  - oder konsequent auf Brutto-Werte (22,61 monatlich / 17,85 jaehrlich)
+  **Erledigt.** Beide Plan-Karten zeigen heute `€19/Monat netto` bzw.
+  `€15/Monat netto · €180 netto jaehrlich`, ergaenzt um das USt.-Banner
+  "Alle Preise verstehen sich netto, zzgl. gesetzlicher USt." und einen
+  expliziten Hinweis auf Reverse-Charge bei gueltiger EU-VAT-ID.
 
-  Empfehlung: Brutto-Anzeige fuer B2C-Optik, zusaetzlich Hinweis "fuer
-  Unternehmer / mit VAT-ID gilt netto".
-
-- Bei spaeterem Live-Gang dasselbe Steuer-Verhalten konsistent uebernehmen
-  (`Excludes tax`) – andernfalls weichen Sandbox- und Live-Preise im Checkout
-  ab.
+- **Live-Gang:** Beim Anlegen der Live-Produkte/-Preise dasselbe Steuer-
+  Verhalten (`Excludes tax`) konsistent uebernehmen — andernfalls weichen
+  Sandbox- und Live-Preise im Checkout ab.
 
 ---
 
@@ -310,17 +317,19 @@ Voraussetzungen:
    (mit Strg+F5 fuer Hard-Reload)
 2. Klick auf "Jetzt monatlich starten" oder "Jetzt jaehrlich starten"
 3. Email-Prompt erscheint  -> z.B. mail@example.com
-4. Browser-Konsole zeigt:
-     checkout-intent unreachable, opening Paddle overlay anyway
-   (erwartet — kein Cloudflare-Backend deployt)
-5. Paddle-Overlay oeffnet sich mit dem Sandbox-Checkout
-6. Discount-Code  EARLY2026  eingeben  -> Endpreis 0,00 EUR
-7. Restliche Felder ausfuellen (Email kommt vorbefuellt)
-8. "Pay" klicken
-9. Paddle bestaetigt den Kauf  -> checkout.completed-Event feuert
-10. Browser springt auf  https://www.lifeflow360.app/app/?checkout=success
-    (App noch nicht deployt -> Browser-Fehler, ist OK)
-11. Im Paddle-Sandbox-Dashboard pruefen:
+4. Browser ruft  https://api.lifeflow360.app/api/billing/checkout-intent
+   mit `priceId` und derselben E-Mail auf.
+5. Erwartung: API antwortet `action = "start_checkout"`.
+6. Paddle-Overlay oeffnet sich mit dem Sandbox-Checkout.
+7. Discount-Code  EARLY2026  eingeben  -> Endpreis 0,00 EUR
+8. Restliche Felder ausfuellen (Email kommt vorbefuellt)
+9. "Pay" klicken
+10. Paddle bestaetigt den Kauf  -> checkout.completed-Event feuert
+11. Browser springt auf
+    https://www.lifeflow360.app/app/?checkout=success&email=mail%40example.com
+12. App zeigt Magic-Link Login; mit derselben Kauf-E-Mail anmelden.
+13. Nach Webhook-Zustellung sieht `/api/me` ein aktives Entitlement.
+14. Im Paddle-Sandbox-Dashboard pruefen:
     - Transactions   -> neue Transaction mit 0,00 EUR sichtbar
     - Subscriptions  -> neues Abo im Status "active"
     - Customers      -> neuer Customer mit dieser Email
@@ -360,9 +369,11 @@ Paddle nachvollziehbar wird.
 - Refund / Erstattung
   -> Nach erfolgreichem Kauf im Sandbox-Dashboard:
      Transactions -> Transaction oeffnen -> "Refund" klicken.
-  -> Erwartung: Webhook-Event "transaction.refunded" wird gesendet
-     (geht aktuell ins Leere, weil Cloudflare-Endpunkt fehlt).
-  -> Wenn Webhook aktiv: Entitlement wird entzogen, App zeigt Paywall.
+  -> Erwartung: Webhook-Event "adjustment.created" wird gesendet
+     (Paddle Billing v2 — das frueher genannte "transaction.refunded"
+     existiert dort nicht mehr).
+  -> Wenn Webhook aktiv: Entitlement wird per `handleRefund()` auf
+     valid_until = now gesetzt, source = "refund_revoked". App zeigt Paywall.
 
 - Kuendigung im Customer Portal
   -> Customer Portal Link aus Sandbox-Dashboard oeffnen.
@@ -455,9 +466,13 @@ Invoices       -> PDF-Rechnung wird automatisch generiert,
 
 - **Localhost / 127.0.0.1**: Paddle akzeptiert nur approved Domains. Lokale
   Tests des Overlays sind nicht moeglich. Alles ueber die echte Domain.
-- **Webhook-Loop**: solange Cloudflare nicht deployt ist, gehen
-  `subscription.created` etc. ins Leere. Im Paddle-Dashboard sind sie
-  trotzdem als "Notification attempts" mit Status "failed" sichtbar — das ist
-  erwartet.
-- **App-Zugang nach Kauf**: `/app/?checkout=success` produziert noch keinen
-  echten Login. Das kommt mit der Cloudflare-Phase (Magic-Link + `/api/me`).
+- **Checkout ohne API**: Die Pricing-Seite oeffnet Paddle nicht mehr, wenn
+  `/api/billing/checkout-intent` nicht erreichbar ist. Das ist Absicht, weil
+  der Intent Mehrfachkaeufe abfaengt und die Kauf-E-Mail konsistent haelt.
+- **Webhook-Loop**: solange Cloudflare nicht deployt ist, wird nach dem
+  Checkout kein Entitlement freigeschaltet. Im Paddle-Dashboard erscheinen
+  Notification Attempts dann als `failed`; fuer den echten Sandbox-Loop muss
+  `https://api.lifeflow360.app/api/paddle/webhook` erreichbar sein.
+- **App-Zugang nach Kauf**: `/app/?checkout=success&email=...` ist nur ein
+  UX-Signal. Der echte Zugang entsteht erst nach Paddle-Webhook plus
+  Magic-Link Login mit derselben E-Mail.

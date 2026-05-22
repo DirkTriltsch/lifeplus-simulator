@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeFlow360 — Debug-Ansicht (Demo)</title>
+  <style>
+    :root {
+      --brand: #1D9E75;
+      --brand-dark: #157a5b;
+      --cta: #EA7600;
+      --ink: #0F1B17;
+      --ink-3: #4A5C53;
+      --ink-5: #A8B2AD;
+      --line: #E1E5E2;
+      --paper: #FAFBF9;
+      --paper-2: #F4F6F2;
+
+      /* Debug-spezifisch */
+      --debug-color: #d946ef;
+      --debug-bg: rgba(217, 70, 239, 0.04);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+      margin: 0;
+    }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+
+    /* === DEBUG TOOLBAR === */
+    .debug-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      border-bottom: 2px solid var(--debug-color);
+    }
+    .debug-toolbar strong { color: var(--debug-color); }
+    .debug-toolbar label { cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+    .debug-toolbar select {
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 12px;
+    }
+    .debug-toolbar .spacer { flex: 1; }
+    .debug-toolbar .hint { color: #999; font-size: 11px; }
+
+    /* === DEBUG OVERLAY (wenn aktiv) === */
+    body.debug-on [data-section] {
+      position: relative;
+      outline: 2px dashed var(--debug-color);
+      outline-offset: -2px;
+      background-image: linear-gradient(var(--debug-bg), var(--debug-bg));
+    }
+    body.debug-on [data-section]::before {
+      content: attr(data-section);
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: var(--debug-color);
+      color: #fff;
+      padding: 4px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      z-index: 10;
+      border-bottom-right-radius: 6px;
+    }
+    body.debug-on [data-section]::after {
+      content: attr(data-lines);
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 4px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      z-index: 10;
+      border-bottom-left-radius: 6px;
+    }
+
+    /* Brand-spezifische Klassen */
+    body.brand-lifeplus { --brand: #1D9E75; --brand-dark: #157a5b; --cta: #EA7600; }
+    body.brand-fitline  { --brand: #D71920; --brand-dark: #a8131a; --cta: #D71920; }
+    body.brand-eqology  { --brand: #48664D; --brand-dark: #34503a; --cta: #48664D; }
+
+    /* === SECTION STYLES (vereinfacht) === */
+    .header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .header-inner { display: flex; justify-content: space-between; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; }
+    .logo-mark {
+      width: 32px; height: 32px; border-radius: 6px;
+      background: var(--brand);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+    }
+    .nav-cta {
+      background: var(--ink); color: #fff;
+      padding: 10px 18px; border-radius: 8px;
+      text-decoration: none; font-size: 14px; font-weight: 500;
+    }
+
+    .hero { padding: 60px 0 70px; background: var(--paper); }
+    .hero-eyebrow {
+      display: inline-block;
+      padding: 6px 14px;
+      background: color-mix(in srgb, var(--brand) 10%, white);
+      color: var(--brand-dark);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    .hero-claim {
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin: 0 0 20px;
+      max-width: 800px;
+      letter-spacing: -0.02em;
+    }
+    .hero-sub {
+      font-size: 19px;
+      color: var(--ink-3);
+      max-width: 640px;
+      margin: 0 0 32px;
+    }
+    .cta {
+      display: inline-block;
+      background: var(--cta);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .trust-strip {
+      padding: 24px 0;
+      background: var(--paper-2);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .trust-items {
+      display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+      font-size: 13px; color: var(--ink-3); font-weight: 500;
+    }
+    .trust-items span::before { content: "✓ "; color: var(--brand); }
+
+    .core { padding: 80px 0; }
+    .core h2 { font-size: 36px; margin: 0 0 16px; letter-spacing: -0.01em; }
+    .core p { font-size: 18px; color: var(--ink-3); max-width: 720px; }
+
+    .feat-teaser { padding: 80px 0; background: var(--paper-2); }
+    .feat-teaser h2 { font-size: 32px; margin: 0 0 40px; }
+    .feat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .feat-card {
+      background: #fff;
+      padding: 28px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+    .feat-card h3 { margin: 0 0 8px; font-size: 18px; }
+    .feat-card p { margin: 0; color: var(--ink-3); font-size: 14px; }
+
+    .pricing-teaser { padding: 80px 0; }
+    .pricing-teaser h2 { font-size: 32px; margin: 0 0 40px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 720px; }
+    .pricing-card {
+      background: #fff;
+      padding: 32px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+    .pricing-card.highlighted { border-color: var(--brand); border-width: 2px; }
+    .pricing-card .price { font-size: 36px; font-weight: 700; margin: 12px 0; }
+    .pricing-card ul { padding-left: 20px; color: var(--ink-3); font-size: 14px; }
+    .pricing-card li { margin: 6px 0; }
+
+    .faq { padding: 80px 0; background: var(--paper-2); }
+    .faq h2 { font-size: 32px; margin: 0 0 32px; }
+    .faq-item {
+      background: #fff;
+      padding: 20px 24px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+    .faq-item h3 { margin: 0 0 8px; font-size: 15px; }
+    .faq-item p { margin: 0; color: var(--ink-3); font-size: 14px; }
+
+    .final-cta {
+      padding: 80px 0;
+      text-align: center;
+      background: var(--ink);
+      color: #fff;
+    }
+    .final-cta h2 { font-size: 36px; margin: 0 0 16px; }
+    .final-cta p { font-size: 18px; opacity: 0.7; margin: 0 0 28px; }
+
+    .footer {
+      padding: 32px 0;
+      background: #0a0a0a;
+      color: #888;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .hero-claim { font-size: 32px; }
+      .feat-grid, .pricing-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="brand-lifeplus debug-on">
+
+  <!-- ===== DEBUG TOOLBAR ===== -->
+  <div class="debug-toolbar">
+    <strong>🔧 DEBUG VIEW</strong>
+    <label>
+      <input type="checkbox" id="toggle-debug" checked>
+      Rahmen + Labels anzeigen
+    </label>
+    <label>
+      Brand:
+      <select id="brand-switch">
+        <option value="lifeplus">LifePlus (grün)</option>
+        <option value="fitline">FitLine (rot)</option>
+        <option value="eqology">Eqology (blau-grün)</option>
+      </select>
+    </label>
+    <div class="spacer"></div>
+    <span class="hint">Toggle mit Taste "d"</span>
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header" data-section="Header.astro" data-lines="brand + lockup">
+    <div class="wrap header-inner">
+      <div class="logo">
+        <span class="logo-mark" id="logo-mark">L</span>
+        <span id="logo-text">LifeFlow360</span>
+      </div>
+      <a class="nav-cta" href="#">Simulator starten</a>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" data-section="Hero.astro" data-lines="hero: { eyebrow, claim, subClaim, ctaLabel, ctaUrl }">
+    <div class="wrap">
+      <span class="hero-eyebrow">Vergütungs-Simulator</span>
+      <h1 class="hero-claim" id="claim">Sieh deinen Vergütungsplan, bevor du planst.</h1>
+      <p class="hero-sub" id="subclaim">Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann.</p>
+      <a class="cta" href="#">Simulator starten →</a>
+    </div>
+  </section>
+
+  <!-- ===== TRUST STRIP ===== -->
+  <section class="trust-strip" data-section="TrustStrip.astro" data-lines="trustStrip: { items[] }">
+    <div class="wrap">
+      <div class="trust-items">
+        <span>10 Jahre Simulation</span>
+        <span>Realistische Defaults</span>
+        <span>Keine Werbeversprechen</span>
+        <span>DSGVO-konform</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CORE MESSAGE ===== -->
+  <section class="core" data-section="CoreMessage.astro" data-lines="coreMessage: { headline, body }">
+    <div class="wrap">
+      <h2>Realistisch statt Hochrechnung</h2>
+      <p>LifePlus360 zeigt dir, was passieren kann — nicht was passieren soll. Du steuerst Teamgröße, Aktivität, Fluktuation und siehst sofort, was das über zehn Jahre bedeutet.</p>
+    </div>
+  </section>
+
+  <!-- ===== FEATURE TEASER ===== -->
+  <section class="feat-teaser" data-section="FeatureTeaser.astro" data-lines="featureTeaser: { headline, items[] }">
+    <div class="wrap">
+      <h2>Was der Simulator leistet</h2>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <h3>Fünf Slider</h3>
+          <p>Teamgröße, Aktivität, Fluktuation, Wachstum, Tiefe.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Zehn-Jahre-Verlauf</h3>
+          <p>Kumulierter Provisionsverlauf mit Monatsauflösung.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Stufen-Prognose</h3>
+          <p>Wann erreichst du welchen Karrierelevel realistisch?</p>
+        </div>
+        <div class="feat-card">
+          <h3>Pitch-Modus</h3>
+          <p>Klare Ansicht für Gespräche mit Interessenten.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRICING TEASER ===== -->
+  <section class="pricing-teaser" data-section="PricingTeaser.astro" data-lines="pricingTeaser: { headline, tiers[] }">
+    <div class="wrap">
+      <h2>Einfache Preise</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Free</h3>
+          <div class="price">0 €</div>
+          <ul>
+            <li>Bis zu 3 Simulationen</li>
+            <li>Basis-Sliders</li>
+          </ul>
+        </div>
+        <div class="pricing-card highlighted">
+          <h3>Pro</h3>
+          <div class="price">9 €<small style="font-size:14px;color:#888"> / Monat</small></div>
+          <ul>
+            <li>Unbegrenzte Simulationen</li>
+            <li>Stufen-Prognose</li>
+            <li>Pitch-Modus</li>
+            <li>URL-Sharing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="faq" data-section="FAQ.astro" data-lines="faq: { headline, items[] }">
+    <div class="wrap">
+      <h2>Häufige Fragen</h2>
+      <div class="faq-item">
+        <h3>Sind die Zahlen verbindlich?</h3>
+        <p>Nein. Der Simulator zeigt realistische Szenarien auf Basis der Defaults.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Welche Daten werden gespeichert?</h3>
+        <p>Standardmäßig keine. Alle Berechnungen laufen im Browser.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Funktioniert das auch für FitLine/Eqology?</h3>
+        <p>Ja — jedes Produkt hat eine eigene Variante mit angepasster Terminologie.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FINAL CTA ===== -->
+  <section class="final-cta" data-section="FinalCTA.astro" data-lines="finalCta: { headline, body, ctaLabel }">
+    <div class="wrap">
+      <h2>Bereit für deine erste Simulation?</h2>
+      <p>Kostenlos starten, keine Anmeldung nötig.</p>
+      <a class="cta" href="#">Simulator öffnen →</a>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" data-section="Footer.astro" data-lines="brand + _contact">
+    <div class="wrap">
+      Dirk Triltsch · c/o COCENTER · Koppoldstr. 1 · 86551 Aichach
+    </div>
+  </footer>
+
+  <script>
+    const body = document.body;
+    const toggle = document.getElementById('toggle-debug');
+    const brandSwitch = document.getElementById('brand-switch');
+
+    // Toggle debug overlay
+    toggle.addEventListener('change', e => {
+      body.classList.toggle('debug-on', e.target.checked);
+    });
+
+    // Keyboard shortcut "d"
+    document.addEventListener('keydown', e => {
+      if (e.key === 'd' && !e.target.matches('input, textarea, select')) {
+        toggle.checked = !toggle.checked;
+        body.classList.toggle('debug-on', toggle.checked);
+      }
+    });
+
+    // Brand switch — passt Text + Klasse an
+    const brandData = {
+      lifeplus: {
+        name: 'LifeFlow360',
+        initial: 'L',
+        product: 'LifePlus',
+        subclaim: 'Simuliere realistisch, was dein LifePlus-Netzwerk über zehn Jahre einspielen kann.',
+      },
+      fitline: {
+        name: 'FitFlow360',
+        initial: 'F',
+        product: 'FitLine',
+        subclaim: 'Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann.',
+      },
+      eqology: {
+        name: 'EqoFlow360',
+        initial: 'E',
+        product: 'Eqology',
+        subclaim: 'Simuliere realistisch, was dein Eqology-Netzwerk über zehn Jahre einspielen kann.',
+      },
+    };
+
+    brandSwitch.addEventListener('change', e => {
+      const id = e.target.value;
+      const data = brandData[id];
+      body.className = body.className.replace(/brand-\w+/, '') + ' brand-' + id;
+      if (body.classList.contains('debug-on')) body.classList.add('debug-on');
+      document.getElementById('logo-mark').textContent = data.initial;
+      document.getElementById('logo-text').textContent = data.name;
+      document.getElementById('subclaim').textContent = data.subclaim;
+    });
+  </script>
+
+</body>
+</html>

@@ -25,6 +25,11 @@ packages/
 
 tests/
 └── contracts/          Produktübergreifende Contract-Tests
+
+functions/               Cloudflare Pages Functions fuer Auth, Billing,
+                         Paddle-Webhooks und Geraete-Limit
+migrations/              D1-Schema fuer die API
+public/                  Minimaler Static-Output fuer Pages Functions
 ```
 
 ## Entwicklungsbefehle
@@ -55,27 +60,62 @@ npm run build:sites            # alle drei auf einmal
 ```bash
 npm run build:all              # 3 Apps + 3 Microsites
 npm run build:webroot:lifeplus # -> dist/site-lifeplus/ inkl. app/ fuer www.lifeflow360.app
+npm run build:webroot:fitline  # -> dist/site-fitline/  inkl. app/ fuer fitflow360.triltsch.com
+npm run build:webroot:eqology  # -> dist/site-eqology/  inkl. app/ fuer eqoflow360.triltsch.com
 npm test
 ```
 
 ## Deployment-Mapping
 
-| Brand    | Microsite (www.lifeflow360.app / …) | App (`/app` on the same host) |
-|----------|--------------------------------------|------------------------------|
-| LifePlus | `dist/site-lifeplus/`                | `dist/site-lifeplus/app/`    |
-| FitLine  | `dist/site-fitline/`                 | `dist/fitline/`              |
-| Eqology  | `dist/site-eqology/`                 | `dist/eqology/`              |
+| Brand    | Webroot (Microsite + App) | App-Build (Standalone)  | Domain (Stand 2026-05-22)        |
+|----------|---------------------------|-------------------------|----------------------------------|
+| LifePlus | `dist/site-lifeplus/`     | `dist/lifeplus/`        | `www.lifeflow360.app`            |
+| FitLine  | `dist/site-fitline/`      | `dist/fitline/`         | `fitflow360.triltsch.com` (Staging) |
+| Eqology  | `dist/site-eqology/`      | `dist/eqology/`         | `eqoflow360.triltsch.com` (Staging) |
+
+`build:webroot:<brand>` baut zuerst Microsite und App separat und kopiert
+dann den App-Build nach `dist/site-<brand>/app/`. Damit liegen Marketing-
+Site und Simulator gemeinsam unter `https://<domain>/` bzw.
+`https://<domain>/app/`. Der Standalone-Ordner `dist/<brand>/` wird vor
+allem fuer SFTP-Deploys benutzt, wenn nur der App-Teil neu hochgeladen
+werden soll.
 
 Die App linkt im Footer auf `https://<domain>/impressum.html` und
 `https://<domain>/datenschutz.html`. Die Microsite linkt per CTA auf
 die App-URL (in `website/brands.json` konfiguriert).
 
+## Payment/API-Status
+
+LifePlus ist aktuell die einzige Brand mit kompletter Payment-/API-
+Konfiguration im Repo:
+
+- `website/brands.json` enthaelt fuer LifePlus Sandbox-Token, Monthly- und
+  Yearly-Price-ID sowie `apiBaseUrl = https://api.lifeflow360.app`.
+- `wrangler.toml` beschreibt das LifePlus-Pages-Projekt
+  `lifeflow360-api` mit D1/KV-Bindings und den Paddle-Price-IDs.
+- Checkout laeuft ueber `website/templates/pricing.html`: Die Seite fragt
+  zuerst eine E-Mail ab, ruft `POST /api/billing/checkout-intent` auf und
+  oeffnet Paddle nur bei `action = "start_checkout"`.
+- Der Webhook verarbeitet Paddle Billing v2 Events
+  `subscription.*`, `transaction.paid`, `transaction.payment_failed`,
+  `transaction.canceled`, `adjustment.created` und `adjustment.updated`.
+- Magic-Link Login, Session-Cookie, 3-Geraete-Limit und Paddle Customer
+  Portal liegen in `functions/api/*` und `simulator-app/src/auth/*`.
+
+FitLine und Eqology haben eigene Product Packs, Microsites und App-Builds,
+aber noch keine echten Paddle-IDs, API-Subdomains oder Pages-Projekte. Ihre
+`paddle.*`-Werte in `website/brands.json` bleiben deshalb Platzhalter, bis
+die Brand-Setups separat angelegt werden.
+
 ## Microsite anpassen
 
 - **Brand-spezifisch** (Name, Farbe, Claim, App-URL):
   `website/brands.json`
+- **Paddle/API-Konfiguration pro Brand**:
+  `website/brands.json` (`paddle.*`, `apiBaseUrl`) und fuer LifePlus
+  zusaetzlich `wrangler.toml`
 - **Layout/Texte aller Sites**:
-  `website/templates/{index,impressum,datenschutz}.html`
+  `website/templates/*.html`
 - **Stil**:
   `website/templates/styles.css`
 

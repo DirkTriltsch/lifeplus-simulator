@@ -1,5 +1,13 @@
 # Cloudflare-API-Setup (Hybrid mit IONOS)
 
+> **Hinweis (Stand 2026-05-22): Dieses Dokument ist durch
+> [Cloudflare, Resend und IONOS - Setup.md](./Cloudflare,%20Resend%20und%20IONOS%20-%20Setup.md)
+> abgeloest worden.** Die neuere Anleitung beschreibt das Setup per
+> Wrangler-CLI (statt Dashboard-Wizard) und ist im echten Sandbox-Loop
+> verifiziert. Dieses Dokument bleibt als Kurzueberblick verfuegbar,
+> der ausfuehrliche Walkthrough mit Stolpersteinen, Diagnose und
+> "Neue Brand hinzufuegen"-Rezept liegt in der neueren Datei.
+
 Diese Anleitung beschreibt das Deployment der LifeFlow360-API auf
 **Cloudflare Pages Free-Tier**, waehrend Marketing-Site und React-App weiter
 ueber IONOS unter `www.lifeflow360.app` ausgeliefert werden.
@@ -144,23 +152,33 @@ TTL:     standard
 
 ### 5.2 Resend-DNS-Records eintragen
 
-Werte exakt aus dem Resend-Dashboard kopieren. Beispiele:
+Resend nutzt heute Amazon SES als Backend und richtet eine eigene
+`send.<deine-domain>` Bounce-Subdomain ein. Werte exakt aus dem
+Resend-Dashboard kopieren. Tatsaechliche Records fuer `lifeflow360.app`:
 
 ```text
 Typ:     TXT
-Host:    @ (oder leer)
-Wert:    v=spf1 include:_spf.resend.com ~all
-                (Falls schon ein SPF-Record existiert: Resend-Include integrieren,
-                NICHT zwei SPF-Records anlegen.)
+Host:    resend._domainkey
+Wert:    p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...   (von Resend, DKIM)
+
+Typ:     MX
+Host:    send
+Wert:    feedback-smtp.eu-west-1.amazonses.com   Prio 10
 
 Typ:     TXT
-Host:    resend._domainkey
-Wert:    p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...  (von Resend)
+Host:    send
+Wert:    v=spf1 include:amazonses.com ~all
 
 Typ:     TXT
 Host:    _dmarc
-Wert:    v=DMARC1; p=quarantine; rua=mailto:dmarc@lifeflow360.app
+Wert:    v=DMARC1; p=none; rua=mailto:mail@triltsch-online.de
+         (optional — Resend schlaegt diesen Record vor)
 ```
+
+Auf der Root-Domain `lifeflow360.app` wird kein SPF/MX gesetzt — Resend
+arbeitet komplett ueber die `send.`-Subdomain. Falls dort schon Mail-
+Records von IONOS-Postfach existieren, bleiben sie unangetastet. Details
+und Stolpersteine im neueren Setup-Dokument, Abschnitte 5 und 6.
 
 Nach 5-30 Min sollten alle Records aktiv sein. Im Resend-Dashboard zeigt die
 Domain dann `Verified`. **Jetzt** einen API-Key erzeugen:
@@ -256,10 +274,19 @@ Events:
   - subscription.past_due
   - subscription.paused
   - subscription.resumed
-  - transaction.completed
-  - transaction.refunded
+  - subscription.trialing
+  - transaction.paid
+  - transaction.payment_failed
+  - transaction.canceled
   - adjustment.created
+  - adjustment.updated
 ```
+
+Hinweis: Paddle Billing v2 hat `transaction.completed` zu `transaction.paid`
+umbenannt und `transaction.refunded` gestrichen — Refunds laufen jetzt
+ausschliesslich ueber `adjustment.created` / `adjustment.updated`. Die
+Event-Liste oben entspricht dem aktuellen Webhook-Handler in
+[functions/api/paddle/webhook.ts](../functions/api/paddle/webhook.ts).
 
 Nach dem Speichern zeigt Paddle den **Webhook-Secret**. Diesen sofort kopieren
 und im Pages-Projekt als Secret `PADDLE_WEBHOOK_SECRET` eintragen

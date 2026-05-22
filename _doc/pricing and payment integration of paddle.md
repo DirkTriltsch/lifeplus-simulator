@@ -1,5 +1,38 @@
 # Pricing and Payment Integration of Paddle
 
+> **Hinweis (Stand 2026-05-22):** Dieses Dokument ist das urspruengliche
+> Architektur-/Konzeptpapier. Inzwischen sind mehrere Konzeptentscheidungen
+> umgesetzt — die tatsaechlich gelebte Realitaet weicht in folgenden Punkten
+> bewusst ab und ist in den darauf bezogenen Setup-Dokumenten festgehalten:
+>
+> - **Mailer:** Resend (statt der Konzept-Option "Brevo oder Resend"). Setup
+>   in [Cloudflare, Resend und IONOS - Setup.md](./Cloudflare,%20Resend%20und%20IONOS%20-%20Setup.md).
+> - **Datenbank:** Cloudflare D1 in WEUR (statt Neon Frankfurt). Schema in
+>   [migrations/0001_init.sql](../migrations/0001_init.sql).
+> - **Hosting:** Cloudflare Pages Functions (wie hier empfohlen).
+> - **Paddle-Events (Billing v2):** `transaction.paid` statt
+>   `transaction.completed`, `adjustment.created`/`adjustment.updated`
+>   statt `transaction.refunded`. Aktive Event-Liste im
+>   Webhook-Handler in [functions/api/paddle/webhook.ts](../functions/api/paddle/webhook.ts).
+> - **Brand-Trennung:** Bestaetigt — eigene DB / eigenes Pages-Projekt pro
+>   Brand (siehe Memory `project_brand_separation`).
+> - **Pricing-Quelle:** Es gibt kein `website/pricing.json`. Die aktuelle
+>   Implementierung rendert `website/templates/pricing.html` direkt aus
+>   `website/brands.json` (`paddle.clientToken`, `priceIdMonthly`,
+>   `priceIdYearly`, `apiBaseUrl`).
+> - **Checkout-Schutz:** Die Pricing-Seite fragt vor Paddle eine E-Mail ab und
+>   ruft `POST /api/billing/checkout-intent` auf. Paddle oeffnet nur bei
+>   `action = "start_checkout"`; ein unerreichbarer Intent blockiert den
+>   Checkout bewusst.
+> - **Umsetzungsstand:** LifePlus ist komplett verdrahtet. FitLine und Eqology
+>   haben Product Packs, Microsites und App-Builds, aber noch Platzhalter fuer
+>   Paddle/API-Konfiguration.
+>
+> Konzeptpassagen unten, die die alten Event-Namen oder Mailer/DB-Alternativen
+> nennen oder `pricing.json`, Neon/Brevo als Ziel oder einen direkten
+> Checkout ohne Intent beschreiben, sind als historischer Kontext zu lesen.
+> Die Setup-Dokumente in `_doc/` und der Code sind die maßgebliche Quelle.
+
 ## Ziel
 
 Die App soll auf Desktop und Mobilgeraeten nutzbar sein, ohne dass die Zahlung
@@ -16,10 +49,13 @@ pricing.html / Marketing-Site (pro Brand)
         v
 Paddle Billing (Merchant of Record)
         |
-        | Webhooks: transaction.completed, subscription.created,
-        |           subscription.updated, subscription.canceled,
-        |           subscription.past_due, transaction.refunded,
-        |           adjustment.created
+        | Webhooks: subscription.created, subscription.updated,
+        |           subscription.activated, subscription.canceled,
+        |           subscription.past_due, subscription.paused,
+        |           subscription.resumed, subscription.trialing,
+        |           transaction.paid, transaction.payment_failed,
+        |           transaction.canceled, adjustment.created,
+        |           adjustment.updated
         v
 Serverless API (eine Instanz pro Brand)
         |
@@ -211,14 +247,21 @@ Was bedeutet das fuer die App:
 
 ### 1. pricing.html
 
-`pricing.html` sollte die oeffentliche Produkt- und Preisliste sein. Sie kann
-aus einer zentralen Config generiert werden, zum Beispiel:
+`pricing.html` ist die oeffentliche Produkt- und Preisliste. In der aktuellen
+Implementierung wird sie nicht aus `website/pricing.json`, sondern aus
+[website/brands.json](../website/brands.json) und
+[website/templates/pricing.html](../website/templates/pricing.html) gerendert:
 
 ```text
-website/pricing.json
+website/brands.json
+- siteName, siteDomain, appUrl, apiBaseUrl
+- paddle.env
+- paddle.clientToken
+- paddle.priceIdMonthly
+- paddle.priceIdYearly
 ```
 
-Beispielstruktur:
+Historische Beispielstruktur fuer ein separates Pricing-JSON:
 
 ```json
 {
@@ -711,18 +754,27 @@ Schutzschicht.
 
 ### Subscription Lifecycle
 
-Folgende Paddle-Events werden verarbeitet:
+Folgende Paddle-Events werden verarbeitet (Paddle Billing v2):
 
 ```text
-transaction.completed       -> Erstkauf oder Renewal
 subscription.created        -> Neues Abo
 subscription.updated        -> Plan-Wechsel, Reaktivierung, Pausierung
+subscription.activated      -> Trial endet, Abo wird abrechnungspflichtig
 subscription.canceled       -> Kuendigung wirksam (ggf. mit Periodenende)
 subscription.past_due       -> Zahlung fehlgeschlagen, Retry laeuft
-transaction.refunded        -> Volle Rueckzahlung
-adjustment.created          -> Teilrueckerstattung, Kulanz, Korrektur
-customer.updated            -> E-Mail-Adresse geaendert
+subscription.paused         -> Abo pausiert
+subscription.resumed        -> Pause aufgehoben
+subscription.trialing       -> Trial-Phase
+transaction.paid            -> Erstkauf oder Renewal (frueher transaction.completed)
+transaction.payment_failed  -> Frueh-Warnung vor past_due
+transaction.canceled        -> Cart-Abbruch (nur Monitoring)
+adjustment.created          -> Refund / Kulanz / Chargeback (Entitlement entziehen)
+adjustment.updated          -> Adjustment-State-Wechsel
 ```
+
+`customer.updated` wird bewusst nicht abonniert — User-Anlage laeuft ueber
+Subscription-Events, E-Mail-Aenderungen sind im aktuellen Flow kein
+Trigger fuer Folgelogik.
 
 Allgemeines Vorgehen pro Event:
 
@@ -801,7 +853,7 @@ Empfohlener Ablauf:
 
 Renewal Tag:
 - Paddle belastet automatisch
-- Webhook transaction.completed verlaengert Entitlement
+- Webhook transaction.paid (bzw. subscription.updated) verlaengert Entitlement
 
 0-14 Tage nach Renewal:
 - Kulanzfenster fuer Rueckerstattung, wenn der Kunde sagt:
@@ -831,12 +883,13 @@ offensichtliche missbraeuchliche Nutzung vorliegt.
 Technische Umsetzung:
 
 ```text
-1. Renewal kommt als Paddle transaction.completed.
-2. API verlaengert Entitlement um 12 Monate.
-3. API speichert renewal_transaction_id und renewal_at.
+1. Renewal kommt als Paddle transaction.paid (verknuepft mit Subscription).
+2. API verlaengert Entitlement bis current_period_ends_at + Grace.
+3. API speichert paddle_transaction_id auf der Subscription.
 4. Bei Refund innerhalb von 14 Tagen:
-   - Webhook transaction.refunded oder adjustment.created kommt an.
-   - Entitlement valid_until wird auf now gesetzt.
+   - Webhook adjustment.created kommt an
+     (transaction.refunded gibt es in Paddle Billing v2 nicht mehr).
+   - Entitlement valid_until wird auf now gesetzt, source = refund_revoked.
    - Subscription wird je nach Paddle-Status beendet oder bleibt gemaess Portal.
 5. App zeigt: "Dein Zugang wurde erstattet und ist beendet."
 ```
@@ -874,7 +927,7 @@ Referenzen:
 
 ### Refunds und Chargebacks
 
-Bei `transaction.refunded` oder Chargeback-Adjustments:
+Bei `adjustment.created` / `adjustment.updated` (Refund, Kulanz, Chargeback):
 
 ```text
 1. Webhook erkennt Erstattung.
@@ -1007,21 +1060,41 @@ Amazon SES   -> Sehr guenstig, aber mehr Setup-Aufwand.
 Empfehlung: **Brevo oder Resend**. Brevo ist EU-basiert, Resend ist
 entwicklerfreundlich. Welcher konkret hier passt, wird in Phase 3 entschieden.
 
-Setup pro Brand-Domain:
+> Entscheidung umgesetzt: **Resend** (Region EU/Frankfurt). DKIM und
+> Bounce-Subdomain sind in IONOS-DNS verifiziert. Setup-Details siehe
+> [Cloudflare, Resend und IONOS - Setup.md](./Cloudflare,%20Resend%20und%20IONOS%20-%20Setup.md)
+> Abschnitt 5.
+
+Setup pro Brand-Domain (Resend mit Amazon-SES-Backend nutzt eine
+`send.<domain>` Bounce-Subdomain — SPF/MX liegen dort, nicht auf der Root):
 
 ```text
-SPF:    v=spf1 include:<mailer-spf-host> -all
-DKIM:   Selektor und Public Key wie vom Mailer vorgegeben
-DMARC:  v=DMARC1; p=quarantine; rua=mailto:dmarc@lifeflow360.app
+DKIM:        TXT  resend._domainkey    p=<von Resend>
+Bounce-MX:   MX   send                 feedback-smtp.eu-west-1.amazonses.com  Prio 10
+Bounce-SPF:  TXT  send                 v=spf1 include:amazonses.com ~all
+DMARC:       TXT  _dmarc               v=DMARC1; p=none; rua=mailto:mail@triltsch-online.de
 ```
 
-Absender-Adressen je Brand:
+DMARC startet mit `p=none` (nur reporten), spaeter auf `p=quarantine` oder
+`p=reject` hochziehen, wenn alle Sender sauber konfiguriert sind. Exakte
+Werte und Stolpersteine in
+[Cloudflare, Resend und IONOS - Setup.md](./Cloudflare,%20Resend%20und%20IONOS%20-%20Setup.md)
+Abschnitt 5/6.
+
+Absender-Adressen je Brand (Mailer-Domain in Resend verifiziert):
 
 ```text
-no-reply@lifeflow360.app
-no-reply@fitflow360.triltsch.com  (spaeter no-reply@fitflow360.de)
-no-reply@eqoflow360.triltsch.com  (spaeter no-reply@eqoflow360.de)
+no-reply@lifeflow360.app           (aktiv)
+no-reply@fitflow360.<domain>       (FitFlow360 — Domain wird mit Live-Schaltung gesetzt)
+no-reply@eqoflow360.<domain>       (EqoFlow360 — Domain wird mit Live-Schaltung gesetzt)
 ```
+
+Solange die FitLine/Eqology-Brands nur unter `*.triltsch.com` erreichbar
+sind, laeuft der Mail-Versand weiter ueber `no-reply@lifeflow360.app` —
+Resend verlangt eine verifizierte Absender-Domain, und `triltsch.com` ist
+nicht als Brand-Domain verifiziert. Mit dem Umzug auf die finalen
+Brand-Domains werden die dortigen DKIM/SPF-Records gesetzt und die
+Absender-Adresse umgestellt.
 
 ## Sandbox vs. Live
 
@@ -1035,7 +1108,8 @@ Vorgehensweise:
 ```text
 Schritt 1: Sandbox-Account anlegen.
 Schritt 2: Sandbox-Produkte und -Preise pro Brand anlegen.
-Schritt 3: VITE_PADDLE_ENV=sandbox lokal nutzen.
+Schritt 3: `paddle.env = "sandbox"` in `website/brands.json` und
+            `PADDLE_ENV=sandbox` in der API-Env nutzen.
 Schritt 4: Sandbox-Webhook-Endpunkt einrichten und mit ngrok/cloudflared
             lokal testen.
 Schritt 5: Den vollen Happy Path testen: Kauf, Webhook, /api/me, Paywall weg.
@@ -1052,8 +1126,10 @@ Schritt 10: Einen kleinen Realkauf mit eigener Kreditkarte machen und
             sofort refunden, um den vollen Live-Loop zu validieren.
 ```
 
-`pricing.json` fuehrt sowohl Sandbox- als auch Live-Price-IDs. Welche
-verwendet wird, haengt an `VITE_PADDLE_ENV`.
+Aktueller Stand: Sandbox-/Live-Price-IDs stehen nicht in `pricing.json`,
+sondern in `website/brands.json` fuer die Marketing-Seite und in den
+Cloudflare-Env-Vars `PADDLE_PRICE_MONTHLY` / `PADDLE_PRICE_YEARLY` fuer den
+Checkout-Intent und Webhook.
 
 ## DSGVO und Datenschutz
 
@@ -1449,11 +1525,13 @@ BRAND_ID                 -> lifeplus | fitline | eqology
 Oeffentliche Frontend-Werte duerfen dagegen in Vite-Env liegen:
 
 ```text
-VITE_PADDLE_ENV=sandbox
-VITE_PADDLE_CLIENT_TOKEN=test_...
-VITE_PADDLE_PRICE_ID_PRO_YEARLY=pri_...
+VITE_PRODUCT=lifeplus
+VITE_BASE_PATH=/app/
 VITE_API_BASE_URL=https://api.lifeflow360.app
 ```
+
+Paddle-Client-Token und Price-IDs liegen fuer die statische Pricing-Seite in
+`website/brands.json`. Die Simulator-App selbst benoetigt sie nicht.
 
 ### Datenbankoptionen
 
@@ -1766,16 +1844,38 @@ bleiben Teil der `<SimulatorShell />` und sind damit hinter der Paywall.
 
 ### Pricing-Seite Anbindung
 
-`pricing.html` wird als neuer Eintrag in [website/templates/](website/templates/)
-hinzugefuegt und in `build-webroot.mjs` mitgeneriert. Die Seite liest
-`pricing.json` und rendert pro Brand die Plan-Karten. Paddle.js wird als
-`<script>` eingebunden; beim Klick auf "Kaufen":
+`pricing.html` liegt in [website/templates/](../website/templates/) und wird
+vom Website-Build mit den Tokens aus
+[website/brands.json](../website/brands.json) gerendert. Die Plan-Karten sind
+im Template enthalten; pro Brand werden Client-Token, Price-IDs, App-URL und
+API-Base-URL eingesetzt. Paddle.js wird als `<script>` eingebunden.
+
+Beim Klick auf "Kaufen" passiert heute bewusst **nicht** sofort
+`Paddle.Checkout.open()`, sondern:
+
+```text
+1. E-Mail per Browser-Prompt abfragen.
+2. POST <API_BASE_URL>/api/billing/checkout-intent
+   Body: { priceId, email }
+3. Nur bei action = "start_checkout" Paddle oeffnen.
+4. Bei already_active zur App leiten.
+5. Bei manage_subscription zur App mit ?manage=1 leiten.
+6. Bei Fehler oder nicht erreichbarer API keinen Checkout starten.
+```
+
+Aktueller Checkout-Aufruf im Template:
 
 ```text
 Paddle.Checkout.open({
-  items: [{ priceId: <PRICE_ID> }],
-  customData: { brand_id: '<BRAND_ID>' },
-  successUrl: '<BRAND_APP_URL>?checkout=success'
+  items: [{ priceId, quantity: 1 }],
+  customer: { email: normalizedEmail },
+  customData: { brand_id: brandId, checkout_email: normalizedEmail },
+  settings: {
+    successUrl: appUrl + '?checkout=success&email=' + encodeURIComponent(normalizedEmail),
+    displayMode: 'overlay',
+    theme: 'light',
+    locale: 'de'
+  }
 })
 ```
 
@@ -1788,7 +1888,7 @@ Paddle.Checkout.open({
 2. User waehlt Plan.
 3. Paddle Checkout oeffnet sich.
 4. User bezahlt mit E-Mail-Adresse.
-5. Paddle sendet transaction.completed und subscription.created.
+5. Paddle sendet transaction.paid und subscription.created.
 6. API verifiziert Webhook.
 7. API erstellt oder aktualisiert User.
 8. API setzt Entitlement fuer die gekaufte Brand.
@@ -1852,16 +1952,17 @@ Paddle-Portal.
   Webseiten-URL pro Brand). Achtung: Dieser Schritt kann mehrere Werktage
   dauern.
 - Cloudflare Account anlegen, Pages-Projekt pro Brand vorbereiten.
-- Datenbank-Wahl treffen: Neon Frankfurt empfohlen (harter EU-Pin), D1 als
-  Alternative wenn EU-Pin nicht zwingend.
-- E-Mail-Dienst-Wahl treffen (Brevo empfohlen).
+- Datenbank: Cloudflare D1 pro Brand anlegen und Schema migrieren.
+  *Entschieden: D1 (WEUR-Region) — siehe Setup-Doku.*
+- E-Mail-Dienst: Resend pro Brand-Domain vorbereiten.
+  *Entschieden: Resend (EU/Frankfurt) — siehe Setup-Doku.*
 
 Ergebnis: Konten und Dienste sind grundsaetzlich verfuegbar.
 
 ### Phase 1: Oeffentliche Preis-Seite und Checkout
 
 - `pricing.html` pro Brand bauen.
-- `pricing.json` einfuehren.
+- Brand-/Paddle-Werte in `website/brands.json` pflegen.
 - Paddle.js integrieren.
 - Sandbox-Produkte und -Preise pro Brand anlegen.
 - Checkout testen.
@@ -1925,7 +2026,7 @@ Ergebnis: Sauberer Live-Betrieb.
 [ ] Webhook-Endpunkt Live erreichbar und Signaturpruefung getestet.
 [ ] DPA mit Paddle unterzeichnet.
 [ ] DPA mit Mailer unterzeichnet.
-[ ] Datenbank in EU-Region (Neon Frankfurt o.ae.) angelegt.
+[ ] D1-Datenbank fuer jede aktive Brand angelegt und Schema migriert.
 [ ] Datenbank-Backups aktiviert.
 [ ] SPF/DKIM/DMARC pro Brand-Domain in DNS gesetzt und verifiziert.
 [ ] Magic-Link Mail-Template pro Brand getestet (Posteingang, nicht Spam).
@@ -1942,53 +2043,42 @@ Ergebnis: Sauberer Live-Betrieb.
 
 ## Offene Entscheidungen
 
-- Jahresabo ist die Zielstrategie. Noch zu entscheiden: konkreter Preis,
-  Renewal-Reminder-Texte und exakte Kulanzregeln nach automatischer
+- Renewal-Reminder-Texte und exakte Kulanzregeln nach automatischer
   Verlaengerung.
-- Kostenlose Demo: zeitlich begrenzt (z.B. 14 Tage Vollzugang) oder
-  funktional begrenzt (z.B. nur 3-Jahres-Prognose)?
-- Konkrete Preise pro Brand: zunaechst gleicher Preis ueber alle Brands,
-  oder pro Brand differenziert?
-- Datenbank: Cloudflare D1 (einfacher Einstieg, kein harter EU-Pin) oder
-  Neon Frankfurt (harter EU-Pin, Postgres, Branching)? Empfehlung: Neon
-  Frankfurt fuer DSGVO-Sicherheit.
-- E-Mail-Dienst: Brevo oder Resend?
+- Kostenlose Demo: aktuell ist der Simulator hinter Auth/Paywall. Noch zu
+  entscheiden ist, ob es spaeter eine zeitlich oder funktional begrenzte
+  Demo-Version geben soll.
+- Konkrete Preise fuer FitLine und Eqology, sobald deren Paddle-Produkte
+  angelegt werden. LifePlus ist aktuell mit 19 EUR netto monatlich und
+  180 EUR netto jaehrlich dokumentiert.
 - Rate-Limiting und Anti-Abuse: finale Grenzwerte festlegen, aber Device-Limit
   als Hauptschutz beibehalten.
-- IONOS-Fallback: nur ausarbeiten, falls Cloudflare-Setup an einer konkreten
-  Anforderung scheitert. Keine Doppel-Implementierung pflegen.
+- Admin-/Support-Endpunkte fuer manuelle Revoke-, Export- und Loeschfaelle.
 
 ## Empfehlung
 
-Die beste Balance fuer dieses Projekt:
+Die beste Balance fuer dieses Projekt, angepasst an den aktuellen Code:
 
-- `pricing.html` als statische Pricing-Seite pro Brand, mit Paddle
-  `PricePreview` fuer lokalisierte Preise.
-- Jahresabo mit automatischer Verlaengerung als Standardangebot. Bei niedrigem
-  Ticketpreis ist Jahresabo gegenueber Monatsabo deutlich guenstiger fuer den
-  Betreiber, weil die 0,50-USD-Pauschale pro Transaktion bei Monatsabos zu
-  einer effektiven Paddle-Last von ~20 % fuehrt (vs. ~6 % bei Jahresabo).
+- `pricing.html` als statische Pricing-Seite pro Brand, gerendert aus
+  `website/brands.json`. Ein separates `pricing.json` existiert nicht.
+- Monatsabo und Jahresabo parallel anbieten. Das Jahresabo bleibt die
+  wirtschaftlich bevorzugte Option, weil die fixe Paddle-Gebuehr pro
+  Transaktion bei niedrigen Monatspreisen deutlich staerker wirkt.
 - Keine Cross-Sell-Mechanik zwischen Brands.
-- Mehrfachkaeufe derselben Brand blockieren; erneuter Checkout nur fuer
-  Upgrade, Reaktivierung oder abgelaufenes Abo.
-- Paddle Overlay Checkout fuer Mobile und Desktop.
+- Mehrfachkaeufe derselben Brand ueber `/api/billing/checkout-intent`
+  abfangen; bei nicht erreichbarer API keinen Checkout starten.
+- Paddle Overlay Checkout fuer Mobile und Desktop mit `customData.brand_id`
+  und `customData.checkout_email`.
 - Pro Brand getrennte Identitaeten, getrennte API-Instanz, getrennte
   Datenbank.
-- **Start direkt mit Cloudflare Pages Functions + Neon Frankfurt.** Bei
-  Kundenzahlen unter 1.000 pro Brand (Standardszenario in den ersten
-  12-24 Monaten) entstehen keine laufenden Infrastrukturkosten — Cloudflare
-  und Neon Free-Tier reichen. Bei Skalierung darueber hinaus kann Workers Paid
-  fuer 5 USD/Monat als Reserve aktiviert werden. IONOS bleibt als
-  dokumentierter Fallback, kommt aber nur bei konkretem Cloudflare-Hindernis
-  zum Einsatz.
-- Magic-Link Login statt Passwort, mit Brevo oder Resend als Mailer und
-  sauber gesetztem SPF/DKIM/DMARC.
-- 3 aktive Geraete pro User, plus maximal 3 neue Geraete pro 30 Tage.
+- Cloudflare Pages Functions + Cloudflare D1 + KV als aktuelle
+  Implementierung; IONOS liefert Marketing-Site und App per SFTP aus.
+- Resend als Mailer, mit verifizierter Brand-Domain und HTTPS-API.
+- 3 aktive Geraete pro User. Ein zusaetzliches Wechsel-Limit pro 30 Tage ist
+  noch nicht implementiert.
 - Webhook-basierte Freischaltung mit Idempotenz via `webhook_events`.
 - Rate-Limits und neutrale Antworten an allen Auth-Endpunkten.
-- Renewal-Reminder 30 und 7 Tage vor Jahresverlaengerung.
-- 14 Tage kundenfreundliche Kulanz nach automatischer Jahresverlaengerung.
-- Grace Period bei `past_due` und sauberer Refund-Handler.
+- Grace Period bei `past_due` und Refund-/Adjustment-Handler.
 - Datenschutz: DPA mit Paddle und Mailer, Datenresidenz EU, Datenexport-
   und Loesch-Endpunkte.
 
