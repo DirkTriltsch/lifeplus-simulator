@@ -5,6 +5,18 @@
 <IfModule mod_headers.c>
     Header set X-Robots-Tag "noai, noimageai, noindex, nofollow, noarchive, nosnippet"
     Header set Tdm-Reservation "1"
+
+    # App shell und PWA-Steuerdateien immer frisch vom Server holen.
+    <FilesMatch "(\.html)$|^(sw\.js|registerSW\.js|manifest\.webmanifest)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Vite-Assets mit Content-Hash koennen dauerhaft gecacht werden.
+    <FilesMatch "[-.][A-Za-z0-9_-]{8,}\.(js|css|woff2?|png|svg|jpe?g|webp)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>

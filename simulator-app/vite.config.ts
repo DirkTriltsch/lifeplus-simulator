@@ -39,6 +39,11 @@ export default defineConfig(async ({ mode }) => {
       },
       VitePWA({
         registerType: 'autoUpdate',
+        workbox: {
+          clientsClaim: true,
+          skipWaiting: true,
+          cleanupOutdatedCaches: true,
+        },
         includeAssets: ['favicon.svg'],
         devOptions: {
           enabled: false,

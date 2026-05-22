@@ -5,7 +5,10 @@ import type { ProductId } from '@mlm/simulator-core';
 import App from './App';
 import { AuthProvider } from './auth/useAuth';
 import { AuthGate } from './components/AuthGate';
+import { initializePwaUpdates } from './pwaUpdates';
 import './index.css';
+
+initializePwaUpdates();
 
 const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
 const product = getProduct(productId);

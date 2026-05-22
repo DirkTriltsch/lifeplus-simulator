@@ -73,9 +73,13 @@ async function asJson<T>(res: Response): Promise<T> {
 }
 
 const headers = { 'content-type': 'application/json' } as const;
+const noStore = { cache: 'no-store' } as const;
 
 export function fetchMe(): Promise<MeResponse> {
-  return fetch(apiUrl('/api/me'), { credentials: 'include' }).then(asJson<MeResponse>);
+  return fetch(apiUrl('/api/me'), {
+    credentials: 'include',
+    ...noStore,
+  }).then(asJson<MeResponse>);
 }
 
 export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
@@ -104,7 +108,10 @@ export function logout(): Promise<{ ok: boolean }> {
 }
 
 export function listDevices(): Promise<DevicesResponse> {
-  return fetch(apiUrl('/api/devices'), { credentials: 'include' }).then(asJson<DevicesResponse>);
+  return fetch(apiUrl('/api/devices'), {
+    credentials: 'include',
+    ...noStore,
+  }).then(asJson<DevicesResponse>);
 }
 
 export function revokeDevice(deviceId: string): Promise<{ ok: boolean; promoted?: boolean; loggedOut?: boolean }> {
