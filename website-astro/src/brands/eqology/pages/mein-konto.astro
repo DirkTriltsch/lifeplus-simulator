@@ -1,0 +1,14 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import AccountPageDefault from '@shared/components/sections/AccountPageDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+
+const brand = await getBrand('eqology');
+---
+<BrandLayout brand={brand} title="Mein Konto">
+  <Header brand={brand} active="account" />
+  <AccountPageDefault brand={brand} source="shared/components/sections/AccountPageDefault.astro" />
+  <Footer brand={brand} />
+</BrandLayout>

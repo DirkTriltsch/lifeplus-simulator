@@ -1,7 +1,7 @@
 import type { Env } from '../../env';
 import { sessionCookieHeader } from '../../_lib/cookies';
 import { randomId, sha256Hex } from '../../_lib/crypto';
-import { getActiveDevices, upsertUserByEmail } from '../../_lib/db';
+import { getActiveDevices, grantFreeEntitlementIfMissing, upsertUserByEmail } from '../../_lib/db';
 import { clientIp, consumeRateLimit } from '../../_lib/rate-limit';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
 import { createSessionForNewDevice } from '../../_lib/session';
@@ -9,6 +9,7 @@ import { nowMs } from '../../_lib/time';
 
 interface Body {
   token?: string;
+  access?: string;
 }
 
 interface TokenRow {
@@ -60,6 +61,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (markedRows === 0) return error(400, 'token_used');
 
   const user = await upsertUserByEmail(env, row.email_lower, nowMs(), randomId);
+  if (body.access === 'free') {
+    await grantFreeEntitlementIfMissing(env, user.id, env.BRAND_ID, nowMs(), randomId);
+  }
 
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
   const devices = await getActiveDevices(env, user.id);

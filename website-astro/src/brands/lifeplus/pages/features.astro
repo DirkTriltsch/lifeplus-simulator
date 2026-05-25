@@ -1,0 +1,18 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import FeaturesPageDefault from '@shared/components/sections/FeaturesPageDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+
+const brand = await getBrand('lifeplus');
+---
+<BrandLayout
+  brand={brand}
+  title="Funktionen"
+  description={`Fünf Slider, Zehn-Jahre-Verlauf, Stufen-Prognose, drei Simulationsmodelle, Ziele-Leiter und Netzwerk-Visualisierungen. Was ${brand.siteName} im Gespräch leistet.`}
+>
+  <Header brand={brand} active="features" />
+  <FeaturesPageDefault brand={brand} source="shared/components/sections/FeaturesPageDefault.astro" />
+  <Footer brand={brand} />
+</BrandLayout>

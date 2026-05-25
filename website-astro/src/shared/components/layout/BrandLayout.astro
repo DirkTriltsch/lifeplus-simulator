@@ -1,0 +1,47 @@
+---
+import '@shared/styles/tokens.css';
+import '@shared/styles/globals.css';
+import '@shared/styles/site.css';
+import type { Brand } from '@shared/content-schemas/config';
+
+interface Props {
+  brand: Brand;
+  title?: string;
+  description?: string;
+  /** Mit true wird das Paddle.js-Skript fuer diese Seite geladen (nur pricing). */
+  paddle?: boolean;
+}
+const { brand, title, description, paddle = false } = Astro.props;
+const fullTitle = title ? `${title} - ${brand.siteName}` : brand.siteName;
+const apiBase = brand.apiBaseUrl ?? '';
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script is:inline define:vars={{ apiBase }}>window.LFL_API_BASE = apiBase;</script>
+    {paddle && <script src="https://cdn.paddle.com/paddle/v2/paddle.js" is:inline></script>}
+  </head>
+  <body
+    data-brand={brand.id}
+    style={`--brand:${brand.accentColor};--brand-dark:${brand.accentColorDark};--cta:${brand.ctaColor};--cta-dark:${brand.ctaColorDark};--brand-soft:${brand.lockup.waveColor};--lockup-dark-bg:${brand.lockup.darkBg};--lockup-accent-on-dark:${brand.lockup.accentOnDark};--brand-surface:color-mix(in srgb, ${brand.accentColor} 8%, white);`}
+  >
+    <slot />
+
+    <script>
+      import { setupAccountLink } from '@shared/scripts/accountLink';
+      setupAccountLink((window as unknown as { LFL_API_BASE?: string }).LFL_API_BASE);
+    </script>
+  </body>
+</html>

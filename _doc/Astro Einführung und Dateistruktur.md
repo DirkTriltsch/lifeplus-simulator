@@ -25,7 +25,7 @@ Die aktuelle Website basiert auf einem selbstgebauten Token-Replace-Build. Diese
 - Content und Layout sind vermischt
 - Änderungen an einer Section sind schwer nachvollziehbar
 
-Astro ist für diesen Fall sinnvoll, weil es statische Websites erzeugt, Content Collections mit Zod validiert, Komponenten sauber kapselt und sich weiterhin in das bestehende Deployment-Modell einfügen lässt.
+Astro ist für diesen Fall sinnvoll, weil es statische Websites erzeugt, strukturierte Daten mit Zod validieren kann, Komponenten sauber kapselt und sich weiterhin in das bestehende Deployment-Modell einfügen lässt. Brand-Stammdaten können als Astro Content Collection geführt werden; der Section-Content wird wegen der unterschiedlichen Section-Schemas besser über einen eigenen Loader mit Zod-Schema-Map validiert.
 
 Die empfohlene Zielarchitektur trennt strikt:
 
@@ -65,6 +65,8 @@ _doc/             Architektur-, Produkt- und Migrationsdokumentation
 ### Aktueller Website-Build
 
 Die Marketing-Site wird heute über `website/scripts/build.mjs` gebaut.
+
+Wichtige Rahmenbedingung: Die bestehende Website gilt fachlich und visuell als passender Referenzstand. Die Astro-Einführung ist daher zuerst eine Struktur-, Wartbarkeits- und Workflow-Migration, keine inhaltliche oder gestalterische Neuentwicklung. Abweichungen vom Altstand müssen bewusst entschieden werden.
 
 Der Build:
 
@@ -151,7 +153,7 @@ Das bedeutet:
 
 ### Zielzustand in einem Satz
 
-> Astro rendert statische Multi-Brand-Seiten aus validierten Content Collections, wiederverwendbaren Section-Komponenten und einer internen Preview-/Debug-Infrastruktur.
+> Astro rendert statische Multi-Brand-Seiten aus validierten Brand-Daten, validiertem Section-Content, wiederverwendbaren Section-Komponenten und einer internen Preview-/Debug-Infrastruktur.
 
 ### Nicht-Ziele der ersten Migration
 
@@ -267,8 +269,9 @@ Das reduziert Fehlersuche und macht die Architektur im Browser sichtbar.
 ```text
 Astro
 TypeScript strict
-Astro Content Collections
-Zod
+Astro Content Collections für Brand-Stammdaten
+Zod-Schemas für Brand- und Section-Daten (`zod` als explizite Dependency)
+Eigener Section-Content-Loader mit import.meta.glob
 YAML oder JSON für Content-Daten
 CSS Modules oder scoped Astro styles
 ```
@@ -336,6 +339,8 @@ Beispiel-Scripts:
 }
 ```
 
+Wichtig: `cross-env` ist im aktuellen Root-`package.json` noch nicht installiert. Wenn diese Script-Variante gewählt wird, muss `cross-env` als Dev-Dependency ergänzt werden. Alternativ werden PowerShell-kompatible Scripts verwendet.
+
 Für Windows/PowerShell kann alternativ ohne `cross-env` gearbeitet werden:
 
 ```powershell
@@ -344,9 +349,20 @@ $env:ASTRO_BRAND='lifeplus'; astro build
 
 Für portable NPM-Scripts ist `cross-env` dennoch vorzuziehen.
 
-### Feature 2: Content Collections mit Zod
+Wenn `website-astro/` zunächst side-by-side aufgebaut wird, muss außerdem entschieden werden, ob der Ordner temporär in den NPM-Workspaces registriert wird. Der aktuelle Root kennt als Website-Workspace nur `website`. Für die Übergangsphase gibt es zwei saubere Varianten:
 
-Jeder Content-Typ bekommt ein Schema.
+- `website-astro` als zusätzlichen Workspace aufnehmen und später `website` ersetzen.
+- `website-astro` außerhalb der Workspace-Scripts direkt mit `npm --prefix website-astro ...` bauen.
+
+### Feature 2: Validierte Content-Daten mit Zod
+
+Jeder Content-Typ bekommt ein Schema. Wichtig ist die technische Trennung:
+
+- Brand-Stammdaten liegen als Astro Content Collection unter `src/content/brands/`.
+- Section-Content liegt unter `src/data/sections/` und wird über `import.meta.glob` geladen.
+- Die final gemergten Section-Daten werden mit einer Schema-Map in `src/lib/contentSchemas.ts` validiert.
+
+Diese Trennung vermeidet eine Stolperfalle: Astro Content Collections sind sehr gut für gleichförmige Collections, aber die geplanten Sections haben unterschiedliche Schemas. Ein einzelner Collection-Ordner `sections/` mit vielen verschiedenen Section-Typen würde entweder zu breite Schemas erzwingen oder später unnötige Loader-Tricks brauchen.
 
 Beispiele:
 
@@ -357,6 +373,16 @@ Beispiele:
 - `featureTeaserSchema`
 
 Der Build validiert alle Inhalte.
+
+Zusätzlich sollte es ein explizites Content-Validierungsscript geben, das nicht nur die aktuell gerenderte Seite prüft, sondern alle bekannten Brand-Section-Kombinationen lädt:
+
+```json
+{
+  "validate:content": "tsx src/scripts/validate-content.ts"
+}
+```
+
+Wenn `tsx` genutzt wird, muss es als Dev-Dependency ergänzt werden. Alternativ kann das Validierungsscript als `.mjs` geschrieben werden. Grund: Ein normaler Astro-Build validiert zuverlässig die Daten, die im Build-Pfad tatsächlich geladen werden. Interne Preview-Kombinationen, seltene Overrides oder spätere Seiten sollten aber ebenfalls aktiv geprüft werden, bevor sie im Review auffallen.
 
 ### Feature 3: Section-Komponenten mit klarem Props-Vertrag
 
@@ -464,6 +490,13 @@ Die Preview rendert:
 - optional echtes BrandLayout
 - Debug-Labels
 
+Wichtig für Production: Preview-Routen dürfen nicht versehentlich öffentlich als Teil der produktiven Marketing-Site deployed werden, solange sie interne Arbeitsansichten sind. Für den ersten Wurf gibt es zwei zulässige Strategien:
+
+- Preview- und Review-Routen nur in Dev erzeugen, z.B. mit leerem `getStaticPaths()` bei `!import.meta.env.DEV`.
+- Preview- und Review-Routen in einem separaten internen Build erzeugen, aber nicht in `dist/site-<brand>/` deployen.
+
+Die Entscheidung muss vor dem Cut-Over getroffen werden. Der sichere Default ist: interne Routen nicht produktiv ausliefern.
+
 ### Feature 6: Review Routes
 
 Zusätzlich zur Einzel-Preview ist eine Vergleichsansicht sinnvoll.
@@ -523,10 +556,10 @@ src/lib/sectionContent.ts
 
 Aufgabe:
 
-1. Lade `_shared.yaml` für eine Section, falls vorhanden.
-2. Lade `<brand>.yaml`, falls vorhanden.
+1. Lade `src/data/sections/<section>/_shared.yaml`, falls vorhanden.
+2. Lade `src/data/sections/<section>/<brand>.yaml`, falls vorhanden.
 3. Merge Brand-Override über `_shared`.
-4. Validiere das Ergebnis.
+4. Validiere das finale Objekt gegen das passende Zod-Schema.
 5. Liefere Content plus `source`-Metadaten.
 
 Beispiel:
@@ -545,7 +578,7 @@ Das Ergebnis enthält:
     subClaim: 'Simuliere realistisch, was dein FitLine-Team ...',
     ctaLabel: 'FitLine-Simulation starten'
   },
-  source: 'sections/hero/_shared.yaml + sections/hero/fitline.yaml'
+  source: 'data/sections/hero/_shared.yaml + data/sections/hero/fitline.yaml'
 }
 ```
 
@@ -692,7 +725,7 @@ Brand-Stammdaten liegen pro Brand. Section-Content liegt pro Section. Gemeinsame
 
 Das ist architektonisch sauber:
 
-> Ich arbeite heute am Hero, also gehe ich nach `content/sections/hero/`.
+> Ich arbeite heute am Hero, also gehe ich nach `data/sections/hero/`.
 
 ### Struktur
 
@@ -713,6 +746,7 @@ website-astro/
         lifeplus.yaml
         fitline.yaml
         eqology.yaml
+    data/
       sections/
         hero/
           _shared.yaml
@@ -780,13 +814,14 @@ website-astro/
     lib/
       brands.ts
       contact.ts
+      contentSchemas.ts
       sectionContent.ts
       pageContent.ts
 ```
 
 ### Beispiel `_shared` plus Override
 
-`src/content/sections/hero/_shared.yaml`:
+`src/data/sections/hero/_shared.yaml`:
 
 ```yaml
 eyebrow: "Vergütungs-Simulator"
@@ -795,7 +830,7 @@ subClaim: "Simuliere realistisch, was dein Netzwerk über zehn Jahre einspielen 
 ctaLabel: "Simulator starten"
 ```
 
-`src/content/sections/hero/fitline.yaml`:
+`src/data/sections/hero/fitline.yaml`:
 
 ```yaml
 eyebrow: "FitLine Business Simulator"
@@ -892,6 +927,7 @@ website-astro/
         lifeplus.yaml
         fitline.yaml
         eqology.yaml
+    data/
       sections/
         hero/
           _shared.yaml
@@ -986,6 +1022,7 @@ website-astro/
       brandIds.ts
       brands.ts
       contact.ts
+      contentSchemas.ts
       sectionContent.ts
       pageContent.ts
       routes.ts
@@ -1012,6 +1049,7 @@ paddle:
   env: "sandbox"
   clientToken: "test_fee36ee3e68b2f654e1ad01ab59"
   priceIdMonthly: "pri_01ks580xcmk17mam0qp9tjkwxg"
+  priceIdHalfYear: "pri_01ksfd0ws71rgxkj7gfrrzkywm"
   priceIdYearly: "pri_01ks5864k3detqr1j2v3cx7dhs"
 lockup:
   initial: "L"
@@ -1026,7 +1064,7 @@ lockup:
 
 ### Section-Content
 
-Beispiel `src/content/sections/faq/_shared.yaml`:
+Beispiel `src/data/sections/faq/_shared.yaml`:
 
 ```yaml
 headline: "Häufige Fragen"
@@ -1037,7 +1075,7 @@ items:
     a: "Ja. Du kannst Parameter ändern und die Auswirkungen direkt im Verlauf sehen."
 ```
 
-Beispiel `src/content/sections/faq/fitline.yaml`:
+Beispiel `src/data/sections/faq/fitline.yaml`:
 
 ```yaml
 items:
@@ -1053,7 +1091,7 @@ Das ist einfacher, vorhersagbarer und vermeidet fragile Merge-Regeln.
 
 ## Zod-Schema-Konzept
 
-`src/content/config.ts` enthält die Content-Collection-Schemas.
+`src/content/config.ts` enthält nur die Astro Content Collection für Brand-Stammdaten. Die Section-Schemas liegen in `src/lib/contentSchemas.ts`, weil die Section-Dateien über `import.meta.glob` geladen und danach mit der passenden Zod-Schema-Map validiert werden.
 
 Grundbausteine:
 
@@ -1091,6 +1129,7 @@ const brandSchema = z.object({
     env: z.enum(['sandbox', 'live']),
     clientToken: z.string(),
     priceIdMonthly: z.string(),
+    priceIdHalfYear: z.string().optional(),
     priceIdYearly: z.string(),
   }).optional(),
   lockup: lockupSchema,
@@ -1255,9 +1294,15 @@ body.debug-on [data-section]::after {
 Debug wird nur in Dev geladen:
 
 ```astro
-{import.meta.env.DEV && <link rel="stylesheet" href="/src/styles/debug.css" />}
-{import.meta.env.DEV && <script src="/src/scripts/debug.js"></script>}
+---
+import DebugTools from '../components/preview/DebugTools.astro';
+const enableDebugTools = import.meta.env.DEV;
+---
+
+{enableDebugTools && <DebugTools />}
 ```
+
+`DebugTools.astro` bündelt Debug-CSS und Debug-JS an einer Stelle. Styles aus `src/` sollten in Astro nicht per festem `<link href="/src/...">` eingebunden werden. Ob das Debug-Script inline oder als Vite-verarbeitetes Modul eingebunden wird, ist eine Implementierungsentscheidung. Wichtig ist: Nach jedem Production-Build wird geprüft, dass keine Debug-Artefakte ausgeliefert werden.
 
 ## Preview-Workflow
 
@@ -1284,6 +1329,8 @@ Beispiele:
 /__preview/eqology/faq/
 ```
 
+Diese Routen sind interne Arbeitsansichten. Sie werden im ersten Wurf nicht produktiv veröffentlicht, außer es gibt eine explizite Entscheidung dafür. Der Default ist: Dev-only oder separater interner Preview-Build.
+
 ### Review-Preview
 
 Route:
@@ -1306,6 +1353,8 @@ Beispiele:
 /__review/faq/
 ```
 
+Auch Review-Routen sind intern. Sie dienen Freigabe und Qualitätssicherung, nicht der öffentlichen Website.
+
 ### Brand-Komplettansicht
 
 Die normale Seite bleibt die wichtigste Brand-Gesamtansicht:
@@ -1321,7 +1370,7 @@ eqology build: /
 ### Workflow: Neue Section einführen
 
 1. Section-Zweck definieren.
-2. Content-Schema in `config.ts` ergänzen.
+2. Section-Schema in `src/lib/contentSchemas.ts` ergänzen.
 3. `_shared.yaml` anlegen, falls die Section brand-übergreifend gleich startet.
 4. Brand-Override-Dateien anlegen, wo nötig.
 5. Astro-Komponente in `components/sections/` erstellen.
@@ -1401,7 +1450,8 @@ Tasks:
 - Astro minimal installieren
 - TypeScript strict aktivieren
 - `astro.config.mjs`
-- `src/content/config.ts`
+- `src/content/config.ts` für Brand-Stammdaten
+- `src/lib/contentSchemas.ts` für Section-Schemas
 - `src/lib/brandIds.ts`
 - leere `index.astro`
 
@@ -1668,4 +1718,3 @@ Deployment umstellen
 ```
 
 Diese Reihenfolge hält das Risiko niedrig und liefert früh sichtbaren Nutzen. Schon nach dem Walking Skeleton ist klar, ob der neue Workflow trägt.
-

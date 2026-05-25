@@ -1,0 +1,3 @@
+# ai.txt - Opt-out fuer KI-Trainingsdaten
+User-Agent: *
+Disallow: *

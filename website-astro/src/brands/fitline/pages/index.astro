@@ -1,0 +1,19 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import IndexPageDefault from '@shared/components/sections/IndexPageDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+
+const brand = await getBrand('fitline');
+const description = `Simuliere realistisch, was dein ${brand.productName}-Team über zehn Jahre einspielen kann.`;
+---
+<BrandLayout
+  brand={brand}
+  title={`Vergütungs-Simulator für ${brand.productName}`}
+  description={description}
+>
+  <Header brand={brand} active="home" />
+  <IndexPageDefault brand={brand} source="shared/components/sections/IndexPageDefault.astro" />
+  <Footer brand={brand} />
+</BrandLayout>

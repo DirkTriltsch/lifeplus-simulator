@@ -1,0 +1,21 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import PricingPageDefault from '@shared/components/sections/PricingPageDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+import { getPage } from '@shared/lib/pageContent';
+
+const brand = await getBrand('lifeplus');
+const pricing = await getPage('lifeplus', 'pricing');
+---
+<BrandLayout
+  brand={brand}
+  title={pricing.seo.title}
+  description={pricing.seo.description}
+  paddle
+>
+  <Header brand={brand} active="pricing" />
+  <PricingPageDefault brand={brand} pricing={pricing} source="brands/lifeplus/content/pricing.yaml" />
+  <Footer brand={brand} />
+</BrandLayout>

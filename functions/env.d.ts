@@ -10,6 +10,7 @@ export interface Env {
   ALLOWED_ORIGINS: string;
   PADDLE_ENV: 'sandbox' | 'live';
   PADDLE_PRICE_MONTHLY: string;
+  PADDLE_PRICE_HALFYEAR: string;
   PADDLE_PRICE_YEARLY: string;
   COOKIE_DOMAIN: string;
   SESSION_TTL_DAYS: string;

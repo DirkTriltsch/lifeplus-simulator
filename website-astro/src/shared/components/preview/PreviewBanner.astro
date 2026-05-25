@@ -1,0 +1,45 @@
+---
+interface Props {
+  brandId: string;
+  component: string;
+  livePage?: string;
+}
+const { brandId, component, livePage } = Astro.props;
+---
+<div class="preview-banner">
+  <span class="pb-tag">PREVIEW</span>
+  <span class="pb-meta">
+    <strong>{component}</strong> · brand: <code>{brandId}</code>
+  </span>
+  <span class="pb-links">
+    <a href="/dev.html">← Dev-Index</a>
+    {livePage && <a href={livePage}>→ volle Page</a>}
+  </span>
+</div>
+
+<style>
+  .preview-banner {
+    background: #fef3c7;
+    border-bottom: 1px solid #fcd34d;
+    padding: 8px 16px;
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #713f12;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .pb-tag {
+    background: #d946ef;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .pb-meta strong { color: #0f1b17; }
+  .pb-meta code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; }
+  .pb-links { margin-left: auto; display: flex; gap: 12px; }
+  .pb-links a { color: #713f12; text-decoration: underline; text-underline-offset: 2px; }
+</style>

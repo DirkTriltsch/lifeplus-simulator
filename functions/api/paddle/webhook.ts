@@ -312,7 +312,9 @@ async function handleRefund(env: Env, data: PaddleEventData): Promise<void> {
 }
 
 function isAllowedPriceId(env: Env, priceId: string): boolean {
-  return [env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_YEARLY].filter(Boolean).includes(priceId);
+  return [env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_HALFYEAR, env.PADDLE_PRICE_YEARLY]
+    .filter(Boolean)
+    .includes(priceId);
 }
 
 function customDataMatchesBrand(

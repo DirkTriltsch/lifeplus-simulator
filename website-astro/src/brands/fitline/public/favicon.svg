@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="28" fill="#CD0039"/>
+  <text x="29.16" y="158.067" fill="#FFFFFF" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="600" letter-spacing="-3" style="white-space:pre; font-size:145.9px;" transform="matrix(1.268075, 0, 0, 1.045683, -16.903988, -22.842188)">F</text>
+  <path d="M 26.39 182.443 L 86.155 180.164 L 127.99 173.328 C 151.895 167.249 171.818 153.575 187.756 132.306 C 203.692 111.034 217.637 89.764 229.59 68.494" fill="none" stroke="#FFFFFF" stroke-width="15.36" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 22.943 210.906 C 45.668 204.506 68.394 204.506 91.118 210.906 C 113.842 217.307 136.567 217.307 159.293 210.906 C 182.016 204.506 206.807 204.506 233.664 210.906" fill="none" stroke="#EB99B0" stroke-width="8.96" stroke-linecap="round" opacity="0.7"/>
+</svg>

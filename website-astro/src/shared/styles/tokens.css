@@ -1,0 +1,15 @@
+/* Brand-spezifische CSS-Variablen werden von BrandLayout per inline style auf <body> gesetzt:
+   --brand, --brand-dark, --cta, --cta-dark
+   Hier nur Defaults und globale Tokens. */
+:root {
+  --max-content: 70rem;
+  --radius-sm: .25rem;
+  --radius-md: .4rem;
+  --radius-lg: .75rem;
+  --space-1: .5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 5rem;
+}

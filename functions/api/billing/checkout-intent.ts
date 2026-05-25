@@ -13,7 +13,9 @@ interface Body {
 const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 function allowedPriceIds(env: Env): Set<string> {
-  return new Set([env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_YEARLY].filter(Boolean));
+  return new Set(
+    [env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_HALFYEAR, env.PADDLE_PRICE_YEARLY].filter(Boolean),
+  );
 }
 
 // Pre-checkout intent endpoint. The pricing page calls this BEFORE opening the

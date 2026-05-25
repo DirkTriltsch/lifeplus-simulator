@@ -1,0 +1,49 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import type { Brand } from '@shared/content-schemas/config';
+
+interface Props {
+  brand: Brand;
+  title: string;
+}
+const { brand, title } = Astro.props;
+---
+<BrandLayout brand={brand} title={title}>
+  <Header brand={brand} />
+  <main class="legal-page">
+    <div class="container">
+      <slot />
+    </div>
+  </main>
+  <Footer brand={brand} />
+</BrandLayout>
+
+<style is:global>
+  /* Aus styles.css uebernommen — Legal-Page typografie */
+  .legal-page { padding: 3rem 0 4rem; }
+  .legal-page h1 { font-size: 1.75rem; margin: 0 0 0.5rem; color: #0f172a; }
+  .legal-page .legal-meta-top { font-size: 0.85rem; color: #94a3b8; margin-bottom: 2rem; }
+  .legal-page h2 { font-size: 1.15rem; margin: 2rem 0 0.6rem; color: #0f172a; }
+  .legal-page h3 { font-size: 1rem; margin: 1.5rem 0 0.4rem; color: #1e293b; }
+  .legal-page p, .legal-page address, .legal-page li {
+    font-size: 0.95rem;
+    color: #334155;
+    font-style: normal;
+    margin: 0 0 0.85rem;
+    line-height: 1.6;
+  }
+  .legal-page address { font-style: normal; }
+  .legal-page ol { padding-left: 1.3rem; margin: 0 0 0.85rem; }
+  .legal-page blockquote {
+    margin: 0.85rem 0;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 0 6px 6px 0;
+  }
+  .legal-page blockquote p { margin-bottom: 0.6rem; }
+  .legal-page blockquote p:last-child { margin-bottom: 0; }
+  .legal-page .legal-meta { font-size: 0.8rem; color: #94a3b8; margin-top: 2rem; }
+</style>

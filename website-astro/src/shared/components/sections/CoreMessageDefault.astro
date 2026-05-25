@@ -1,0 +1,18 @@
+---
+import type { CoreMessage } from '@shared/content-schemas/config';
+interface Props extends CoreMessage { source?: string; }
+const { headline, body, source } = Astro.props;
+---
+<section class="core" data-section="CoreMessageDefault.astro" data-source={source}>
+  <div class="wrap">
+    <h2>{headline}</h2>
+    <p>{body}</p>
+  </div>
+</section>
+
+<style>
+  .core { padding: var(--space-6) var(--space-3); }
+  .wrap { max-width: 48rem; margin: 0 auto; text-align: center; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); color: var(--brand); }
+  p { font-size: 1.15rem; color: #444; }
+</style>

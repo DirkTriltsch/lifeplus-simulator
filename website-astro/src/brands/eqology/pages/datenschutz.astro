@@ -1,0 +1,11 @@
+---
+import LegalPageLayout from '@shared/components/layout/LegalPageLayout.astro';
+import LegalDatenschutzDefault from '@shared/components/sections/LegalDatenschutzDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+import { contact } from '@shared/lib/contact';
+
+const brand = await getBrand('eqology');
+---
+<LegalPageLayout brand={brand} title="Datenschutz">
+  <LegalDatenschutzDefault brand={brand} contact={contact} source="shared/components/sections/LegalDatenschutzDefault.astro" />
+</LegalPageLayout>

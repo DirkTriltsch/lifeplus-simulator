@@ -3,7 +3,7 @@
 // Aufruf:  node scripts/build.mjs            (alle Brands)
 //          node scripts/build.mjs lifeplus   (nur einer)
 
-import { readFile, writeFile, mkdir, copyFile, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, copyFile, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
@@ -67,6 +67,7 @@ function tokensFor(brand) {
     PADDLE_ENV: paddle.env ?? 'sandbox',
     PADDLE_CLIENT_TOKEN: paddle.clientToken ?? '',
     PADDLE_PRICE_MONTHLY: paddle.priceIdMonthly ?? '',
+    PADDLE_PRICE_HALFYEAR: paddle.priceIdHalfYear ?? '',
     PADDLE_PRICE_YEARLY: paddle.priceIdYearly ?? '',
     API_BASE_URL: brand.apiBaseUrl ?? '',
   };
@@ -107,6 +108,7 @@ for (const brandId of brandIds) {
   const outDir = join(DIST_ROOT, `site-${brandId}`);
   console.log(`\nBuilding ${brand.siteName} -> dist/site-${brandId}/`);
 
+  await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
 
   // 1. Copy public assets (robots.txt etc.)

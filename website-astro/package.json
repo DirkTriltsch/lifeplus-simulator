@@ -1,0 +1,30 @@
+{
+  "name": "website-astro",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "check": "npm run check:lifeplus && npm run check:fitline && npm run check:eqology",
+    "check:lifeplus": "cross-env ASTRO_BRAND=lifeplus astro check",
+    "check:fitline": "cross-env ASTRO_BRAND=fitline astro check",
+    "check:eqology": "cross-env ASTRO_BRAND=eqology astro check",
+    "dev:lifeplus": "cross-env ASTRO_BRAND=lifeplus astro dev",
+    "dev:fitline": "cross-env ASTRO_BRAND=fitline astro dev",
+    "dev:eqology": "cross-env ASTRO_BRAND=eqology astro dev",
+    "build:lifeplus": "node scripts/clean-brand.mjs lifeplus && cross-env ASTRO_BRAND=lifeplus astro build && node scripts/prune-brand-output.mjs lifeplus",
+    "build:fitline": "node scripts/clean-brand.mjs fitline && cross-env ASTRO_BRAND=fitline astro build && node scripts/prune-brand-output.mjs fitline",
+    "build:eqology": "node scripts/clean-brand.mjs eqology && cross-env ASTRO_BRAND=eqology astro build && node scripts/prune-brand-output.mjs eqology",
+    "build:all": "npm run build:lifeplus && npm run build:fitline && npm run build:eqology"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/js-yaml": "^4.0.9",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.4.0"
+  }
+}

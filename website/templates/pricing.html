@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Preise – {{SITE_NAME}}</title>
-  <meta name="description" content="{{SITE_NAME}}-Abo · €19 monatlich oder €15/Monat im Jahresabo. Beide Pläne mit vollem Funktionsumfang, als Betriebsausgabe absetzbar." />
+  <meta name="description" content="{{SITE_NAME}} · Frei starten oder Pro mit 1, 6 oder 12 Monaten Laufzeit nutzen. Alle Pro-Pläne mit vollem Funktionsumfang, als Betriebsausgabe absetzbar." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,43 +141,24 @@
     .pricing-section { padding: 50px 0 88px; }
     .pricing-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      max-width: 1100px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      max-width: 1240px;
       margin: 0 auto 28px;
+      align-items: stretch;
     }
-    @media (max-width: 980px) { .pricing-row { grid-template-columns: 1fr; max-width: 480px; } }
-
-    .price-card.placeholder {
-      background: var(--paper-2);
-      border-style: dashed;
-    }
-    .price-card.placeholder .price-cta {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .price-card .placeholder-note {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--ink-4);
-      background: #fff;
-      border: 0.5px solid var(--line);
-      padding: 4px 10px;
-      border-radius: 100px;
-      margin-bottom: 14px;
-      font-weight: 500;
-    }
+    @media (max-width: 1120px) { .pricing-row { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 820px; } }
+    @media (max-width: 640px) { .pricing-row { grid-template-columns: 1fr; max-width: 480px; } }
 
     .price-card {
       background: #fff;
       border: 0.5px solid var(--line);
       border-radius: 18px;
-      padding: 36px 32px 32px;
+      padding: 34px 28px 30px;
       position: relative;
       transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
     }
     .price-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(15,27,23,0.08); }
     .price-card.featured {
@@ -199,16 +180,23 @@
       box-shadow: 0 2px 8px color-mix(in srgb, var(--cta) 32%, transparent);
     }
     .price-name { font-family: var(--serif); font-size: 24px; font-weight: 400; color: var(--ink); margin: 0 0 8px; letter-spacing: -0.01em; }
-    .price-desc { font-size: 14px; color: var(--ink-4); margin-bottom: 26px; }
+    .price-desc {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--ink-4);
+      margin-bottom: 24px;
+      min-height: 40px;
+    }
     .price-amount { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; letter-spacing: -0.025em; }
     .price-cur { font-family: var(--serif); font-size: 28px; color: var(--ink-3); font-weight: 300; }
-    .price-val { font-family: var(--serif); font-size: 64px; color: var(--ink); font-weight: 400; line-height: 0.95; }
+    .price-val { font-family: var(--serif); font-size: clamp(48px, 4.3vw, 60px); color: var(--ink); font-weight: 400; line-height: 0.95; }
     .price-unit { font-family: var(--sans); font-size: 16px; color: var(--ink-4); margin-left: 8px; font-weight: 400; }
     .price-billed {
       font-size: 13px; color: var(--ink-3);
       margin-bottom: 26px;
       padding-bottom: 22px;
       border-bottom: 0.5px solid var(--line-soft);
+      min-height: 64px;
     }
     .price-card.featured .price-billed { color: var(--brand); font-weight: 500; }
     .price-feats { list-style: none; display: grid; gap: 12px; margin: 0 0 26px; padding: 0; }
@@ -229,6 +217,7 @@
       text-decoration: none !important;
       cursor: pointer;
       font-family: inherit;
+      margin-top: auto;
     }
     button.price-cta { background: transparent; }
     .price-card.featured button.price-cta { border: none; }
@@ -254,19 +243,28 @@
     .price-cta:hover svg { transform: translateX(3px); }
 
     .pricing-note {
-      max-width: 720px;
+      max-width: 860px;
       margin: 0 auto;
       display: flex; gap: 14px; align-items: flex-start;
-      padding: 18px 22px;
+      padding: 22px 26px;
       background: #fff;
       border: 0.5px solid var(--line);
       border-radius: 12px;
-      font-size: 14px;
+      font-size: 15px;
       color: var(--ink-3);
       line-height: 1.55;
+      box-shadow: 0 12px 34px rgba(18, 24, 38, 0.06);
     }
-    .pricing-note svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--brand); margin-top: 1px; }
-    .pricing-note strong { color: var(--ink); font-weight: 600; }
+    .pricing-note svg { width: 22px; height: 22px; flex-shrink: 0; color: var(--brand); margin-top: 2px; }
+    .pricing-note strong { color: var(--ink); font-weight: 650; }
+    .pricing-note-title {
+      display: block;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 650;
+      margin-bottom: 5px;
+    }
+    .pricing-note + .pricing-note { margin-top: 14px; }
 
     /* ===== USt.-Banner (Netto-Hinweis) ===== */
     .vat-banner-wrap { padding: 18px 0 4px; }
@@ -331,7 +329,7 @@
     }
     .compare-row {
       display: grid;
-      grid-template-columns: 1.8fr 1fr 1fr;
+      grid-template-columns: 1.65fr repeat(4, 0.9fr);
       gap: 12px;
       padding: 18px 28px;
       align-items: center;
@@ -362,8 +360,10 @@
       font-weight: 500;
     }
     @media (max-width: 540px) {
+      .compare-table { overflow-x: auto; }
       .compare-row {
-        grid-template-columns: 1.2fr 0.6fr 0.6fr;
+        min-width: 720px;
+        grid-template-columns: 1.4fr repeat(4, 0.7fr);
         padding: 14px 16px;
         gap: 8px;
         font-size: 13px;
@@ -511,9 +511,9 @@
   <section class="ph">
     <div class="wrap">
       <div class="ph-eyebrow">Preise &amp; Konditionen</div>
-      <h1 class="ph-h1">Ein Werkzeug.<br><em>Drei klare Optionen.</em></h1>
+      <h1 class="ph-h1">Ein Werkzeug.<br><em>Vier klare Optionen.</em></h1>
       <p class="ph-sub">
-        Frei testen, monatlich kündbar nutzen oder im Jahresabo sparen — du wählst die passende Form. Die Bezahlpläne sind als <strong>Betriebsausgabe</strong> absetzbar.
+        Frei starten, flexibel monatlich nutzen oder mit 6 bzw. 12 Monaten vorausplanen — du wählst die passende Form. Die Bezahlpläne sind als <strong>Betriebsausgabe</strong> absetzbar.
       </p>
 
       <div class="vat-banner-wrap">
@@ -532,48 +532,48 @@
   <section class="pricing-section">
     <div class="wrap">
       <div class="pricing-row">
-        <div class="price-card placeholder">
-          <span class="placeholder-note">In Vorbereitung</span>
+        <div class="price-card">
           <div class="price-name">Frei</div>
-          <div class="price-desc">Reduzierter Demo-Zugang, ohne Anmeldung.</div>
+          <div class="price-desc">14 Tage Pro testen,<br>danach Free nutzen.</div>
           <div class="price-amount">
             <span class="price-cur">€</span><span class="price-val">0</span><span class="price-unit">/Monat</span>
           </div>
-          <div class="price-billed">kostenlos · ohne Login · ohne Kreditkarte</div>
+          <div class="price-billed">kostenlos · mit Magic-Link · ohne Kreditkarte</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span><strong>Funktionsumfang in Definition</strong> — Details folgen</span>
+              <span><strong>Jahr 1-4 sichtbar</strong> — langfristige Werte bleiben begrenzt</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Idealer Einstieg, um das Tool kennenzulernen</span>
+              <span>1 aktuelles Szenario, keine Speicherung</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Keine Speicherung eigener Szenarien</span>
+              <span>Ideal, um das Prinzip kennenzulernen</span>
             </li>
           </ul>
-          <button type="button" class="price-cta" disabled aria-disabled="true">
-            Bald verfügbar
-          </button>
+          <a href="{{APP_URL}}" class="price-cta" data-free-start>
+            Plan jetzt starten
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
         </div>
 
         <div class="price-card">
-          <div class="price-name">Monatlich</div>
-          <div class="price-desc">Flexibel, monatlich kündbar.</div>
+          <div class="price-name">1 Monat</div>
+          <div class="price-desc">Flexibel,<br>monatlich kündbar.</div>
           <div class="price-amount">
-            <span class="price-cur">€</span><span class="price-val">13,32</span><span class="price-unit">/Monat <em>netto</em></span>
+            <span class="price-cur">€</span><span class="price-val">14,95</span><span class="price-unit">/Monat <em>netto</em></span>
           </div>
-          <div class="price-billed">€13,32 netto monatlich · zzgl. USt. · jederzeit kündbar</div>
+          <div class="price-billed">€14,95 netto monatlich · zzgl. USt. · monatlich kündbar</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span><strong>Voller Funktionsumfang</strong> — alle Slider, alle Stufen, alle Phasen</span>
+              <span><strong>Voller Funktionsumfang</strong> — alle Jahre und Kennzahlen</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Handy, Tablet &amp; Desktop · URL-Sharing inklusive</span>
+              <span>Handy, Tablet &amp; Desktop</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -581,35 +581,63 @@
             </li>
           </ul>
           <button type="button" class="price-cta" data-plan="monthly" data-price-id="{{PADDLE_PRICE_MONTHLY}}">
-            Jetzt monatlich starten
+            Plan jetzt starten
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div class="price-card">
+          <div class="pc-badge">Halber Monat gratis</div>
+          <div class="price-name">6 Monate</div>
+          <div class="price-desc">Halbjährlich planen,<br>ein halber Monat gratis.</div>
+          <div class="price-amount">
+            <span class="price-cur">€</span><span class="price-val">13,71</span><span class="price-unit">/Monat <em>netto</em></span>
+          </div>
+          <div class="price-billed">€82,23 netto alle 6 Monate · zzgl. USt. · halber Monat gratis</div>
+          <ul class="price-feats">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong>Alles aus 1 Monat</strong></span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Eine Rechnung pro Halbjahr</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Monatlich kündbar, Restmonate zurück</span>
+            </li>
+          </ul>
+          <button type="button" class="price-cta" data-plan="halfyear" data-price-id="{{PADDLE_PRICE_HALFYEAR}}">
+            Plan jetzt starten
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
 
         <div class="price-card featured">
-          <div class="pc-badge">Empfehlung · 3 Monate gratis</div>
-          <div class="price-name">Jährlich</div>
-          <div class="price-desc">Ein Abo, eine Rechnung, klarer Vorteil.</div>
+          <div class="pc-badge">Empfehlung · 2 Monate gratis</div>
+          <div class="price-name">12 Monate</div>
+          <div class="price-desc">Jährlich sparen,<br>zwei Monate gratis.</div>
           <div class="price-amount">
-            <span class="price-cur">€</span><span class="price-val">9,99</span><span class="price-unit">/Monat <em>netto</em></span>
+            <span class="price-cur">€</span><span class="price-val">12,46</span><span class="price-unit">/Monat <em>netto</em></span>
           </div>
-          <div class="price-billed">€119,88 netto jährlich · zzgl. USt. · Ersparnis €39,96 / Jahr</div>
+          <div class="price-billed">€149,50 netto jährlich · zzgl. USt. · 2 Monate gratis</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span><strong>Alles aus Monatlich</strong></span>
+              <span><strong>Alles aus 1 Monat</strong></span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span><strong>~25 % günstiger</strong> als das Monatsabo</span>
+              <span>Eine Rechnung pro Jahr</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Eine Jahresrechnung — sauber für die Buchhaltung</span>
+              <span>Monatlich kündbar, Restmonate zurück</span>
             </li>
           </ul>
           <button type="button" class="price-cta" data-plan="yearly" data-price-id="{{PADDLE_PRICE_YEARLY}}">
-            Jetzt jährlich starten
+            Plan jetzt starten
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
@@ -617,7 +645,18 @@
 
       <div class="pricing-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-        <span>Als Sponsor setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater. Zahlung per Kreditkarte, SEPA-Lastschrift oder PayPal.</span>
+        <span>
+          <span class="pricing-note-title">Jahresrabatt ohne Jahresfalle.</span>
+          Automatisch verlängert? Kein Problem. Wir sind von unserem Nutzen überzeugt — und du hoffentlich auch. Wenn du aber nicht weitermachen möchtest, kündigst du einfach monatlich. Was du an vollen Restmonaten schon bezahlt hast, bekommst du anteilig zurück.
+        </span>
+      </div>
+
+      <div class="pricing-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8l4 4v14H4V3h4z"/><path d="M16 3v5h5M8 13h8M8 17h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>
+          <span class="pricing-note-title">Saubere Rechnung für deine Unterlagen.</span>
+          Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du LifeFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater.
+        </span>
       </div>
     </div>
   </section>
@@ -626,64 +665,79 @@
   <section class="compare">
     <div class="wrap">
       <h2 class="compare-h">Was ist <em>jeweils</em> enthalten?</h2>
-      <p class="compare-sub">Funktional identisch — der einzige Unterschied ist die Abrechnung.</p>
+      <p class="compare-sub">Free zeigt den Einstieg. Pro ist in allen Laufzeiten funktional identisch — der Unterschied ist die Abrechnung.</p>
 
       <div class="compare-table">
         <div class="compare-row header">
           <div></div>
-          <div class="compare-cell"><span class="compare-head-name">Monatlich</span><span class="compare-head-sub">€13,32/Mon</span></div>
-          <div class="compare-cell featured"><span class="compare-head-name featured-name">Jährlich</span><span class="compare-head-sub">€9,99/Mon</span></div>
+          <div class="compare-cell"><span class="compare-head-name">Free</span><span class="compare-head-sub">€0</span></div>
+          <div class="compare-cell"><span class="compare-head-name">1 Monat</span><span class="compare-head-sub">€14,95</span></div>
+          <div class="compare-cell"><span class="compare-head-name">6 Monate</span><span class="compare-head-sub">€13,71/Mon</span></div>
+          <div class="compare-cell featured"><span class="compare-head-name featured-name">12 Monate</span><span class="compare-head-sub">€12,46/Mon</span></div>
         </div>
 
         <div class="compare-row">
           <div class="compare-feat">5-Slider-Simulator</div>
+          <div class="compare-cell">begrenzt</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">10-Jahres-Verlauf &amp; Chart</div>
+          <div class="compare-cell">Jahr 1-4</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Stufen-Prognose (Believer → 3* Diamond)</div>
+          <div class="compare-cell">begrenzt</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Drei Simulationsmodelle (Standard / Zufall / Momentum)</div>
+          <div class="compare-cell">begrenzt</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Ziele-Leiter mit eigenen Zwischenzielen</div>
+          <div class="compare-cell">Demo-Ziele</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Netzwerk-Visualisierungen (Tabelle, Sunburst, Bein-Spalten, Hybrid-Tree)</div>
+          <div class="compare-cell">Basis</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Szenario per URL teilen (Handy, Tablet, Desktop)</div>
+          <div class="compare-cell">Magic-Link</div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="compare-row">
-          <div class="compare-feat">Light- &amp; Dark-Mode</div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Abrechnung</div>
-          <div class="compare-cell">12 Rechnungen / Jahr</div>
-          <div class="compare-cell featured">1 Rechnung / Jahr</div>
+          <div class="compare-cell">kostenlos</div>
+          <div class="compare-cell">monatlich</div>
+          <div class="compare-cell">halbjährlich</div>
+          <div class="compare-cell featured">jährlich</div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Kündigungsfrist</div>
+          <div class="compare-cell">—</div>
           <div class="compare-cell">monatlich</div>
-          <div class="compare-cell featured">zum Vertragsende</div>
+          <div class="compare-cell">monatlich</div>
+          <div class="compare-cell featured">monatlich</div>
         </div>
       </div>
     </div>
@@ -701,8 +755,8 @@
           </button>
           <div class="faq-a">
             <div class="faq-a-inner">
-              <p>Im <strong>Monatsabo</strong> kündigst du jederzeit zum Monatsende — ein Klick im Account-Bereich genügt, keine Begründung nötig.</p>
-              <p>Im <strong>Jahresabo</strong> läuft der Vertrag bis zum Ende des bezahlten Jahres und endet automatisch, wenn du nicht verlängerst. Du kannst die automatische Verlängerung jederzeit deaktivieren.</p>
+              <p>Im <strong>1-Monats-Abo</strong> kündigst du monatlich — ein Klick im Account-Bereich genügt, keine Begründung nötig.</p>
+              <p>Bei <strong>6 oder 12 Monaten</strong> kündigst du ebenfalls monatlich. Dein Zugang läuft bis zum Ende des laufenden Monats; nicht genutzte volle Restmonate erstatten wir anteilig.</p>
             </div>
           </div>
         </div>
@@ -714,7 +768,7 @@
           </button>
           <div class="faq-a">
             <div class="faq-a-inner">
-              <p>Ja. Beim Wechsel vom Monats- aufs Jahresabo wird der nicht verbrauchte Restmonat angerechnet. Beim umgekehrten Wechsel endet das Jahresabo regulär und das Monatsabo startet direkt im Anschluss.</p>
+              <p>Ja. Du kannst zwischen 1, 6 und 12 Monaten wechseln. Nicht verbrauchte Restzeit wird dabei angerechnet oder anteilig erstattet.</p>
             </div>
           </div>
         </div>
@@ -739,7 +793,7 @@
           </button>
           <div class="faq-a">
             <div class="faq-a-inner">
-              <p>Kreditkarte (Visa, Mastercard, Amex), SEPA-Lastschrift und PayPal. Für das Jahresabo zusätzlich Überweisung auf Anfrage.</p>
+              <p>Kreditkarte (Visa, Mastercard, Amex), SEPA-Lastschrift und PayPal. Für 6- und 12-Monats-Laufzeiten zusätzlich Überweisung auf Anfrage.</p>
             </div>
           </div>
         </div>
@@ -751,7 +805,7 @@
           </button>
           <div class="faq-a">
             <div class="faq-a-inner">
-              <p>Eine reduzierte Demo-Version steht ohne Anmeldung zur Verfügung. Sie zeigt das Konzept und Default-Szenarien — die volle Slider-Steuerung und persönliche URL-Szenarien sind den Abo-Plänen vorbehalten.</p>
+              <p>Ja. Der freie Zugang zeigt dir das Prinzip mit reduzierter Planungstiefe. Die volle 10-Jahres-Projektion und alle Pro-Funktionen sind in den bezahlten Laufzeiten enthalten.</p>
             </div>
           </div>
         </div>
@@ -776,7 +830,7 @@
           </button>
           <div class="faq-a">
             <div class="faq-a-inner">
-              <p>Szenarien werden direkt in der URL kodiert, nicht zentral gespeichert. Deine gespeicherten Links bleiben funktionsfähig — solange ein aktives Abo auf dem öffnenden Endgerät existiert.</p>
+              <p>Free speichert keine eigenen Szenarien. In Pro kannst du deine aktuelle Planung weiter nutzen; bei Kündigung schaltet die App nach Ablauf des Zugangs wieder in den freien Umfang.</p>
             </div>
           </div>
         </div>
@@ -827,6 +881,74 @@
       const appUrl = '{{APP_URL}}';
       const brandId = '{{BRAND_ID}}';
       const apiBaseUrl = '{{API_BASE_URL}}'.replace(/\/$/, '');
+      const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+      // Remembered for the global Paddle eventCallback, which cannot
+      // receive arguments from the per-button click handler.
+      let lastCheckoutEmail = '';
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function showMailSentScreen(email) {
+        const existing = document.getElementById('mail-sent-overlay');
+        if (existing) existing.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'mail-sent-overlay';
+        overlay.style.cssText =
+          'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;' +
+          'display:flex;align-items:center;justify-content:center;padding:16px;' +
+          'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;';
+        overlay.innerHTML =
+          '<div role="dialog" aria-live="polite" style="background:#fff;border-radius:12px;max-width:480px;width:100%;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+            '<h2 style="font-size:24px;font-weight:600;margin:0 0 12px;color:#1a1a1a;text-align:center;">Schau in dein Postfach</h2>' +
+            '<p style="color:#333;line-height:1.55;margin:0 0 16px;text-align:center;font-size:15px;">Wir haben dir einen Login-Link an <strong>' + escapeHtml(email) + '</strong> gesendet.</p>' +
+            '<p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 20px;text-align:center;">Klicke auf den Link in der Mail, um dich anzumelden. Der Link ist 15 Minuten gueltig.</p>' +
+            '<p style="color:#888;font-size:13px;line-height:1.5;margin:0;text-align:center;">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>' +
+          '</div>';
+        document.body.appendChild(overlay);
+      }
+
+      async function requestMagicLink(email, access) {
+        try {
+          const res = await fetch(apiBaseUrl + '/api/auth/request-link', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(access ? { email: email, access: access } : { email: email }),
+          });
+          if (!res.ok) throw new Error('request_link_failed_' + res.status);
+        } catch (err) {
+          console.warn('request-link unreachable:', err);
+          throw err;
+        }
+      }
+
+      document.querySelectorAll('[data-free-start]').forEach((link) => {
+        link.addEventListener('click', async function (e) {
+          e.preventDefault();
+          const freeEmail = window.prompt(
+            'Mit welcher E-Mail-Adresse moechtest du deinen kostenlosen Zugang starten?',
+          );
+          if (!freeEmail) return;
+          const normalizedEmail = freeEmail.trim().toLowerCase();
+          if (!emailPattern.test(normalizedEmail)) {
+            alert('Bitte gib eine gueltige E-Mail-Adresse ein.');
+            return;
+          }
+          try {
+            await requestMagicLink(normalizedEmail, 'free');
+            showMailSentScreen(normalizedEmail);
+          } catch (err) {
+            alert('Der Login-Link konnte gerade nicht gesendet werden. Bitte versuche es gleich noch einmal.');
+          }
+        });
+      });
 
       if (!clientToken || clientToken.startsWith('REPLACE_')) {
         console.warn('Paddle client token not configured. Checkout disabled.');
@@ -851,7 +973,21 @@
         token: clientToken,
         eventCallback: function (event) {
           if (event && event.name === 'checkout.completed') {
-            window.location.href = appUrl + '?checkout=success';
+            let email = lastCheckoutEmail;
+            try {
+              const customerEmail = event && event.data && event.data.customer && event.data.customer.email;
+              if (customerEmail) email = String(customerEmail).trim().toLowerCase();
+            } catch (e) { /* ignore */ }
+            if (email) {
+              requestMagicLink(email).then(function () {
+                showMailSentScreen(email);
+              }).catch(function () {
+                alert('Der Login-Link konnte gerade nicht gesendet werden. Du wirst zur App weitergeleitet.');
+                window.location.href = appUrl + '?checkout=success&email=' + encodeURIComponent(email);
+              });
+            } else {
+              window.location.href = appUrl + '?checkout=success';
+            }
           }
         },
       });
@@ -870,7 +1006,7 @@
           );
           if (!checkoutEmail) return;
           const normalizedEmail = checkoutEmail.trim().toLowerCase();
-          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalizedEmail)) {
+          if (!emailPattern.test(normalizedEmail)) {
             alert('Bitte gib eine gueltige E-Mail-Adresse ein.');
             return;
           }
@@ -913,6 +1049,7 @@
             btn.disabled = false;
           }
 
+          lastCheckoutEmail = normalizedEmail;
           Paddle.Checkout.open({
             items: [{ priceId: priceId, quantity: 1 }],
             customer: { email: normalizedEmail },

@@ -1,0 +1,143 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import type { Contact } from '@shared/lib/contact';
+
+interface Props { brand: Brand; contact: Contact; source?: string; }
+const { contact, source } = Astro.props;
+---
+<div data-section="LegalDatenschutzDefault.astro" data-source={source}>
+  <p class="legal-meta-top">Rechtliche Informationen</p>
+  <h1>Datenschutzerklärung</h1>
+
+  <h2>1. Datenschutz auf einen Blick</h2>
+  <p>
+    Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen
+    Daten passiert, wenn Sie diese Web-App besuchen. Personenbezogene Daten sind alle Daten,
+    mit denen Sie persönlich identifiziert werden können.
+  </p>
+
+  <h3>Datenerfassung in dieser Web-App</h3>
+  <p>
+    Die Datenverarbeitung erfolgt durch den Betreiber dieser Web-App. Die Kontaktdaten finden Sie
+    im Impressum und im Abschnitt „Hinweis zur verantwortlichen Stelle".
+  </p>
+  <p>
+    Ihre Daten werden zum einen dadurch erhoben, dass Sie uns diese mitteilen, zum Beispiel per
+    E-Mail oder Telefon. Andere Daten werden automatisch beim Aufruf der Web-App durch die
+    bereitstellende technische Infrastruktur erfasst. Das sind vor allem technische Daten wie
+    Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs.
+  </p>
+  <p>
+    Die Eingaben im Simulator werden lokal im Browser für die Berechnung verwendet und nach
+    aktuellem Stand nicht an einen eigenen Server übertragen.
+  </p>
+
+  <h2>2. Hosting und technische Bereitstellung</h2>
+  <p>
+    Diese Web-App ist als statische Web-Anwendung vorgesehen. Beim Aufruf können durch den
+    jeweiligen Hosting-Anbieter technische Zugriffsdaten verarbeitet werden, insbesondere
+    IP-Adresse, Datum und Uhrzeit des Zugriffs, Browsertyp, Betriebssystem und die angeforderte
+    Datei. Diese Verarbeitung dient der sicheren und fehlerfreien Bereitstellung der Web-App.
+  </p>
+  <p>
+    Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Das berechtigte Interesse liegt in einer
+    zuverlässigen, sicheren und performanten Bereitstellung des Angebots.
+  </p>
+
+  <h2>3. Allgemeine Hinweise und Pflichtinformationen</h2>
+  <h3>Datenschutz</h3>
+  <p>
+    Der Betreiber dieser Web-App nimmt den Schutz Ihrer persönlichen Daten sehr ernst.
+    Personenbezogene Daten werden vertraulich und entsprechend den gesetzlichen
+    Datenschutzvorschriften sowie dieser Datenschutzerklärung behandelt.
+  </p>
+  <p>
+    Wir weisen darauf hin, dass die Datenübertragung im Internet, zum Beispiel bei der
+    Kommunikation per E-Mail, Sicherheitslücken aufweisen kann. Ein lückenloser Schutz der
+    Daten vor dem Zugriff durch Dritte ist nicht möglich.
+  </p>
+
+  <h3>Hinweis zur verantwortlichen Stelle</h3>
+  <p>Die verantwortliche Stelle für die Datenverarbeitung ist:</p>
+  <address>
+    {contact.name}<br />
+    {contact.addressLine1}<br />
+    {contact.addressLine2}<br />
+    {contact.addressLine3}
+  </address>
+  <p>
+    Telefon: {contact.phone}<br />
+    E-Mail: <a href={`mailto:${contact.email}`}>{contact.email}</a>
+  </p>
+  <p>
+    Verantwortliche Stelle ist die natürliche oder juristische Person, die allein oder gemeinsam
+    mit anderen über die Zwecke und Mittel der Verarbeitung von personenbezogenen Daten entscheidet.
+  </p>
+
+  <h3>Speicherdauer</h3>
+  <p>
+    Soweit innerhalb dieser Datenschutzerklärung keine speziellere Speicherdauer genannt wurde,
+    verbleiben Ihre personenbezogenen Daten bei uns, bis der Zweck für die Datenverarbeitung
+    entfällt. Wenn Sie ein berechtigtes Löschersuchen geltend machen oder eine Einwilligung zur
+    Datenverarbeitung widerrufen, werden Ihre Daten gelöscht, sofern keine anderen rechtlich
+    zulässigen Gründe für die Speicherung bestehen.
+  </p>
+
+  <h3>Rechtsgrundlagen der Datenverarbeitung</h3>
+  <p>
+    Sofern Sie in die Datenverarbeitung eingewilligt haben, verarbeiten wir Ihre personenbezogenen
+    Daten auf Grundlage von Art. 6 Abs. 1 lit. a DSGVO. Sind Ihre Daten zur Vertragserfüllung
+    oder zur Durchführung vorvertraglicher Maßnahmen erforderlich, erfolgt die Verarbeitung auf
+    Grundlage von Art. 6 Abs. 1 lit. b DSGVO. Soweit eine rechtliche Verpflichtung besteht,
+    erfolgt die Verarbeitung auf Grundlage von Art. 6 Abs. 1 lit. c DSGVO. Darüber hinaus kann
+    die Verarbeitung auf Grundlage unseres berechtigten Interesses nach Art. 6 Abs. 1 lit. f
+    DSGVO erfolgen.
+  </p>
+
+  <h2>4. Ihre Rechte</h2>
+  <p>
+    Sie haben jederzeit das Recht, unentgeltlich Auskunft über Herkunft, Empfänger und Zweck
+    Ihrer gespeicherten personenbezogenen Daten zu erhalten. Sie haben außerdem ein Recht auf
+    Berichtigung oder Löschung dieser Daten. Wenn Sie eine Einwilligung zur Datenverarbeitung
+    erteilt haben, können Sie diese Einwilligung jederzeit für die Zukunft widerrufen.
+    Außerdem haben Sie das Recht, unter bestimmten Umständen die Einschränkung der Verarbeitung
+    Ihrer personenbezogenen Daten zu verlangen.
+  </p>
+  <p>
+    Im Falle von Verstößen gegen die DSGVO steht Ihnen ein Beschwerderecht bei einer zuständigen
+    Aufsichtsbehörde zu.
+  </p>
+  <p>
+    Sie haben außerdem das Recht, Daten, die wir auf Grundlage Ihrer Einwilligung oder in
+    Erfüllung eines Vertrags automatisiert verarbeiten, in einem gängigen, maschinenlesbaren
+    Format aushändigen zu lassen.
+  </p>
+
+  <h2>5. Kontaktaufnahme</h2>
+  <p>
+    Wenn Sie uns per E-Mail oder Telefon kontaktieren, wird Ihre Anfrage inklusive aller daraus
+    hervorgehenden personenbezogenen Daten zum Zweck der Bearbeitung Ihres Anliegens gespeichert
+    und verarbeitet. Diese Daten geben wir nicht ohne Ihre Einwilligung weiter.
+  </p>
+  <p>
+    Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre Anfrage
+    mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher
+    Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem
+    berechtigten Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen
+    nach Art. 6 Abs. 1 lit. f DSGVO.
+  </p>
+
+  <h2>6. Cookies, Analyse-Tools und Drittanbieter</h2>
+  <p>
+    Die aktuelle Web-App verwendet nach derzeitigem Stand keine eigenen Analyse-Tools, keine
+    YouTube-Einbettungen und keine eigenen Cookies für Tracking- oder Marketingzwecke.
+  </p>
+  <p>
+    Als installierbare Web-App kann sie technische Dateien im Browser-Cache speichern, damit die
+    Anwendung schneller lädt und auf geeigneten Geräten zum Homescreen hinzugefügt werden kann.
+    Diese technische Speicherung dient der Bereitstellung der App-Funktion und erfolgt auf
+    Grundlage von Art. 6 Abs. 1 lit. f DSGVO.
+  </p>
+
+  <p class="legal-meta">Grundlage: angepasst aus dem bestehenden eRecht24-Text.</p>
+</div>

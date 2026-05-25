@@ -1,0 +1,164 @@
+seo:
+  title: "Preise"
+  description: "LifeFlow360 · Frei starten oder Pro mit 1, 6 oder 12 Monaten Laufzeit nutzen. Alle Pro-Pläne mit vollem Funktionsumfang, als Betriebsausgabe absetzbar."
+
+hero:
+  eyebrow: "Preise & Konditionen"
+  h1Html: "Ein Werkzeug.<br><em>Vier klare Optionen.</em>"
+  subHtml: "Frei starten, flexibel monatlich nutzen oder mit 6 bzw. 12 Monaten vorausplanen — du wählst die passende Form. Die Bezahlpläne sind als <strong>Betriebsausgabe</strong> absetzbar."
+
+vatBanner:
+  title: "Alle Preise verstehen sich netto, zzgl. gesetzlicher USt."
+  body: "Im Checkout wird die länderspezifische USt. ausgewiesen. Für Unternehmer mit gültiger EU-VAT-ID greift Reverse-Charge."
+
+tiers:
+  - id: "free"
+    name: "Frei"
+    descHtml: "Reduzierter Demo-Zugang,<br>ohne Anmeldung."
+    currency: "€"
+    value: "0"
+    unit: "/Monat"
+    billed: "kostenlos · ohne Login · ohne Kreditkarte"
+    features:
+      - strong: "Jahr 1-4 sichtbar"
+        text: "— langfristige Werte bleiben begrenzt"
+      - text: "1 aktuelles Szenario, keine Speicherung"
+      - text: "Ideal, um das Prinzip kennenzulernen"
+    cta:
+      kind: "link"
+      label: "Plan jetzt starten"
+      url: "/app/"
+
+  - id: "monthly"
+    name: "1 Monat"
+    descHtml: "Flexibel,<br>monatlich kündbar."
+    currency: "€"
+    value: "14,95"
+    unit: "/Monat"
+    unitNote: "netto"
+    billed: "€14,95 netto monatlich · zzgl. USt. · monatlich kündbar"
+    features:
+      - strong: "Voller Funktionsumfang"
+        text: "— alle Jahre und Kennzahlen"
+      - text: "Handy, Tablet & Desktop"
+      - text: "Monatlich kündbar"
+    cta:
+      kind: "paddle"
+      label: "Plan jetzt starten"
+      plan: "monthly"
+      priceIdKey: "monthly"
+
+  - id: "halfyear"
+    badge: "Halber Monat gratis"
+    name: "6 Monate"
+    descHtml: "Halbjährlich planen,<br>ein halber Monat gratis."
+    currency: "€"
+    value: "13,71"
+    unit: "/Monat"
+    unitNote: "netto"
+    billed: "€82,23 netto alle 6 Monate · zzgl. USt. · halber Monat gratis"
+    features:
+      - strong: "Alles aus 1 Monat"
+        text: ""
+      - text: "Eine Rechnung pro Halbjahr"
+      - text: "Monatlich kündbar, Restmonate zurück"
+    cta:
+      kind: "paddle"
+      label: "Plan jetzt starten"
+      plan: "halfyear"
+      priceIdKey: "halfyear"
+
+  - id: "yearly"
+    featured: true
+    badge: "Empfehlung · 2 Monate gratis"
+    name: "12 Monate"
+    descHtml: "Jährlich sparen,<br>zwei Monate gratis."
+    currency: "€"
+    value: "12,46"
+    unit: "/Monat"
+    unitNote: "netto"
+    billed: "€149,50 netto jährlich · zzgl. USt. · 2 Monate gratis"
+    features:
+      - strong: "Alles aus 1 Monat"
+        text: ""
+      - text: "Eine Rechnung pro Jahr"
+      - text: "Monatlich kündbar, Restmonate zurück"
+    cta:
+      kind: "paddle"
+      label: "Plan jetzt starten"
+      plan: "yearly"
+      priceIdKey: "yearly"
+
+notes:
+  - icon: "info"
+    title: "Jahresrabatt ohne Jahresfalle."
+    body: "Automatisch verlängert? Kein Problem. Wir sind von unserem Nutzen überzeugt — und du hoffentlich auch. Wenn du aber nicht weitermachen möchtest, kündigst du einfach monatlich. Was du an vollen Restmonaten schon bezahlt hast, bekommst du anteilig zurück."
+  - icon: "doc"
+    title: "Saubere Rechnung für deine Unterlagen."
+    body: "Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du LifeFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater."
+
+compare:
+  headlineHtml: "Was ist <em>jeweils</em> enthalten?"
+  sub: "Free zeigt den Einstieg. Pro ist in allen Laufzeiten funktional identisch — der Unterschied ist die Abrechnung."
+  columns:
+    - name: "Free"
+      sub: "€0"
+    - name: "1 Monat"
+      sub: "€14,95"
+    - name: "6 Monate"
+      sub: "€13,71/Mon"
+    - name: "12 Monate"
+      sub: "€12,46/Mon"
+      featured: true
+  rows:
+    - feature: "5-Slider-Simulator"
+      cells: ["begrenzt", "check", "check", "check"]
+    - feature: "10-Jahres-Verlauf & Chart"
+      cells: ["Jahr 1-4", "check", "check", "check"]
+    - feature: "Stufen-Prognose (Believer → 3* Diamond)"
+      cells: ["begrenzt", "check", "check", "check"]
+    - feature: "Drei Simulationsmodelle (Standard / Zufall / Momentum)"
+      cells: ["begrenzt", "check", "check", "check"]
+    - feature: "Ziele-Leiter mit eigenen Zwischenzielen"
+      cells: ["Demo-Ziele", "check", "check", "check"]
+    - feature: "Netzwerk-Visualisierungen (Tabelle, Sunburst, Bein-Spalten, Hybrid-Tree)"
+      cells: ["Basis", "check", "check", "check"]
+    - feature: "Szenario per URL teilen (Handy, Tablet, Desktop)"
+      cells: ["-", "check", "check", "check"]
+    - feature: "Abrechnung"
+      cells: ["kostenlos", "monatlich", "halbjährlich", "jährlich"]
+    - feature: "Kündigungsfrist"
+      cells: ["-", "monatlich", "monatlich", "monatlich"]
+
+faq:
+  headlineHtml: "Fragen zur <em>Abrechnung.</em>"
+  items:
+    - q: "Wie kann ich kündigen?"
+      a:
+        - "Im <strong>1-Monats-Abo</strong> kündigst du monatlich — ein Klick im Account-Bereich genügt, keine Begründung nötig."
+        - "Bei <strong>6 oder 12 Monaten</strong> kündigst du ebenfalls monatlich. Dein Zugang läuft bis zum Ende des laufenden Monats; nicht genutzte volle Restmonate erstatten wir anteilig."
+    - q: "Kann ich vom Monats- aufs Jahresabo wechseln (oder umgekehrt)?"
+      a:
+        - "Ja. Du kannst zwischen 1, 6 und 12 Monaten wechseln. Nicht verbrauchte Restzeit wird dabei angerechnet oder anteilig erstattet."
+    - q: "Ist LifeFlow360 als Betriebsausgabe absetzbar?"
+      a:
+        - "Für Sponsoren, die mit dem Abo ihre Sponsoring-Tätigkeit unterstützen, ist es in aller Regel als Betriebsausgabe absetzbar. Die Rechnung enthält alle steuerlich relevanten Angaben."
+        - "Wir sind keine Steuerberater — sprich im Zweifelsfall mit deinem."
+    - q: "Welche Zahlungsmethoden gibt es?"
+      a:
+        - "Kreditkarte (Visa, Mastercard, Amex), SEPA-Lastschrift und PayPal. Für 6- und 12-Monats-Laufzeiten zusätzlich Überweisung auf Anfrage."
+    - q: "Gibt es eine kostenlose Testphase?"
+      a:
+        - "Ja. Der freie Zugang zeigt dir das Prinzip mit reduzierter Planungstiefe. Die volle 10-Jahres-Projektion und alle Pro-Funktionen sind in den bezahlten Laufzeiten enthalten."
+    - q: "Brauche ich für jeden meiner Interessenten ein eigenes Abo?"
+      a:
+        - "Nein. Ein Abo ist auf dich als Sponsor lizenziert. Du nutzt es für beliebig viele Gespräche mit beliebig vielen Interessenten — auf deinen Geräten oder per geteiltem URL-Link."
+        - "Wenn dein Interessent das Tool selbst nutzen möchte (nachdem er Sponsor geworden ist), schließt er ein eigenes Abo ab."
+    - q: "Was passiert mit meinen Szenarien, wenn ich kündige?"
+      a:
+        - "Free speichert keine eigenen Szenarien. In Pro kannst du deine aktuelle Planung weiter nutzen; bei Kündigung schaltet die App nach Ablauf des Zugangs wieder in den freien Umfang."
+
+finalCta:
+  headlineHtml: "Eine Entscheidung. <em>Ein Werkzeug.</em>"
+  sub: "Frei testen oder direkt im Gespräch nutzen — beides startet mit einem Klick."
+  ctaLabel: "Simulator starten"

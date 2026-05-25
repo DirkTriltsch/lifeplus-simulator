@@ -1,0 +1,148 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import type { Contact } from '@shared/lib/contact';
+
+interface Props { brand: Brand; contact: Contact; source?: string; }
+const { contact, source } = Astro.props;
+---
+<div data-section="LegalWiderrufDefault.astro" data-source={source}>
+  <p class="legal-meta-top">Rechtliche Informationen</p>
+  <h1>Widerrufsbelehrung</h1>
+  <p class="legal-meta">Für Verbraucher im Sinne des § 13 BGB. Stand: Mai 2026.</p>
+
+  <h2>Widerrufsrecht</h2>
+  <p>
+    Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen
+    diesen Vertrag zu widerrufen.
+  </p>
+  <p>
+    Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsschlusses.
+  </p>
+  <p>
+    Um Ihr Widerrufsrecht auszuüben, müssen Sie uns
+  </p>
+  <address>
+    {contact.name}<br />
+    {contact.addressLine1}<br />
+    {contact.addressLine2}<br />
+    {contact.addressLine3}<br />
+    Telefon: {contact.phone}<br />
+    E-Mail: <a href={`mailto:${contact.email}`}>{contact.email}</a>
+  </address>
+  <p>
+    mittels einer eindeutigen Erklärung (z.B. ein mit der Post versandter
+    Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu
+    widerrufen, informieren. Sie können dafür das beigefügte
+    Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben
+    ist.
+  </p>
+  <p>
+    Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung
+    über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist
+    absenden.
+  </p>
+
+  <h2>Folgen des Widerrufs</h2>
+  <p>
+    Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die
+    wir von Ihnen erhalten haben, einschließlich der Lieferkosten (mit
+    Ausnahme der zusätzlichen Kosten, die sich daraus ergeben, dass Sie
+    eine andere Art der Lieferung als die von uns angebotene, günstigste
+    Standardlieferung gewählt haben), unverzüglich und spätestens binnen
+    vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über
+    Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese
+    Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der
+    ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen
+    wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden
+    Ihnen wegen dieser Rückzahlung Entgelte berechnet.
+  </p>
+
+  <h2>Vorzeitiges Erlöschen des Widerrufsrechts</h2>
+  <p>
+    Bei einem Vertrag über die Lieferung von nicht auf einem körperlichen
+    Datenträger befindlichen digitalen Inhalten erlischt das
+    Widerrufsrecht auch dann, wenn der Anbieter mit der Ausführung des
+    Vertrags begonnen hat, nachdem der Verbraucher
+  </p>
+  <ol>
+    <li>
+      ausdrücklich zugestimmt hat, dass mit der Ausführung des Vertrags
+      vor Ablauf der Widerrufsfrist begonnen wird,
+    </li>
+    <li>
+      seine Kenntnis davon bestätigt hat, dass durch seine Zustimmung mit
+      Beginn der Ausführung des Vertrags sein Widerrufsrecht erlischt, und
+    </li>
+    <li>
+      der Anbieter dem Verbraucher eine Bestätigung gemäß § 312f BGB zur
+      Verfügung gestellt hat.
+    </li>
+  </ol>
+  <p>
+    Bei einem Vertrag über die Bereitstellung digitaler Dienstleistungen
+    (laufender SaaS-Zugang) gilt das Widerrufsrecht entsprechend.
+  </p>
+
+  <h2>Hinweis</h2>
+  <p>
+    Mit Abschluss des Kaufvorgangs im Paddle-Checkout stimmen Sie
+    ausdrücklich zu, dass die Bereitstellung des Dienstes sofort beginnt
+    und Sie davon Kenntnis genommen haben, dass Ihr Widerrufsrecht mit
+    vollständiger Vertragserfüllung erlischt.
+  </p>
+
+  <h2>Ausnahme: Geschäftskunden</h2>
+  <p>
+    Das Widerrufsrecht steht nur Verbrauchern im Sinne des § 13 BGB zu.
+    Unternehmer im Sinne des § 14 BGB haben kein gesetzliches
+    Widerrufsrecht.
+  </p>
+
+  <h2>Muster-Widerrufsformular</h2>
+  <p>
+    Wenn Sie den Vertrag widerrufen wollen, können Sie dieses Formular
+    ausfüllen und zurücksenden:
+  </p>
+  <blockquote>
+    <p>
+      An<br />
+      {contact.name}<br />
+      {contact.addressLine1}<br />
+      {contact.addressLine2}<br />
+      {contact.addressLine3}<br />
+      E-Mail: {contact.email}
+    </p>
+    <p>
+      Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen
+      Vertrag über die Erbringung der folgenden Dienstleistung (*):
+    </p>
+    <p>
+      ____________________________________________________________________
+    </p>
+    <p>
+      Bestellt am (*) / erhalten am (*): _________________________________<br />
+      Name des/der Verbraucher(s): _____________________________________<br />
+      Anschrift des/der Verbraucher(s): ________________________________<br />
+      Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier):<br />
+      _________________________________<br />
+      Datum: _________________________________
+    </p>
+    <p style="font-size: 12px; color: #94a3b8;">
+      (*) Unzutreffendes streichen.
+    </p>
+  </blockquote>
+
+  <h2>Rückerstattung über Paddle</h2>
+  <p>
+    Da die Zahlungsabwicklung über die Paddle.com Market Limited als
+    Verkaufsabwickler (Merchant of Record) erfolgt, wird eine berechtigte
+    Rückerstattung über Paddle abgewickelt und auf das ursprünglich
+    verwendete Zahlungsmittel zurückgebucht.
+  </p>
+
+  <p class="legal-meta">
+    Vorlage auf Basis der Muster-Widerrufsbelehrung gemäß Anlage 1 zu
+    Artikel 246a § 1 Absatz 2 Satz 2 EGBGB, angepasst für SaaS. Vor
+    Live-Schaltung durch eine Anwältin oder einen Anwalt prüfen lassen.
+  </p>
+</div>

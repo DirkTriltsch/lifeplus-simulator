@@ -126,3 +126,31 @@ export function isEntitlementActive(entitlement: EntitlementRow | null, now: num
   if (entitlement.valid_until === null) return true;
   return entitlement.valid_until > now;
 }
+
+export async function grantFreeEntitlementIfMissing(
+  env: Env,
+  userId: string,
+  brandId: string,
+  now: number,
+  id: () => string,
+): Promise<void> {
+  const existing = await getEntitlementForBrand(env, userId, brandId);
+  if (existing && isEntitlementActive(existing, now) && existing.access_level !== 'free') return;
+  if (existing && isEntitlementActive(existing, now) && existing.access_level === 'free') return;
+
+  if (existing) {
+    await env.DB.prepare(
+      'UPDATE entitlements SET access_level = ?, valid_until = ?, source = ?, updated_at = ? WHERE id = ?',
+    )
+      .bind('free', null, 'free_signup', now, existing.id)
+      .run();
+    return;
+  }
+
+  await env.DB.prepare(
+    `INSERT INTO entitlements (id, user_id, brand_id, access_level, valid_until, source, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(id(), userId, brandId, 'free', null, 'free_signup', now, now)
+    .run();
+}

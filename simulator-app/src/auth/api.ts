@@ -91,12 +91,15 @@ export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
   }).then(asJson<{ ok: boolean }>);
 }
 
-export function verifyMagicLink(token: string): Promise<{ ok: boolean; sessionKind: string }> {
+export function verifyMagicLink(
+  token: string,
+  access?: 'free',
+): Promise<{ ok: boolean; sessionKind: string }> {
   return fetch(apiUrl('/api/auth/verify-link'), {
     method: 'POST',
     headers,
     credentials: 'include',
-    body: JSON.stringify({ token }),
+    body: JSON.stringify(access ? { token, access } : { token }),
   }).then(asJson<{ ok: boolean; sessionKind: string }>);
 }
 

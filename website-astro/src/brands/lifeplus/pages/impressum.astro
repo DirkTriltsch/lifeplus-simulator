@@ -1,0 +1,11 @@
+---
+import LegalPageLayout from '@shared/components/layout/LegalPageLayout.astro';
+import LegalImpressumDefault from '@shared/components/sections/LegalImpressumDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+import { contact } from '@shared/lib/contact';
+
+const brand = await getBrand('lifeplus');
+---
+<LegalPageLayout brand={brand} title="Impressum">
+  <LegalImpressumDefault brand={brand} contact={contact} source="shared/components/sections/LegalImpressumDefault.astro" />
+</LegalPageLayout>

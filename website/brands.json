@@ -15,6 +15,8 @@
       "env": "sandbox",
       "clientToken": "test_fee36ee3e68b2f654e1ad01ab59",
       "priceIdMonthly": "pri_01ks580xcmk17mam0qp9tjkwxg",
+      "_priceIdHalfYearNote": "Paddle internal description: LifeFlow-IND-PRO-HY",
+      "priceIdHalfYear": "pri_01ksfd0ws71rgxkj7gfrrzkywm",
       "priceIdYearly": "pri_01ks5864k3detqr1j2v3cx7dhs"
     },
     "lockup": {
@@ -43,6 +45,7 @@
       "env": "sandbox",
       "clientToken": "REPLACE_WITH_PADDLE_CLIENT_TOKEN",
       "priceIdMonthly": "REPLACE_WITH_PRICE_ID_MONTHLY",
+      "priceIdHalfYear": "REPLACE_WITH_PRICE_ID_HALFYEAR",
       "priceIdYearly": "REPLACE_WITH_PRICE_ID_YEARLY"
     },
     "lockup": {
@@ -71,6 +74,7 @@
       "env": "sandbox",
       "clientToken": "REPLACE_WITH_PADDLE_CLIENT_TOKEN",
       "priceIdMonthly": "REPLACE_WITH_PRICE_ID_MONTHLY",
+      "priceIdHalfYear": "REPLACE_WITH_PRICE_ID_HALFYEAR",
       "priceIdYearly": "REPLACE_WITH_PRICE_ID_YEARLY"
     },
     "lockup": {

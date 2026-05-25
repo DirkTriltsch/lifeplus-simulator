@@ -22,11 +22,13 @@ export function LoginGate(): JSX.Element {
     const url = new URL(window.location.href);
     const token = url.searchParams.get('token');
     if (!token) return;
+    const access = url.searchParams.get('access') === 'free' ? 'free' : undefined;
 
     setPhase('verifying');
-    verifyMagicLink(token)
+    verifyMagicLink(token, access)
       .then(async () => {
         url.searchParams.delete('token');
+        url.searchParams.delete('access');
         window.history.replaceState({}, '', url.toString());
         await refresh();
       })

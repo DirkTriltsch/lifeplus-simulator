@@ -1,0 +1,14 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import DevIndexDefault from '@shared/components/sections/DevIndexDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+
+const brand = await getBrand('lifeplus');
+---
+<BrandLayout brand={brand} title="Dev-Index">
+  <Header brand={brand} />
+  <DevIndexDefault brand={brand} source="shared/components/sections/DevIndexDefault.astro" />
+  <Footer brand={brand} />
+</BrandLayout>

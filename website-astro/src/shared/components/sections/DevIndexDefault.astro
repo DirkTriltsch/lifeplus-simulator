@@ -1,0 +1,256 @@
+---
+import type { Brand, BrandId } from '@shared/content-schemas/config';
+import { BRAND_IDS } from '@shared/content-schemas/config';
+
+interface Props { brand: Brand; source?: string; }
+const { brand, source } = Astro.props;
+
+const pages = [
+  { href: '/index.html', label: 'Startseite', file: 'pages/index.astro', comp: 'IndexPageDefault.astro' },
+  { href: '/features.html', label: 'Funktionen', file: 'pages/features.astro', comp: 'FeaturesPageDefault.astro' },
+  { href: '/pricing.html', label: 'Preise', file: 'pages/pricing.astro', comp: 'PricingPageDefault.astro' },
+  { href: '/mein-konto.html', label: 'Mein Konto', file: 'pages/mein-konto.astro', comp: 'AccountPageDefault.astro' },
+  { href: '/impressum.html', label: 'Impressum', file: 'pages/impressum.astro', comp: 'LegalImpressumDefault.astro' },
+  { href: '/datenschutz.html', label: 'Datenschutz', file: 'pages/datenschutz.astro', comp: 'LegalDatenschutzDefault.astro' },
+  { href: '/agb.html', label: 'AGB', file: 'pages/agb.astro', comp: 'LegalAgbDefault.astro' },
+  { href: '/widerruf.html', label: 'Widerruf', file: 'pages/widerruf.astro', comp: 'LegalWiderrufDefault.astro' },
+];
+
+const previews = [
+  { href: '/preview/header.html', label: 'Header (Lockup + Nav)', file: 'shared/components/layout/Header.astro' },
+  { href: '/preview/footer.html', label: 'Footer', file: 'shared/components/layout/Footer.astro' },
+];
+
+const otherBrands: BrandId[] = BRAND_IDS.filter((b) => b !== brand.id);
+
+const isProd = !import.meta.env.DEV;
+---
+<main class="dev-index" data-section="DevIndexDefault.astro" data-source={source}>
+  <div class="dev-wrap">
+    <div class="dev-header">
+      <span class="dev-tag">DEV-INDEX</span>
+      <h1>Komponenten- und Page-Übersicht</h1>
+      <p class="dev-lead">
+        Diese Seite ist ein internes Werkzeug. Sie listet alle Pages, Komponenten und Tools dieser Brand-Build-Variante.
+        Aktive Brand: <strong>{brand.siteName}</strong> <span class="brand-id">({brand.id})</span>
+      </p>
+
+      {isProd && (
+        <div class="dev-warning">
+          <strong>⚠ Production-Build:</strong> Dieser Build enthält Dev-Routen (__dev / __preview). Vor Live-Deploy sollten sie aus <code>robots.txt</code> ausgeschlossen oder gelöscht werden.
+        </div>
+      )}
+    </div>
+
+    <section class="dev-section">
+      <h2>Pages dieser Brand</h2>
+      <p class="dev-sec-lead">Die acht gebauten Marketing-Seiten — direkt verlinkt.</p>
+      <ul class="dev-list">
+        {pages.map((p) => (
+          <li>
+            <a href={p.href}>
+              <span class="dev-list-label">{p.label}</span>
+              <span class="dev-list-path">{p.href}</span>
+            </a>
+            <span class="dev-list-meta">
+              <code>{p.file}</code> → <code>{p.comp}</code>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="dev-section">
+      <h2>Komponenten-Previews</h2>
+      <p class="dev-sec-lead">Layout-Komponenten isoliert im BrandLayout. (Page-Komponenten sind direkt als Pages oben verlinkt.)</p>
+      <ul class="dev-list">
+        {previews.map((p) => (
+          <li>
+            <a href={p.href}>
+              <span class="dev-list-label">{p.label}</span>
+              <span class="dev-list-path">{p.href}</span>
+            </a>
+            <span class="dev-list-meta">
+              <code>{p.file}</code>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="dev-section">
+      <h2>Debug-Modus</h2>
+      <p class="dev-sec-lead">Im Dev-Build sind alle Sections mit <code>data-section</code> und <code>data-source</code> annotiert.</p>
+      <div class="dev-cmd">
+        <kbd>d</kbd>
+        <span>Toggle Debug-Outlines (rosa Rahmen + Komponentenname + Quelle pro Section). Status wird in localStorage gespeichert.</span>
+      </div>
+      <p class="dev-note">Debug-Styles sind via <code>body.debug-on</code> aktiv. CSS in <code>shared/styles/debug.css</code>, JS in <code>shared/scripts/debug.ts</code>.</p>
+    </section>
+
+    <section class="dev-section">
+      <h2>Andere Brands</h2>
+      <p class="dev-sec-lead">Jede Brand baut mit eigenem <code>srcDir</code>. Wechsel erfordert eigenen Dev-Server.</p>
+      <div class="dev-brand-grid">
+        <div class="dev-brand-card current">
+          <span class="dev-brand-status">aktiv</span>
+          <span class="dev-brand-name">{brand.siteName}</span>
+          <span class="dev-brand-cmd"><code>npm run dev:{brand.id}</code></span>
+        </div>
+        {otherBrands.map((other) => (
+          <div class="dev-brand-card">
+            <span class="dev-brand-status">inaktiv</span>
+            <span class="dev-brand-name">{other}</span>
+            <span class="dev-brand-cmd"><code>npm run dev:{other}</code></span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="dev-section">
+      <h2>Build- und Deployment-Konfig</h2>
+      <ul class="dev-meta">
+        <li><span>Brand-ID</span><code>{brand.id}</code></li>
+        <li><span>Site-Name</span><code>{brand.siteName}</code></li>
+        <li><span>Site-Domain</span><code>{brand.siteDomain}</code></li>
+        <li><span>App-URL</span><code>{brand.appUrl}</code></li>
+        <li><span>API-Base</span><code>{brand.apiBaseUrl ?? '— (nicht gesetzt)'}</code></li>
+        <li><span>Paddle-Env</span><code>{brand.paddle.env}</code></li>
+        <li><span>Paddle-Token</span><code>{brand.paddle.clientToken.startsWith('REPLACE_') ? '⚠ Platzhalter' : 'gesetzt'}</code></li>
+        <li><span>Accent</span><code style={`color:${brand.accentColor}`}>{brand.accentColor}</code></li>
+        <li><span>CTA</span><code style={`color:${brand.ctaColor}`}>{brand.ctaColor}</code></li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<style>
+  .dev-index { padding: 60px 0 120px; background: #fafbf9; min-height: 80vh; }
+  .dev-wrap { max-width: 920px; margin: 0 auto; padding: 0 28px; }
+
+  .dev-header { margin-bottom: 48px; }
+  .dev-tag {
+    display: inline-block;
+    background: #d946ef;
+    color: #fff;
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .dev-header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 400;
+    color: #0f1b17;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .dev-lead { font-size: 16px; color: #4a5c53; line-height: 1.55; margin: 0; }
+  .dev-lead strong { color: var(--brand); font-weight: 600; }
+  .brand-id { color: #7a8983; font-size: 14px; }
+
+  .dev-warning {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: #fef3c7;
+    border-left: 3px solid #d97706;
+    border-radius: 4px;
+    color: #713f12;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .dev-warning code { font-family: ui-monospace, monospace; background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; }
+
+  .dev-section { margin-bottom: 40px; }
+  .dev-section h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: #0f1b17;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .dev-sec-lead { font-size: 14px; color: #4a5c53; margin: 0 0 18px; line-height: 1.55; }
+  .dev-sec-lead code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+  .dev-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .dev-list li {
+    background: #fff;
+    border: 0.5px solid #e1e5e2;
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dev-list a { text-decoration: none; color: #0f1b17; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .dev-list a:hover { color: var(--brand); }
+  .dev-list-label { font-weight: 500; font-size: 15px; }
+  .dev-list-path { font-family: ui-monospace, monospace; font-size: 12px; color: #7a8983; }
+  .dev-list-meta { font-size: 11px; color: #7a8983; }
+  .dev-list-meta code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 5px; border-radius: 3px; }
+
+  .dev-cmd {
+    display: flex; align-items: center; gap: 14px;
+    background: #fff;
+    border: 0.5px solid #e1e5e2;
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .dev-cmd kbd {
+    display: inline-block;
+    background: #0f1b17;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 14px;
+    box-shadow: 0 2px 0 #4a5c53;
+  }
+  .dev-cmd span { font-size: 14px; color: #2c4138; line-height: 1.5; }
+  .dev-note { font-size: 12px; color: #7a8983; margin-top: 10px; }
+  .dev-note code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 5px; border-radius: 3px; }
+
+  .dev-brand-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .dev-brand-card {
+    background: #fff;
+    border: 0.5px solid #e1e5e2;
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .dev-brand-card.current { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 4%, white); }
+  .dev-brand-status {
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #7a8983;
+  }
+  .dev-brand-card.current .dev-brand-status { color: var(--brand); font-weight: 600; }
+  .dev-brand-name { font-weight: 600; font-size: 15px; }
+  .dev-brand-cmd { font-size: 12px; color: #4a5c53; }
+  .dev-brand-cmd code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 6px; border-radius: 3px; }
+
+  .dev-meta { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .dev-meta li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 0.5px solid #eef1ef;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .dev-meta span { color: #7a8983; font-family: ui-monospace, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .dev-meta code { font-family: ui-monospace, monospace; color: #0f1b17; }
+</style>

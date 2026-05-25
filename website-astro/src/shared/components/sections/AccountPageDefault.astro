@@ -1,0 +1,161 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import { contact } from '@shared/lib/contact';
+
+interface Props { brand: Brand; source?: string; }
+const { brand, source } = Astro.props;
+
+const accountConfig = {
+  apiBase: brand.apiBaseUrl ?? '',
+  appUrl: brand.appUrl,
+  contactEmail: contact.email,
+};
+---
+<main class="account-page" data-section="AccountPageDefault.astro" data-source={source}>
+  <div class="container">
+    <h1>Mein <em>Konto</em></h1>
+    <p class="lead">Sieh deinen Zugang, verwalte dein Abo oder melde dich an.</p>
+
+    <div class="account-card">
+      <!-- Loading state -->
+      <div id="state-loading">
+        <p style="text-align:center; color:#7A8983; font-size:14px; margin:24px 0;">Lade Konto…</p>
+      </div>
+
+      <!-- Anonymous: login form -->
+      <div id="state-anonymous" class="hidden">
+        <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Anmelden</h2>
+        <p style="font-size:14px; color:#4A5C53; margin:0 0 20px;">
+          Gib die E-Mail-Adresse ein, mit der du gekauft hast. Wir senden dir einen einmaligen Login-Link.
+        </p>
+        <form id="login-form" class="account-actions">
+          <input
+            id="login-email"
+            type="email"
+            required
+            autocomplete="email"
+            inputmode="email"
+            placeholder="du@example.com"
+            class="account-input"
+          />
+          <button type="submit" class="account-btn-primary" id="login-btn">
+            Login-Link senden
+          </button>
+        </form>
+        <p id="login-msg" class="account-msg hidden"></p>
+      </div>
+
+      <!-- Sent -->
+      <div id="state-sent" class="hidden">
+        <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Link gesendet</h2>
+        <p style="font-size:14px; color:#4A5C53;">
+          Falls die E-Mail-Adresse bei uns bekannt ist, hast du in den naechsten Minuten einen Login-Link im Postfach.
+          Du kannst dieses Fenster offen lassen und auf den Link in der Mail klicken.
+        </p>
+      </div>
+
+      <!-- Verifying -->
+      <div id="state-verifying" class="hidden">
+        <p style="text-align:center; color:#4A5C53;">Login wird geprueft…</p>
+      </div>
+
+      <!-- Logged in -->
+      <div id="state-account" class="hidden">
+        <div class="account-row">
+          <span class="label">E-Mail</span>
+          <span class="value" id="account-email">—</span>
+        </div>
+        <div class="account-row">
+          <span class="label">Status</span>
+          <span class="value" id="account-status">—</span>
+        </div>
+        <div class="account-row" id="account-row-plan">
+          <span class="label">Plan</span>
+          <span class="value" id="account-plan">—</span>
+        </div>
+        <div class="account-row" id="account-row-until">
+          <span class="label" id="account-until-label">Gueltig bis</span>
+          <span class="value" id="account-until">—</span>
+        </div>
+        <div class="account-row">
+          <span class="label">Geraete</span>
+          <span class="value" id="account-devices">—</span>
+        </div>
+
+        <div class="account-actions">
+          <a href={brand.appUrl} class="account-btn-primary">Zum Simulator</a>
+          <button type="button" id="portal-btn" class="account-btn-secondary">Abo bei Paddle verwalten</button>
+          <a href="/pricing.html" class="account-btn-secondary">Plan wechseln</a>
+          <button type="button" id="logout-btn" class="account-btn-link">Abmelden</button>
+        </div>
+        <p id="account-msg" class="account-msg hidden"></p>
+      </div>
+    </div>
+
+    <p style="text-align:center; font-size:12px; color:#7A8983; margin-top:24px; max-width:540px; margin-left:auto; margin-right:auto;">
+      Zahlung, Rechnung und Kuendigung laufen ueber Paddle als Verkaufsabwickler (Merchant of Record).
+      Aktualisiere Karte / SEPA und lade Rechnungen herunter ueber "Abo bei Paddle verwalten".
+    </p>
+  </div>
+</main>
+
+<script is:inline define:vars={{ accountConfig }}>
+  window.__ACCOUNT_CFG__ = accountConfig;
+</script>
+<script>
+  import { setupAccountPage } from '@shared/scripts/accountPage';
+  type Cfg = Parameters<typeof setupAccountPage>[0];
+  const cfg = (window as unknown as { __ACCOUNT_CFG__: Cfg }).__ACCOUNT_CFG__;
+  setupAccountPage(cfg);
+</script>
+
+<style is:global>
+  .account-card {
+    max-width: 540px;
+    margin: 0 auto;
+    background: #fff;
+    border: 0.5px solid #E1E5E2;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 1px 2px rgba(15,27,23,0.04);
+  }
+  .account-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 12px 0; border-bottom: 0.5px solid #EEF1EF;
+    font-size: 14px;
+  }
+  .account-row:last-of-type { border-bottom: none; }
+  .account-row .label { color: #4A5C53; }
+  .account-row .value { color: #0F1B17; font-weight: 500; }
+  .account-status-active { color: #1D9E75; font-weight: 600; }
+  .account-status-inactive { color: #B45309; font-weight: 600; }
+  .account-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+  .account-btn-primary, .account-btn-secondary, .account-btn-link {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 18px; border-radius: 100px; font-size: 14px;
+    font-weight: 500; font-family: inherit; cursor: pointer;
+    text-decoration: none !important; transition: all 0.18s;
+    border: 1px solid transparent;
+  }
+  .account-btn-primary { background: var(--brand); color: #fff !important; }
+  .account-btn-primary:hover { background: var(--brand-dark); }
+  .account-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .account-btn-secondary { background: #fff; color: #0F1B17; border-color: #E1E5E2; }
+  .account-btn-secondary:hover { border-color: var(--brand); color: var(--brand); }
+  .account-btn-link { background: none; border: none; color: #7A8983; padding: 8px; }
+  .account-btn-link:hover { color: #2C4138; }
+  .account-input {
+    width: 100%; padding: 12px 16px; border-radius: 12px;
+    border: 1px solid #E1E5E2; font-size: 15px; font-family: inherit;
+    box-sizing: border-box;
+  }
+  .account-input:focus { outline: none; border-color: var(--brand); }
+  .account-msg { font-size: 13px; color: #4A5C53; margin-top: 8px; }
+  .account-msg.error { color: #B91C1C; }
+  .account-msg.success { color: #047857; }
+  .account-page { padding: 60px 0 120px; min-height: 60vh; }
+  .account-page h1 { font-family: 'Fraunces', Georgia, serif; font-size: clamp(32px, 4vw, 44px); font-weight: 400; text-align: center; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .account-page h1 em { font-style: italic; color: var(--brand); }
+  .account-page .lead { text-align: center; font-size: 16px; color: #4A5C53; max-width: 520px; margin: 0 auto 36px; line-height: 1.55; }
+  .hidden { display: none !important; }
+</style>

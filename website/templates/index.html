@@ -474,8 +474,8 @@
     @media (max-width: 900px) { .pricing-grid { grid-template-columns: 1fr; gap: 36px; } }
     .pricing-intro .sec-h { font-size: clamp(28px, 3.6vw, 40px); }
     .pricing-intro .sec-sub { max-width: 460px; }
-    .pricing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    @media (max-width: 540px) { .pricing-cards { grid-template-columns: 1fr; } }
+    .pricing-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 1180px) { .pricing-cards { grid-template-columns: 1fr; } }
     .pricing-card {
       background: #fff;
       border: 0.5px solid var(--line);
@@ -506,9 +506,9 @@
     .pc-name { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); margin: 0 0 10px; letter-spacing: -0.01em; }
     .pc-price { font-family: var(--serif); color: var(--ink); display: flex; align-items: baseline; gap: 2px; margin-bottom: 4px; letter-spacing: -0.02em; }
     .pc-price-cur { font-size: 22px; color: var(--ink-3); font-weight: 300; }
-    .pc-price-val { font-size: 44px; font-weight: 400; line-height: 1; }
+    .pc-price-val { font-size: 42px; font-weight: 400; line-height: 1; }
     .pc-price-unit { font-family: var(--sans); font-size: 14px; color: var(--ink-4); margin-left: 6px; font-weight: 400; }
-    .pc-bill { font-size: 12px; color: var(--ink-4); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 0.5px solid var(--line-soft); }
+    .pc-bill { font-size: 12px; color: var(--ink-4); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 0.5px solid var(--line-soft); min-height: 50px; }
     .pc-featured .pc-bill { color: var(--brand); font-weight: 500; }
     .pc-features { list-style: none; display: grid; gap: 10px; padding: 0; margin: 0; }
     .pc-features li {
@@ -891,7 +891,7 @@
           <div class="sec-eyebrow">Preise</div>
           <h2 class="sec-h">Faires Werkzeug, <em>fairer Preis.</em></h2>
           <p class="sec-sub">
-            {{SITE_NAME}} ist ein Abo-Werkzeug für Sponsoren. Monatlich kündbar — oder im Jahresabo mit spürbarem Rabatt. Beide Pläne sind als <strong>Betriebsausgabe absetzbar.</strong>
+            Starte frei, teste 14 Tage Pro und wähle danach zwischen drei fairen Laufzeiten. Auch der günstigere Jahresplan bleibt monatlich kündbar — <strong>ohne Risiko, ohne Jahresfalle.</strong>
           </p>
           <a href="pricing.html" class="btn-secondary">
             Alle Preise &amp; Details ansehen
@@ -901,12 +901,26 @@
 
         <div class="pricing-cards">
           <div class="pricing-card">
-            <div class="pc-tag">Flexibel</div>
-            <div class="pc-name">Monatlich</div>
+            <div class="pc-tag">Einstieg</div>
+            <div class="pc-name">Free</div>
             <div class="pc-price">
-              <span class="pc-price-cur">€</span><span class="pc-price-val">19</span><span class="pc-price-unit">/Monat</span>
+              <span class="pc-price-cur">€</span><span class="pc-price-val">0</span><span class="pc-price-unit">/Monat</span>
             </div>
-            <div class="pc-bill">€19 monatlich abgerechnet</div>
+            <div class="pc-bill">14 Tage Pro testen, danach reduzierter Free-Zugang</div>
+            <ul class="pc-features">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Magic-Link, kein Passwort</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Keine Kreditkarte nötig</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Danach Free weiternutzen</li>
+            </ul>
+          </div>
+
+          <div class="pricing-card">
+            <div class="pc-tag">Flexibel</div>
+            <div class="pc-name">1 Monat</div>
+            <div class="pc-price">
+              <span class="pc-price-cur">€</span><span class="pc-price-val">14,95</span><span class="pc-price-unit">/Monat</span>
+            </div>
+            <div class="pc-bill">netto monatlich · zzgl. USt.</div>
             <ul class="pc-features">
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Voller Funktionsumfang</li>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Mobil, Tablet &amp; Desktop</li>
@@ -916,15 +930,15 @@
 
           <div class="pricing-card pc-featured">
             <div class="pc-tag pc-tag-highlight">2 Monate gespart</div>
-            <div class="pc-name">Jährlich</div>
+            <div class="pc-name">12 Monate</div>
             <div class="pc-price">
-              <span class="pc-price-cur">€</span><span class="pc-price-val">15</span><span class="pc-price-unit">/Monat</span>
+              <span class="pc-price-cur">€</span><span class="pc-price-val">12,46</span><span class="pc-price-unit">/Monat</span>
             </div>
-            <div class="pc-bill">€180 jährlich · Ersparnis €48</div>
+            <div class="pc-bill">€149,50 netto jährlich · zzgl. USt.</div>
             <ul class="pc-features">
-              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Alles aus Monatlich</li>
-              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>~21 % günstiger</strong> als Monatsabo</span></li>
-              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Eine Rechnung pro Jahr</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Alles aus 1 Monat</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>2 Monate gratis</strong> gegenüber monatlich</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Monatlich kündbar, Restmonate zurück</li>
             </ul>
           </div>
         </div>
@@ -932,7 +946,7 @@
 
       <div class="pricing-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-        <span>Alle Preise inkl. MwSt. Als Sponsor setzt du das Abo als <strong>Betriebsausgabe</strong> ab — sprich im Zweifel mit deinem Steuerberater.</span>
+        <span><strong>Ohne Risiko:</strong> Auch 6- und 12-Monats-Pläne sind monatlich kündbar. Nicht genutzte volle Restmonate erstatten wir anteilig. Du erhältst eine ordnungsgemäße Rechnung für deine Unterlagen.</span>
       </div>
     </div>
   </section>
@@ -998,8 +1012,8 @@
           </button>
           <div class="faq-a">
             <div class="faq-a-inner">
-              <p>Zwei Optionen: <strong>€19/Monat</strong> bei monatlicher Abrechnung, oder <strong>€15/Monat</strong> (= €180/Jahr) im Jahresabo — das spart rund 21 %.</p>
-              <p>Beide Stufen haben den vollen Funktionsumfang und sind als <strong>Betriebsausgabe</strong> absetzbar. Details, Zahlungsoptionen und Kündigungsfristen findest du auf der <a href="pricing.html">Preisseite</a>.</p>
+              <p>Du kannst kostenlos starten: 14 Tage Pro testen, danach Free weiternutzen. Pro gibt es mit drei fairen Laufzeiten: <strong>€14,95/Monat</strong>, <strong>€82,23/6 Monate</strong> oder <strong>€149,50/Jahr</strong>, jeweils netto zzgl. USt.</p>
+              <p>Alle Pro-Laufzeiten haben den vollen Funktionsumfang. Auch 6- und 12-Monats-Pläne sind monatlich kündbar; nicht genutzte volle Restmonate erstatten wir anteilig. Details findest du auf der <a href="pricing.html">Preisseite</a>.</p>
             </div>
           </div>
         </div>

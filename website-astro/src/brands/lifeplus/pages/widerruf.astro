@@ -1,0 +1,11 @@
+---
+import LegalPageLayout from '@shared/components/layout/LegalPageLayout.astro';
+import LegalWiderrufDefault from '@shared/components/sections/LegalWiderrufDefault.astro';
+import { getBrand } from '@shared/lib/brand';
+import { contact } from '@shared/lib/contact';
+
+const brand = await getBrand('lifeplus');
+---
+<LegalPageLayout brand={brand} title="Widerrufsbelehrung">
+  <LegalWiderrufDefault brand={brand} contact={contact} source="shared/components/sections/LegalWiderrufDefault.astro" />
+</LegalPageLayout>

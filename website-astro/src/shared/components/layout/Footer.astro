@@ -1,0 +1,23 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import { contact } from '@shared/lib/contact';
+
+interface Props { brand: Brand; }
+const { brand } = Astro.props;
+const year = new Date().getFullYear();
+---
+<footer class="site-footer" data-section="Footer.astro" data-source="shared/lib/contact.ts">
+  <div class="container">
+    <span>© {year} {brand.siteName}</span>
+    <nav>
+      <a href="/">Startseite</a>
+      <a href="/mein-konto.html" class="js-account-link">Mein Konto</a>
+      <a href="/features.html">Funktionen</a>
+      <a href="/agb.html">AGB</a>
+      <a href="/widerruf.html">Widerruf</a>
+      <a href="/impressum.html">Impressum</a>
+      <a href="/datenschutz.html">Datenschutz</a>
+      <a href={`mailto:${contact.email}`}>Kontakt</a>
+    </nav>
+  </div>
+</footer>

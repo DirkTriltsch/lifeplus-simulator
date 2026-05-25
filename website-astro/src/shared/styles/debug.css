@@ -1,0 +1,35 @@
+:root {
+  --debug-color: #d946ef;
+  --debug-bg: rgba(217, 70, 239, 0.04);
+}
+
+body.debug-on [data-section] {
+  position: relative;
+  outline: 2px dashed var(--debug-color);
+  outline-offset: -2px;
+  background-image: linear-gradient(var(--debug-bg), var(--debug-bg));
+}
+
+body.debug-on [data-section]::before {
+  content: attr(data-section);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--debug-color);
+  color: #fff;
+  padding: 4px 12px;
+  font: 600 11px/1 ui-monospace, 'JetBrains Mono', monospace;
+  z-index: 10;
+}
+
+body.debug-on [data-section]::after {
+  content: attr(data-source);
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 4px 10px;
+  font: 400 10px/1 ui-monospace, 'JetBrains Mono', monospace;
+  z-index: 10;
+}

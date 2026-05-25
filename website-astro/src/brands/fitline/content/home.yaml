@@ -1,0 +1,49 @@
+hero:
+  eyebrow: "FitLine Business Simulator"
+  claim: "Plane dein FitLine-Geschäft mit echten Zahlen."
+  subClaim: "Simuliere realistisch, was dein FitLine-Team über zehn Jahre einspielen kann."
+  ctaLabel: "FitLine-Simulation starten"
+  ctaUrl: "/app/"
+
+trustStrip:
+  headline: "Warum FitFlow360"
+  items:
+    - "FitLine-spezifische Wachstumsmodelle"
+    - "Klare Annahmen, keine Versprechen"
+    - "Langfristige Planungssicht über 10 Jahre"
+
+coreMessage:
+  headline: "Sieh, was möglich ist — bevor du es planst."
+  body: "Der FitLine-Simulator macht aus Annahmen sichtbare Szenarien. Du verstehst, welche Hebel wirklich wirken."
+
+featureTeaser:
+  headline: "Was FitFlow360 dir zeigt"
+  items:
+    - title: "FitLine-Wachstumsmodelle"
+      body: "Vier Stufen — von vorsichtig bis ambitioniert. Du behältst die Kontrolle."
+    - title: "Transparente Annahmen"
+      body: "Jeder Parameter sichtbar, jederzeit veränderbar."
+    - title: "10-Jahres-Sicht"
+      body: "Sieh die langfristigen Auswirkungen deiner Entscheidungen."
+
+pricingTeaser:
+  headline: "Faire Preise"
+  body: "Monatlich oder jährlich. Jederzeit kündbar."
+  ctaLabel: "Preise ansehen"
+  ctaUrl: "/pricing"
+
+faq:
+  headline: "Häufige Fragen"
+  items:
+    - q: "Ist das eine Garantie für mein FitLine-Einkommen?"
+      a: "Nein. Die Simulation ist ein Planungswerkzeug und ersetzt keine individuelle Geschäftsanalyse."
+    - q: "Kann ich mehrere Szenarien vergleichen?"
+      a: "Ja. Du kannst Parameter ändern und die Auswirkungen direkt im Verlauf sehen."
+    - q: "Brauche ich Vorkenntnisse?"
+      a: "Nein. Die Standard-Annahmen sind realistisch — du kannst sie schrittweise an dein Team anpassen."
+
+finalCta:
+  headline: "Bereit, dein FitLine-Geschäft zu planen?"
+  body: "Starte deine erste Simulation in unter zwei Minuten."
+  ctaLabel: "Jetzt starten"
+  ctaUrl: "/app/"

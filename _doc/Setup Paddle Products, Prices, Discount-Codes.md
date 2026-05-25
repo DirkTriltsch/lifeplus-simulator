@@ -207,6 +207,7 @@ TRI     Trial / Gutschein-Zugang                        - reserviert
 ```text
 LifeFlow-IND-PRO                     Produkt: Einzelplatz, Pro, LifeFlow
 LifeFlow-IND-PRO-MO                  Preis:   Einzelplatz Pro Monatsabo
+LifeFlow-IND-PRO-HY                  Preis:   Einzelplatz Pro Halbjahresabo
 LifeFlow-IND-PRO-YR                  Preis:   Einzelplatz Pro Jahresabo
 
 LifeFlow-SPO-PRO-50                  Produkt: Sponsor-Paket 50 Sitze

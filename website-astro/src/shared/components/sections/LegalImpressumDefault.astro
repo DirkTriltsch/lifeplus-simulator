@@ -1,0 +1,34 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import type { Contact } from '@shared/lib/contact';
+
+interface Props { brand: Brand; contact: Contact; source?: string; }
+const { contact, source } = Astro.props;
+---
+<div data-section="LegalImpressumDefault.astro" data-source={source}>
+  <p class="legal-meta-top">Rechtliche Informationen</p>
+  <h1>Impressum</h1>
+
+  <h2>Anbieter</h2>
+  <address>
+    {contact.name}<br />
+    betreibt diese Web-App<br />
+    {contact.addressLine1}<br />
+    {contact.addressLine2}<br />
+    {contact.addressLine3}
+  </address>
+
+  <h2>Kontakt</h2>
+  <p>
+    Telefon: {contact.phone}<br />
+    E-Mail: <a href={`mailto:${contact.email}`}>{contact.email}</a>
+  </p>
+
+  <h2>Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+  <p>
+    Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren
+    vor einer Verbraucherschlichtungsstelle teilzunehmen.
+  </p>
+
+  <p class="legal-meta">Grundlage: angepasst aus dem bestehenden eRecht24-Text.</p>
+</div>

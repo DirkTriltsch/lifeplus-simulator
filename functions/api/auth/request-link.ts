@@ -7,6 +7,7 @@ import { minutesFromNow, nowMs } from '../../_lib/time';
 
 interface Body {
   email?: string;
+  access?: string;
 }
 
 const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -25,6 +26,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (!email || !EMAIL_RX.test(email) || email.length > 254) {
     return error(400, 'invalid_email');
   }
+  const access = body.access === 'free' ? 'free' : null;
 
   const ip = clientIp(request);
   const ipLimit = await consumeRateLimit(env, `rl:auth:request-link:ip:${ip}`, 5, 600);
@@ -59,7 +61,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     )
     .run();
 
-  const link = `${trimSlash(env.APP_URL)}/?token=${encodeURIComponent(token)}`;
+  const link =
+    `${trimSlash(env.APP_URL)}/?token=${encodeURIComponent(token)}` +
+    (access === 'free' ? '&access=free' : '');
   try {
     await sendMagicLink(env, {
       to: email,

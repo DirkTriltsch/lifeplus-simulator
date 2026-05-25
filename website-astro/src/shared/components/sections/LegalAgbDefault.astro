@@ -1,0 +1,177 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import type { Contact } from '@shared/lib/contact';
+
+interface Props { brand: Brand; contact: Contact; source?: string; }
+const { brand, contact, source } = Astro.props;
+---
+<div data-section="LegalAgbDefault.astro" data-source={source}>
+  <p class="legal-meta-top">Rechtliche Informationen</p>
+  <h1>Allgemeine Geschäftsbedingungen</h1>
+  <p class="legal-meta">Stand: Mai 2026</p>
+
+  <h2>1. Geltungsbereich</h2>
+  <p>
+    Diese Allgemeinen Geschäftsbedingungen (nachfolgend „AGB") gelten für
+    alle Verträge zwischen {contact.name} (nachfolgend „Anbieter") und
+    seinen Kunden (nachfolgend „Nutzer") über die Nutzung der unter
+    {brand.siteDomain} bereitgestellten Web-Anwendung {brand.siteName} (nachfolgend
+    „Dienst").
+  </p>
+  <p>
+    Abweichende Bedingungen des Nutzers werden nicht anerkannt, es sei denn,
+    der Anbieter stimmt ihrer Geltung ausdrücklich schriftlich zu.
+  </p>
+
+  <h2>2. Vertragspartner und Zahlungsabwicklung</h2>
+  <p>
+    Vertragspartner für die Bereitstellung des Dienstes ist der Anbieter.
+    Die Zahlungsabwicklung und Rechnungsstellung erfolgt über die
+    <strong>Paddle.com Market Limited</strong> (Judd House, 18-29 Mora
+    Street, London EC1V 8BT, Vereinigtes Königreich) als
+    Verkaufsabwickler („Merchant of Record"). Paddle ist gegenüber dem
+    Nutzer für die Vertragsabwicklung, Zahlungsabwicklung und Rechnungs­
+    stellung verantwortlich. Für die Zahlungsabwicklung gelten ergänzend
+    die Paddle-Bedingungen, einsehbar unter
+    <a href="https://www.paddle.com/legal/checkout-buyer-terms" target="_blank" rel="noopener">paddle.com/legal/checkout-buyer-terms</a>.
+  </p>
+
+  <h2>3. Vertragsgegenstand</h2>
+  <p>
+    Der Anbieter stellt dem Nutzer den Dienst gegen Entgelt im Rahmen eines
+    Software-as-a-Service-Abonnements (SaaS) zur Nutzung über das Internet
+    zur Verfügung. Der genaue Funktionsumfang ergibt sich aus der
+    Produktbeschreibung auf der Webseite des Anbieters zum Zeitpunkt des
+    Vertragsschlusses.
+  </p>
+  <p>
+    Der Dienst ist ein <em>Simulations- und Schätzwerkzeug</em>. Berechnete
+    Ergebnisse sind <strong>keine Zusicherung</strong> tatsächlicher
+    Provisionen, Einkommen oder Geschäftsentwicklungen.
+  </p>
+
+  <h2>4. Vertragsschluss</h2>
+  <p>
+    Die Darstellung der Tarife auf der Webseite stellt kein verbindliches
+    Angebot dar, sondern eine Aufforderung zur Abgabe eines Angebots. Der
+    Nutzer gibt sein Angebot durch Auswahl eines Tarifs und Abschluss des
+    Bestellvorgangs im Paddle-Checkout ab. Der Vertrag kommt mit
+    Bestätigung durch Paddle / den Anbieter zustande.
+  </p>
+
+  <h2>5. Laufzeit und Kündigung</h2>
+  <p>
+    Die Vertragslaufzeit richtet sich nach dem gewählten Tarif (z.B.
+    monatlich oder jährlich). Der Vertrag verlängert sich automatisch um
+    die jeweils gewählte Laufzeit, wenn er nicht vor Ablauf der laufenden
+    Periode gekündigt wird.
+  </p>
+  <p>
+    Die Kündigung kann jederzeit ohne Angabe von Gründen erfolgen, im
+    Monatsabo zum Ende des laufenden Monats, im Jahresabo zum Ende des
+    laufenden Vertragsjahres. Die Kündigung kann über das Paddle-
+    Kundenportal oder per E-Mail an
+    <a href={`mailto:${contact.email}`}>{contact.email}</a> erklärt werden.
+  </p>
+
+  <h2>6. Preise und Zahlung</h2>
+  <p>
+    Es gelten die zum Zeitpunkt des Vertragsschlusses ausgewiesenen Preise.
+    Die Preise verstehen sich netto zuzüglich der gesetzlichen
+    Umsatzsteuer, die im Paddle-Checkout abhängig vom Standort des Nutzers
+    ausgewiesen wird. Für Unternehmer mit gültiger EU-Umsatzsteuer-Identi­
+    fikations­nummer kommt das Reverse-Charge-Verfahren zur Anwendung.
+  </p>
+  <p>
+    Die Abrechnung erfolgt durch Paddle. Akzeptierte Zahlungsmethoden sind
+    Kreditkarte, SEPA-Lastschrift und PayPal.
+  </p>
+
+  <h2>7. Nutzungsrechte</h2>
+  <p>
+    Der Anbieter räumt dem Nutzer für die Dauer des Vertragsverhältnisses
+    ein nicht ausschließliches, nicht übertragbares Recht zur Nutzung des
+    Dienstes zu den vertraglich vereinbarten Zwecken ein.
+  </p>
+  <p>
+    Eine Einzelplatz-Lizenz darf gleichzeitig auf maximal drei (3) Geräten
+    verwendet werden. Eine darüber hinausgehende Weitergabe der
+    Zugangsdaten an Dritte ist nicht gestattet.
+  </p>
+
+  <h2>8. Verfügbarkeit</h2>
+  <p>
+    Der Anbieter bemüht sich um eine möglichst hohe Verfügbarkeit des
+    Dienstes, schuldet jedoch keine ständige, ununterbrochene
+    Verfügbarkeit. Wartungs- und Aktualisierungsarbeiten sowie Störungen
+    durch Dritte (z.B. Internet- oder Stromausfall, Hosting-Anbieter,
+    Zahlungsdienstleister) können zu vorübergehenden Einschränkungen
+    führen.
+  </p>
+
+  <h2>9. Gewährleistung</h2>
+  <p>
+    Der Anbieter gewährleistet, dass der Dienst im vertraglichen Umfang im
+    Wesentlichen den auf der Webseite beschriebenen Funktionen entspricht.
+    Es gelten die gesetzlichen Gewährleistungsrechte.
+  </p>
+
+  <h2>10. Haftung</h2>
+  <p>
+    Der Anbieter haftet unbeschränkt nur für Schäden aus der Verletzung des
+    Lebens, des Körpers oder der Gesundheit, die auf einer vorsätzlichen
+    oder fahrlässigen Pflichtverletzung beruhen, sowie für sonstige
+    Schäden, die auf einer vorsätzlichen oder grob fahrlässigen
+    Pflichtverletzung beruhen.
+  </p>
+  <p>
+    Für leicht fahrlässig verursachte Schäden haftet der Anbieter nur bei
+    Verletzung einer wesentlichen Vertragspflicht (Kardinalpflicht) und
+    begrenzt auf den vertragstypischen, vorhersehbaren Schaden.
+  </p>
+  <p>
+    Eine Haftung für entgangenen Gewinn, nicht eingetretene Geschäfts­
+    entwicklungen oder Provisionen, die auf der Nutzung der
+    Simulations­ergebnisse beruhen, ist ausdrücklich ausgeschlossen.
+  </p>
+
+  <h2>11. Datenschutz</h2>
+  <p>
+    Hinweise zur Verarbeitung personenbezogener Daten finden sich in
+    unserer <a href="/datenschutz.html">Datenschutzerklärung</a>.
+  </p>
+
+  <h2>12. Widerrufsrecht für Verbraucher</h2>
+  <p>
+    Verbrauchern steht ein gesetzliches Widerrufsrecht zu. Einzelheiten
+    ergeben sich aus unserer
+    <a href="/widerruf.html">Widerrufsbelehrung</a>.
+  </p>
+
+  <h2>13. Änderungen dieser AGB</h2>
+  <p>
+    Der Anbieter behält sich vor, diese AGB mit Wirkung für die Zukunft zu
+    ändern, soweit dies aus rechtlichen oder technischen Gründen
+    erforderlich wird. Der Nutzer wird über Änderungen rechtzeitig per
+    E-Mail informiert. Widerspricht der Nutzer den geänderten AGB nicht
+    innerhalb von sechs Wochen, gelten die Änderungen als angenommen.
+  </p>
+
+  <h2>14. Schlussbestimmungen</h2>
+  <p>
+    Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des
+    UN-Kaufrechts. Ist der Nutzer Kaufmann, juristische Person des
+    öffentlichen Rechts oder öffentlich-rechtliches Sondervermögen, ist
+    ausschließlicher Gerichtsstand für alle Streitigkeiten aus diesem
+    Vertrag der Geschäftssitz des Anbieters.
+  </p>
+  <p>
+    Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden,
+    bleibt die Gültigkeit der übrigen Bestimmungen unberührt.
+  </p>
+
+  <p class="legal-meta">
+    Vorlage. Vor Live-Schaltung durch eine Anwältin oder einen Anwalt für
+    IT-/Vertragsrecht prüfen lassen.
+  </p>
+</div>
