@@ -1,37 +1,46 @@
-# Pricing and Payment Integration of Paddle
+# Konzept: Paddle-Integration und App-Architektur
 
-> **Hinweis (Stand 2026-05-22):** Dieses Dokument ist das urspruengliche
-> Architektur-/Konzeptpapier. Inzwischen sind mehrere Konzeptentscheidungen
-> umgesetzt — die tatsaechlich gelebte Realitaet weicht in folgenden Punkten
-> bewusst ab und ist in den darauf bezogenen Setup-Dokumenten festgehalten:
+> **Dokument-Typ:** Architektur-/Konzeptpapier — beantwortet das **Warum**
+> hinter Brand-Trennung, App-Auth (Magic-Link + Devices), Webhook-Strategie,
+> DSGVO, Hosting-Wahl und Phasen-Roadmap.
 >
-> - **Mailer:** Resend (statt der Konzept-Option "Brevo oder Resend"). Setup
->   in [Cloudflare, Resend und IONOS - Setup.md](./Cloudflare,%20Resend%20und%20IONOS%20-%20Setup.md).
-> - **Datenbank:** Cloudflare D1 in WEUR (statt Neon Frankfurt). Schema in
->   [migrations/0001_init.sql](../migrations/0001_init.sql).
-> - **Hosting:** Cloudflare Pages Functions (wie hier empfohlen).
-> - **Paddle-Events (Billing v2):** `transaction.paid` statt
->   `transaction.completed`, `adjustment.created`/`adjustment.updated`
->   statt `transaction.refunded`. Aktive Event-Liste im
->   Webhook-Handler in [functions/api/paddle/webhook.ts](../functions/api/paddle/webhook.ts).
-> - **Brand-Trennung:** Bestaetigt — eigene DB / eigenes Pages-Projekt pro
->   Brand (siehe Memory `project_brand_separation`).
-> - **Pricing-Quelle:** Es gibt kein `website/pricing.json`. Die aktuelle
->   Implementierung rendert `website/templates/pricing.html` direkt aus
+> **Nicht hier zu suchen** (operativ, "wie macht man Schritt X"):
+>
+> - **Paddle-Setup** (Produkte, Preise, Discount-Codes, Webhook-Events,
+>   Test-Karten) → [Setup Paddle Products, Prices, Discount-Codes.md](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md)
+> - **Infrastruktur-Setup** (Cloudflare-CLI, Resend, IONOS-DNS, Secrets,
+>   Custom Domain) → [Setup Infrastruktur Cloudflare, Resend und IONOS.md](./Setup%20Infrastruktur%20Cloudflare%2C%20Resend%20und%20IONOS.md)
+> - **Namens-/SKU-Konvention** → bleibt in eigenem Dokument:
+>   [Produkt-Namenskonvention.md](./Produkt-Namenskonvention.md)
+>   und in [Setup Paddle …](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md) §4.
+>
+> **Stand 2026-05-22 — was abweichend von urspruenglichen Konzept-Optionen
+> tatsaechlich umgesetzt ist:**
+>
+> - **Mailer:** Resend (urspruenglich "Brevo oder Resend").
+> - **Datenbank:** Cloudflare D1 in WEUR (urspruenglich "Neon Frankfurt").
+>   Schema in [migrations/0001_init.sql](../migrations/0001_init.sql).
+> - **Hosting:** Cloudflare Pages Functions (wie konzipiert).
+> - **Paddle-Events (Billing v2):** `transaction.paid` und
+>   `adjustment.created`/`updated` (statt der Konzept-Namen aus Classic-Era).
+>   Aktive Event-Liste im Webhook-Handler:
+>   [functions/api/paddle/webhook.ts](../functions/api/paddle/webhook.ts).
+> - **Pricing-Quelle:** kein `website/pricing.json`. Tokens kommen aus
 >   `website/brands.json` (`paddle.clientToken`, `priceIdMonthly`,
->   `priceIdYearly`, `apiBaseUrl`).
-> - **Checkout-Schutz:** Die Pricing-Seite fragt vor Paddle eine E-Mail ab und
+>   `priceIdYearly`, `apiBaseUrl`) und werden in
+>   `website/templates/pricing.html` gerendert.
+> - **Checkout-Schutz:** Pricing-Seite fragt vor Paddle eine E-Mail ab und
 >   ruft `POST /api/billing/checkout-intent` auf. Paddle oeffnet nur bei
->   `action = "start_checkout"`; ein unerreichbarer Intent blockiert den
->   Checkout bewusst.
-> - **Umsetzungsstand:** LifePlus ist komplett verdrahtet. FitLine und Eqology
->   haben Product Packs, Microsites und App-Builds, aber noch Platzhalter fuer
->   Paddle/API-Konfiguration.
+>   `action = "start_checkout"`; ein unerreichbarer Intent blockiert
+>   bewusst.
+> - **Umsetzungsstand:** LifePlus voll verdrahtet. FitLine und Eqology
+>   haben Microsites + App-Builds, aber noch Platzhalter fuer
+>   Paddle-/API-Konfiguration.
 >
-> Konzeptpassagen unten, die die alten Event-Namen oder Mailer/DB-Alternativen
-> nennen oder `pricing.json`, Neon/Brevo als Ziel oder einen direkten
-> Checkout ohne Intent beschreiben, sind als historischer Kontext zu lesen.
-> Die Setup-Dokumente in `_doc/` und der Code sind die maßgebliche Quelle.
+> Konzept-Passagen, die alte Event-Namen, Mailer-/DB-Alternativen,
+> `pricing.json` oder einen direkten Checkout-ohne-Intent nennen, sind als
+> historischer Kontext zu lesen. **Maßgeblich** sind heute der Code und die
+> beiden Setup-Dokumente oben.
 
 ## Ziel
 
@@ -217,31 +226,20 @@ bezahlt hat. Diese Entscheidung muss aus der API kommen.
 
 ## Paddle als Merchant of Record
 
-Paddle ist nicht nur eine Zahlungs-API, sondern Merchant of Record. Das hat
-praktische Folgen:
+Kurz: Paddle uebernimmt USt./Sales-Tax, Rechnungsstellung, KYC,
+Compliance, Disputes und Auszahlung. Wir bleiben fuer Service und
+Entitlements verantwortlich.
 
-- **USt./Sales Tax**: Paddle berechnet, sammelt und fuehrt landesabhaengige
-  Steuern selbst ab. Das Pricing kann brutto oder netto angezeigt werden.
-  Paddle erkennt den Kunden-Standort und passt die angezeigten Preise an.
-- **Rechnungen**: Paddle erstellt die Rechnung an den Endkunden im Namen von
-  Paddle. Der Endkunde sieht Paddle auf der Rechnung, nicht den Verkaeufer
-  direkt. Die Auszahlung an den Verkaeufer kommt periodisch von Paddle.
-- **KYC / Onboarding**: Vor Live-Schaltung muss Paddle KYC-Daten pruefen
-  (Identitaet, Steuer-ID, Bankverbindung, ggf. Webseite). Das dauert
-  typischerweise einige Werktage und sollte vor jeder weiteren Planung
-  angestossen werden.
-- **B2B / VAT-ID**: Paddle bietet im Checkout die Eingabe einer
-  Umsatzsteuer-ID an. Bei gueltiger EU-VAT-ID wird Reverse-Charge angewendet.
-- **Auszahlung**: Paddle zahlt in vereinbarter Waehrung (z.B. EUR) periodisch
-  aus. Wechselkurse, Auslandsgebuehren etc. uebernimmt Paddle.
+Konsequenzen fuer die App:
 
-Was bedeutet das fuer die App:
+- Kein Stripe-Connect-artiges Setup noetig.
+- Kein eigenes Steuer- oder Rechnungssystem noetig.
+- Im Frontend keine eigenen Brutto-Preise hartkodieren — Paddle ist die
+  Quelle der Wahrheit.
 
-- Es ist **kein Stripe-Connect-artiges Setup noetig**.
-- Es ist **kein eigenes Steuer- oder Rechnungssystem noetig**.
-- Im Frontend keine eigenen Preisangaben mit USt. ausweisen, die spaeter
-  abweichen koennten. Stattdessen das offizielle Paddle-Pricing als
-  Quelle anzeigen (z.B. via `Paddle.PricePreview`).
+→ Operative Setup-Details (KYC-Schritte, Reverse-Charge-Konfig, MoR-
+Auswirkungen auf Code) in
+[Setup Paddle Products, Prices, Discount-Codes.md](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md) §3.
 
 ## Empfohlene Komponenten
 
@@ -752,6 +750,26 @@ Schutzschicht.
 
 ## Webhook-Verarbeitung im Detail
 
+### SKU-Routing — wie der Webhook den Audience-Typ erkennt
+
+Aus der Namenskonvention (siehe
+[Setup Paddle §4](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md#4-namens--und-sku-konvention)
+und [Produkt-Namenskonvention.md](./Produkt-Namenskonvention.md)) liest
+der Webhook-Handler den `internal description`-Code des Preises
+(z.B. `LifeFlow-IND-PRO-MO`) und faechert die Entitlement-Logik
+entsprechend des Audience-Segments auf:
+
+```text
+<BRAND>-IND-<TIER>[-<PERIOD>]            -> Einzel-Entitlement fuer den Kaeufer
+<BRAND>-SPO-<TIER>-<SEATS>[-<PERIOD>]    -> license_pool mit <SEATS> Slots
+<BRAND>-TEAM-<TIER>-<SEATS>[-<PERIOD>]   -> license_pool im Team-Modus   (zukuenftig)
+<BRAND>-ENT-<TIER>[-<SEATS>][-<PERIOD>]  -> Custom-Vertrag, manuell      (zukuenftig)
+```
+
+So bleiben heutige und zukuenftige Codes ohne Code-Aenderung
+unterscheidbar — neue Audience-Codes (z.B. `EDU` fuer Bildungslizenzen)
+ergaenzen die Switch-Logik ohne Refactor der bestehenden Pfade.
+
 ### Subscription Lifecycle
 
 Folgende Paddle-Events werden verarbeitet (Paddle Billing v2):
@@ -1098,38 +1116,23 @@ Absender-Adresse umgestellt.
 
 ## Sandbox vs. Live
 
-Paddle stellt eine Sandbox-Umgebung. Die ist nicht ein zweiter Account, sondern
-ein paralleles Login unter `sandbox-vendors.paddle.com`. Sandbox-Webhooks
-zeigen das Praefix `pdl_` etwas anders, vor allem aber sind die Customer IDs
-und Subscription IDs nicht mit Live identisch.
+Paddle hat zwei voneinander getrennte Logins:
+`sandbox-vendors.paddle.com` und `vendors.paddle.com`. Customer-IDs und
+Subscription-IDs sind nicht identisch — Sandbox-Daten werden nicht
+uebernommen.
 
-Vorgehensweise:
+Konfigurationsorte (kein `pricing.json` im Repo):
 
-```text
-Schritt 1: Sandbox-Account anlegen.
-Schritt 2: Sandbox-Produkte und -Preise pro Brand anlegen.
-Schritt 3: `paddle.env = "sandbox"` in `website/brands.json` und
-            `PADDLE_ENV=sandbox` in der API-Env nutzen.
-Schritt 4: Sandbox-Webhook-Endpunkt einrichten und mit ngrok/cloudflared
-            lokal testen.
-Schritt 5: Den vollen Happy Path testen: Kauf, Webhook, /api/me, Paywall weg.
-Schritt 6: Negativ-Tests:
-            - Refund -> Zugang weg
-            - Cancel -> Zugang bleibt bis Periodenende
-            - past_due simulieren -> Grace
-            - Falsche Webhook-Signatur -> 401
-            - Doppelter Webhook -> Idempotenz greift
-Schritt 7: KYC bei Paddle Live anstossen.
-Schritt 8: Live-Produkte/-Preise spiegeln.
-Schritt 9: Live-Webhook umstellen, Vite-Env auf live.
-Schritt 10: Einen kleinen Realkauf mit eigener Kreditkarte machen und
-            sofort refunden, um den vollen Live-Loop zu validieren.
-```
+- `website/brands.json` → `paddle.env`, `paddle.clientToken`,
+  `paddle.priceIdMonthly`, `paddle.priceIdYearly` pro Brand.
+- Cloudflare Pages Env: `PADDLE_ENV`, `PADDLE_PRICE_MONTHLY`,
+  `PADDLE_PRICE_YEARLY` als plain vars + `PADDLE_API_KEY` /
+  `PADDLE_WEBHOOK_SECRET` als secrets.
 
-Aktueller Stand: Sandbox-/Live-Price-IDs stehen nicht in `pricing.json`,
-sondern in `website/brands.json` fuer die Marketing-Seite und in den
-Cloudflare-Env-Vars `PADDLE_PRICE_MONTHLY` / `PADDLE_PRICE_YEARLY` fuer den
-Checkout-Intent und Webhook.
+→ Detaillierter Test-Ablauf (Happy-Path, Negativ-Tests inkl. Refund,
+Cancel, past_due, Idempotenz) und Pre-Live-Checkliste in
+[Setup Paddle Products, Prices, Discount-Codes.md](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md)
+§14 und §17.
 
 ## DSGVO und Datenschutz
 
@@ -2020,25 +2023,25 @@ Ergebnis: Sauberer Live-Betrieb.
 
 ## Setup-Checkliste vor Livegang
 
+Die **operativen** Checklisten-Punkte (Paddle-KYC, Live-Webhook,
+Mailer-Verify, D1-Backups, DNS-Records, Live-Real-Kauf) sind in den
+Setup-Docs gepflegt:
+
+- Paddle-Live-Items: [Setup Paddle Products, Prices, Discount-Codes.md §17](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md#17-pre-live-checkliste)
+- Infrastruktur-Items: [Setup Infrastruktur Cloudflare, Resend und IONOS.md §12](./Setup%20Infrastruktur%20Cloudflare%2C%20Resend%20und%20IONOS.md#12-verifikation-und-smoke-tests)
+
+Konzept-spezifische Items, die in den Setup-Docs **nicht** abgedeckt
+sind und vor Live-Schaltung der App stehen muessen:
+
 ```text
-[ ] Paddle KYC abgeschlossen.
-[ ] Paddle Live-Produkte und -Preise pro Brand angelegt.
-[ ] Webhook-Endpunkt Live erreichbar und Signaturpruefung getestet.
-[ ] DPA mit Paddle unterzeichnet.
-[ ] DPA mit Mailer unterzeichnet.
-[ ] D1-Datenbank fuer jede aktive Brand angelegt und Schema migriert.
-[ ] Datenbank-Backups aktiviert.
-[ ] SPF/DKIM/DMARC pro Brand-Domain in DNS gesetzt und verifiziert.
-[ ] Magic-Link Mail-Template pro Brand getestet (Posteingang, nicht Spam).
-[ ] Datenschutzerklaerung pro Brand aktualisiert und veroeffentlicht.
-[ ] Impressum-Hinweis auf Paddle (Merchant of Record) ergaenzt.
-[ ] Cookie-Hinweis aktualisiert (Paddle-Cookies, Session-Cookies).
-[ ] Rate-Limits an Auth-Endpunkten aktiv und getestet.
-[ ] Refund-Loop einmal mit Echtkauf durchgespielt (kleiner Realkauf + Refund).
-[ ] Logging und Webhook-Failure-Alert aktiv (Mail oder Slack).
-[ ] Geraete-Limit-UX einmal durchgespielt (4. Geraet, Abmelde-Flow).
-[ ] /api/account/export liefert vollstaendigen JSON-Export.
-[ ] /api/account/delete loescht und anonymisiert wie vorgesehen.
+[ ] Rate-Limits an Auth-Endpunkten aktiv und unter Last getestet
+[ ] Geraete-Limit-UX einmal durchgespielt (4. Geraet, Abmelde-Flow)
+[ ] DPA mit Paddle und Mailer unterzeichnet
+[ ] Datenschutzerklaerung pro Brand auf Resend, Cloudflare, Paddle erweitert
+[ ] Impressum-Hinweis auf Paddle (Merchant of Record) ergaenzt
+[ ] Cookie-Hinweis aktualisiert (Paddle-Cookies, Session-Cookies)
+[ ] /api/account/export liefert vollstaendigen JSON-Export
+[ ] /api/account/delete loescht und anonymisiert wie vorgesehen
 ```
 
 ## Offene Entscheidungen

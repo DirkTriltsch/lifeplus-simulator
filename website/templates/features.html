@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Funktionen – {{SITE_NAME}}</title>
-  <meta name="description" content="Fünf Slider, Zehn-Jahre-Verlauf, Stufen-Prognose, Pitch-Modus und URL-Sharing. Was {{SITE_NAME}} im Gespräch leistet." />
+  <meta name="description" content="Fünf Slider, Zehn-Jahre-Verlauf, Stufen-Prognose, drei Simulationsmodelle, Ziele-Leiter und Netzwerk-Visualisierungen. Was {{SITE_NAME}} im Gespräch leistet." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -279,93 +279,6 @@
       .v-rank-meta { display: none; }
     }
 
-    /* ===== Visual 4 — Pitch hero ===== */
-    .v-pitch-hero {
-      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-      border-radius: 14px;
-      padding: 32px 28px;
-      color: #fff;
-      margin-bottom: 14px;
-      position: relative;
-      overflow: hidden;
-    }
-    .v-pitch-hero::before {
-      content: ""; position: absolute; inset: 0;
-      background-image: radial-gradient(circle at 90% 10%, rgba(255,255,255,0.12) 0%, transparent 60%);
-    }
-    .v-pitch-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: rgba(255,255,255,0.7); margin-bottom: 10px; position: relative; }
-    .v-pitch-num { font-family: var(--serif); font-size: 56px; font-weight: 400; letter-spacing: -0.03em; line-height: 1; margin-bottom: 8px; position: relative; }
-    .v-pitch-num .cur { color: rgba(255,255,255,0.7); font-weight: 300; }
-    .v-pitch-cap { font-size: 13px; color: rgba(255,255,255,0.78); position: relative; }
-    .v-pitch-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-    .v-pitch-cell { background: var(--paper-2); padding: 12px; border-radius: 8px; text-align: center; }
-    .v-pitch-cell-label { font-size: 9px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5px; font-weight: 500; }
-    .v-pitch-cell-val { font-family: var(--serif); font-size: 18px; color: var(--ink); letter-spacing: -0.01em; }
-
-    /* ===== Visual 5 — Multi-Device ===== */
-    .multidevice {
-      position: relative;
-      display: grid;
-      grid-template-columns: 1.6fr 1fr 0.65fr;
-      gap: 18px;
-      align-items: end;
-      padding: 32px 12px 56px;
-    }
-    .md-d-frame { background: #1A1F1C; border-radius: 10px 10px 4px 4px; padding: 8px; box-shadow: 0 1px 2px rgba(15,27,23,0.06), 0 12px 28px rgba(15,27,23,0.12); border: 0.5px solid var(--line); }
-    .md-d-toolbar { background: #fff; border-radius: 6px 6px 0 0; padding: 8px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--line-soft); }
-    .md-dots { display: flex; gap: 4px; flex-shrink: 0; }
-    .md-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
-    .md-d-url {
-      flex: 1; background: var(--paper-2);
-      padding: 4px 10px; border-radius: 100px;
-      font-family: var(--mono); font-size: 10px;
-      color: var(--ink-4); overflow: hidden;
-      white-space: nowrap; text-overflow: ellipsis;
-      min-width: 0;
-    }
-    .md-d-url .url-prot { color: var(--ink-3); }
-    .md-d-url .url-params { color: var(--brand); font-weight: 500; }
-    .md-d-body { background: #fff; border-radius: 0 0 6px 6px; padding: 24px 22px 22px; }
-    .md-d-num { font-family: var(--serif); font-size: 46px; font-weight: 400; color: var(--ink); letter-spacing: -0.03em; line-height: 1; display: flex; align-items: baseline; gap: 2px; margin-bottom: 4px; }
-    .md-d-num .cur { font-size: 28px; color: var(--ink-3); font-weight: 300; }
-    .md-d-unit { font-family: var(--sans); font-size: 13px; color: var(--ink-4); font-weight: 400; margin-left: 6px; }
-    .md-d-cap { font-size: 11px; color: var(--ink-4); margin-bottom: 12px; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
-    .md-d-chart { width: 100%; height: 60px; display: block; }
-    .md-stand { width: 50%; margin: 0 auto; height: 14px; background: linear-gradient(180deg, #1A1F1C 0%, #0B0E0D 100%); border-radius: 0 0 4px 4px; position: relative; }
-    .md-stand::after { content: ""; display: block; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); width: 70%; height: 3px; background: var(--ink-5); border-radius: 100px; opacity: 0.35; }
-    .md-t-frame { background: #1A1F1C; border-radius: 14px; padding: 6px; box-shadow: 0 1px 2px rgba(15,27,23,0.06), 0 8px 22px rgba(15,27,23,0.1); border: 0.5px solid var(--line); }
-    .md-t-body { background: #fff; border-radius: 10px; padding: 18px 14px 16px; min-height: 150px; }
-    .md-t-num { font-family: var(--serif); font-size: 28px; font-weight: 400; color: var(--ink); letter-spacing: -0.025em; line-height: 1; display: flex; align-items: baseline; gap: 1px; margin-bottom: 2px; }
-    .md-t-num .cur { font-size: 18px; color: var(--ink-3); font-weight: 300; }
-    .md-t-cap { font-size: 9px; color: var(--ink-4); margin-bottom: 10px; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
-    .md-t-chart { width: 100%; height: 36px; display: block; margin-bottom: 12px; }
-    .md-t-mini { display: grid; gap: 6px; }
-    .md-t-mb { height: 3px; background: var(--line); border-radius: 100px; overflow: hidden; }
-    .md-t-mb-fill { height: 100%; background: var(--brand); border-radius: 100px; }
-    .md-p-frame { background: #1A1F1C; border-radius: 16px; padding: 4px; box-shadow: 0 1px 2px rgba(15,27,23,0.06), 0 6px 18px rgba(15,27,23,0.1); border: 0.5px solid var(--line); position: relative; }
-    .md-p-notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 28px; height: 5px; background: #000; border-radius: 100px; z-index: 2; }
-    .md-p-body { background: #fff; border-radius: 12px; padding: 20px 10px 14px; min-height: 110px; }
-    .md-p-num { font-family: var(--serif); font-size: 18px; font-weight: 400; color: var(--ink); letter-spacing: -0.02em; line-height: 1; display: flex; align-items: baseline; gap: 1px; margin-bottom: 2px; }
-    .md-p-num .cur { font-size: 12px; color: var(--ink-3); font-weight: 300; }
-    .md-p-cap { font-size: 8px; color: var(--ink-4); margin-bottom: 8px; font-family: var(--mono); letter-spacing: 0.04em; text-transform: uppercase; }
-    .md-p-chart { width: 100%; height: 24px; display: block; }
-    .md-label { margin-top: 10px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.05em; }
-    .md-sync {
-      position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--brand-surface);
-      padding: 7px 14px; border-radius: 100px;
-      color: var(--brand);
-      font-size: 12px; font-weight: 500; white-space: nowrap;
-      border: 0.5px solid color-mix(in srgb, var(--brand) 12%, transparent);
-    }
-    .md-sync svg { width: 13px; height: 13px; animation: md-spin 4s linear infinite; }
-    @keyframes md-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @media (max-width: 540px) {
-      .multidevice { grid-template-columns: 1fr; gap: 32px; }
-      .md-sync { position: static; transform: none; margin: 0 auto; display: flex; width: fit-content; }
-    }
-
     /* ===== Lite features grid ===== */
     .lite-features {
       background: var(--paper-2);
@@ -501,7 +414,7 @@
     <div class="wrap">
       <div class="ph-eyebrow">Funktionen</div>
       <h1 class="ph-h1">Was im Gespräch <em>wirklich wirkt.</em></h1>
-      <p class="ph-sub">Fünf Slider, ein Zehn-Jahres-Verlauf, klare Stufen-Prognose, ein Pitch-Modus und ein Link, der alles teilt. Jede Funktion einzeln nutzbar — zusammen ein Werkzeug, das im Pitch trägt.</p>
+      <p class="ph-sub">Fünf Slider, ein Zehn-Jahres-Verlauf, klare Stufen-Prognose, drei Simulationsmodelle, persönliche Ziele und Netzwerk-Visualisierungen. Jede Funktion einzeln nutzbar — zusammen ein Werkzeug für Interessenten-Gespräche und die eigene Downline.</p>
     </div>
   </section>
 
@@ -512,10 +425,10 @@
         <div class="feature-num">01 / FEATURE</div>
         <h2 class="feature-h">Fünf Slider. <em>Sein</em> Plan, nicht deiner.</h2>
         <p class="feature-p">
-          Du brauchst keine Folien-Erklärung des Vergütungsplans. Du brauchst fünf Slider, die er selbst anfasst. Jede Bewegung ist eine Frage, jede Antwort ist eine Zahl.
+          Du brauchst keine Folien-Erklärung des Vergütungsplans. Fünf Regler reichen, um ein Gespräch zu drehen — der Interessent oder Partner stellt selbst ein, was er für realistisch hält. Jede Änderung berechnet die Entwicklung über die Zeit sofort neu.
         </p>
         <p class="feature-p feature-p-highlight">
-          Und genau hier nimmst du dem Gespräch den Druck: Selbst mit <b>nur 2 Member pro Jahr</b> zeigt der Simulator nach 7–10 Jahren eine stolze Summe. Das relativiert die Angst, sofort liefern zu müssen.
+          Auch mit moderaten Werten wird sichtbar, was Kontinuität über Jahre bewirkt. <b>Erwartungen werden geklärt, nicht gepusht</b> — das nimmt dem Gespräch den Druck, sofort liefern zu müssen.
         </p>
         <ul class="feature-list">
           <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Member pro Jahr</b> — wie viele baut er aktiv mit auf?</span></li>
@@ -690,19 +603,19 @@
     </div>
   </section>
 
-  <!-- ===== Feature 4 — Pitch View ===== -->
-  <section class="feature" id="pitch">
+  <!-- ===== Feature 4 — Drei Simulationsmodelle ===== -->
+  <section class="feature" id="modelle">
     <div class="wrap feature-row reverse">
       <div class="feature-text">
         <div class="feature-num">04 / FEATURE</div>
-        <h2 class="feature-h">Pitch-Modus: <em>weniger zeigen, mehr wirken.</em></h2>
+        <h2 class="feature-h">Drei Modelle. <em>Vom einfachen Wachstum bis zur realen Team-Dynamik.</em></h2>
         <p class="feature-p">
-          Im Gespräch willst du keine Datentabellen. Du willst eine Zahl, die so groß ist, dass sie wirkt. Der Pitch-Modus blendet alles aus, was ablenkt — und zeigt nur das, was zählt.
+          Nicht jedes Team wächst gleich. Ein einfaches Modell hilft beim Einstieg, realistischere Modelle zeigen Streuung und Dynamik. Starte einfach und schalte bei Bedarf mehr Realität hinzu.
         </p>
         <ul class="feature-list">
-          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Eine Zahl, riesig dargestellt</b> — auf jedem Display lesbar, vom Handy bis zur Präsentation.</span></li>
-          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Reduzierte Kennzahlen</b> — Netzwerkgröße, Rang, Bonus auf einen Blick.</span></li>
-          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Teilbar als Link</b> — die exakten Slider-Werte landen in der URL. Er kann's zuhause nochmal in Ruhe anschauen.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Standard</b> — alle Teams wachsen gleichmäßig. Klare Einstiegs-Sicht für das erste Gespräch.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Zufallsverteilung</b> — zufällige Dynamik zwischen Teams. Zeigt Bandbreite statt Durchschnitt.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Momentum</b> — realitätsnah: einzelne Beine entwickeln Dynamik, andere bleiben kleiner. Spiegelt echte Team-Erfahrung.</span></li>
         </ul>
       </div>
 
@@ -710,107 +623,159 @@
         <div class="visual-frame">
           <div class="visual-bar">
             <div class="dots"><span></span><span></span><span></span></div>
-            <div class="file">pitch · ergebnisansicht</div>
+            <div class="file">modelle · vergleich</div>
           </div>
-          <div class="v-pitch-hero">
-            <div class="v-pitch-label">DEIN MONATLICHER VERDIENST · JAHR 10</div>
-            <div class="v-pitch-num"><span class="cur">€</span>8.420</div>
-            <div class="v-pitch-cap">Bei 2 Member · 3 Shopper · 200 IP · 30 % Dup · 20 % Fluk</div>
-          </div>
-          <div class="v-pitch-grid">
-            <div class="v-pitch-cell"><div class="v-pitch-cell-label">Netzwerk</div><div class="v-pitch-cell-val">412</div></div>
-            <div class="v-pitch-cell"><div class="v-pitch-cell-label">Stufe</div><div class="v-pitch-cell-val">Gold</div></div>
-            <div class="v-pitch-cell"><div class="v-pitch-cell-label">Jahr</div><div class="v-pitch-cell-val">10</div></div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div style="background: var(--paper-2); padding: 16px 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Standard</div>
+              <svg viewBox="0 0 100 70" preserveAspectRatio="none" style="width: 100%; height: 60px;">
+                <path d="M 5 60 L 25 50 L 50 35 L 75 18 L 95 6" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M 5 62 L 25 52 L 50 37 L 75 20 L 95 8" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.4" stroke-linecap="round" opacity="0.6"/>
+                <path d="M 5 64 L 25 54 L 50 39 L 75 22 L 95 10" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+              </svg>
+              <div style="font-size: 11px; color: var(--ink-3); margin-top: 6px; line-height: 1.4;">Gleichmäßig — alle Beine im Gleichschritt.</div>
+            </div>
+            <div style="background: var(--paper-2); padding: 16px 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Zufall</div>
+              <svg viewBox="0 0 100 70" preserveAspectRatio="none" style="width: 100%; height: 60px;">
+                <path d="M 5 62 L 25 45 L 50 38 L 75 22 L 95 8" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M 5 64 L 25 58 L 50 42 L 75 35 L 95 18" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.4" stroke-linecap="round" opacity="0.6"/>
+                <path d="M 5 60 L 25 55 L 50 30 L 75 28 L 95 12" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+              </svg>
+              <div style="font-size: 11px; color: var(--ink-3); margin-top: 6px; line-height: 1.4;">Streuung — Bandbreite statt Durchschnitt.</div>
+            </div>
+            <div style="background: var(--paper-2); padding: 16px 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Momentum</div>
+              <svg viewBox="0 0 100 70" preserveAspectRatio="none" style="width: 100%; height: 60px;">
+                <path d="M 5 62 L 25 48 L 50 28 L 75 12 L 95 2" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="2" stroke-linecap="round"/>
+                <path d="M 5 64 L 25 58 L 50 48 L 75 38 L 95 28" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+                <path d="M 5 66 L 25 63 L 50 60 L 75 58 L 95 52" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/>
+              </svg>
+              <div style="font-size: 11px; color: var(--ink-3); margin-top: 6px; line-height: 1.4;">Stärkere und schwächere Beine.</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===== Feature 5 — URL-Sharing / Multi-Device ===== -->
-  <section class="feature" id="sharing" style="border-bottom: none;">
+  <!-- ===== Feature 5 — Ziele-Leiter ===== -->
+  <section class="feature" id="ziele">
     <div class="wrap feature-row">
       <div class="feature-text">
         <div class="feature-num">05 / FEATURE</div>
-        <h2 class="feature-h">Ein Link. Sein Szenario. <em>Überall.</em></h2>
+        <h2 class="feature-h">Ziele-Leiter. <em>Zwischenziele</em> statt nur Endsumme.</h2>
         <p class="feature-p">
-          Jeder Slider-Wert steckt in der URL. Kopier den Link, schick ihn per WhatsApp — und auf seinem Handy öffnet sich die exakt gleiche Berechnung. Auf dem Tablet im Wohnzimmer. Auf dem Notebook im Büro.
+          Für Motivation sind Endzahlen oft zu weit weg. Statt nur auf Jahr 10 zu schauen, zeigt die Ziele-Leiter konkrete Zwischenziele im Verlauf — und in welchem Jahr sie nach den eigenen Annahmen erreicht werden.
         </p>
         <p class="feature-p feature-p-highlight">
-          Im <b>Zoom-Call</b>: Bildschirm teilen, Slider live bewegen, er sieht jede Veränderung in Echtzeit. Auch wenn ihr nicht im selben Raum seid, sitzt ihr nebeneinander.
+          Für bestehende Partner ist das oft entscheidender als die Endzahl: <b>Wegmarken machen Fortschritt greifbar</b>, gerade in den ersten Jahren, in denen die Provision noch klein wirkt.
         </p>
         <ul class="feature-list">
-          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Handy, Tablet, Desktop</b> — gleicher Link, gleiche Zahl, jedes Display.</span></li>
-          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Nachfass-fähig</b> — er kann das Szenario zuhause in Ruhe nachrechnen.</span></li>
-          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Zoom- &amp; Teams-tauglich</b> — Bildschirm teilen, gemeinsam justieren.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Produktkosten refinanziert</b> — der erste, leicht erreichbare Anker.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Auto finanziert</b> — Zwischenziel mit greifbarer Wirkung im Alltag.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Mietfrei wohnen</b> — Wegmarke, an der viele Partner durchhalten.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Vollwertiges Einkommen</b> — der Punkt, an dem aus Nebenher ein echtes Standbein wird.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Eigene, frei definierte Ziele</b> — was immer den Sponsor oder Partner motiviert.</span></li>
         </ul>
       </div>
 
       <div class="feature-visual">
-        <div class="multidevice">
-          <div class="md-desktop">
-            <div class="md-d-frame">
-              <div class="md-d-toolbar">
-                <div class="md-dots"><span></span><span></span><span></span></div>
-                <div class="md-d-url"><span class="url-prot">{{SITE_DOMAIN}}/?</span><span class="url-params">m=2&amp;s=3&amp;ip=200&amp;d=30&amp;f=20</span></div>
-              </div>
-              <div class="md-d-body">
-                <div class="md-d-num"><span class="cur">€</span>8.420<span class="md-d-unit">/Mon</span></div>
-                <div class="md-d-cap">Jahr 10 · realistisch</div>
-                <svg class="md-d-chart" viewBox="0 0 280 60" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="md-grad" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stop-color="{{ACCENT_COLOR}}" stop-opacity="0.18"/>
-                      <stop offset="100%" stop-color="{{ACCENT_COLOR}}" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M 10 55 L 38 53 L 66 49 L 94 43 L 122 35 L 150 26 L 178 18 L 206 11 L 234 6 L 262 4 L 262 60 L 10 60 Z" fill="url(#md-grad)"/>
-                  <path d="M 10 55 L 38 53 L 66 49 L 94 43 L 122 35 L 150 26 L 178 18 L 206 11 L 234 6 L 262 4" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.6" stroke-linecap="round"/>
-                  <circle cx="262" cy="4" r="3" fill="{{ACCENT_COLOR}}" stroke="white" stroke-width="1.5"/>
-                </svg>
-              </div>
-            </div>
-            <div class="md-stand"></div>
-            <div class="md-label">Desktop · 27"</div>
+        <div class="visual-frame">
+          <div class="visual-bar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="file">ziele · pers&ouml;nliche wegmarken</div>
           </div>
-
-          <div class="md-tablet">
-            <div class="md-t-frame">
-              <div class="md-t-body">
-                <div class="md-t-num"><span class="cur">€</span>8.420</div>
-                <div class="md-t-cap">/Monat · Jahr 10</div>
-                <svg class="md-t-chart" viewBox="0 0 140 36" preserveAspectRatio="none">
-                  <path d="M 6 32 L 22 30 L 38 27 L 54 23 L 70 18 L 86 13 L 102 8 L 118 5 L 134 3" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.4" stroke-linecap="round"/>
-                  <circle cx="134" cy="3" r="2.5" fill="{{ACCENT_COLOR}}" stroke="white" stroke-width="1.2"/>
-                </svg>
-                <div class="md-t-mini">
-                  <div class="md-t-mb"><div class="md-t-mb-fill" style="width:25%"></div></div>
-                  <div class="md-t-mb"><div class="md-t-mb-fill" style="width:38%"></div></div>
-                  <div class="md-t-mb"><div class="md-t-mb-fill" style="width:50%"></div></div>
-                </div>
-              </div>
-            </div>
-            <div class="md-label">Tablet · 10"</div>
+          <div class="v-rank">
+            <div class="v-rank-head"><span class="v-rank-title">Zwischenziele im Jahresverlauf</span></div>
+            <div class="v-rank-row achieved"><span class="v-rank-dot"></span><span class="v-rank-name">Produktkosten refinanziert</span><span class="v-rank-meta">~ 50 €/Monat</span><span class="v-rank-year">J1</span></div>
+            <div class="v-rank-row achieved"><span class="v-rank-dot"></span><span class="v-rank-name">Auto finanziert</span><span class="v-rank-meta">~ 350 €/Monat</span><span class="v-rank-year">J3</span></div>
+            <div class="v-rank-row achieved"><span class="v-rank-dot"></span><span class="v-rank-name">Mietfrei wohnen</span><span class="v-rank-meta">~ 1.200 €/Monat</span><span class="v-rank-year">J5</span></div>
+            <div class="v-rank-row achieved"><span class="v-rank-dot"></span><span class="v-rank-name">Vollwertiges Einkommen</span><span class="v-rank-meta">~ 3.500 €/Monat</span><span class="v-rank-year">J7</span></div>
+            <div class="v-rank-row"><span class="v-rank-dot"></span><span class="v-rank-name">Eigenes Ziel · Frühpension</span><span class="v-rank-meta">~ 6.000 €/Monat</span><span class="v-rank-year">—</span></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          <div class="md-phone">
-            <div class="md-p-frame">
-              <div class="md-p-notch"></div>
-              <div class="md-p-body">
-                <div class="md-p-num"><span class="cur">€</span>8.420</div>
-                <div class="md-p-cap">Jahr 10/Mon</div>
-                <svg class="md-p-chart" viewBox="0 0 80 24" preserveAspectRatio="none">
-                  <path d="M 4 20 L 14 19 L 24 17 L 34 14 L 44 11 L 54 7 L 64 4 L 76 2" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="1.3" stroke-linecap="round"/>
-                  <circle cx="76" cy="2" r="2" fill="{{ACCENT_COLOR}}" stroke="white" stroke-width="1"/>
-                </svg>
-              </div>
-            </div>
-            <div class="md-label">Handy</div>
+  <!-- ===== Feature 6 — Netzwerk im Zeitverlauf ===== -->
+  <section class="feature" id="netzwerk" style="border-bottom: none;">
+    <div class="wrap feature-row reverse">
+      <div class="feature-text">
+        <div class="feature-num">06 / FEATURE</div>
+        <h2 class="feature-h">Netzwerk im Zeitverlauf. <em>Struktur</em> statt nur Endsumme.</h2>
+        <p class="feature-p">
+          Ein Netzwerk ist nicht nur eine Endsumme. Die Simulation zeigt nicht nur Ergebniszahlen, sondern auch die Struktur dahinter — und macht sichtbar, wo Konzentration, Breite oder Abhängigkeiten entstehen.
+        </p>
+        <ul class="feature-list">
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Tabelle</b> — Jahr-für-Jahr-Aufstellung mit allen Kennzahlen.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Sunburst</b> — radiale Sicht auf Ebenen und Beine.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Bein-Spalten</b> — vertikale Spalten je Sponsor-Bein, gut für Vergleich.</span></li>
+          <li><span class="marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Hybrid-Tree</b> — Baumstruktur mit Größenwirkung pro Knoten.</span></li>
+        </ul>
+      </div>
+
+      <div class="feature-visual">
+        <div class="visual-frame">
+          <div class="visual-bar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="file">netzwerk · vier ansichten</div>
           </div>
-
-          <div class="md-sync">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Live synchronisiert über URL</span>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div style="background: var(--paper-2); padding: 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Tabelle</div>
+              <svg viewBox="0 0 120 70" preserveAspectRatio="none" style="width: 100%; height: 64px;">
+                <rect x="6" y="6" width="108" height="10" fill="{{ACCENT_COLOR}}" opacity="0.7" rx="2"/>
+                <rect x="6" y="20" width="80" height="6" fill="{{ACCENT_COLOR}}" opacity="0.35" rx="1"/>
+                <rect x="6" y="30" width="100" height="6" fill="{{ACCENT_COLOR}}" opacity="0.35" rx="1"/>
+                <rect x="6" y="40" width="70" height="6" fill="{{ACCENT_COLOR}}" opacity="0.35" rx="1"/>
+                <rect x="6" y="50" width="92" height="6" fill="{{ACCENT_COLOR}}" opacity="0.35" rx="1"/>
+                <rect x="6" y="60" width="60" height="6" fill="{{ACCENT_COLOR}}" opacity="0.35" rx="1"/>
+              </svg>
+            </div>
+            <div style="background: var(--paper-2); padding: 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Sunburst</div>
+              <svg viewBox="0 0 120 70" preserveAspectRatio="none" style="width: 100%; height: 64px;">
+                <circle cx="60" cy="35" r="22" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="6" stroke-dasharray="22 5 30 5 28 5 20 5" opacity="0.65"/>
+                <circle cx="60" cy="35" r="13" fill="none" stroke="{{ACCENT_COLOR}}" stroke-width="4" stroke-dasharray="16 3 18 3 22 3" opacity="0.5"/>
+                <circle cx="60" cy="35" r="5" fill="{{ACCENT_COLOR}}"/>
+              </svg>
+            </div>
+            <div style="background: var(--paper-2); padding: 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Bein-Spalten</div>
+              <svg viewBox="0 0 120 70" preserveAspectRatio="none" style="width: 100%; height: 64px;">
+                <rect x="15" y="35" width="12" height="28" fill="{{ACCENT_COLOR}}" opacity="0.7" rx="1"/>
+                <rect x="35" y="20" width="12" height="43" fill="{{ACCENT_COLOR}}" opacity="0.8" rx="1"/>
+                <rect x="55" y="45" width="12" height="18" fill="{{ACCENT_COLOR}}" opacity="0.55" rx="1"/>
+                <rect x="75" y="12" width="12" height="51" fill="{{ACCENT_COLOR}}" opacity="0.9" rx="1"/>
+                <rect x="95" y="30" width="12" height="33" fill="{{ACCENT_COLOR}}" opacity="0.7" rx="1"/>
+              </svg>
+            </div>
+            <div style="background: var(--paper-2); padding: 14px; border-radius: 10px;">
+              <div style="font-size: 10px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 500;">Hybrid-Tree</div>
+              <svg viewBox="0 0 120 70" preserveAspectRatio="none" style="width: 100%; height: 64px;">
+                <line x1="60" y1="13" x2="30" y2="35" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.4"/>
+                <line x1="60" y1="13" x2="60" y2="35" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.4"/>
+                <line x1="60" y1="13" x2="90" y2="35" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.4"/>
+                <line x1="30" y1="35" x2="20" y2="58" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.35"/>
+                <line x1="30" y1="35" x2="40" y2="58" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.35"/>
+                <line x1="60" y1="35" x2="55" y2="58" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.35"/>
+                <line x1="60" y1="35" x2="65" y2="58" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.35"/>
+                <line x1="90" y1="35" x2="80" y2="58" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.35"/>
+                <line x1="90" y1="35" x2="100" y2="58" stroke="{{ACCENT_COLOR}}" stroke-width="1" opacity="0.35"/>
+                <circle cx="60" cy="13" r="6" fill="{{ACCENT_COLOR}}" opacity="0.9"/>
+                <circle cx="30" cy="35" r="4" fill="{{ACCENT_COLOR}}" opacity="0.7"/>
+                <circle cx="60" cy="35" r="4" fill="{{ACCENT_COLOR}}" opacity="0.7"/>
+                <circle cx="90" cy="35" r="4" fill="{{ACCENT_COLOR}}" opacity="0.7"/>
+                <circle cx="20" cy="58" r="3" fill="{{ACCENT_COLOR}}" opacity="0.5"/>
+                <circle cx="40" cy="58" r="3" fill="{{ACCENT_COLOR}}" opacity="0.5"/>
+                <circle cx="55" cy="58" r="3" fill="{{ACCENT_COLOR}}" opacity="0.5"/>
+                <circle cx="65" cy="58" r="3" fill="{{ACCENT_COLOR}}" opacity="0.5"/>
+                <circle cx="80" cy="58" r="3" fill="{{ACCENT_COLOR}}" opacity="0.5"/>
+                <circle cx="100" cy="58" r="3" fill="{{ACCENT_COLOR}}" opacity="0.5"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -821,7 +786,8 @@
   <section class="lite-features">
     <div class="wrap lite-head">
       <div class="sec-eyebrow">Weitere Funktionen</div>
-      <h2 class="sec-h">Alles drin, was im Pitch <em>zählt.</em></h2>
+      <h2 class="sec-h">Alles drin, was im Gespräch <em>zählt.</em></h2>
+      <p style="font-size: 16px; color: var(--ink-3); line-height: 1.6; margin: 16px 0 0; max-width: 640px;">Plus: jedes Szenario lässt sich per URL teilen — vom Handy zum Tablet, vom Sponsor zum Interessenten oder Partner. Gleiche Werte, gleiche Kurve, jedes Display.</p>
     </div>
     <div class="wrap" style="padding-left:0; padding-right:0;">
       <div class="lite-grid">

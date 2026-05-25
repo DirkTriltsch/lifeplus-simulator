@@ -141,12 +141,35 @@
     .pricing-section { padding: 50px 0 88px; }
     .pricing-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      max-width: 880px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 1100px;
       margin: 0 auto 28px;
     }
-    @media (max-width: 720px) { .pricing-row { grid-template-columns: 1fr; max-width: 480px; } }
+    @media (max-width: 980px) { .pricing-row { grid-template-columns: 1fr; max-width: 480px; } }
+
+    .price-card.placeholder {
+      background: var(--paper-2);
+      border-style: dashed;
+    }
+    .price-card.placeholder .price-cta {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .price-card .placeholder-note {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-4);
+      background: #fff;
+      border: 0.5px solid var(--line);
+      padding: 4px 10px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
 
     .price-card {
       background: #fff;
@@ -488,21 +511,10 @@
   <section class="ph">
     <div class="wrap">
       <div class="ph-eyebrow">Preise &amp; Konditionen</div>
-      <h1 class="ph-h1">Ein Werkzeug.<br><em>Zwei einfache Pläne.</em></h1>
+      <h1 class="ph-h1">Ein Werkzeug.<br><em>Drei klare Optionen.</em></h1>
       <p class="ph-sub">
-        Voller Funktionsumfang in beiden Plänen — wähle nur, wie oft du abrechnen willst. Monatlich kündbar. In jedem Plan als <strong>Betriebsausgabe</strong> absetzbar.
+        Frei testen, monatlich kündbar nutzen oder im Jahresabo sparen — du wählst die passende Form. Die Bezahlpläne sind als <strong>Betriebsausgabe</strong> absetzbar.
       </p>
-
-      <div class="toggle-wrap">
-        <div class="toggle">
-          <div class="toggle-pill" id="togglePill"></div>
-          <button class="toggle-btn active" onclick="setBilling('monthly')" id="btnMonthly">Monatlich</button>
-          <button class="toggle-btn" onclick="setBilling('yearly')" id="btnYearly">
-            Jährlich
-            <span class="toggle-save">−21 %</span>
-          </button>
-        </div>
-      </div>
 
       <div class="vat-banner-wrap">
         <div class="vat-banner">
@@ -520,13 +532,40 @@
   <section class="pricing-section">
     <div class="wrap">
       <div class="pricing-row">
+        <div class="price-card placeholder">
+          <span class="placeholder-note">In Vorbereitung</span>
+          <div class="price-name">Frei</div>
+          <div class="price-desc">Reduzierter Demo-Zugang, ohne Anmeldung.</div>
+          <div class="price-amount">
+            <span class="price-cur">€</span><span class="price-val">0</span><span class="price-unit">/Monat</span>
+          </div>
+          <div class="price-billed">kostenlos · ohne Login · ohne Kreditkarte</div>
+          <ul class="price-feats">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong>Funktionsumfang in Definition</strong> — Details folgen</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Idealer Einstieg, um das Tool kennenzulernen</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Keine Speicherung eigener Szenarien</span>
+            </li>
+          </ul>
+          <button type="button" class="price-cta" disabled aria-disabled="true">
+            Bald verfügbar
+          </button>
+        </div>
+
         <div class="price-card">
           <div class="price-name">Monatlich</div>
           <div class="price-desc">Flexibel, monatlich kündbar.</div>
           <div class="price-amount">
-            <span class="price-cur">€</span><span class="price-val">19</span><span class="price-unit">/Monat <em>netto</em></span>
+            <span class="price-cur">€</span><span class="price-val">13,32</span><span class="price-unit">/Monat <em>netto</em></span>
           </div>
-          <div class="price-billed">€19 netto monatlich · zzgl. USt. · jederzeit kündbar</div>
+          <div class="price-billed">€13,32 netto monatlich · zzgl. USt. · jederzeit kündbar</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -535,10 +574,6 @@
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span>Handy, Tablet &amp; Desktop · URL-Sharing inklusive</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>E-Mail-Support innerhalb 48 h</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -552,13 +587,13 @@
         </div>
 
         <div class="price-card featured">
-          <div class="pc-badge">Empfehlung · 2 Monate gratis</div>
+          <div class="pc-badge">Empfehlung · 3 Monate gratis</div>
           <div class="price-name">Jährlich</div>
           <div class="price-desc">Ein Abo, eine Rechnung, klarer Vorteil.</div>
           <div class="price-amount">
-            <span class="price-cur">€</span><span class="price-val">15</span><span class="price-unit">/Monat <em>netto</em></span>
+            <span class="price-cur">€</span><span class="price-val">9,99</span><span class="price-unit">/Monat <em>netto</em></span>
           </div>
-          <div class="price-billed">€180 netto jährlich · zzgl. USt. · Ersparnis €48 / Jahr</div>
+          <div class="price-billed">€119,88 netto jährlich · zzgl. USt. · Ersparnis €39,96 / Jahr</div>
           <ul class="price-feats">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -566,15 +601,11 @@
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span><strong>~21 % günstiger</strong> als das Monatsabo</span>
+              <span><strong>~25 % günstiger</strong> als das Monatsabo</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span>Eine Jahresrechnung — sauber für die Buchhaltung</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Priorisierter Support innerhalb 24 h</span>
             </li>
           </ul>
           <button type="button" class="price-cta" data-plan="yearly" data-price-id="{{PADDLE_PRICE_YEARLY}}">
@@ -600,8 +631,8 @@
       <div class="compare-table">
         <div class="compare-row header">
           <div></div>
-          <div class="compare-cell"><span class="compare-head-name">Monatlich</span><span class="compare-head-sub">€19/Mon</span></div>
-          <div class="compare-cell featured"><span class="compare-head-name featured-name">Jährlich</span><span class="compare-head-sub">€15/Mon</span></div>
+          <div class="compare-cell"><span class="compare-head-name">Monatlich</span><span class="compare-head-sub">€13,32/Mon</span></div>
+          <div class="compare-cell featured"><span class="compare-head-name featured-name">Jährlich</span><span class="compare-head-sub">€9,99/Mon</span></div>
         </div>
 
         <div class="compare-row">
@@ -620,12 +651,22 @@
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
-          <div class="compare-feat">Pitch-Modus für Gespräche</div>
+          <div class="compare-feat">Drei Simulationsmodelle (Standard / Zufall / Momentum)</div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="compare-row">
-          <div class="compare-feat">URL-Sharing &amp; Multi-Device-Sync</div>
+          <div class="compare-feat">Ziele-Leiter mit eigenen Zwischenzielen</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">Netzwerk-Visualisierungen (Tabelle, Sunburst, Bein-Spalten, Hybrid-Tree)</div>
+          <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">Szenario per URL teilen (Handy, Tablet, Desktop)</div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
@@ -633,11 +674,6 @@
           <div class="compare-feat">Light- &amp; Dark-Mode</div>
           <div class="compare-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="compare-cell featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="compare-row">
-          <div class="compare-feat">Support-Reaktionszeit</div>
-          <div class="compare-cell">≤ 48 h</div>
-          <div class="compare-cell featured" style="color: var(--brand); font-weight: 600;">≤ 24 h · priorisiert</div>
         </div>
         <div class="compare-row">
           <div class="compare-feat">Abrechnung</div>
@@ -751,14 +787,13 @@
   <!-- ===== Final CTA ===== -->
   <section class="final-cta" id="cta">
     <div class="wrap">
-      <h2 class="final-h">Eine Zahl. <em>Sein nächstes Ja.</em></h2>
-      <p class="final-sub">Wähle deinen Plan, öffne den Simulator, setz dich zu ihm.</p>
+      <h2 class="final-h">Eine Entscheidung. <em>Ein Werkzeug.</em></h2>
+      <p class="final-sub">Frei testen oder direkt im Gespräch nutzen — beides startet mit einem Klick.</p>
       <div class="final-ctas">
         <a href="{{APP_URL}}" class="btn-primary">
-          Jetzt starten
+          Simulator starten
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a href="index.html" class="btn-secondary">Zur Übersicht</a>
       </div>
     </div>
   </section>
@@ -786,21 +821,6 @@
       document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
       if (!isOpen) item.classList.add('open');
     }
-    function setBilling(mode) {
-      const btnM = document.getElementById('btnMonthly');
-      const btnY = document.getElementById('btnYearly');
-      const pill = document.getElementById('togglePill');
-      if (mode === 'monthly') {
-        btnM.classList.add('active');
-        btnY.classList.remove('active');
-        pill.style.transform = 'translateX(0)';
-      } else {
-        btnY.classList.add('active');
-        btnM.classList.remove('active');
-        pill.style.transform = 'translateX(100%)';
-      }
-    }
-
     (function initPaddle() {
       const clientToken = '{{PADDLE_CLIENT_TOKEN}}';
       const env = '{{PADDLE_ENV}}';
