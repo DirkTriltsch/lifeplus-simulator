@@ -1,11 +1,3 @@
-import { useState } from 'react';
-import type { GoalKind, GoalProgress } from '@mlm/simulator-goals';
-import { GoalIcon } from './GoalIcon';
-import {
-  GoalsEditorDialog,
-  type GoalUI,
-} from './GoalsEditorDialog';
-
 export type RealityStrategy =
   | 'standard'
   | 'dirichlet'
@@ -20,42 +12,32 @@ const STRATEGY_OPTIONS: { value: RealityStrategy; label: string }[] = [
 ];
 
 interface AdvancedSettingsPanelProps {
+  open: boolean;
+  onToggle: () => void;
   maxDirectMembersPerMember: number;
   onMaxDirectChange: (v: number) => void;
   monthlyProductCostEUR: number;
   onMonthlyProductCostChange: (v: number) => void;
   realityStrategy: RealityStrategy;
   onRealityStrategyChange: (s: RealityStrategy) => void;
-  goals: GoalUI[];
-  onGoalsChange: (goals: GoalUI[]) => void;
-  defaultGoals: GoalUI[];
   onResetAll: () => void;
-  goalProgress?: GoalProgress[];
 }
 
 export function AdvancedSettingsPanel({
+  open,
+  onToggle,
   maxDirectMembersPerMember,
   onMaxDirectChange,
   monthlyProductCostEUR,
   onMonthlyProductCostChange,
   realityStrategy,
   onRealityStrategyChange,
-  goals,
-  onGoalsChange,
-  defaultGoals,
   onResetAll,
-  goalProgress,
 }: AdvancedSettingsPanelProps) {
-  const progressById = new Map(
-    (goalProgress ?? []).map((p) => [p.goal.id, p]),
-  );
-  const [open, setOpen] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-4">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={onToggle}
         className="w-full flex items-center justify-between px-4 sm:px-6 py-3 text-left"
         aria-expanded={open}
       >
@@ -75,7 +57,7 @@ export function AdvancedSettingsPanel({
               Zuruecksetzen
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             <div>
               <label className="block text-xs text-gray-600 mb-1">
                 Max. Members je Sponsor
@@ -142,75 +124,9 @@ export function AdvancedSettingsPanel({
                 Verteilung des Wachstums auf die Beine.
               </p>
             </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-600">Ziele-Leiter</span>
-                <button
-                  onClick={() => setEditorOpen(true)}
-                  aria-label="Ziele bearbeiten"
-                  className="text-gray-500 hover:text-gray-900 p-1 -mr-1 rounded-md hover:bg-gray-100"
-                >
-                  <GearIcon />
-                </button>
-              </div>
-              <ul className="space-y-1">
-                {goals
-                  .filter((g) => goalVisible(g))
-                  .map((g) => {
-                    const p = progressById.get(g.id);
-                    return (
-                      <li
-                        key={g.id}
-                        className="flex items-start gap-2 text-xs text-gray-700"
-                      >
-                        <span
-                          className={`shrink-0 mt-0.5 ${p?.achieved ? 'text-brand-700' : 'text-gray-400'}`}
-                        >
-                          <GoalIcon name={g.icon} size={14} />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate">{g.label}</span>
-                          {p && (
-                            <span className="block text-[11px] text-gray-500 truncate">
-                              {progressLabel(p, g, monthlyProductCostEUR)}
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-gray-500 whitespace-nowrap text-right">
-                          <span>
-                            {formatAmount(displayAmountForGoal(g, monthlyProductCostEUR))} {shortUnit(g.kind)}
-                          </span>
-                          {p?.achieved && p.achievedInYear !== undefined && (
-                            <span className="ml-1.5 text-brand-700 font-medium">
-                              · J{p.achievedInYear}
-                            </span>
-                          )}
-                          {p?.blockedByRefinanced && (
-                            <span
-                              className="ml-1.5 text-amber-600"
-                              title="Wartet auf Produkt-Refinanzierung"
-                            >
-                              ⏳
-                            </span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-              </ul>
-            </div>
           </div>
         </div>
       )}
-
-      <GoalsEditorDialog
-        open={editorOpen}
-        goals={goals}
-        onChange={onGoalsChange}
-        defaultGoals={defaultGoals}
-        onClose={() => setEditorOpen(false)}
-      />
     </div>
   );
 }
@@ -231,61 +147,4 @@ function ChevronIcon({ open }: { open: boolean }) {
       <polyline points="6 9 12 15 18 9" />
     </svg>
   );
-}
-
-function GearIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
-}
-
-function formatAmount(value: number): string {
-  return Math.round(value).toLocaleString('de-DE');
-}
-
-function displayAmountForGoal(goal: GoalUI, monthlyProductCostEUR: number): number {
-  return goal.kind === 'productsRefinanced'
-    ? monthlyProductCostEUR
-    : goal.amountEUR;
-}
-
-function shortUnit(kind: GoalKind): string {
-  return kind === 'yearlySurplus' ? 'EUR/Jahr' : 'EUR/Mon';
-}
-
-function goalVisible(goal: GoalUI): boolean {
-  return goal.kind === 'productsRefinanced' || goal.amountEUR > 0;
-}
-
-function progressLabel(
-  progress: GoalProgress,
-  goal: GoalUI,
-  monthlyProductCostEUR: number,
-): string {
-  const target = displayAmountForGoal(goal, monthlyProductCostEUR);
-  const current = progress.currentValueEUR;
-  const remaining = Math.max(0, target - current);
-  const percent = Math.max(0, Math.min(999, Math.round(progress.percentage * 100)));
-
-  if (progress.achieved) {
-    return `${formatAmount(Math.max(0, current))} erreicht (${percent}%)`;
-  }
-
-  if (progress.blockedByRefinanced) {
-    return 'Bedingung erfuellt, wartet auf Refinanzierung';
-  }
-
-  return `noch -${formatAmount(remaining)} EUR (${percent}%)`;
 }

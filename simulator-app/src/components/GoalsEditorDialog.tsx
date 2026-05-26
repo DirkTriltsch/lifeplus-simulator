@@ -1,12 +1,13 @@
+import { useEffect, useState } from 'react';
 import type { Goal, GoalKind } from '@mlm/simulator-goals';
 import { GoalIcon, type GoalIconName } from './GoalIcon';
 
-export type GoalUnit = 'EUR/Monat' | 'EUR/Jahr';
+export type GoalUnit = 'EUR/Mon' | 'EUR/Jahr';
 
 export type GoalUI = Goal & { icon: GoalIconName };
 
 export function unitForKind(kind: GoalKind): GoalUnit {
-  return kind === 'yearlySurplus' ? 'EUR/Jahr' : 'EUR/Monat';
+  return kind === 'yearlySurplus' ? 'EUR/Jahr' : 'EUR/Mon';
 }
 
 interface GoalsEditorDialogProps {
@@ -23,6 +24,11 @@ const ICON_OPTIONS: { value: GoalIconName; label: string }[] = [
   { value: 'car', label: 'Auto' },
   { value: 'home', label: 'Haus' },
   { value: 'crown', label: 'Krone' },
+  { value: 'heart', label: 'Herz' },
+  { value: 'star', label: 'Stern' },
+  { value: 'trophy', label: 'Trophaee' },
+  { value: 'target', label: 'Zielscheibe' },
+  { value: 'wallet', label: 'Geldbeutel' },
 ];
 
 const GOAL_KIND_OPTIONS: { value: GoalKind; label: string }[] = [
@@ -38,16 +44,25 @@ export function GoalsEditorDialog({
   defaultGoals,
   onClose,
 }: GoalsEditorDialogProps) {
+  const [draftGoals, setDraftGoals] = useState<GoalUI[]>(() =>
+    cloneGoals(goals),
+  );
+
+  useEffect(() => {
+    if (open) setDraftGoals(cloneGoals(goals));
+  }, [goals, open]);
+
   if (!open) return null;
 
   const updateGoal = (index: number, patch: Partial<GoalUI>) => {
-    const next = goals.map((g, i) => (i === index ? { ...g, ...patch } : g));
-    onChange(next);
+    setDraftGoals((current) =>
+      current.map((g, i) => (i === index ? { ...g, ...patch } : g)),
+    );
   };
 
   const addGoal = () => {
-    onChange([
-      ...goals,
+    setDraftGoals((current) => [
+      ...current,
       {
         id: `custom-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
         label: 'Neues Ziel',
@@ -60,7 +75,12 @@ export function GoalsEditorDialog({
   };
 
   const removeGoal = (index: number) => {
-    onChange(goals.filter((_, i) => i !== index));
+    setDraftGoals((current) => current.filter((_, i) => i !== index));
+  };
+
+  const saveGoals = () => {
+    onChange(draftGoals);
+    onClose();
   };
 
   return (
@@ -76,7 +96,8 @@ export function GoalsEditorDialog({
           <h2 className="text-base font-medium">Ziele-Leiter bearbeiten</h2>
           <button
             onClick={onClose}
-            aria-label="Schliessen"
+            aria-label="Aenderungen verwerfen und schliessen"
+            title="Aenderungen verwerfen"
             className="text-gray-500 p-1 text-lg leading-none rounded-md hover:bg-gray-100"
           >
             x
@@ -84,13 +105,13 @@ export function GoalsEditorDialog({
         </div>
 
         <div className="space-y-3">
-          {goals.map((goal, index) => {
+          {draftGoals.map((goal, index) => {
             const systemGoal = goal.kind === 'productsRefinanced';
 
             return (
               <div
                 key={goal.id}
-                className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_auto_minmax(0,1fr)_180px_110px_auto] items-center gap-2 sm:gap-3 rounded-lg border border-gray-100 bg-gray-50/70 p-2"
+                className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_auto_minmax(0,1fr)_162px_126px_auto] items-center gap-2 sm:gap-3 rounded-lg border border-gray-100 bg-gray-50/70 p-2"
               >
                 <span className="text-brand-700">
                   <GoalIcon name={goal.icon} size={18} />
@@ -140,7 +161,7 @@ export function GoalsEditorDialog({
                   ))}
                 </select>
 
-                <div className="col-span-1 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                <div className="col-span-1 grid grid-cols-[72px_48px] gap-2 items-center">
                   <input
                     type="number"
                     min={0}
@@ -155,7 +176,7 @@ export function GoalsEditorDialog({
                     aria-label="Wert"
                   />
 
-                  <span className="text-xs text-gray-500 whitespace-nowrap px-1 py-1">
+                  <span className="text-xs text-gray-500 whitespace-nowrap py-1">
                     {unitForKind(goal.kind)}
                   </span>
                 </div>
@@ -175,18 +196,24 @@ export function GoalsEditorDialog({
 
         <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <p className="text-xs text-gray-500 italic">
-            Wert 0 blendet ein Ziel aus. Das Refinanzierungsziel nutzt den Eigenkonsum.
+            Speichern uebernimmt deine Aenderungen. X oder Klick ausserhalb verwirft sie.
           </p>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onChange(defaultGoals)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              onClick={saveGoals}
+              className="h-9 whitespace-nowrap rounded-md bg-brand-700 px-3 text-sm font-medium text-white hover:bg-brand-800"
+            >
+              Speichern
+            </button>
+            <button
+              onClick={() => setDraftGoals(cloneGoals(defaultGoals))}
+              className="h-9 whitespace-nowrap rounded-md border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
             >
               Defaults
             </button>
             <button
               onClick={addGoal}
-              className="rounded-md bg-brand-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-800"
+              className="h-9 min-w-28 whitespace-nowrap rounded-md bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
             >
               + Neues Ziel
             </button>
@@ -195,4 +222,8 @@ export function GoalsEditorDialog({
       </div>
     </div>
   );
+}
+
+function cloneGoals(goals: GoalUI[]): GoalUI[] {
+  return goals.map((goal) => ({ ...goal }));
 }

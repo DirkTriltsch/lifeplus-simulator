@@ -38,10 +38,19 @@ function deriveStatus(me: MeResponse | null): AuthStatus {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const devAuthBypass = isDevAuthBypassEnabled();
+  const [me, setMe] = useState<MeResponse | null>(
+    devAuthBypass ? createDevMeResponse() : null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    if (devAuthBypass) {
+      setMe(createDevMeResponse());
+      setError(null);
+      return;
+    }
+
     try {
       const result = await fetchMe();
       setMe(result);
@@ -56,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         activeDevices: 0,
       });
     }
-  }, []);
+  }, [devAuthBypass]);
 
   useEffect(() => {
     void refresh();
@@ -73,6 +82,32 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+function isDevAuthBypassEnabled(): boolean {
+  return import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
+}
+
+function createDevMeResponse(): MeResponse {
+  const brand = import.meta.env.VITE_PRODUCT ?? 'lifeplus';
+
+  return {
+    authenticated: true,
+    sessionKind: 'normal',
+    email: 'dev@lifeflow360.local',
+    brand,
+    entitlements: [
+      {
+        brand,
+        plan: 'pro',
+        active: true,
+        validUntil: null,
+        source: 'dev',
+      },
+    ],
+    deviceLimit: 3,
+    activeDevices: 1,
+  };
 }
 
 export function useAuth(): AuthState {

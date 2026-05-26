@@ -18,6 +18,7 @@ import {
   AdvancedSettingsPanel,
   type RealityStrategy,
 } from './components/AdvancedSettingsPanel';
+import { GoalsLadderPanel } from './components/GoalsLadderPanel';
 import { AccountPanel } from './components/AccountPanel';
 import type { GoalUI } from './components/GoalsEditorDialog';
 
@@ -43,6 +44,7 @@ interface PersistedAppState {
 }
 
 const STORAGE_VERSION = 1;
+type ExpandedSection = 'goals' | 'advanced' | null;
 
 export default function App() {
   const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
@@ -79,6 +81,8 @@ export default function App() {
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [expandedSection, setExpandedSection] =
+    useState<ExpandedSection>(null);
 
   const pricingUrl = `${product.siteUrl}pricing.html`;
 
@@ -286,18 +290,33 @@ export default function App() {
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
         {page === 'chart' ? (
           <>
+            <GoalsLadderPanel
+              open={expandedSection === 'goals'}
+              onToggle={() =>
+                setExpandedSection((section) =>
+                  section === 'goals' ? null : 'goals',
+                )
+              }
+              goals={goals}
+              onGoalsChange={setGoals}
+              defaultGoals={DEFAULT_GOALS}
+              monthlyProductCostEUR={monthlyProductCostEUR}
+              goalProgress={goalProgress}
+            />
             <AdvancedSettingsPanel
+              open={expandedSection === 'advanced'}
+              onToggle={() =>
+                setExpandedSection((section) =>
+                  section === 'advanced' ? null : 'advanced',
+                )
+              }
               maxDirectMembersPerMember={maxDirectMembersPerMember}
               onMaxDirectChange={setMaxDirectMembersPerMember}
               monthlyProductCostEUR={monthlyProductCostEUR}
               onMonthlyProductCostChange={setMonthlyProductCostEUR}
               realityStrategy={realityStrategy}
               onRealityStrategyChange={setRealityStrategy}
-              goals={goals}
-              onGoalsChange={setGoals}
-              defaultGoals={DEFAULT_GOALS}
               onResetAll={resetAll}
-              goalProgress={goalProgress}
             />
             <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-4 mb-5">

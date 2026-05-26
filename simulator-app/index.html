@@ -11,9 +11,34 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Verguetungs-Simulator</title>
+    <script>
+      window.addEventListener(
+        'error',
+        function (event) {
+          var target = event.target;
+          var isAssetError =
+            target &&
+            (target.tagName === 'SCRIPT' || target.tagName === 'LINK');
+          if (!isAssetError) return;
+          var root = document.getElementById('root');
+          if (!root) return;
+          root.innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f9fafb;padding:24px;font-family:Inter,system-ui,-apple-system,sans-serif;color:#1f2937">' +
+            '<div style="max-width:420px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08)">' +
+            '<h1 style="font-size:18px;margin:0 0 8px">Simulator konnte nicht geladen werden</h1>' +
+            '<p style="font-size:14px;line-height:1.5;margin:0;color:#4b5563">Bitte lade die Seite hart neu. Falls der Fehler bleibt, wurden wahrscheinlich nicht alle Dateien im Ordner app/assets hochgeladen.</p>' +
+            '</div></div>';
+        },
+        true,
+      );
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f9fafb;font-family:Inter,system-ui,-apple-system,sans-serif;color:#6b7280;font-size:14px">
+        Simulator wird geladen...
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
