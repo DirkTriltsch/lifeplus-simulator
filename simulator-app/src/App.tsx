@@ -21,6 +21,7 @@ import {
 import { GoalsLadderPanel } from './components/GoalsLadderPanel';
 import { AccountPanel } from './components/AccountPanel';
 import type { GoalUI } from './components/GoalsEditorDialog';
+import { LineageView } from './components/lineage/LineageView';
 
 const DEFAULT_GOALS: GoalUI[] = [
   { id: 'products-refinanced', label: 'Produkte refinanziert', icon: 'leaf',   kind: 'productsRefinanced', amountEUR: 100 },
@@ -77,7 +78,7 @@ export default function App() {
   const [ipToEur, setIpToEur] = useState(
     persistedState?.ipToEur ?? defaults.unitToCurrency ?? 1,
   );
-  const [page, setPage] = useState<'chart' | 'network'>('chart');
+  const [page, setPage] = useState<'chart' | 'network' | 'lineage'>('chart');
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -260,6 +261,29 @@ export default function App() {
             )}
           </div>
 
+          <button
+            onClick={() => {
+              setPage('lineage');
+              setNetworkMenuOpen(false);
+            }}
+            aria-label="Verguetungsplan erklaeren"
+            title="Verguetungsplan"
+            className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
+              page === 'lineage' ? 'bg-gray-100 text-brand-700' : ''
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <path d="M7 4h10" strokeLinecap="round" />
+              <path d="M9 8h6" strokeLinecap="round" />
+              <path d="M12 8v11" />
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+              <path d="M14 12h5" strokeLinecap="round" />
+              <path d="M14 19h5" strokeLinecap="round" />
+            </svg>
+          </button>
+
           <SettingsDrawer
             ipToEur={ipToEur}
             onIpToEurChange={setIpToEur}
@@ -342,13 +366,15 @@ export default function App() {
             <YearlySummaryTable years={result.yearSummaries} />
             </div>
           </>
-        ) : (
+        ) : page === 'network' ? (
           <NetworkVisualizations
             yearEnds={result.yearEnds}
             selectedView={networkView}
             memberMonthlyVolume={inputs.memberMonthlyVolume}
             shopperMonthlyVolume={inputs.shopperMonthlyVolume}
           />
+        ) : (
+          <LineageView />
         )}
         <p className="text-xs text-gray-500 text-center mt-4 px-4">
           Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.

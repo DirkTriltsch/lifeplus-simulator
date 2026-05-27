@@ -1,5 +1,5 @@
 // website/scripts/build.mjs
-// Erzeugt pro Brand eine statische Microsite in dist/site-<brand>/
+// Erzeugt pro Brand eine statische Microsite in dist/<brand>-website/
 // Aufruf:  node scripts/build.mjs            (alle Brands)
 //          node scripts/build.mjs lifeplus   (nur einer)
 
@@ -105,8 +105,8 @@ for (const brandId of brandIds) {
     process.exit(1);
   }
 
-  const outDir = join(DIST_ROOT, `site-${brandId}`);
-  console.log(`\nBuilding ${brand.siteName} -> dist/site-${brandId}/`);
+  const outDir = join(DIST_ROOT, `${brandId}-website`);
+  console.log(`\nBuilding ${brand.siteName} -> dist/${brandId}-website/`);
 
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });

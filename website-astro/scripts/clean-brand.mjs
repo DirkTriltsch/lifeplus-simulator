@@ -9,5 +9,5 @@ if (!allowed.has(brand)) {
   process.exit(1);
 }
 
-const outDir = resolve(process.cwd(), '..', 'dist', `site-${brand}`);
+const outDir = resolve(process.cwd(), '..', 'dist', `${brand}-website`);
 await rm(outDir, { recursive: true, force: true });

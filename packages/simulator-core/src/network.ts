@@ -68,6 +68,7 @@ export function simulateNetwork(
   const modulator = options.growthModulator;
 
   let legs: Leg[] = [];
+  let directRootShoppersByLevel: number[] = [];
   const snapshots: NetworkSnapshot[] = [];
   modulator?.reset?.();
 
@@ -87,6 +88,12 @@ export function simulateNetwork(
       const shopperAttritionResult = applyLegShopperAttrition(legs, attritionRate);
       legs = shopperAttritionResult.legs;
       shopperAttrition += shopperAttritionResult.shopperAttrition;
+      const rootShopperAttritionResult = applyShopperLevelAttrition(
+        directRootShoppersByLevel,
+        attritionRate,
+      );
+      directRootShoppersByLevel = rootShopperAttritionResult.shoppersByLevel;
+      shopperAttrition += rootShopperAttritionResult.shopperAttrition;
 
       // Snapshot der Members VOR den direct-adds dieses Jahres. Nur diese werben jetzt;
       // frisch dazugekommene Direkt-Members werben erst ab dem Folgejahr.
@@ -105,12 +112,16 @@ export function simulateNetwork(
       }
 
       if (directShoppers > 0) {
-        distributeAtLevel(
-          directMembers > 0 ? newLegs : legs,
-          'shoppersByLevel',
-          0,
-          directShoppers,
-        );
+        if (directMembers > 0 || legs.length > 0) {
+          distributeAtLevel(
+            directMembers > 0 ? newLegs : legs,
+            'shoppersByLevel',
+            0,
+            directShoppers,
+          );
+        } else {
+          addAtLevel(directRootShoppersByLevel, 0, directShoppers);
+        }
         shopperGrowth += directShoppers;
       }
 
@@ -153,6 +164,7 @@ export function simulateNetwork(
 
     const membersByLevel = aggregateLegLevels(legs, 'membersByLevel');
     const shoppersByLevel = aggregateLegLevels(legs, 'shoppersByLevel');
+    mergeLevels(shoppersByLevel, directRootShoppersByLevel);
     const directLegs = membersByLevel[0] ?? 0;
     const snapshotLegs = modulator
       ? modulator.splitLegs({
@@ -278,6 +290,27 @@ function applyLegShopperAttrition(
   };
 }
 
+function applyShopperLevelAttrition(
+  shoppersByLevel: number[],
+  attritionRate: number,
+): { shoppersByLevel: number[]; shopperAttrition: number } {
+  if (attritionRate <= 0) {
+    return { shoppersByLevel, shopperAttrition: 0 };
+  }
+
+  let shopperAttrition = 0;
+  const nextShoppersByLevel = shoppersByLevel.map((count) => {
+    const leavers = count * attritionRate;
+    shopperAttrition += leavers;
+    return Math.max(0, count - leavers);
+  });
+
+  return {
+    shoppersByLevel: trimLevels(nextShoppersByLevel),
+    shopperAttrition,
+  };
+}
+
 function addAtLevel(levels: number[], level: number, count: number): void {
   if (count <= 0) return;
   while (levels.length <= level) {
@@ -296,6 +329,12 @@ function trimLevels(levels: number[]): number[] {
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
+}
+
+function mergeLevels(target: number[], source: number[]): void {
+  for (let level = 0; level < source.length; level++) {
+    addAtLevel(target, level, source[level] ?? 0);
+  }
 }
 
 function createDirectLegs(existingLegCount: number, count: number): Leg[] {

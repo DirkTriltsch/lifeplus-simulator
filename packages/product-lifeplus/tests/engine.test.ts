@@ -161,6 +161,24 @@ describe('Netzwerk-Wachstum', () => {
     expect(y2.shoppersByLevel[1]).toBeCloseTo(6, 5);
   });
 
+  it('zaehlt direkte Shopper auch ohne Member-Beine', () => {
+    const snapshots = simulateNetwork(
+      {
+        membersPerYear: 0,
+        shoppersPerYear: 3,
+        duplicationRate: 0,
+        attritionRate: 0,
+      },
+      120,
+    );
+
+    const y10 = snapshots[119];
+    expect(y10.directLegs).toBe(0);
+    expect(y10.membersByLevel[0] ?? 0).toBe(0);
+    expect(y10.shoppersByLevel[0]).toBeCloseTo(30, 5);
+    expect(totalNetworkSize(y10)).toBeCloseTo(30, 5);
+  });
+
   it('liefert pro Bein asymmetrische membersByLevel/shoppersByLevel (alte Beine voller als neue)', () => {
     // membersPerYear=2, shoppersPerYear=3, dupRate=1, attrition=0
     // Jahr 2 erwartet:
@@ -775,6 +793,22 @@ describe('Vollstaendige Simulation', () => {
     });
 
     expect(result.finalMonth.totalEUR).toBe(0);
+  });
+
+  it('berechnet Shopper-only Umsatz ohne Member-Beine', () => {
+    const result = runSimulation(lifeplusProduct, {
+      membersPerYear: 0,
+      shoppersPerYear: 3,
+      duplicationRate: 0,
+      attritionRate: 0,
+      memberMonthlyVolume: 150,
+      shopperMonthlyVolume: 150,
+    });
+
+    expect(result.finalMonth.members).toBe(0);
+    expect(result.finalMonth.shoppers).toBeCloseTo(30, 5);
+    expect(result.finalMonth.rankName).toBe('Member');
+    expect(result.finalMonth.totalEUR).toBeCloseTo(1125, 2);
   });
 
   it('rechnet IP in EUR um', () => {

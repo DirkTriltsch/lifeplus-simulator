@@ -73,7 +73,7 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     build: {
-      outDir: `${repoRoot}dist/${product}`,
+      outDir: `${repoRoot}dist/${product}-app`,
       emptyOutDir: true,
       sourcemap: false,
     },

@@ -74,6 +74,33 @@ describe('Beispielrechnungen fuer konkrete Linien', () => {
     ]);
   });
 
+  it('zahlt einer Person nicht gleichzeitig Phase 2 und Phase 3', () => {
+    const result = calculateExampleLine({
+      order: { kind: 'member_order', ip: 120 },
+      peopleFromCustomerUp: [
+        { id: 'bernd', rank: 'Believer' },
+        { id: 'cornelia', rank: 'Builder' },
+        { id: 'daniela', rank: 'Bronze' },
+        { id: 'eva', rank: 'Silver' },
+        { id: 'frank', rank: 'Gold' },
+        { id: 'georg', rank: '1*Diamond' },
+        { id: 'heidi', rank: '2*Diamond' },
+      ],
+    });
+
+    expect(result.payouts.filter((payout) => payout.phase === 2)).toMatchObject([
+      { personId: 'eva', rate: 0.06, slot: 'Bronze-Stueck + Silber-Stueck' },
+      { personId: 'frank', rate: 0.03, slot: 'Gold-Stueck' },
+      { personId: 'georg', rate: 0.03, slot: 'Diamant-Stueck' },
+    ]);
+    expect(result.payouts.filter((payout) => payout.phase === 3)).toMatchObject([
+      { personId: 'heidi', rate: 0.03, slot: '1*Diamant-Stueck' },
+    ]);
+    expect(
+      result.payouts.filter((payout) => payout.personId === 'georg'),
+    ).toHaveLength(1);
+  });
+
   it('behandelt 4* und hoehere Diamanten als Phase-3-qualifiziert, behaelt aber den Statusnamen', () => {
     const result = calculateExampleLine({
       order: { kind: 'shopper', ip: 1000 },
@@ -88,7 +115,7 @@ describe('Beispielrechnungen fuer konkrete Linien', () => {
     });
 
     expect(result.payouts.filter((payout) => payout.phase === 3)).toMatchObject([
-      { personId: 'four-d', rank: '4*Diamond', rate: 0.03, slot: '1*Diamant-Stueck' },
+      { personId: 'one-d', rank: '1*Diamond', rate: 0.03, slot: '1*Diamant-Stueck' },
       { personId: 'fifteen-d', rank: '15*Diamond', rate: 0.03, slot: '2*Diamant-Stueck' },
     ]);
   });

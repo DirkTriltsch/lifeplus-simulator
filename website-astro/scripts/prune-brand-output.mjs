@@ -9,7 +9,7 @@ if (!allowed.has(brand)) {
   process.exit(1);
 }
 
-const outDir = resolve(process.cwd(), '..', 'dist', `site-${brand}`);
+const outDir = resolve(process.cwd(), '..', 'dist', `${brand}-website`);
 const generatedContentFiles = [
   'content-assets.mjs',
   'content-modules.mjs',

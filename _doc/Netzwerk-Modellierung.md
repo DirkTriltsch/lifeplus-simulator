@@ -87,6 +87,17 @@ Phase 3 ist ein Generationenbonus mit insgesamt 8 %. Der Pool besteht aus drei S
 
 Phase 3 wird ebenfalls chronologisch entlang der Upline vergeben. Ein qualifizierter Diamond nimmt aber nur ein passendes freies Stueck.
 
+Wichtig fuer die aktuelle Implementierung: Eine Person kann fuer dieselbe Order nicht gleichzeitig aus Phase 2 und Phase 3 bezahlt werden. Wenn eine Person bereits ein Phase-2-Stueck erhalten hat, wird sie bei Phase 3 uebersprungen. Das Phase-3-Stueck wird dadurch nicht verbraucht, sondern steht der naechsten qualifizierten Upline zur Verfuegung.
+
+Beispiel:
+
+```text
+Order bei Anna
+Bernd -> Cornelia -> Daniela -> Eva -> Frank -> Georg -> Heidi
+```
+
+Bei passender Rangfolge kann Georg das Diamant-Stueck aus Phase 2 erhalten. Georg bekommt dann nicht zusaetzlich das 1*Diamant-Stueck aus Phase 3. Das 1*Diamant-Stueck geht an Heidi, sofern Heidi dafuer qualifiziert ist.
+
 Beispiel:
 
 ```text
@@ -107,6 +118,14 @@ Die Idee: Fuer konkrete Beispielrechnungen gibt es eine eigene API, die eine Rei
 packages/product-lifeplus/src/payout-slots.ts
 packages/product-lifeplus/src/example-line.ts
 packages/product-lifeplus/tests/example-line.test.ts
+simulator-app/src/components/lineage/LineageView.tsx
+simulator-app/src/components/lineage/LineageChain.tsx
+simulator-app/src/components/lineage/LineagePersonCard.tsx
+simulator-app/src/components/lineage/PersonActionSheet.tsx
+simulator-app/src/components/lineage/OrderSheet.tsx
+simulator-app/src/components/lineage/StatusPickerSheet.tsx
+simulator-app/src/components/lineage/defaultTeam.ts
+simulator-app/src/components/lineage/rankStats.ts
 ```
 
 `payout-slots.ts` enthaelt die wiederverwendbare Kernlogik:
@@ -159,6 +178,98 @@ Notiz
 
 Diese Ausgabe ist bewusst visualisierbar. Eine UI kann daraus Tabellen, Linien, Kuchenstuecke oder Tooltips bauen.
 
+### Aktueller UI-Stand: Verguetungsplan-Ansicht
+
+Die App hat neben `Chart` und `Network` eine dritte Sektion:
+
+```text
+Verguetungsplan
+```
+
+Diese Ansicht ist aktuell Mode B: Der Status jeder Person wird manuell gesetzt und als qualifiziert angenommen. Die Ansicht dient damit nicht der Wachstumssimulation, sondern der erklaerenden Beispielrechnung.
+
+Der Default-Aufbau stammt aus der Skizze:
+
+```text
+Anna      Member
+Bernd     Believer
+Cornelia  Builder
+Daniela   Bronze
+Eva       Silber
+Frank     Gold
+Georg     1* Diamant
+Heidi     2* Diamant
+Ingo      3* Diamant
+Katrin    4* Diamant
+Ludwig    7* Diamant
+Du        Wurzel / Betrachter
+```
+
+In der UI wird eine Order nicht als abstrakter Kunde unterhalb der Linie eingegeben, sondern an einer konkreten Person platziert. Beispiel: Wird die Order bei Anna gesetzt, dann ist Bernd Ebene 1, Cornelia Ebene 2, Daniela Ebene 3 usw. Intern wird dafuer `people.slice(customerIndex + 1)` an `calculateExampleLine()` uebergeben.
+
+Aktuelle Bedienung:
+
+```text
+Person antippen:
+  - Status setzen
+  - Order setzen / Order aendern
+  - + Person darueber
+  - - Person loeschen
+  - Order loeschen, falls diese Person die Order traegt
+
+Oben in der Ansicht:
+  - Order loeschen, sobald eine Order gesetzt ist
+
+Unter der Personenliste:
+  - KPIs einblenden (GV, AV, QL, SH)
+```
+
+Die KPI-Zeile ist bewusst optional. Im MVP ist der Rang die Single Source of Truth; `rankStats.ts` liefert nur erklaerende Pseudo-Stats fuer die Anzeige.
+
+Die rechte Spalte zeigt nur noch die Phasen-Summen:
+
+```text
+Phase 1
+Phase 2
+Phase 3
+Gesamt
+Gesamtanteil
+```
+
+Die konkrete Slot-Erklaerung steht direkt an der jeweiligen Person. Beispiele:
+
+```text
+3% B, 3% S, 3% G
+3% D
+3% 1*-Dia
+3% 2*-Dia
+2% 3*-Dia
+```
+
+Damit ist die Ansicht auf Touch-Bedienung optimiert: keine Hover-Abhaengigkeit, kein Drag-and-drop, keine kleinen Tabellen als primaerer Interaktionspunkt.
+
+### Aktuelle Testabdeckung
+
+Die Beispielrechnungen sind in `packages/product-lifeplus/tests/example-line.test.ts` abgesichert. Neben Normalisierung von `n*Diamant` und Phase-1-Kompression gibt es einen expliziten Test fuer die Ein-Phase-Regel:
+
+```text
+Eine Person erhaelt fuer dieselbe Order nicht gleichzeitig Phase 2 und Phase 3.
+```
+
+Der konkrete Referenzfall:
+
+```text
+Order bei Anna
+Bernd -> Cornelia -> Daniela -> Eva -> Frank -> Georg -> Heidi
+
+Georg:
+  bekommt 3% Diamant-Stueck aus Phase 2
+  bekommt kein 1*Diamant-Stueck aus Phase 3
+
+Heidi:
+  bekommt 3% 1*Diamant-Stueck aus Phase 3
+```
+
 ### Sinn Und Zweck
 
 Vorschlag A loest drei direkte Probleme:
@@ -206,6 +317,30 @@ Vorschlag A ist weniger ideal fuer:
 - exakte Berechnung eines gesamten realen Baums.
 
 ## Vorschlag B: Einheitliches Personenbaum-Modell
+
+### Umsetzungsstand
+
+Ein erster paralleler Personenbaum-Pfad ist umgesetzt:
+
+```text
+packages/simulator-core/src/person-tree.ts
+packages/simulator-core/src/tree-generator.ts
+packages/product-lifeplus/src/tree-compensation.ts
+packages/product-lifeplus/src/tree-simulation.ts
+packages/product-lifeplus/tests/tree-simulation.test.ts
+```
+
+Der neue Pfad kann aus Szenario-Parametern echte, gewichtete Personen-Knoten erzeugen, diese wieder in die bestehenden `MonthResult`-/Chart-Strukturen adaptieren und LifePlus-Bestellungen entlang echter Uplines berechnen.
+
+Noch nicht vollstaendig umgestellt sind:
+
+```text
+1. UI-Default auf den neuen Tree-Pfad.
+2. Reality-Strategien dirichlet/momentum auf Personenbaum-Ebene.
+3. Klickbare Personen-/Cluster-Visualisierung im Sunburst.
+```
+
+Die bestehende App bleibt dadurch stabil, waehrend der neue Berechnungspfad testbar aufgebaut wird.
 
 Vorschlag B ist die langfristig fachlich staerkere Variante. Dabei wuerde die gesamte Simulation nicht mehr primaer mit aggregierten Ebenen arbeiten, sondern mit echten Personen-/Knotenstrukturen.
 

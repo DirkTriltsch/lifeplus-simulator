@@ -21,8 +21,8 @@ if (!label) {
 
 const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const distRoot = join(repoRoot, 'dist');
-const outDir = join(distRoot, `site-${brandId}`);
-const appSrc = join(distRoot, brandId);
+const outDir = join(distRoot, `${brandId}-website`);
+const appSrc = join(distRoot, `${brandId}-app`);
 
 const sftpAll = JSON.parse(await readFile(join(repoRoot, '.vscode', 'sftp.json'), 'utf8'));
 const websiteSftp = sftpAll.find((entry) => entry.name === `${label} Website`);
@@ -59,4 +59,4 @@ await writeFile(
   'utf8',
 );
 
-console.log(`Added app/ subdirectory to dist/site-${brandId}.`);
+console.log(`Added app/ subdirectory to dist/${brandId}-website.`);

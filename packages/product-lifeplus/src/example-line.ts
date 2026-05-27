@@ -62,10 +62,16 @@ interface Phase1Slice {
 export function calculateExampleLine(
   input: ExampleLineInput,
 ): ExampleLineCalculation {
+  const phase1Payouts = calculateExamplePhase1(input);
+  const phase2Payouts = calculateExamplePhase2(input);
+  const phase2PaidPersonIds = new Set(
+    phase2Payouts.map((payout) => payout.personId),
+  );
+  const phase3Payouts = calculateExamplePhase3(input, phase2PaidPersonIds);
   const payouts = [
-    ...calculateExamplePhase1(input),
-    ...calculateExamplePhase2(input),
-    ...calculateExamplePhase3(input),
+    ...phase1Payouts,
+    ...phase2Payouts,
+    ...phase3Payouts,
   ];
   const phase1IP = sumPayouts(payouts, 1);
   const phase2IP = sumPayouts(payouts, 2);
@@ -145,21 +151,29 @@ function calculateExamplePhase2(input: ExampleLineInput): ExamplePayout[] {
   });
 }
 
-function calculateExamplePhase3(input: ExampleLineInput): ExamplePayout[] {
-  const deepPeople = input.peopleFromCustomerUp.slice(3);
-  const allocations = allocatePhase3Slots(deepPeople.map((person) => person.rank));
+function calculateExamplePhase3(
+  input: ExampleLineInput,
+  phase2PaidPersonIds: Set<string>,
+): ExamplePayout[] {
+  const eligibleDeepPeople = input.peopleFromCustomerUp
+    .slice(3)
+    .map((person, index) => ({ person, levelFromCustomer: index + 4 }))
+    .filter(({ person }) => !phase2PaidPersonIds.has(person.id));
+  const allocations = allocatePhase3Slots(
+    eligibleDeepPeople.map(({ person }) => person.rank),
+  );
 
   return allocations.flatMap((allocation, index) => {
     if (allocation.rate <= 0) return [];
 
-    const person = deepPeople[index];
+    const { person, levelFromCustomer } = eligibleDeepPeople[index];
     return [
       {
         personId: person.id,
         name: person.name,
         rank: allocation.rank,
         phase: 3 as const,
-        levelFromCustomer: index + 4,
+        levelFromCustomer,
         slot: allocation.slots.join(' + '),
         rate: allocation.rate,
         baseIP: input.order.ip,

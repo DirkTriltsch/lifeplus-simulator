@@ -41,17 +41,17 @@ npm run dev:lifeplus
 npm run dev:fitline
 npm run dev:eqology
 
-npm run build:lifeplus     # -> dist/lifeplus/
-npm run build:fitline      # -> dist/fitline/
-npm run build:eqology      # -> dist/eqology/
+npm run build:lifeplus     # -> dist/lifeplus-app/
+npm run build:fitline      # -> dist/fitline-app/
+npm run build:eqology      # -> dist/eqology-app/
 ```
 
 ### Microsite
 
 ```bash
-npm run build:site:lifeplus    # -> dist/site-lifeplus/
-npm run build:site:fitline     # -> dist/site-fitline/
-npm run build:site:eqology     # -> dist/site-eqology/
+npm run build:site:lifeplus    # -> dist/lifeplus-website/
+npm run build:site:fitline     # -> dist/fitline-website/
+npm run build:site:eqology     # -> dist/eqology-website/
 npm run build:sites            # alle drei auf einmal
 ```
 
@@ -59,24 +59,24 @@ npm run build:sites            # alle drei auf einmal
 
 ```bash
 npm run build:all              # 3 Apps + 3 Microsites
-npm run build:webroot:lifeplus # -> dist/site-lifeplus/ inkl. app/ fuer www.lifeflow360.app
-npm run build:webroot:fitline  # -> dist/site-fitline/  inkl. app/ fuer fitflow360.triltsch.com
-npm run build:webroot:eqology  # -> dist/site-eqology/  inkl. app/ fuer eqoflow360.triltsch.com
+npm run build:webroot:lifeplus # -> dist/lifeplus-website/ inkl. app/ fuer www.lifeflow360.app
+npm run build:webroot:fitline  # -> dist/fitline-website/  inkl. app/ fuer fitflow360.triltsch.com
+npm run build:webroot:eqology  # -> dist/eqology-website/  inkl. app/ fuer eqoflow360.triltsch.com
 npm test
 ```
 
 ## Deployment-Mapping
 
-| Brand    | Webroot (Microsite + App) | App-Build (Standalone)  | Domain (Stand 2026-05-22)        |
-|----------|---------------------------|-------------------------|----------------------------------|
-| LifePlus | `dist/site-lifeplus/`     | `dist/lifeplus/`        | `www.lifeflow360.app`            |
-| FitLine  | `dist/site-fitline/`      | `dist/fitline/`         | `fitflow360.triltsch.com` (Staging) |
-| Eqology  | `dist/site-eqology/`      | `dist/eqology/`         | `eqoflow360.triltsch.com` (Staging) |
+| Brand    | Webroot (Microsite + App)   | App-Build (Standalone)    | Domain (Stand 2026-05-22)        |
+|----------|-----------------------------|---------------------------|----------------------------------|
+| LifePlus | `dist/lifeplus-website/`    | `dist/lifeplus-app/`      | `www.lifeflow360.app`            |
+| FitLine  | `dist/fitline-website/`     | `dist/fitline-app/`       | `fitflow360.triltsch.com` (Staging) |
+| Eqology  | `dist/eqology-website/`     | `dist/eqology-app/`       | `eqoflow360.triltsch.com` (Staging) |
 
 `build:webroot:<brand>` baut zuerst Microsite und App separat und kopiert
-dann den App-Build nach `dist/site-<brand>/app/`. Damit liegen Marketing-
+dann den App-Build nach `dist/<brand>-website/app/`. Damit liegen Marketing-
 Site und Simulator gemeinsam unter `https://<domain>/` bzw.
-`https://<domain>/app/`. Der Standalone-Ordner `dist/<brand>/` wird vor
+`https://<domain>/app/`. Der Standalone-Ordner `dist/<brand>-app/` wird vor
 allem fuer SFTP-Deploys benutzt, wenn nur der App-Teil neu hochgeladen
 werden soll.
 

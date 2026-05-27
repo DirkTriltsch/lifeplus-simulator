@@ -12,7 +12,7 @@ const sharedAlias = sharedPath.replace(/\\/g, '/').replace(/\/$/, '');
 export default defineConfig({
   srcDir: `./src/brands/${brand}`,
   publicDir: `./src/brands/${brand}/public`,
-  outDir: `../dist/site-${brand}`,
+  outDir: `../dist/${brand}-website`,
   build: {
     // erzeugt /pricing.html statt /pricing/index.html — kompatibel zum heutigen Build
     format: 'file',
