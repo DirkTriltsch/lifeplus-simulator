@@ -29,6 +29,9 @@ const VIEW_TITLES: Record<NetworkView, string> = {
 };
 
 const RANK_COLORS: Record<string, string> = {
+  '3*Diamond': '#1d4ed8',
+  '2*Diamond': '#2563eb',
+  '1*Diamond': '#3b82f6',
   Diamond: '#2563eb',
   Gold: '#ca8a04',
   Silver: '#64748b',
@@ -453,7 +456,7 @@ function buildLegs(
       const { levels, nodes, qgv } = legTotals[index];
       const share = qgv / totalLegQgv;
       const rank = estimateRank(qgv, Math.max(0, snapshot.legs.length - index));
-      const color = RANK_COLORS[rank] ?? RANK_COLORS.Member;
+      const color = colorForRank(rank);
 
       return {
         id: index + 1,
@@ -503,7 +506,7 @@ function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
   const levelTotals = buildLevelTotals(snapshot);
   const qgvPerLeg = snapshot.qgv * share;
   const rank = estimateRank(qgvPerLeg, legCount);
-  const color = RANK_COLORS[rank] ?? RANK_COLORS.Member;
+  const color = colorForRank(rank);
 
   return Array.from({ length: legCount }, (_, index) => ({
     id: index + 1,
@@ -519,13 +522,22 @@ function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
 }
 
 function estimateRank(qgv: number, qualifiedLegs: number): string {
-  if (qgv >= 25000 && qualifiedLegs >= 4) return 'Diamond';
-  if (qgv >= 12000 && qualifiedLegs >= 3) return 'Gold';
-  if (qgv >= 6000 && qualifiedLegs >= 2) return 'Silver';
-  if (qgv >= 2500 && qualifiedLegs >= 2) return 'Bronze';
+  if (qgv >= 25000 && qualifiedLegs >= 4) return `${Math.floor(qualifiedLegs)}*Diamond`;
+  if (qgv >= 25000 && qualifiedLegs >= 3) return '3*Diamond';
+  if (qgv >= 20000 && qualifiedLegs >= 2) return '2*Diamond';
+  if (qgv >= 15000 && qualifiedLegs >= 1) return '1*Diamond';
+  if (qgv >= 15000 && qualifiedLegs >= 12) return 'Diamond';
+  if (qgv >= 9000 && qualifiedLegs >= 9) return 'Gold';
+  if (qgv >= 6000 && qualifiedLegs >= 6) return 'Silver';
+  if (qgv >= 3000 && qualifiedLegs >= 3) return 'Bronze';
   if (qgv >= 1000) return 'Builder';
   if (qgv >= 300) return 'Believer';
   return 'Member';
+}
+
+function colorForRank(rank: string): string {
+  if (/^\d+\*Diamond$/.test(rank)) return RANK_COLORS['3*Diamond'];
+  return RANK_COLORS[rank] ?? RANK_COLORS.Member;
 }
 
 function describeArc(

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { calculateExampleLine } from '../src';
+import { calculateExampleLine, normalizeRankName, phase3SlotCount } from '../src';
 
 describe('Beispielrechnungen fuer konkrete Linien', () => {
+  it('normalisiert n*Diamant ohne auf 3*Diamond zu kappen', () => {
+    expect(normalizeRankName('4* Diamant')).toBe('4*Diamond');
+    expect(normalizeRankName('15* Dia')).toBe('15*Diamond');
+    expect(phase3SlotCount('15* Diamant')).toBe(3);
+  });
+
   it('bildet eine Musterrechnung mit Phase 1, Phase 2 und Phase 3 ab', () => {
     const result = calculateExampleLine({
       order: { kind: 'shopper', ip: 1000 },
