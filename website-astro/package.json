@@ -11,9 +11,9 @@
     "dev:lifeplus": "cross-env ASTRO_BRAND=lifeplus astro dev",
     "dev:fitline": "cross-env ASTRO_BRAND=fitline astro dev",
     "dev:eqology": "cross-env ASTRO_BRAND=eqology astro dev",
-    "build:lifeplus": "node scripts/clean-brand.mjs lifeplus && cross-env ASTRO_BRAND=lifeplus astro build && node scripts/prune-brand-output.mjs lifeplus",
-    "build:fitline": "node scripts/clean-brand.mjs fitline && cross-env ASTRO_BRAND=fitline astro build && node scripts/prune-brand-output.mjs fitline",
-    "build:eqology": "node scripts/clean-brand.mjs eqology && cross-env ASTRO_BRAND=eqology astro build && node scripts/prune-brand-output.mjs eqology",
+    "build:lifeplus": "node scripts/clean-brand.mjs lifeplus && cross-env ASTRO_BRAND=lifeplus astro build && node scripts/prune-brand-output.mjs lifeplus && node ../scripts/write-dist-sftp.mjs lifeplus website",
+    "build:fitline": "node scripts/clean-brand.mjs fitline && cross-env ASTRO_BRAND=fitline astro build && node scripts/prune-brand-output.mjs fitline && node ../scripts/write-dist-sftp.mjs fitline website",
+    "build:eqology": "node scripts/clean-brand.mjs eqology && cross-env ASTRO_BRAND=eqology astro build && node scripts/prune-brand-output.mjs eqology && node ../scripts/write-dist-sftp.mjs eqology website",
     "build:all": "npm run build:lifeplus && npm run build:fitline && npm run build:eqology"
   },
   "dependencies": {

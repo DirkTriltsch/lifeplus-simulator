@@ -48,6 +48,7 @@ await writeFile(
       username: websiteSftp.username,
       password: websiteSftp.password,
       remotePath: '/',
+      context: '.',
       uploadOnSave: false,
       useTempFile: false,
       openSsh: false,
