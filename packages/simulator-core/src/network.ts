@@ -33,6 +33,8 @@ export interface Leg {
   membersByLevel: number[];
   /** Shopper im Sub-Baum dieses Beins. */
   shoppersByLevel: number[];
+  /** Optional explizite Ranglinie pro Member-Level fuer echte Team-/Testfaelle. */
+  ranksByLevel?: string[];
 }
 
 export interface NetworkSnapshot {
@@ -321,6 +323,7 @@ function cloneLegs(legs: Leg[]): Leg[] {
     id: leg.id,
     membersByLevel: [...leg.membersByLevel],
     shoppersByLevel: [...leg.shoppersByLevel],
+    ranksByLevel: leg.ranksByLevel ? [...leg.ranksByLevel] : undefined,
   }));
 }
 

@@ -12,6 +12,13 @@ import {
 } from './constants';
 import type { NetworkSnapshot } from '@mlm/simulator-core';
 import { determineRank, estimateLegRank, type RankResult } from './ranks';
+import {
+  allocatePhase2SlotRates,
+  allocatePhase3SlotRates,
+  normalizeRankName,
+  phase2SlotCount,
+  phase3SlotCount,
+} from './payout-slots';
 
 export interface CompensationInputs {
   /** Eigenes Aktivitaetsvolumen des Users in IP pro Monat */
@@ -79,23 +86,113 @@ function calculatePhase1(
   return total;
 }
 
-function calculateDeepLevelVolume(
+function calculateCompressedPhase2(
   snapshot: NetworkSnapshot,
   inputs: CompensationInputs,
+  rank: RankResult,
 ): number {
-  const { memberMonthlyIP, shopperMonthlyIP } = inputs;
-  const maxLevels = Math.max(
-    snapshot.membersByLevel.length,
-    snapshot.shoppersByLevel.length,
-  );
-  let volume = 0;
+  if (phase2SlotCount(rank.name) <= 0) return 0;
 
-  for (let i = 3; i < maxLevels; i++) {
-    volume += (snapshot.membersByLevel[i] ?? 0) * memberMonthlyIP;
-    volume += (snapshot.shoppersByLevel[i] ?? 0) * shopperMonthlyIP;
+  return calculateCompressedDeepBonus(snapshot, inputs, rank.name, allocatePhase2SlotRates);
+}
+
+function calculateCompressedPhase3(
+  snapshot: NetworkSnapshot,
+  inputs: CompensationInputs,
+  rank: RankResult,
+): number {
+  if (phase3SlotCount(rank.name) <= 0) return 0;
+
+  return calculateCompressedDeepBonus(snapshot, inputs, rank.name, allocatePhase3SlotRates);
+}
+
+function calculateCompressedDeepBonus(
+  snapshot: NetworkSnapshot,
+  inputs: CompensationInputs,
+  ownRank: string,
+  allocate: (ranksInPayoutOrder: string[]) => number[],
+): number {
+  const legs =
+    snapshot.legs.length > 0
+      ? snapshot.legs
+      : [
+          {
+            id: 'aggregate',
+            membersByLevel: snapshot.membersByLevel,
+            shoppersByLevel: snapshot.shoppersByLevel,
+          },
+        ];
+  let total = 0;
+
+  for (const leg of legs) {
+    const maxLevel = Math.max(
+      leg.membersByLevel.length,
+      leg.shoppersByLevel.length,
+    );
+
+    for (let orderLevel = 3; orderLevel < maxLevel; orderLevel++) {
+      const volume =
+        (leg.membersByLevel[orderLevel] ?? 0) * inputs.memberMonthlyIP +
+        (leg.shoppersByLevel[orderLevel] ?? 0) * inputs.shopperMonthlyIP;
+      if (volume <= 0) continue;
+
+      const closerRanks = estimateCloserDeepRanks(leg, inputs, orderLevel);
+      const rates = allocate([...closerRanks, ownRank]);
+      total += volume * rates[rates.length - 1];
+    }
   }
 
-  return volume;
+  return total;
+}
+
+function estimateCloserDeepRanks(
+  leg: {
+    membersByLevel: number[];
+    shoppersByLevel: number[];
+    ranksByLevel?: string[];
+  },
+  inputs: CompensationInputs,
+  orderLevel: number,
+): string[] {
+  const ranks: string[] = [];
+
+  for (let level = orderLevel - 4; level >= 0; level--) {
+    ranks.push(estimateRankAtLevel(leg, inputs, level));
+  }
+
+  return ranks;
+}
+
+function estimateRankAtLevel(
+  leg: {
+    membersByLevel: number[];
+    shoppersByLevel: number[];
+    ranksByLevel?: string[];
+  },
+  inputs: CompensationInputs,
+  level: number,
+): string {
+  const explicitRank = leg.ranksByLevel?.[level];
+  if (explicitRank) return normalizeRankName(explicitRank);
+
+  const memberCount = leg.membersByLevel[level] ?? 0;
+  if (memberCount <= 0) return 'Member';
+
+  const downlineMembers = leg.membersByLevel
+    .slice(level + 1)
+    .reduce((a, b) => a + b, 0);
+  const downlineShoppers = leg.shoppersByLevel
+    .slice(level + 1)
+    .reduce((a, b) => a + b, 0);
+  const qgv =
+    (downlineMembers * inputs.memberMonthlyIP +
+      downlineShoppers * inputs.shopperMonthlyIP) /
+    memberCount;
+  const qualifiedLegs = Math.floor(
+    ((leg.membersByLevel[level + 1] ?? 0) / memberCount) + 1e-9,
+  );
+
+  return estimateLegRank(qgv, qualifiedLegs);
 }
 
 export function calculateMonthlyCompensation(
@@ -127,9 +224,8 @@ export function calculateMonthlyCompensation(
   });
 
   const phase1IP = calculatePhase1(snapshot, inputs, qualifiedLegs);
-  const deepVolume = calculateDeepLevelVolume(snapshot, inputs);
-  const phase2IP = deepVolume * rank.phase2Rate;
-  const phase3IP = deepVolume * rank.phase3Rate;
+  const phase2IP = calculateCompressedPhase2(snapshot, inputs, rank);
+  const phase3IP = calculateCompressedPhase3(snapshot, inputs, rank);
 
   return {
     phase1IP,
@@ -176,11 +272,8 @@ function estimateQualifiedLegStructure(
     directMembers;
   const qlPerLeg = Math.floor(((snapshot.membersByLevel[1] ?? 0) / directMembers) + 1e-9);
   const estimatedRank = estimateLegRank(qgvPerLeg, qlPerLeg);
-  const bronzeLegs =
-    ['Bronze', 'Silver', 'Gold', 'Diamond'].includes(estimatedRank)
-      ? qualifiedLegs
-      : 0;
-  const diamondLegs = estimatedRank === 'Diamond' ? qualifiedLegs : 0;
+  const bronzeLegs = isBronzeLegRank(estimatedRank) ? qualifiedLegs : 0;
+  const diamondLegs = isDiamondLegRank(estimatedRank) ? qualifiedLegs : 0;
 
   return { bronzeLegs, diamondLegs };
 }
@@ -206,12 +299,14 @@ function estimateQualifiedLegStructureFromLegs(
       downlineMembers * inputs.memberMonthlyIP +
       downlineShoppers * inputs.shopperMonthlyIP;
     const qualifiedLegs = Math.floor((leg.membersByLevel[1] ?? 0) + 1e-9);
-    const estimatedRank = estimateLegRank(qgv, qualifiedLegs);
+    const estimatedRank = leg.ranksByLevel?.[0]
+      ? normalizeRankName(leg.ranksByLevel[0])
+      : estimateLegRank(qgv, qualifiedLegs);
 
-    if (['Bronze', 'Silver', 'Gold', 'Diamond'].includes(estimatedRank)) {
+    if (isBronzeLegRank(estimatedRank)) {
       bronzeLegs++;
     }
-    if (estimatedRank === 'Diamond') {
+    if (isDiamondLegRank(estimatedRank)) {
       diamondLegs++;
     }
   }
@@ -250,11 +345,12 @@ function determineEffectivePersonalAV({
   }
 
   for (const rank of PHASE3_RANKS) {
+    const additionalBronzeLegs = Math.max(0, bronzeLegs - diamondLegs);
     const hasVolumeAndLegs =
       qgv >= rank.minQGV &&
       qualifiedLegs >= rank.minQL &&
       diamondLegs >= rank.minDiamondLegs &&
-      bronzeLegs >= rank.minBronzeLegs;
+      additionalBronzeLegs >= rank.minBronzeLegs;
 
     if (hasVolumeAndLegs) {
       requiredAV = Math.max(requiredAV, rank.minAV);
@@ -262,4 +358,26 @@ function determineEffectivePersonalAV({
   }
 
   return Math.max(requestedAV, requiredAV);
+}
+
+function isBronzeLegRank(rank: string): boolean {
+  const normalized = normalizeRankName(rank);
+  return (
+    ['Bronze', 'Silver', 'Gold', 'Diamond', '1*Diamond', '2*Diamond', '3*Diamond'].includes(
+      normalized,
+    ) || isExtendedDiamondRank(normalized)
+  );
+}
+
+function isDiamondLegRank(rank: string): boolean {
+  const normalized = normalizeRankName(rank);
+  return (
+    ['Diamond', '1*Diamond', '2*Diamond', '3*Diamond'].includes(normalized) ||
+    isExtendedDiamondRank(normalized)
+  );
+}
+
+function isExtendedDiamondRank(rank: string): boolean {
+  const match = rank.match(/^(\d+)\*Diamond$/);
+  return match ? Number(match[1]) >= 4 : false;
 }

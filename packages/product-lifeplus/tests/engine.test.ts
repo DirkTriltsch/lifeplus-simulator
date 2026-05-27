@@ -3,6 +3,8 @@ import { simulateNetwork, totalNetworkSize, runSimulation } from '@mlm/simulator
 import {
   PHASE1,
   REFERRAL_THRESHOLD_IP,
+  allocatePhase2SlotRates,
+  allocatePhase3SlotRates,
   calculateMonthlyCompensation,
   determineRank,
   lifeplusProduct,
@@ -543,12 +545,25 @@ describe('Rangbestimmung', () => {
       av: 150,
       qgv: 15000,
       qualifiedLegs: 12,
-      bronzeLegs: 2,
+      bronzeLegs: 3,
       diamondLegs: 1,
     });
 
     expect(r.name).toBe('1*Diamond');
     expect(r.phase3Rate).toBe(0.03);
+  });
+
+  it('zaehlt Diamond-Beine nicht als zusaetzliche Bronze-Beine fuer Phase 3', () => {
+    const r = determineRank({
+      av: 150,
+      qgv: 15000,
+      qualifiedLegs: 12,
+      bronzeLegs: 2,
+      diamondLegs: 1,
+    });
+
+    expect(r.name).toBe('Diamond');
+    expect(r.phase3Rate).toBe(0);
   });
 
   it('vergibt 3*Diamond mit kumulierter Phase-3-Rate', () => {
@@ -561,6 +576,19 @@ describe('Rangbestimmung', () => {
     });
 
     expect(r.name).toBe('3*Diamond');
+    expect(r.phase3Rate).toBe(0.08);
+  });
+
+  it('zaehlt Diamond-Status ueber 3*Diamond hinaus weiter', () => {
+    const r = determineRank({
+      av: 150,
+      qgv: 25000,
+      qualifiedLegs: 12,
+      bronzeLegs: 4,
+      diamondLegs: 4,
+    });
+
+    expect(r.name).toBe('4*Diamond');
     expect(r.phase3Rate).toBe(0.08);
   });
 
@@ -597,6 +625,111 @@ describe('Rangbestimmung', () => {
     expect(comp.rank.name).toBe('Diamond');
     expect(comp.rank.phase3Rate).toBe(0);
     expect(comp.phase3IP).toBe(0);
+  });
+});
+
+describe('Leadership-Kuchenstuecke', () => {
+  it('belegt Phase-2-Stuecke chronologisch in der Auszahlungsreihenfolge', () => {
+    expect(allocatePhase2SlotRates(['Gold', 'Bronze', 'Bronze'])).toEqual([
+      0.09,
+      0,
+      0,
+    ]);
+    expect(allocatePhase2SlotRates(['Bronze', 'Gold', 'Diamond'])).toEqual([
+      0.03,
+      0.06,
+      0.03,
+    ]);
+    expect(allocatePhase2SlotRates(['Silver', 'Bronze', 'Gold'])).toEqual([
+      0.06,
+      0,
+      0.03,
+    ]);
+  });
+
+  it('belegt Phase-3-Stuecke chronologisch, aber pro Diamond nur ein Stueck', () => {
+    expect(allocatePhase3SlotRates(['3*Diamond', '1*Diamond'])).toEqual([
+      0.03,
+      0,
+    ]);
+    expect(
+      allocatePhase3SlotRates([
+        '2*Diamond',
+        '1*Diamond',
+        '2*Diamond',
+        '3*Diamond',
+      ]),
+    ).toEqual([0.03, 0, 0.03, 0.02]);
+  });
+
+  it('reduziert Phase 2 fuer den User um bereits belegte Stuecke in der Linie', () => {
+    const comp = calculateMonthlyCompensation(
+      {
+        membersByLevel: [9, 0, 0, 0, 1],
+        shoppersByLevel: [],
+        directLegs: 9,
+        legs: [
+          {
+            id: 'leg-1',
+            membersByLevel: [1, 0, 0, 0, 1],
+            shoppersByLevel: [],
+            ranksByLevel: ['Bronze'],
+          },
+          ...Array.from({ length: 8 }, (_, index) => ({
+            id: `leg-${index + 2}`,
+            membersByLevel: [1],
+            shoppersByLevel: [],
+          })),
+        ],
+        memberGrowth: 0,
+        memberAttrition: 0,
+        shopperGrowth: 0,
+        shopperAttrition: 0,
+      },
+      {
+        personalMonthlyIP: 150,
+        memberMonthlyIP: 1000,
+        shopperMonthlyIP: 0,
+      },
+    );
+
+    expect(comp.rank.name).toBe('Gold');
+    expect(comp.phase2IP).toBeCloseTo(60, 2);
+  });
+
+  it('zahlt einem Diamond nur das freie Diamant-Stueck, wenn ein Gold darunter steht', () => {
+    const comp = calculateMonthlyCompensation(
+      {
+        membersByLevel: [12, 0, 0, 0, 1],
+        shoppersByLevel: [],
+        directLegs: 12,
+        legs: [
+          {
+            id: 'leg-1',
+            membersByLevel: [1, 0, 0, 0, 1],
+            shoppersByLevel: [],
+            ranksByLevel: ['Gold'],
+          },
+          ...Array.from({ length: 11 }, (_, index) => ({
+            id: `leg-${index + 2}`,
+            membersByLevel: [1],
+            shoppersByLevel: [],
+          })),
+        ],
+        memberGrowth: 0,
+        memberAttrition: 0,
+        shopperGrowth: 0,
+        shopperAttrition: 0,
+      },
+      {
+        personalMonthlyIP: 150,
+        memberMonthlyIP: 1250,
+        shopperMonthlyIP: 0,
+      },
+    );
+
+    expect(comp.rank.name).toBe('Diamond');
+    expect(comp.phase2IP).toBeCloseTo(37.5, 2);
   });
 });
 

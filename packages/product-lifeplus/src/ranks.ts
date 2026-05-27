@@ -51,15 +51,27 @@ export function determineRank(inputs: RankInputs): RankResult {
   let phase3Rate = 0;
   for (const rank of PHASE3_RANKS) {
     const hasVolume = av >= rank.minAV && qgv >= rank.minQGV;
+    const additionalBronzeLegs = Math.max(0, bronzeLegs - diamondLegs);
     const hasLegs =
       qualifiedLegs >= rank.minQL &&
       diamondLegs >= rank.minDiamondLegs &&
-      bronzeLegs >= rank.minBronzeLegs;
+      additionalBronzeLegs >= rank.minBronzeLegs;
 
     if (phase2Rate >= 0.12 && hasVolume && hasLegs) {
       name = rank.name;
       phase3Rate = rank.cumulativeRate;
     }
+  }
+
+  if (
+    phase2Rate >= 0.12 &&
+    av >= 150 &&
+    qgv >= 25000 &&
+    qualifiedLegs >= 12 &&
+    diamondLegs >= 4
+  ) {
+    name = `${Math.floor(diamondLegs)}*Diamond`;
+    phase3Rate = 0.08;
   }
 
   return {
