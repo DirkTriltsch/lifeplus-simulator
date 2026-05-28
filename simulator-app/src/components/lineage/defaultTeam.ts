@@ -7,14 +7,14 @@ export const DEFAULT_LINEAGE_TEAM: ExampleLinePerson[] = [
   { id: 'daniela', name: 'Daniela', rank: 'Bronze' },
   { id: 'eva', name: 'Eva', rank: 'Silver' },
   { id: 'frank', name: 'Frank', rank: 'Gold' },
-  { id: 'georg', name: 'Georg', rank: '1*Diamond' },
-  { id: 'heidi', name: 'Heidi', rank: '2*Diamond' },
-  { id: 'ingo', name: 'Ingo', rank: '3*Diamond' },
-  { id: 'katrin', name: 'Katrin', rank: '4*Diamond' },
-  { id: 'ludwig', name: 'Ludwig', rank: '7*Diamond' },
+  { id: 'georg', name: 'Georg', rank: 'Diamond' },
+  { id: 'heidi', name: 'Heidi', rank: '1*Diamond' },
+  { id: 'ingo', name: 'Ingo', rank: '2*Diamond' },
+  { id: 'katrin', name: 'Katrin', rank: '3*Diamond' },
+  { id: 'ludwig', name: 'Ludwig', rank: '4*Diamond' },
+  { id: 'maria', name: 'Maria', rank: '7*Diamond' },
 ];
 
 export function cloneDefaultTeam(): ExampleLinePerson[] {
   return DEFAULT_LINEAGE_TEAM.map((person) => ({ ...person }));
 }
-

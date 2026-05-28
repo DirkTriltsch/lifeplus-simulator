@@ -48,6 +48,26 @@ export function rankLabel(rank: string): string {
   return rank.replace('Silver', 'Silber').replace('Diamond', ' Diamant');
 }
 
+import type { RankIconName } from './RankIcon';
+
+export function rankIconName(rank: string): RankIconName {
+  switch (rank) {
+    case 'Member': return 'member';
+    case 'Believer': return 'believer';
+    case 'Builder': return 'builder';
+    case 'Bronze': return 'bronze';
+    case 'Silver': return 'silver';
+    case 'Gold': return 'gold';
+    case 'Diamond': return 'diamond';
+  }
+  const stars = rank.match(/^(\d+)\*Diamond$/);
+  if (stars) {
+    const n = Math.min(3, Math.max(1, Number(stars[1])));
+    return n === 1 ? 'one-star-diamond' : n === 2 ? 'two-star-diamond' : 'three-star-diamond';
+  }
+  return 'member';
+}
+
 export function normalizeUiRank(rank: string): string {
   if (rank === 'Silber') return 'Silver';
   if (rank.includes('Diamant')) return rank.replace(' Diamant', 'Diamond');

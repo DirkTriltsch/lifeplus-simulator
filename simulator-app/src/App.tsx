@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getProduct } from '@mlm/product-registry';
-import { runSimulation, type ProductId } from '@mlm/simulator-core';
+import {
+  runSimulation,
+  simulatePersonTree,
+  type PersonTreeSnapshot,
+  type ProductId,
+} from '@mlm/simulator-core';
 import { createGrowthModulator } from '@mlm/simulator-realistic-growth';
 import { evaluateGoals } from '@mlm/simulator-goals';
 import { BrandLockup } from './components/BrandLockup';
@@ -22,6 +27,7 @@ import { GoalsLadderPanel } from './components/GoalsLadderPanel';
 import { AccountPanel } from './components/AccountPanel';
 import type { GoalUI } from './components/GoalsEditorDialog';
 import { LineageView } from './components/lineage/LineageView';
+import { TreeDemoView } from './components/tree-demo/TreeDemoView';
 
 const DEFAULT_GOALS: GoalUI[] = [
   { id: 'products-refinanced', label: 'Produkte refinanziert', icon: 'leaf',   kind: 'productsRefinanced', amountEUR: 100 },
@@ -78,7 +84,7 @@ export default function App() {
   const [ipToEur, setIpToEur] = useState(
     persistedState?.ipToEur ?? defaults.unitToCurrency ?? 1,
   );
-  const [page, setPage] = useState<'chart' | 'network' | 'lineage'>('chart');
+  const [page, setPage] = useState<'chart' | 'network' | 'lineage' | 'tree-demo'>('chart');
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -192,6 +198,15 @@ export default function App() {
     [product, inputs, growthModulator],
   );
 
+  // Iteration 4: zusaetzliche Person-Tree-Simulation fuer den Sunburst.
+  // Laeuft nur fuer LifePlus und ohne Reality-Strategy (die der Tree-Pfad noch nicht unterstuetzt).
+  const personYearEnds = useMemo<PersonTreeSnapshot[] | undefined>(() => {
+    if (productId !== 'lifeplus') return undefined;
+    if (growthModulator) return undefined;
+    const allSnapshots = simulatePersonTree(inputs, 120);
+    return allSnapshots.filter((snap) => snap.monthInYear === 12);
+  }, [productId, inputs, growthModulator]);
+
   const goalProgress = useMemo(
     () => evaluateGoals(result, activeGoals(goals), inputs),
     [result, goals, inputs],
@@ -284,6 +299,30 @@ export default function App() {
             </svg>
           </button>
 
+          <button
+            onClick={() => {
+              setPage('tree-demo');
+              setNetworkMenuOpen(false);
+            }}
+            aria-label="Personenbaum-Demo"
+            title="Personenbaum-Demo"
+            className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
+              page === 'tree-demo' ? 'bg-gray-100 text-brand-700' : ''
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="4" r="2" />
+              <circle cx="6" cy="13" r="2" />
+              <circle cx="18" cy="13" r="2" />
+              <circle cx="6" cy="20" r="1.5" />
+              <circle cx="18" cy="20" r="1.5" />
+              <path d="M12 6v3l-6 2" />
+              <path d="M12 9l6 2" />
+              <path d="M6 15v3" />
+              <path d="M18 15v3" />
+            </svg>
+          </button>
+
           <SettingsDrawer
             ipToEur={ipToEur}
             onIpToEurChange={setIpToEur}
@@ -372,9 +411,12 @@ export default function App() {
             selectedView={networkView}
             memberMonthlyVolume={inputs.memberMonthlyVolume}
             shopperMonthlyVolume={inputs.shopperMonthlyVolume}
+            personYearEnds={personYearEnds}
           />
-        ) : (
+        ) : page === 'lineage' ? (
           <LineageView />
+        ) : (
+          <TreeDemoView />
         )}
         <p className="text-xs text-gray-500 text-center mt-4 px-4">
           Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.

@@ -197,11 +197,12 @@ Cornelia  Builder
 Daniela   Bronze
 Eva       Silber
 Frank     Gold
-Georg     1* Diamant
-Heidi     2* Diamant
-Ingo      3* Diamant
-Katrin    4* Diamant
-Ludwig    7* Diamant
+Georg     Diamant
+Heidi     1* Diamant
+Ingo      2* Diamant
+Katrin    3* Diamant
+Ludwig    4* Diamant
+Maria     7* Diamant
 Du        Wurzel / Betrachter
 ```
 

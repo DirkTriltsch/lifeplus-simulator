@@ -1,9 +1,11 @@
 import type { ExampleLinePerson } from '@mlm/product-lifeplus';
 import { useState } from 'react';
+import { RankIcon } from './RankIcon';
 import {
   PHASE1_RANKS,
   PHASE2_RANKS,
   PHASE3_RANKS,
+  rankIconName,
   rankLabel,
 } from './rankStats';
 
@@ -93,12 +95,13 @@ export function StatusPickerSheet({
                 onChange(rank);
                 onClose();
               }}
-              className={`rounded-lg border px-3 py-3 text-left text-sm font-medium transition ${
+              className={`flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-sm font-medium transition ${
                 person.rank === rank
                   ? 'border-brand-400 bg-brand-50 text-brand-800'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-brand-300'
               }`}
             >
+              <RankIcon name={rankIconName(rank)} size={18} />
               {rankLabel(rank)}
             </button>
           ))}

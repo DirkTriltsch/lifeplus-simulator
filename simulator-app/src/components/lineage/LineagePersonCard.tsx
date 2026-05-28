@@ -1,5 +1,6 @@
 import type { ExampleLinePerson, ExamplePayout } from '@mlm/product-lifeplus';
-import { rankLabel, rankStats } from './rankStats';
+import { RankIcon } from './RankIcon';
+import { rankIconName, rankLabel, rankStats } from './rankStats';
 
 interface LineagePersonCardProps {
   person: ExampleLinePerson;
@@ -57,7 +58,8 @@ export function LineagePersonCard({
           <p className="truncate text-sm font-semibold text-gray-950">
             {person.name}
           </p>
-          <span className="mt-1 inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+          <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+            <RankIcon name={rankIconName(person.rank)} size={14} />
             {rankLabel(person.rank)}
           </span>
         </div>

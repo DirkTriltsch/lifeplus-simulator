@@ -1,5 +1,19 @@
 import { useMemo, useState } from 'react';
-import type { MonthResult } from '@mlm/simulator-core';
+import type { MonthResult, PersonTreeSnapshot } from '@mlm/simulator-core';
+import {
+  buildSunburstTree,
+  buildSunburstTreeFromPersons,
+  buildLegsFromPersons,
+  colorForLegIndex,
+  estimateAggregateRank,
+  findLeg,
+  findLevel,
+  findNodeById,
+  getPath,
+  type LegData,
+  type LegLevelBreakdown,
+  type SunburstNode,
+} from './network/sunburst-node';
 
 export type NetworkView = 'sunburst' | 'legs' | 'hybrid';
 
@@ -8,19 +22,11 @@ interface NetworkVisualizationsProps {
   selectedView: NetworkView;
   memberMonthlyVolume: number;
   shopperMonthlyVolume: number;
+  /** Optional: echte Person-Tree-Snapshots pro Jahresende fuer den Sunburst (Iteration 4). */
+  personYearEnds?: PersonTreeSnapshot[];
 }
 
-interface LegData {
-  id: number;
-  label: string;
-  rank: string;
-  nodes: number;
-  qgv: number;
-  eur: number;
-  activity: number;
-  color: string;
-  levels: number[];
-}
+type LevelBreakdown = LegLevelBreakdown;
 
 const VIEW_TITLES: Record<NetworkView, string> = {
   sunburst: 'Sunburst',
@@ -28,35 +34,68 @@ const VIEW_TITLES: Record<NetworkView, string> = {
   hybrid: 'Hybrid-Tree',
 };
 
-const RANK_COLORS: Record<string, string> = {
-  '3*Diamond': '#1d4ed8',
-  '2*Diamond': '#2563eb',
-  '1*Diamond': '#3b82f6',
-  Diamond: '#2563eb',
-  Gold: '#ca8a04',
-  Silver: '#64748b',
-  Bronze: '#b45309',
-  Builder: '#0d9488',
-  Believer: '#16a34a',
-  Member: '#4b5563',
-  Shopper: '#9ca3af',
-};
-
 export function NetworkVisualizations({
   yearEnds,
   selectedView,
   memberMonthlyVolume,
   shopperMonthlyVolume,
+  personYearEnds,
 }: NetworkVisualizationsProps) {
   const [year, setYear] = useState(10);
-  const [selectedLegId, setSelectedLegId] = useState(1);
+  const [selectedLegId, setSelectedLegId] = useState<number | null>(1);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [focusedNodeId, setFocusedNodeId] = useState<string>('root');
   const snapshot = yearEnds[Math.min(year - 1, yearEnds.length - 1)] ?? yearEnds[0];
+  const personSnapshot =
+    personYearEnds?.[Math.min(year - 1, personYearEnds.length - 1)];
 
   const legs = useMemo(
-    () => buildLegs(snapshot, memberMonthlyVolume, shopperMonthlyVolume),
-    [snapshot, memberMonthlyVolume, shopperMonthlyVolume],
+    () => {
+      if (personSnapshot) {
+        return buildLegsFromPersons({
+          snapshot: personSnapshot,
+          memberMonthlyVolume,
+          shopperMonthlyVolume,
+        });
+      }
+      return buildLegs(snapshot, memberMonthlyVolume, shopperMonthlyVolume);
+    },
+    [snapshot, personSnapshot, memberMonthlyVolume, shopperMonthlyVolume],
+  );
+  const tree = useMemo(
+    () => {
+      if (personSnapshot) {
+        return buildSunburstTreeFromPersons({
+          snapshot: personSnapshot,
+          memberMonthlyVolume,
+          shopperMonthlyVolume,
+        });
+      }
+      return buildSunburstTree({
+        snapshot,
+        memberMonthlyVolume,
+        shopperMonthlyVolume,
+      });
+    },
+    [snapshot, personSnapshot, memberMonthlyVolume, shopperMonthlyVolume],
   );
   const selectedLeg = legs.find((leg) => leg.id === selectedLegId) ?? legs[0];
+
+  const selectLeg = (legId: number | null) => {
+    setSelectedLegId(legId);
+    setSelectedLevel(null);
+  };
+  const selectSegment = (legId: number, level: number) => {
+    setSelectedLegId(legId);
+    setSelectedLevel(level);
+  };
+  const clearSelection = () => {
+    setSelectedLegId(null);
+    setSelectedLevel(null);
+  };
+  const setFocus = (nodeId: string) => {
+    setFocusedNodeId(nodeId);
+  };
 
   return (
     <div className="space-y-4">
@@ -89,18 +128,31 @@ export function NetworkVisualizations({
             onChange={(event) => {
               setYear(Number(event.target.value));
               setSelectedLegId(1);
+              setFocusedNodeId('root');
             }}
           />
           <span className="text-xs font-medium text-gray-500">10</span>
         </div>
       </div>
 
-      {selectedView === 'sunburst' && <Sunburst snapshot={snapshot} legs={legs} />}
+      {selectedView === 'sunburst' && (
+        <Sunburst
+          tree={tree}
+          legs={legs}
+          selectedLegId={selectedLegId}
+          selectedLevel={selectedLevel}
+          focusedNodeId={focusedNodeId}
+          onSelectSegment={selectSegment}
+          onSelectLeg={selectLeg}
+          onClear={clearSelection}
+          onSetFocus={setFocus}
+        />
+      )}
       {selectedView === 'legs' && (
         <LegColumns
           legs={legs}
           selectedLeg={selectedLeg}
-          onSelectLeg={setSelectedLegId}
+          onSelectLeg={selectLeg}
         />
       )}
       {selectedView === 'hybrid' && (
@@ -108,86 +160,577 @@ export function NetworkVisualizations({
           snapshot={snapshot}
           legs={legs}
           selectedLeg={selectedLeg}
-          onSelectLeg={setSelectedLegId}
+          onSelectLeg={selectLeg}
         />
       )}
-
-      <ImprovementPanel />
     </div>
   );
 }
 
-function Sunburst({ snapshot, legs }: { snapshot: MonthResult; legs: LegData[] }) {
-  const levels = buildLevelTotals(snapshot);
-  const maxLevel = Math.min(10, Math.max(1, levels.length));
-  const center = 190;
-  const ringWidth = 18;
-  const gap = 4;
+interface SunburstProps {
+  tree: SunburstNode;
+  legs: LegData[];
+  selectedLegId: number | null;
+  selectedLevel: number | null;
+  focusedNodeId: string;
+  onSelectSegment: (legId: number, level: number) => void;
+  onSelectLeg: (legId: number | null) => void;
+  onClear: () => void;
+  onSetFocus: (nodeId: string) => void;
+}
+
+function Sunburst({
+  tree,
+  legs,
+  selectedLegId,
+  selectedLevel,
+  focusedNodeId,
+  onSelectSegment,
+  onSelectLeg,
+  onClear,
+  onSetFocus,
+}: SunburstProps) {
+  const focusedNode = findNodeById(tree, focusedNodeId) ?? tree;
+  const focusPath = getPath(tree, focusedNode.id);
+  const parentNode =
+    focusedNode.parentId != null ? findNodeById(tree, focusedNode.parentId) : null;
+
+  const handleCenterClick = () => {
+    if (parentNode) {
+      onSetFocus(parentNode.id);
+    } else {
+      onClear();
+    }
+  };
+
+  const selectedLegNode = selectedLegId != null ? findLeg(tree, selectedLegId) : undefined;
+  const selectedLevelNode =
+    selectedLegId != null && selectedLevel != null
+      ? findLevel(tree, selectedLegId, selectedLevel)
+      : undefined;
+
+  const selectedNodeForDetail = focusedNode.kind === 'root'
+    ? selectedLevelNode ?? selectedLegNode ?? focusedNode
+    : selectedLevelNode?.legId === focusedNode.legId && selectedLevelNode.depth > focusedNode.depth
+      ? selectedLevelNode
+      : focusedNode;
+  const scopedLegs = buildScopedLegs(focusedNode, legs);
+  const isFocusedRoot = focusedNode.kind === 'root';
+  const legendSelectedLegId = isFocusedRoot ? selectedLegId : null;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
-        <svg viewBox="0 0 380 380" role="img" aria-label="Sunburst Netzwerk">
-          <circle cx={center} cy={center} r="42" fill="#0f766e" />
-          <text x={center} y={center - 4} textAnchor="middle" className="fill-white text-sm font-semibold">
-            Du
-          </text>
-          <text x={center} y={center + 15} textAnchor="middle" className="fill-white text-[11px]">
-            {snapshot.rankName}
-          </text>
-          {levels.slice(0, maxLevel).map((levelTotal, levelIndex) => {
-            const radius = 58 + levelIndex * (ringWidth + gap);
-            let cursor = -90;
-            return legs.map((leg, legIndex) => {
-              const levelShare = (leg.levels[levelIndex] ?? 0) / Math.max(1, levelTotal);
-              const angle = Math.max(3, 360 * levelShare);
-              const start = cursor;
-              const end = cursor + angle - 1.5;
-              cursor += angle;
+      <Breadcrumb path={focusPath} onSetFocus={onSetFocus} />
 
-              return (
-                <path
-                  key={`${levelIndex}-${leg.id}`}
-                  d={describeArc(center, center, radius, start, end)}
-                  fill="none"
-                  stroke={shadeColor(leg.color, levelIndex * 7 + legIndex * 2)}
-                  strokeWidth={ringWidth}
-                  strokeLinecap="butt"
-                />
-              );
-            });
-          })}
-          <circle cx={center} cy={center} r="174" fill="none" stroke="#e5e7eb" strokeWidth="1" />
-        </svg>
+      <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:items-start">
+        <PolarHeatmapSvg
+          legs={scopedLegs}
+          tree={tree}
+          centerNode={focusedNode}
+          selectedLegId={isFocusedRoot ? selectedLegId : null}
+          selectedLevel={isFocusedRoot ? selectedLevel : null}
+          onSelectSegment={(legId, level) => {
+            if (isFocusedRoot) {
+              onSelectSegment(legId, level);
+              return;
+            }
+            if (focusedNode.legId != null) {
+              onSelectSegment(focusedNode.legId, toSourceLevel(focusedNode, level));
+            }
+          }}
+          onCenterClick={handleCenterClick}
+          onSegmentDoubleClick={(leg, level) => {
+            if (isFocusedRoot) {
+              const nodeId = leg.nodeId ?? findLeg(tree, leg.id)?.id;
+              if (nodeId) onSetFocus(nodeId);
+              return;
+            }
+            if (leg.nodeId) {
+              onSetFocus(leg.nodeId);
+            } else if (focusedNode.legId != null) {
+              onSetFocus(`leg-${focusedNode.legId}-level-${toSourceLevel(focusedNode, level)}`);
+            }
+          }}
+        />
 
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">
-              Tiefe und Beitrag in einem Bild
-            </h3>
-            <p className="mt-1 text-sm text-gray-600 leading-relaxed">
-              Ringe stehen fuer Ebenen, Segmente fuer Beine. Groessere Segmente
-              zeigen, wo Netzwerkvolumen und Provision entstehen.
-            </p>
-          </div>
-          <div className="space-y-2">
-            {legs.map((leg) => (
-              <div key={leg.id} className="flex items-center justify-between gap-3 text-sm">
-                <span className="flex items-center gap-2 text-gray-700">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ background: leg.color }}
-                  />
-                  {leg.label}
-                </span>
-                <span className="font-medium text-gray-900">{formatCurrency(leg.eur)}</span>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-4">
+          <DetailBox
+            tree={tree}
+            selectedNode={selectedNodeForDetail}
+            focusedNode={focusedNode}
+            onSetFocus={onSetFocus}
+          />
+          <LegLegend
+            legs={scopedLegs}
+            title={isFocusedRoot ? 'Beine' : `Unter-Beine von ${focusedNode.label}`}
+            selectedLegId={legendSelectedLegId}
+            onSelectLeg={(legId) => {
+              const leg = scopedLegs.find((item) => item.id === legId);
+              if (isFocusedRoot) {
+                onSelectLeg(legId);
+              } else if (leg?.nodeId) {
+                onSetFocus(leg.nodeId);
+              } else if (focusedNode.legId != null && legId != null) {
+                onSelectSegment(focusedNode.legId, toSourceLevel(focusedNode, 1));
+              }
+            }}
+          />
         </div>
       </div>
     </div>
   );
+}
+
+interface PolarHeatmapSvgProps {
+  legs: LegData[];
+  tree: SunburstNode;
+  centerNode?: SunburstNode;
+  selectedLegId: number | null;
+  selectedLevel: number | null;
+  onSelectSegment: (legId: number, level: number) => void;
+  onCenterClick: () => void;
+  onSegmentDoubleClick: (leg: LegData, level: number) => void;
+}
+
+function PolarHeatmapSvg({
+  legs,
+  tree,
+  centerNode,
+  selectedLegId,
+  selectedLevel,
+  onSelectSegment,
+  onCenterClick,
+  onSegmentDoubleClick,
+}: PolarHeatmapSvgProps) {
+  const levels = buildLevelTotalsFromLegs(legs);
+  const maxLevel = Math.min(10, Math.max(1, levels.length));
+  const center = 190;
+  const ringWidth = 18;
+  const gap = 4;
+  const rootNode = centerNode ?? tree;
+  const centerColor = rootNode.color ?? '#0f766e';
+
+  return (
+    <svg viewBox="0 0 380 380" role="img" aria-label="Sunburst Netzwerk">
+      {levels.slice(0, maxLevel).map((levelTotal, levelIndex) => {
+        const radius = 58 + levelIndex * (ringWidth + gap);
+        let cursor = -90;
+        return legs.map((leg) => {
+          const levelValue = leg.levels[levelIndex]?.total ?? 0;
+          if (levelValue <= 0 || levelTotal <= 0) return null;
+          const levelShare = levelValue / levelTotal;
+          const angle = 360 * levelShare;
+          const start = cursor;
+          const end = cursor + angle - 1.5;
+          cursor += angle;
+
+          const isLegSelected = selectedLegId === leg.id;
+          const isExactSegment = isLegSelected && selectedLevel === levelIndex + 1;
+          const isOtherLegSelected = selectedLegId != null && !isLegSelected;
+          const opacity = isOtherLegSelected ? 0.18 : 1;
+          const stroke = isExactSegment ? '#0f172a' : leg.color;
+          const strokeWidthValue = isExactSegment
+            ? ringWidth + 4
+            : isLegSelected
+              ? ringWidth + 1
+              : ringWidth;
+
+          return (
+            <path
+              key={`${levelIndex}-${leg.id}`}
+              d={describeArc(center, center, radius, start, end)}
+              fill="none"
+              stroke={stroke}
+              strokeWidth={strokeWidthValue}
+              strokeLinecap="butt"
+              opacity={opacity}
+              className="cursor-pointer transition-opacity"
+              onClick={() => onSelectSegment(leg.id, levelIndex + 1)}
+              onDoubleClick={() => onSegmentDoubleClick(leg, levelIndex + 1)}
+            >
+              <title>{`${leg.label} · Ebene ${levelIndex + 1} (Doppelklick: Fokus)`}</title>
+            </path>
+          );
+        });
+      })}
+      <circle
+        cx={center}
+        cy={center}
+        r="42"
+        fill={centerColor}
+        className="cursor-pointer"
+        onClick={onCenterClick}
+      />
+      <text
+        x={center}
+        y={center - 4}
+        textAnchor="middle"
+        className="pointer-events-none fill-white text-sm font-semibold"
+      >
+        {rootNode.label}
+      </text>
+      <text
+        x={center}
+        y={center + 15}
+        textAnchor="middle"
+        className="pointer-events-none fill-white text-[11px]"
+      >
+        {rootNode.rankName ?? tree.rankName}
+      </text>
+      <circle cx={center} cy={center} r="174" fill="none" stroke="#e5e7eb" strokeWidth="1" />
+    </svg>
+  );
+}
+
+function Breadcrumb({
+  path,
+  onSetFocus,
+}: {
+  path: SunburstNode[];
+  onSetFocus: (nodeId: string) => void;
+}) {
+  return (
+    <nav className="flex flex-wrap items-center gap-1 text-xs text-gray-600">
+      {path.map((node, index) => {
+        const isLast = index === path.length - 1;
+        return (
+          <span key={node.id} className="flex items-center gap-1">
+            {index > 0 && <span className="text-gray-400">/</span>}
+            <BreadcrumbButton
+              onClick={() => !isLast && onSetFocus(node.id)}
+              active={isLast}
+            >
+              {node.label}
+            </BreadcrumbButton>
+          </span>
+        );
+      })}
+    </nav>
+  );
+}
+
+function BreadcrumbButton({
+  children,
+  onClick,
+  active,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  active: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-md px-2 py-1 transition ${
+        active
+          ? 'bg-gray-100 text-gray-900 font-medium'
+          : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DetailBox({
+  tree,
+  selectedNode,
+  focusedNode,
+  onSetFocus,
+}: {
+  tree: SunburstNode;
+  selectedNode: SunburstNode;
+  focusedNode: SunburstNode;
+  onSetFocus: (nodeId: string) => void;
+}) {
+  const node = selectedNode;
+  const phase1 = node.phase1EUR ?? 0;
+  const phase2 = node.phase2EUR ?? 0;
+  const phase3 = node.phase3EUR ?? 0;
+  const isFocusable = node.kind !== 'root' && node.id !== focusedNode.id;
+  const isRootNode = node.kind === 'root';
+
+  return (
+    <section className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="flex items-center gap-2">
+        {node.color && (
+          <span
+            className="h-3 w-3 rounded-full"
+            style={{ background: node.color }}
+          />
+        )}
+        <p className="text-xs uppercase tracking-wider text-gray-500">
+          Detail
+        </p>
+      </div>
+      <p className="mt-1 text-sm font-semibold text-gray-900">
+        {node.label}
+      </p>
+      <p className="text-xs text-gray-500">
+        Rang: {node.rankName ?? tree.rankName ?? 'Member'}
+      </p>
+
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <Stat label="Member" value={formatNumber(node.members)} />
+        <Stat label="Shopper" value={formatNumber(node.shoppers)} />
+        <Stat label="QGV" value={`${formatNumber(node.qgv)} IP`} />
+        <Stat label="Provision" value={formatCurrency(node.provisionEUR)} />
+      </dl>
+
+      {(phase1 + phase2 + phase3) > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-1.5 text-[10px]">
+          <Stat label="Phase 1" value={formatCurrency(phase1)} subtle />
+          <Stat label="Phase 2" value={formatCurrency(phase2)} subtle />
+          <Stat label="Phase 3" value={formatCurrency(phase3)} subtle />
+        </div>
+      )}
+
+      {isFocusable && (
+        <button
+          type="button"
+          onClick={() => onSetFocus(node.id)}
+          className="mt-3 w-full rounded-md border border-brand-300 bg-white px-3 py-1.5 text-xs font-medium text-brand-700 transition hover:bg-brand-50"
+        >
+          Fokus auf {node.label} setzen
+        </button>
+      )}
+      {isRootNode && (
+        <p className="mt-3 text-[11px] text-gray-500">
+          Tippe ein Segment an oder waehle ein Bein, um zu zoomen.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  subtle,
+}: {
+  label: string;
+  value: string;
+  subtle?: boolean;
+}) {
+  return (
+    <div className={subtle ? 'rounded bg-white p-1.5' : 'rounded bg-white p-2'}>
+      <dt className="text-[10px] uppercase tracking-wider text-gray-500">
+        {label}
+      </dt>
+      <dd className={`mt-0.5 font-semibold text-gray-900 ${subtle ? 'text-xs' : 'text-sm'}`}>
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function LegLegend({
+  legs,
+  title = 'Beine',
+  selectedLegId,
+  onSelectLeg,
+}: {
+  legs: LegData[];
+  title?: string;
+  selectedLegId: number | null;
+  onSelectLeg: (legId: number | null) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs uppercase tracking-wider text-gray-500">{title}</p>
+      <div className="space-y-1">
+        {legs.map((leg) => {
+          const isSelected = selectedLegId === leg.id;
+          return (
+            <button
+              key={leg.id}
+              type="button"
+              onClick={() => onSelectLeg(isSelected ? null : leg.id)}
+              className={`flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm transition ${
+                isSelected
+                  ? 'bg-gray-100 ring-1 ring-gray-300'
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <span className="flex items-center gap-2 text-gray-700">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: leg.color }}
+                />
+                {leg.label}
+              </span>
+              <span className="font-medium text-gray-900">
+                {formatCurrency(leg.eur)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function buildLevelTotalsFromLegs(legs: LegData[]): number[] {
+  const maxLevels = Math.max(0, ...legs.map((leg) => leg.levels.length));
+  return Array.from({ length: Math.min(10, maxLevels) }, (_, index) =>
+    legs.reduce(
+      (total, leg) => total + (leg.levels[index]?.total ?? 0),
+      0,
+    ),
+  );
+}
+
+function buildScopedLegs(focusedNode: SunburstNode, legs: LegData[]): LegData[] {
+  if (focusedNode.kind === 'root') {
+    return legs;
+  }
+
+  const personChildren = focusedNode.children.filter(
+    (child) => child.kind === 'person' || child.kind === 'leg',
+  );
+  if (personChildren.length > 0) {
+    const visibleChildren = personChildren.slice(0, 10);
+    const hiddenChildren = personChildren.slice(10);
+    const childNodes = hiddenChildren.length > 0
+      ? [...visibleChildren, mergeHiddenChildren(hiddenChildren, focusedNode)]
+      : visibleChildren;
+    const averageShare = 1 / Math.max(1, childNodes.length);
+    const totalQgv = Math.max(
+      1,
+      childNodes.reduce((total, child) => total + child.qgv, 0),
+    );
+
+    return childNodes.map((child, index) => {
+      const levels = levelsFromNode(child);
+      const share = child.qgv / totalQgv;
+      return {
+        id: index + 1,
+        nodeId: child.kind === 'aggregate' ? undefined : child.id,
+        label: child.label,
+        rank: child.rankName ?? 'Member',
+        nodes: sumTotals(levels),
+        members: child.members,
+        shoppers: child.shoppers,
+        qgv: child.qgv,
+        eur: child.provisionEUR,
+        activity: Math.max(8, Math.min(100, (share / averageShare) * 82)),
+        color: shadeColor(child.color ?? focusedNode.color ?? '#0f766e', index * 5),
+        levels,
+      };
+    });
+  }
+
+  if (focusedNode.legId == null) {
+    return [];
+  }
+
+  const sourceLeg = legs.find((leg) => leg.id === focusedNode.legId);
+  if (!sourceLeg) {
+    return [];
+  }
+
+  const firstChildLevelIndex = focusedNode.kind === 'leg'
+    ? 1
+    : Math.max(0, focusedNode.depth - 1);
+  const childLevels = sourceLeg.levels.slice(firstChildLevelIndex);
+  const directMembers = Math.round(childLevels[0]?.members ?? 0);
+
+  if (directMembers <= 0 || childLevels.length === 0) {
+    return [];
+  }
+
+  const visibleLegs = Math.min(10, directMembers);
+  return Array.from({ length: visibleLegs }, (_, index) => {
+    const representedMembers =
+      index === visibleLegs - 1 && directMembers > visibleLegs
+        ? directMembers - visibleLegs + 1
+        : 1;
+    const share = representedMembers / directMembers;
+    const levels = childLevels.map((level) => ({
+      members: level.members * share,
+      shoppers: level.shoppers * share,
+      total: level.total * share,
+    }));
+    const nodes = sumTotals(levels);
+    const isCluster = representedMembers > 1;
+
+    return {
+      id: index + 1,
+      label: isCluster
+        ? `Weitere ${representedMembers}`
+        : `Bein ${focusedNode.legId}.${index + 1}`,
+      rank: estimateAggregateRank(sourceLeg.qgv * share, Math.round(childLevels[1]?.members ?? 0)),
+      nodes,
+      members: levels.reduce((total, level) => total + level.members, 0),
+      shoppers: levels.reduce((total, level) => total + level.shoppers, 0),
+      qgv: sourceLeg.qgv * share,
+      eur: sourceLeg.eur * share,
+      activity: sourceLeg.activity,
+      color: shadeColor(sourceLeg.color, index * 7),
+      levels,
+    };
+  });
+}
+
+function levelsFromNode(node: SunburstNode): LevelBreakdown[] {
+  const levels: LevelBreakdown[] = [];
+
+  const ensure = (index: number) => {
+    while (levels.length <= index) {
+      levels.push({ members: 0, shoppers: 0, total: 0 });
+    }
+  };
+
+  const visit = (item: SunburstNode, relativeDepth: number) => {
+    ensure(relativeDepth);
+    const childMembers = item.children.reduce((total, child) => total + child.members, 0);
+    const childShoppers = item.children.reduce((total, child) => total + child.shoppers, 0);
+    levels[relativeDepth].members += Math.max(0, item.members - childMembers);
+    levels[relativeDepth].shoppers += Math.max(0, item.shoppers - childShoppers);
+    levels[relativeDepth].total = levels[relativeDepth].members + levels[relativeDepth].shoppers;
+    for (const child of item.children) {
+      visit(child, relativeDepth + 1);
+    }
+  };
+
+  visit(node, 0);
+  return levels;
+}
+
+function mergeHiddenChildren(children: SunburstNode[], parent: SunburstNode): SunburstNode {
+  const merged = children.reduce(
+    (total, child) => ({
+      members: total.members + child.members,
+      shoppers: total.shoppers + child.shoppers,
+      qgv: total.qgv + child.qgv,
+      provisionEUR: total.provisionEUR + child.provisionEUR,
+    }),
+    { members: 0, shoppers: 0, qgv: 0, provisionEUR: 0 },
+  );
+
+  return {
+    id: `${parent.id}-more`,
+    parentId: parent.id,
+    label: `Weitere ${children.length}`,
+    kind: 'aggregate',
+    legId: parent.legId,
+    depth: parent.depth + 1,
+    rankName: estimateAggregateRank(merged.qgv, children.length),
+    members: merged.members,
+    shoppers: merged.shoppers,
+    qgv: merged.qgv,
+    provisionEUR: merged.provisionEUR,
+    color: parent.color,
+    children,
+  };
+}
+
+function toSourceLevel(focusedNode: SunburstNode, localLevel: number): number {
+  if (focusedNode.kind === 'leg') {
+    return localLevel + 1;
+  }
+  return focusedNode.depth - 1 + localLevel;
 }
 
 function LegColumns({
@@ -199,6 +742,11 @@ function LegColumns({
   selectedLeg: LegData;
   onSelectLeg: (id: number) => void;
 }) {
+  const maxVisibleLevelTotal = Math.max(
+    1,
+    ...legs.flatMap((leg) => leg.levels.slice(0, 10).map((level) => level.total)),
+  );
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
       <div className="grid gap-3 lg:grid-cols-5">
@@ -234,15 +782,44 @@ function LegColumns({
               {leg.levels.slice(0, 10).map((value, index) => (
                 <div key={index} className="flex-1 flex flex-col items-center justify-end gap-1">
                   <span
-                    className="w-full rounded-t"
+                    className="flex w-full flex-col justify-end overflow-hidden rounded-t bg-gray-100"
                     style={{
-                      height: `${Math.max(8, Math.min(96, value / Math.max(1, leg.nodes) * 160))}px`,
-                      background: shadeColor(leg.color, index * 8),
+                      height: `${Math.max(8, Math.min(96, (value.total / maxVisibleLevelTotal) * 96))}px`,
                     }}
-                  />
+                  >
+                    {value.shoppers > 0 && (
+                      <span
+                        className="w-full bg-green-300"
+                        title={`Shopper: ${formatNumber(value.shoppers)}`}
+                        style={{
+                          height: `${Math.max(10, (value.shoppers / Math.max(1, value.total)) * 100)}%`,
+                        }}
+                      />
+                    )}
+                    {value.members > 0 && (
+                      <span
+                        className="w-full"
+                        title={`Member: ${formatNumber(value.members)}`}
+                        style={{
+                          height: `${Math.max(10, (value.members / Math.max(1, value.total)) * 100)}%`,
+                          background: shadeColor(leg.color, index * 8),
+                        }}
+                      />
+                    )}
+                  </span>
                   <span className="text-[10px] text-gray-400">E{index + 1}</span>
                 </div>
               ))}
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-500">
+              <span className="inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm" style={{ background: leg.color }} />
+                M {formatNumber(leg.members)}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-green-300" />
+                S {formatNumber(leg.shoppers)}
+              </span>
             </div>
             <p className="mt-3 text-xs text-gray-600">
               {formatNumber(leg.nodes)} Knoten · {formatCurrency(leg.eur)}
@@ -258,7 +835,7 @@ function LegColumns({
         <div className="mt-2 grid gap-3 sm:grid-cols-4">
           <Metric label="Status" value={selectedLeg.rank} />
           <Metric label="QGV" value={`${formatNumber(selectedLeg.qgv)} IP`} />
-          <Metric label="Knoten" value={formatNumber(selectedLeg.nodes)} />
+          <Metric label="Member/Shopper" value={`${formatNumber(selectedLeg.members)} / ${formatNumber(selectedLeg.shoppers)}`} />
           <Metric label="Provision*" value={formatCurrency(selectedLeg.eur)} />
         </div>
       </div>
@@ -319,7 +896,7 @@ function HybridTree({
                 <text x={x + 36} y="251" textAnchor="middle" className="fill-gray-700 text-xs font-semibold">E2</text>
                 <rect x={x - 54} y="286" width="108" height="36" rx="18" fill={selected ? '#ecfdf5' : '#f3f4f6'} stroke={selected ? '#1d9e75' : '#e5e7eb'} />
                 <text x={x} y="309" textAnchor="middle" className="fill-gray-700 text-xs font-medium">
-                  tief: {formatNumber(sum(leg.levels.slice(2)))}
+                  tief: {formatNumber(sumTotals(leg.levels.slice(2)))}
                 </text>
               </g>
             );
@@ -344,6 +921,8 @@ function HybridTree({
             <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
               <tr>
                 <th className="px-3 py-2 text-left">Ebene</th>
+                <th className="px-3 py-2 text-right">Member</th>
+                <th className="px-3 py-2 text-right">Shopper</th>
                 <th className="px-3 py-2 text-right">Knoten</th>
                 <th className="px-3 py-2 text-right">Anteil</th>
               </tr>
@@ -352,9 +931,11 @@ function HybridTree({
               {selectedLeg.levels.slice(0, 10).map((value, index) => (
                 <tr key={index}>
                   <td className="px-3 py-2 font-medium text-gray-800">E{index + 1}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">{formatNumber(value)}</td>
+                  <td className="px-3 py-2 text-right text-gray-700">{formatNumber(value.members)}</td>
+                  <td className="px-3 py-2 text-right text-gray-700">{formatNumber(value.shoppers)}</td>
+                  <td className="px-3 py-2 text-right text-gray-700">{formatNumber(value.total)}</td>
                   <td className="px-3 py-2 text-right text-gray-500">
-                    {Math.round((value / Math.max(1, selectedLeg.nodes)) * 100)}%
+                    {Math.round((value.total / Math.max(1, selectedLeg.nodes)) * 100)}%
                   </td>
                 </tr>
               ))}
@@ -362,28 +943,6 @@ function HybridTree({
           </table>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ImprovementPanel() {
-  const items = [
-    'Knoten-Identitaeten pro Bein-Pfad speichern, damit Klicks echte Personen statt Schaetzungen zeigen.',
-    'Ab ca. 1.000 Knoten automatisch clustern und nur sichtbare Ebenen rendern.',
-    'Status-Ampel ergaenzen: aktiv, unter Qualifikation, inaktiv, nicht provisioniert.',
-    'Tooltips mit Phase-1/2/3-Anteil pro Bein einbauen.',
-  ];
-
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">Verbesserungsvorschlaege</h3>
-      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-        {items.map((item) => (
-          <li key={item} className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
-            {item}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
@@ -442,10 +1001,12 @@ function buildLegs(
 ): LegData[] {
   if (snapshot.legs.length > 0) {
     const legTotals = snapshot.legs.map((leg) => {
-      const levels = buildLegLevelTotals(leg);
+      const levels = buildLegLevelBreakdowns(leg);
       return {
         levels,
-        nodes: sum(levels),
+        nodes: sumTotals(levels),
+        members: sum(leg.membersByLevel),
+        shoppers: sum(leg.shoppersByLevel),
         qgv: calculateLegQgv(leg, memberMonthlyVolume, shopperMonthlyVolume),
       };
     });
@@ -453,16 +1014,19 @@ function buildLegs(
     const averageShare = 1 / Math.max(1, snapshot.legs.length);
 
     return snapshot.legs.map((_, index) => {
-      const { levels, nodes, qgv } = legTotals[index];
+      const { levels, nodes, members, shoppers, qgv } = legTotals[index];
       const share = qgv / totalLegQgv;
-      const rank = estimateRank(qgv, Math.max(0, snapshot.legs.length - index));
-      const color = colorForRank(rank);
+      const qualifiedLegs = Math.floor((snapshot.legs[index].membersByLevel[1] ?? 0) + 1e-9);
+      const rank = snapshot.legs[index].ranksByLevel?.[0] ?? estimateAggregateRank(qgv, qualifiedLegs);
+      const color = colorForLegIndex(index);
 
       return {
         id: index + 1,
         label: `Bein ${index + 1}`,
         rank,
         nodes,
+        members,
+        shoppers,
         qgv,
         eur: snapshot.totalEUR * share,
         activity: Math.max(8, Math.min(100, (share / averageShare) * 82)),
@@ -482,10 +1046,16 @@ function buildLevelTotals(snapshot: MonthResult): number[] {
   });
 }
 
-function buildLegLevelTotals(leg: MonthResult['legs'][number]): number[] {
+function buildLegLevelBreakdowns(leg: MonthResult['legs'][number]): LevelBreakdown[] {
   const max = Math.max(leg.membersByLevel.length, leg.shoppersByLevel.length, 1);
   return Array.from({ length: max }, (_, index) => {
-    return (leg.membersByLevel[index] ?? 0) + (leg.shoppersByLevel[index] ?? 0);
+    const members = leg.membersByLevel[index] ?? 0;
+    const shoppers = leg.shoppersByLevel[index] ?? 0;
+    return {
+      members,
+      shoppers,
+      total: members + shoppers,
+    };
   });
 }
 
@@ -504,40 +1074,28 @@ function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
   const legCount = Math.max(1, Math.round(snapshot.directLegs || 1));
   const share = 1 / legCount;
   const levelTotals = buildLevelTotals(snapshot);
+  const membersByLevel = snapshot.membersByLevel.map((count) => count * share);
+  const shoppersByLevel = snapshot.shoppersByLevel.map((count) => count * share);
   const qgvPerLeg = snapshot.qgv * share;
-  const rank = estimateRank(qgvPerLeg, legCount);
-  const color = colorForRank(rank);
+  const rank = estimateAggregateRank(qgvPerLeg, legCount);
 
   return Array.from({ length: legCount }, (_, index) => ({
     id: index + 1,
     label: `Bein ${index + 1}`,
     rank,
     nodes: snapshot.networkSize * share,
+    members: sum(membersByLevel),
+    shoppers: sum(shoppersByLevel),
     qgv: qgvPerLeg,
     eur: snapshot.totalEUR * share,
     activity: 100,
-    color,
-    levels: levelTotals.map((levelTotal) => levelTotal * share),
+    color: colorForLegIndex(index),
+    levels: levelTotals.map((levelTotal, levelIndex) => ({
+      members: membersByLevel[levelIndex] ?? 0,
+      shoppers: shoppersByLevel[levelIndex] ?? 0,
+      total: levelTotal * share,
+    })),
   }));
-}
-
-function estimateRank(qgv: number, qualifiedLegs: number): string {
-  if (qgv >= 25000 && qualifiedLegs >= 4) return `${Math.floor(qualifiedLegs)}*Diamond`;
-  if (qgv >= 25000 && qualifiedLegs >= 3) return '3*Diamond';
-  if (qgv >= 20000 && qualifiedLegs >= 2) return '2*Diamond';
-  if (qgv >= 15000 && qualifiedLegs >= 1) return '1*Diamond';
-  if (qgv >= 15000 && qualifiedLegs >= 12) return 'Diamond';
-  if (qgv >= 9000 && qualifiedLegs >= 9) return 'Gold';
-  if (qgv >= 6000 && qualifiedLegs >= 6) return 'Silver';
-  if (qgv >= 3000 && qualifiedLegs >= 3) return 'Bronze';
-  if (qgv >= 1000) return 'Builder';
-  if (qgv >= 300) return 'Believer';
-  return 'Member';
-}
-
-function colorForRank(rank: string): string {
-  if (/^\d+\*Diamond$/.test(rank)) return RANK_COLORS['3*Diamond'];
-  return RANK_COLORS[rank] ?? RANK_COLORS.Member;
 }
 
 function describeArc(
@@ -605,4 +1163,8 @@ function formatNumber(value: number) {
 
 function sum(values: number[]) {
   return values.reduce((total, value) => total + value, 0);
+}
+
+function sumTotals(values: LevelBreakdown[]) {
+  return values.reduce((total, value) => total + value.total, 0);
 }
