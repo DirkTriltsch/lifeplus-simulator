@@ -544,6 +544,19 @@ describe('Rangbestimmung', () => {
     expect(r.phase2Rate).toBe(0.03);
   });
 
+  it('setzt AV automatisch auf den passenden hoeheren Status, wenn nur AV fehlt', () => {
+    const r = determineRank({
+      av: 50,
+      qgv: 65541,
+      qualifiedLegs: 20,
+      bronzeLegs: 0,
+      diamondLegs: 0,
+    });
+
+    expect(r.name).toBe('Diamond');
+    expect(r.phase2Rate).toBe(0.12);
+  });
+
   it('vergibt Gold knapp unter Diamond-Schwelle', () => {
     const r = determineRank({
       av: 150,
@@ -600,7 +613,7 @@ describe('Rangbestimmung', () => {
   it('zaehlt Diamond-Status ueber 3*Diamond hinaus weiter', () => {
     const r = determineRank({
       av: 150,
-      qgv: 25000,
+      qgv: 30000,
       qualifiedLegs: 12,
       bronzeLegs: 4,
       diamondLegs: 4,
@@ -608,6 +621,42 @@ describe('Rangbestimmung', () => {
 
     expect(r.name).toBe('4*Diamond');
     expect(r.phase3Rate).toBe(0.08);
+  });
+
+  it('bleibt bei 3*Diamond, wenn QGV unter 30k fuer 4*Diamond liegt', () => {
+    const r = determineRank({
+      av: 150,
+      qgv: 25000,
+      qualifiedLegs: 12,
+      bronzeLegs: 4,
+      diamondLegs: 4,
+    });
+
+    expect(r.name).toBe('3*Diamond');
+    expect(r.phase3Rate).toBe(0.08);
+  });
+
+  it('steigt bei steigender QGV-Staffel weiter zu n*Diamond auf', () => {
+    const r5 = determineRank({
+      av: 150,
+      qgv: 35000,
+      qualifiedLegs: 12,
+      bronzeLegs: 5,
+      diamondLegs: 5,
+    });
+
+    expect(r5.name).toBe('5*Diamond');
+    expect(r5.phase3Rate).toBe(0.08);
+
+    const r4Capped = determineRank({
+      av: 150,
+      qgv: 100000,
+      qualifiedLegs: 12,
+      bronzeLegs: 4,
+      diamondLegs: 4,
+    });
+
+    expect(r4Capped.name).toBe('4*Diamond');
   });
 
   it('bewertet Phase-3-Beine aus echten legs statt aus Gleichverteilung', () => {

@@ -2,12 +2,17 @@ import type {
   MonthResult,
   PersonTreeSnapshot,
   SimPerson,
+  TreeCompensationResult,
 } from '@mlm/simulator-core';
 
 export interface LegLevelBreakdown {
   members: number;
   shoppers: number;
   total: number;
+  /** Aggregiertes Volumen aller Personen dieser Ebene des Beins. */
+  qgv: number;
+  /** Aggregierte Provision dieser Ebene/des Subtrees, soweit Tree-Compensation vorhanden ist. */
+  provisionEUR?: number;
 }
 
 export interface LegData {
@@ -23,6 +28,8 @@ export interface LegData {
   activity: number;
   color: string;
   levels: LegLevelBreakdown[];
+  /** Optional: Status des Bein-Roots (nur bei Personenbaum bekannt). */
+  status?: SunburstStatus;
 }
 
 export type SunburstNodeKind = 'root' | 'leg' | 'level' | 'aggregate' | 'person';
@@ -49,6 +56,8 @@ export interface SunburstNode {
   phase2EUR?: number;
   phase3EUR?: number;
   status?: SunburstStatus;
+  /** Eigene monatliche IP der Person (ohne Subtree). Nur bei Personenknoten gesetzt. */
+  ownIP?: number;
   /** Bein-Farbe; ueber alle Tiefen identisch fuer das gleiche Bein. */
   color?: string;
   children: SunburstNode[];
@@ -264,6 +273,8 @@ export interface BuildFromPersonsInput {
   snapshot: PersonTreeSnapshot;
   memberMonthlyVolume: number;
   shopperMonthlyVolume: number;
+  compensation?: TreeCompensationResult;
+  unitToCurrency?: number;
 }
 
 interface SubtreeStats {
@@ -279,6 +290,7 @@ function subtreeStats(
   personsById: Map<string, SimPerson>,
   memberVolume: number,
   shopperVolume: number,
+  rankByPersonId: Map<string, { av: number }> = new Map(),
 ): SubtreeStats {
   let members = 0;
   let shoppers = 0;
@@ -289,7 +301,7 @@ function subtreeStats(
     if (p.active) {
       if (p.kind === 'member') {
         members += p.weight;
-        qgv += p.weight * memberVolume;
+        qgv += p.weight * (rankByPersonId.get(p.id)?.av ?? memberVolume);
       } else if (p.kind === 'shopper') {
         shoppers += p.weight;
         qgv += p.weight * shopperVolume;
@@ -297,7 +309,7 @@ function subtreeStats(
       if (depth > maxDepth) maxDepth = depth;
     }
     for (const childId of p.childrenIds) {
-      const child = personsById.get(childId);
+    const child = personsById.get(childId);
       if (child) visit(child, depth + 1);
     }
   };
@@ -310,9 +322,17 @@ export function buildSunburstTreeFromPersons({
   snapshot,
   memberMonthlyVolume,
   shopperMonthlyVolume,
+  compensation,
+  unitToCurrency = 1,
 }: BuildFromPersonsInput): SunburstNode {
   const personsById = new Map(snapshot.persons.map((p) => [p.id, p]));
   const rootPerson = personsById.get(snapshot.rootId);
+  const payoutByReceiverId = compensation
+    ? buildPayoutMap(compensation, unitToCurrency)
+    : new Map<string, PayoutTotals>();
+  const rankByPersonId = new Map(
+    compensation?.rankStates.map((state) => [state.personId, state]) ?? [],
+  );
 
   if (!rootPerson) {
     return {
@@ -335,6 +355,7 @@ export function buildSunburstTreeFromPersons({
     personsById,
     memberMonthlyVolume,
     shopperMonthlyVolume,
+    rankByPersonId,
   );
 
   // Direkte Member-Kinder = Beine. Shopper-Kinder werden im Sunburst (vorerst) nicht als eigene Wedges gerendert.
@@ -351,8 +372,12 @@ export function buildSunburstTreeFromPersons({
     depth: 0,
     members: rootStats.members,
     shoppers: rootStats.shoppers,
-    qgv: rootStats.qgv,
-    provisionEUR: 0,
+    qgv: compensation?.qgv ?? Math.max(0, rootStats.qgv - rootPerson.personalMonthlyVolume * rootPerson.weight),
+    provisionEUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).total,
+    phase1EUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).phase1,
+    phase2EUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).phase2,
+    phase3EUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).phase3,
+    rankName: rankByPersonId.get(rootPerson.id)?.rank.name,
     children: [],
   };
 
@@ -370,6 +395,8 @@ export function buildSunburstTreeFromPersons({
         memberMonthlyVolume,
         shopperMonthlyVolume,
         'root',
+        payoutByReceiverId,
+        rankByPersonId,
       ),
     );
   });
@@ -387,14 +414,24 @@ function buildPersonSubtree(
   memberVolume: number,
   shopperVolume: number,
   parentId: string,
+  payoutByReceiverId: Map<string, PayoutTotals>,
+  rankByPersonId: Map<string, { rank: { name: string }; av: number }>,
 ): SunburstNode {
-  const stats = subtreeStats(person, personsById, memberVolume, shopperVolume);
+  const stats = subtreeStats(
+    person,
+    personsById,
+    memberVolume,
+    shopperVolume,
+    rankByPersonId,
+  );
+  const payouts = subtreePayout(person, personsById, payoutByReceiverId);
+  const rankState = rankByPersonId.get(person.id);
   const qualifiedLegs = person.childrenIds
     .map((id) => personsById.get(id))
     .filter(
       (c): c is SimPerson => !!c && c.kind === 'member' && c.active,
     ).length;
-  const rankName = estimateAggregateRank(stats.qgv, qualifiedLegs);
+  const rankName = rankState?.rank.name ?? estimateAggregateRank(stats.qgv, qualifiedLegs);
 
   const node: SunburstNode = {
     id: person.id,
@@ -407,12 +444,16 @@ function buildPersonSubtree(
     members: stats.members,
     shoppers: stats.shoppers,
     qgv: stats.qgv,
-    provisionEUR: 0,
+    provisionEUR: payouts.total,
+    phase1EUR: payouts.phase1,
+    phase2EUR: payouts.phase2,
+    phase3EUR: payouts.phase3,
     status: person.active
       ? person.weight < 0.95
         ? 'under_qualified'
         : 'active'
       : 'inactive',
+    ownIP: (rankState?.av ?? person.personalMonthlyVolume) * person.weight,
     color,
     children: [],
   };
@@ -432,6 +473,8 @@ function buildPersonSubtree(
           memberVolume,
           shopperVolume,
           person.id,
+          payoutByReceiverId,
+          rankByPersonId,
         ),
       );
     }
@@ -445,10 +488,18 @@ export function buildLegsFromPersons({
   snapshot,
   memberMonthlyVolume,
   shopperMonthlyVolume,
+  compensation,
+  unitToCurrency = 1,
 }: BuildFromPersonsInput): LegData[] {
   const personsById = new Map(snapshot.persons.map((p) => [p.id, p]));
   const rootPerson = personsById.get(snapshot.rootId);
   if (!rootPerson) return [];
+  const payoutByReceiverId = compensation
+    ? buildPayoutMap(compensation, unitToCurrency)
+    : new Map<string, PayoutTotals>();
+  const rankByPersonId = new Map(
+    compensation?.rankStates.map((state) => [state.personId, state]) ?? [],
+  );
 
   const legPersons = rootPerson.childrenIds
     .map((id) => personsById.get(id))
@@ -456,7 +507,13 @@ export function buildLegsFromPersons({
 
   // Gesamt-QGV der Beine fuer eur-Verteilung.
   const legStats = legPersons.map((p) =>
-    subtreeStats(p, personsById, memberMonthlyVolume, shopperMonthlyVolume),
+    subtreeStats(
+      p,
+      personsById,
+      memberMonthlyVolume,
+      shopperMonthlyVolume,
+      rankByPersonId,
+    ),
   );
   const totalLegQgv = Math.max(
     1,
@@ -466,16 +523,29 @@ export function buildLegsFromPersons({
 
   return legPersons.map((legPerson, index) => {
     const stats = legStats[index];
+    const payouts = subtreePayout(legPerson, personsById, payoutByReceiverId);
     const levels = levelsByDepth(
       legPerson,
       personsById,
+      memberMonthlyVolume,
+      shopperMonthlyVolume,
+      payoutByReceiverId,
+      rankByPersonId,
     );
     const qualifiedDirect = legPerson.childrenIds
       .map((id) => personsById.get(id))
       .filter((c): c is SimPerson => !!c && c.kind === 'member' && c.active).length;
-    const rank = estimateAggregateRank(stats.qgv, qualifiedDirect);
+    const rank =
+      rankByPersonId.get(legPerson.id)?.rank.name ??
+      estimateAggregateRank(stats.qgv, qualifiedDirect);
     const share = stats.qgv / totalLegQgv;
     const nodes = sumLevels(levels);
+
+    const status: SunburstStatus = legPerson.active
+      ? legPerson.weight < 0.95
+        ? 'under_qualified'
+        : 'active'
+      : 'inactive';
 
     return {
       id: index + 1,
@@ -486,8 +556,9 @@ export function buildLegsFromPersons({
       shoppers: stats.shoppers,
       qgv: stats.qgv,
       nodeId: legPerson.id,
-      eur: 0,
+      eur: payouts.total,
       activity: Math.max(8, Math.min(100, (share / averageShare) * 82)),
+      status,
       color: colorForLegIndex(index),
       levels,
     };
@@ -497,23 +568,32 @@ export function buildLegsFromPersons({
 function levelsByDepth(
   legRoot: SimPerson,
   personsById: Map<string, SimPerson>,
+  memberVolume: number,
+  shopperVolume: number,
+  payoutByReceiverId: Map<string, PayoutTotals> = new Map(),
+  rankByPersonId: Map<string, { av: number }> = new Map(),
 ): LegLevelBreakdown[] {
   const levels: LegLevelBreakdown[] = [];
 
   const ensure = (level: number) => {
     while (levels.length <= level) {
-      levels.push({ members: 0, shoppers: 0, total: 0 });
+      levels.push({ members: 0, shoppers: 0, total: 0, qgv: 0 });
     }
   };
 
   const visit = (p: SimPerson, depth: number) => {
     if (p.active && depth >= 0) {
       ensure(depth);
+      const payouts = payoutByReceiverId.get(p.id);
       if (p.kind === 'member') {
         levels[depth].members += p.weight;
+        levels[depth].qgv += p.weight * (rankByPersonId.get(p.id)?.av ?? memberVolume);
       } else if (p.kind === 'shopper') {
         levels[depth].shoppers += p.weight;
+        levels[depth].qgv += p.weight * shopperVolume;
       }
+      levels[depth].provisionEUR =
+        (levels[depth].provisionEUR ?? 0) + (payouts?.total ?? 0);
       levels[depth].total = levels[depth].members + levels[depth].shoppers;
     }
     for (const childId of p.childrenIds) {
@@ -529,4 +609,61 @@ function levelsByDepth(
 
 function sumLevels(levels: LegLevelBreakdown[]): number {
   return levels.reduce((total, level) => total + level.total, 0);
+}
+
+interface PayoutTotals {
+  total: number;
+  phase1: number;
+  phase2: number;
+  phase3: number;
+}
+
+function buildPayoutMap(
+  compensation: TreeCompensationResult,
+  unitToCurrency: number,
+): Map<string, PayoutTotals> {
+  const payouts = new Map<string, PayoutTotals>();
+
+  for (const payout of compensation.payouts) {
+    const current = payouts.get(payout.receiverId) ?? {
+      total: 0,
+      phase1: 0,
+      phase2: 0,
+      phase3: 0,
+    };
+    const amount = payout.amount * unitToCurrency;
+    current.total += amount;
+    if (payout.phase === 1) current.phase1 += amount;
+    if (payout.phase === 2) current.phase2 += amount;
+    if (payout.phase === 3) current.phase3 += amount;
+    payouts.set(payout.receiverId, current);
+  }
+
+  return payouts;
+}
+
+function subtreePayout(
+  person: SimPerson,
+  personsById: Map<string, SimPerson>,
+  payoutByReceiverId: Map<string, PayoutTotals>,
+): PayoutTotals {
+  const own = payoutByReceiverId.get(person.id) ?? {
+    total: 0,
+    phase1: 0,
+    phase2: 0,
+    phase3: 0,
+  };
+  const totals = { ...own };
+
+  for (const childId of person.childrenIds) {
+    const child = personsById.get(childId);
+    if (!child || !child.active) continue;
+    const childTotals = subtreePayout(child, personsById, payoutByReceiverId);
+    totals.total += childTotals.total;
+    totals.phase1 += childTotals.phase1;
+    totals.phase2 += childTotals.phase2;
+    totals.phase3 += childTotals.phase3;
+  }
+
+  return totals;
 }

@@ -2,11 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { getProduct } from '@mlm/product-registry';
 import {
   runSimulation,
-  simulatePersonTree,
-  type PersonTreeSnapshot,
   type ProductId,
 } from '@mlm/simulator-core';
-import { createGrowthModulator } from '@mlm/simulator-realistic-growth';
+import { createTreeGrowthStrategy } from '@mlm/simulator-realistic-growth';
 import { evaluateGoals } from '@mlm/simulator-goals';
 import { BrandLockup } from './components/BrandLockup';
 import { Slider } from './components/Slider';
@@ -181,11 +179,11 @@ export default function App() {
     ],
   );
 
-  const growthModulator = useMemo(
+  const treeGrowthStrategy = useMemo(
     () => {
       if (realityStrategy === 'standard') return undefined;
 
-      return createGrowthModulator({
+      return createTreeGrowthStrategy({
         strategy: realityStrategy,
         seed: 42,
       });
@@ -194,18 +192,9 @@ export default function App() {
   );
 
   const result = useMemo(
-    () => runSimulation(product, inputs, undefined, { growthModulator }),
-    [product, inputs, growthModulator],
+    () => runSimulation(product, inputs, undefined, { treeGrowthStrategy }),
+    [product, inputs, treeGrowthStrategy],
   );
-
-  // Iteration 4: zusaetzliche Person-Tree-Simulation fuer den Sunburst.
-  // Laeuft nur fuer LifePlus und ohne Reality-Strategy (die der Tree-Pfad noch nicht unterstuetzt).
-  const personYearEnds = useMemo<PersonTreeSnapshot[] | undefined>(() => {
-    if (productId !== 'lifeplus') return undefined;
-    if (growthModulator) return undefined;
-    const allSnapshots = simulatePersonTree(inputs, 120);
-    return allSnapshots.filter((snap) => snap.monthInYear === 12);
-  }, [productId, inputs, growthModulator]);
 
   const goalProgress = useMemo(
     () => evaluateGoals(result, activeGoals(goals), inputs),
@@ -411,7 +400,9 @@ export default function App() {
             selectedView={networkView}
             memberMonthlyVolume={inputs.memberMonthlyVolume}
             shopperMonthlyVolume={inputs.shopperMonthlyVolume}
-            personYearEnds={personYearEnds}
+            personYearEnds={result.personYearEnds}
+            treeCompensationYearEnds={result.treeCompensationYearEnds}
+            unitToCurrency={inputs.unitToCurrency ?? 1}
           />
         ) : page === 'lineage' ? (
           <LineageView />

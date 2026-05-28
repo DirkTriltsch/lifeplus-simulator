@@ -2,9 +2,15 @@
  * Haupt-Simulationslauf.
  */
 
-import type { ProductDefinition, SimulatorInputs } from './contracts';
+import type {
+  ProductDefinition,
+  SimulatorInputs,
+  TreeCompensationResult,
+} from './contracts';
 import { simulateNetwork, type Leg, type NetworkInputs } from './network';
+import { personTreeToNetworkSnapshot, type PersonTreeSnapshot } from './person-tree';
 import type { GrowthModulator } from './pipeline';
+import { simulatePersonTree, type TreeGrowthStrategy } from './tree-generator';
 
 const DEFAULT_UNIT_TO_CURRENCY = 1;
 const MONTHS_PER_YEAR = 12;
@@ -55,10 +61,15 @@ export interface SimulationResult {
   finalMonth: MonthResult;
   yearEnds: MonthResult[];
   yearSummaries: YearSummary[];
+  personMonths?: PersonTreeSnapshot[];
+  personYearEnds?: PersonTreeSnapshot[];
+  treeCompensations?: TreeCompensationResult[];
+  treeCompensationYearEnds?: TreeCompensationResult[];
 }
 
 export interface RunSimulationOptions {
   growthModulator?: GrowthModulator;
+  treeGrowthStrategy?: TreeGrowthStrategy;
 }
 
 export function runSimulation(
@@ -77,12 +88,26 @@ export function runSimulation(
     maxDirectMembersPerMember: inputs.maxDirectMembersPerMember,
   };
 
-  const snapshots = simulateNetwork(networkInputs, totalMonths, {
-    growthModulator: options.growthModulator,
-  });
+  const personMonths = options.growthModulator
+    ? undefined
+    : simulatePersonTree(inputs, totalMonths, {
+        growthStrategy: options.treeGrowthStrategy,
+      });
+  const snapshots = options.growthModulator
+    ? simulateNetwork(networkInputs, totalMonths, {
+        growthModulator: options.growthModulator,
+      })
+    : personMonths?.map(personTreeToNetworkSnapshot) ?? [];
+  const calculateTreeMonth = product.simulator.plan.calculateTreeMonth;
+  const treeCompensations =
+    personMonths && calculateTreeMonth
+      ? personMonths.map((personMonth) => calculateTreeMonth(personMonth, inputs))
+      : undefined;
 
   const months: MonthResult[] = snapshots.map((snapshot, monthIndex) => {
-    const comp = product.simulator.plan.calculateMonth(snapshot, inputs);
+    const comp =
+      treeCompensations?.[monthIndex] ??
+      product.simulator.plan.calculateMonth(snapshot, inputs);
 
     return {
       monthIndex,
@@ -135,6 +160,12 @@ export function runSimulation(
     finalMonth: months[months.length - 1],
     yearEnds,
     yearSummaries,
+    personMonths,
+    personYearEnds: personMonths?.filter((m) => m.monthInYear === MONTHS_PER_YEAR),
+    treeCompensations,
+    treeCompensationYearEnds: treeCompensations?.filter(
+      (_comp, index) => (index % MONTHS_PER_YEAR) + 1 === MONTHS_PER_YEAR,
+    ),
   };
 }
 

@@ -7,6 +7,21 @@ const ROOT_ID = 'root';
 
 export interface TreeGeneratorOptions {
   rootMonthlyVolume?: number;
+  growthStrategy?: TreeGrowthStrategy;
+}
+
+export interface TreeGrowthContext {
+  year: number;
+  monthIndex: number;
+  persons: ReadonlyArray<SimPerson>;
+  sourceMembers: ReadonlyArray<SimPerson>;
+  inputs: SimulatorInputs;
+}
+
+export interface TreeGrowthStrategy {
+  id: string;
+  reset?(): void;
+  sourceWeights(context: TreeGrowthContext): number[];
 }
 
 export function simulatePersonTree(
@@ -33,6 +48,7 @@ export function simulatePersonTree(
   let persons = [root];
   let nextId = 1;
   const snapshots: PersonTreeSnapshot[] = [];
+  options.growthStrategy?.reset?.();
 
   for (let monthIndex = 0; monthIndex < totalMonths; monthIndex++) {
     const isYearStart = monthIndex % MONTHS_PER_YEAR === 0;
@@ -44,9 +60,8 @@ export function simulatePersonTree(
     let shopperAttrition = 0;
 
     if (isYearStart) {
-      const attrition = applyTreeAttrition(persons, inputs.attritionRate);
-      memberAttrition = attrition.memberAttrition;
-      shopperAttrition = attrition.shopperAttrition;
+      shopperAttrition = applyTreeShopperAttrition(persons, inputs.attritionRate);
+      memberAttrition = applyTreeMemberAttrition(persons, inputs.attritionRate);
 
       const sourceMembers = persons.filter(
         (person) =>
@@ -54,6 +69,14 @@ export function simulatePersonTree(
           person.kind === 'member' &&
           person.joinedMonth < monthIndex,
       );
+      const sourceWeights = sourceGrowthWeights({
+        strategy: options.growthStrategy,
+        year,
+        monthIndex,
+        persons,
+        sourceMembers,
+        inputs,
+      });
       const rootPerson = persons[0];
       const directCapacity = Math.max(
         0,
@@ -61,16 +84,16 @@ export function simulatePersonTree(
       );
       const directMemberWeight = Math.min(inputs.membersPerYear, directCapacity);
       if (directMemberWeight > 0) {
-        const member = createPerson({
-          id: `m-${nextId++}`,
+        const created = createMemberPersons({
           sponsorId: rootPerson.id,
-          kind: 'member',
           joinedMonth: monthIndex,
-          weight: directMemberWeight,
+          totalWeight: directMemberWeight,
           personalMonthlyVolume: inputs.memberMonthlyVolume,
+          nextId,
         });
-        rootPerson.childrenIds.push(member.id);
-        persons.push(member);
+        nextId = created.nextId;
+        rootPerson.childrenIds.push(...created.members.map((member) => member.id));
+        persons.push(...created.members);
         memberGrowth += directMemberWeight;
       }
 
@@ -88,13 +111,18 @@ export function simulatePersonTree(
         shopperGrowth += inputs.shoppersPerYear;
       }
 
-      for (const source of sourceMembers) {
+      for (let sourceIndex = 0; sourceIndex < sourceMembers.length; sourceIndex++) {
+        const source = sourceMembers[sourceIndex];
+        const sourceWeight = sourceWeights[sourceIndex] ?? 1;
         const memberCapacity = Math.max(
           0,
           maxDirect - activeMemberChildWeight(source, persons),
         );
         const memberWeight = Math.min(
-          source.weight * inputs.membersPerYear * inputs.duplicationRate,
+          source.weight *
+            inputs.membersPerYear *
+            inputs.duplicationRate *
+            sourceWeight,
           source.weight * memberCapacity,
         );
         if (memberWeight > 0) {
@@ -112,7 +140,10 @@ export function simulatePersonTree(
         }
 
         const shopperWeight =
-          source.weight * inputs.shoppersPerYear * inputs.duplicationRate;
+          source.weight *
+          inputs.shoppersPerYear *
+          inputs.duplicationRate *
+          sourceWeight;
         if (shopperWeight > 0) {
           const shopper = createPerson({
             id: `s-${nextId++}`,
@@ -146,6 +177,49 @@ export function simulatePersonTree(
   return snapshots;
 }
 
+function sourceGrowthWeights(input: {
+  strategy?: TreeGrowthStrategy;
+  year: number;
+  monthIndex: number;
+  persons: ReadonlyArray<SimPerson>;
+  sourceMembers: ReadonlyArray<SimPerson>;
+  inputs: SimulatorInputs;
+}): number[] {
+  const sourceCount = input.sourceMembers.length;
+  if (sourceCount <= 0) return [];
+
+  const rawWeights =
+    input.strategy?.sourceWeights({
+      year: input.year,
+      monthIndex: input.monthIndex,
+      persons: input.persons,
+      sourceMembers: input.sourceMembers,
+      inputs: input.inputs,
+    }) ?? [];
+
+  if (rawWeights.length !== sourceCount) {
+    return Array.from({ length: sourceCount }, () => 1);
+  }
+
+  const sanitized = rawWeights.map((weight) =>
+    Number.isFinite(weight) && weight > 0 ? weight : 0,
+  );
+  const sourceWeightSum = input.sourceMembers.reduce(
+    (total, source) => total + Math.max(0, source.weight),
+    0,
+  );
+  const weightedScoreSum = sanitized.reduce(
+    (total, score, index) =>
+      total + score * Math.max(0, input.sourceMembers[index]?.weight ?? 0),
+    0,
+  );
+  if (sourceWeightSum <= 0 || weightedScoreSum <= 0) {
+    return Array.from({ length: sourceCount }, () => 1);
+  }
+
+  return sanitized.map((score) => (score * sourceWeightSum) / weightedScoreSum);
+}
+
 function createPerson(input: {
   id: string;
   sponsorId: string;
@@ -166,33 +240,93 @@ function createPerson(input: {
   };
 }
 
-function applyTreeAttrition(
+function createMemberPersons(input: {
+  sponsorId: string;
+  joinedMonth: number;
+  totalWeight: number;
+  personalMonthlyVolume: number;
+  nextId: number;
+}): { members: SimPerson[]; nextId: number } {
+  const members: SimPerson[] = [];
+  let nextId = input.nextId;
+  const wholeMembers = Math.floor(input.totalWeight + 1e-9);
+  const remainder = input.totalWeight - wholeMembers;
+
+  for (let index = 0; index < wholeMembers; index++) {
+    members.push(
+      createPerson({
+        id: `m-${nextId++}`,
+        sponsorId: input.sponsorId,
+        kind: 'member',
+        joinedMonth: input.joinedMonth,
+        weight: 1,
+        personalMonthlyVolume: input.personalMonthlyVolume,
+      }),
+    );
+  }
+
+  if (remainder > 1e-9) {
+    members.push(
+      createPerson({
+        id: `m-${nextId++}`,
+        sponsorId: input.sponsorId,
+        kind: 'member',
+        joinedMonth: input.joinedMonth,
+        weight: remainder,
+        personalMonthlyVolume: input.personalMonthlyVolume,
+      }),
+    );
+  }
+
+  return { members, nextId };
+}
+
+function applyTreeMemberAttrition(
   persons: SimPerson[],
   attritionRate: number,
-): { memberAttrition: number; shopperAttrition: number } {
+): number {
   if (attritionRate <= 0) {
-    return { memberAttrition: 0, shopperAttrition: 0 };
+    return 0;
   }
 
   let memberAttrition = 0;
-  let shopperAttrition = 0;
+  const rootId = persons[0]?.id;
   for (const person of persons) {
-    if (!person.active || person.kind === 'root') continue;
+    if (!person.active || person.kind !== 'member') continue;
+    if (person.sponsorId === rootId) continue;
 
     const leavers = person.weight * attritionRate;
     person.weight = Math.max(0, person.weight - leavers);
     if (person.weight <= 1e-9) {
       person.active = false;
     }
-
-    if (person.kind === 'member') {
-      memberAttrition += leavers;
-    } else {
-      shopperAttrition += leavers;
-    }
+    memberAttrition += leavers;
   }
 
-  return { memberAttrition, shopperAttrition };
+  return memberAttrition;
+}
+
+function applyTreeShopperAttrition(
+  persons: SimPerson[],
+  attritionRate: number,
+): number {
+  if (attritionRate <= 0) {
+    return 0;
+  }
+
+  let shopperAttrition = 0;
+  for (const person of persons) {
+    if (!person.active || person.kind !== 'shopper') continue;
+
+    const leavers = person.weight * attritionRate;
+    person.weight = Math.max(0, person.weight - leavers);
+    if (person.weight <= 1e-9) {
+      person.active = false;
+    }
+    shopperAttrition += leavers;
+  }
+
+  return shopperAttrition;
 }
 
 function createMonthlyOrders(persons: SimPerson[], monthIndex: number): SimOrder[] {

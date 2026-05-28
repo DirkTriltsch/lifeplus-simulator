@@ -30,7 +30,8 @@ export interface RankResult {
 }
 
 export function determineRank(inputs: RankInputs): RankResult {
-  const { av, qgv, qualifiedLegs, bronzeLegs, diamondLegs } = inputs;
+  const { qgv, qualifiedLegs, bronzeLegs, diamondLegs } = inputs;
+  const av = determineEffectiveAV(inputs);
 
   let name = 'Member';
   let phase2Rate = 0;
@@ -66,12 +67,18 @@ export function determineRank(inputs: RankInputs): RankResult {
   if (
     phase2Rate >= 0.12 &&
     av >= 150 &&
-    qgv >= 25000 &&
     qualifiedLegs >= 12 &&
     diamondLegs >= 4
   ) {
-    name = `${Math.floor(diamondLegs)}*Diamond`;
-    phase3Rate = 0.08;
+    // n*Diamond ab n=4: minQGV(n) = 10.000 + n*5.000, minDiamondLegs = n,
+    // minQL = 12. phase3Rate bleibt bei 8% (3*Diamond-Cap).
+    const maxNByQgv = Math.floor((qgv - 10000) / 5000);
+    const maxNByDiamondLegs = Math.floor(diamondLegs);
+    const n = Math.min(maxNByQgv, maxNByDiamondLegs);
+    if (n >= 4) {
+      name = `${n}*Diamond`;
+      phase3Rate = 0.08;
+    }
   }
 
   return {
@@ -81,6 +88,51 @@ export function determineRank(inputs: RankInputs): RankResult {
     qualifiedForPhase2: phase2Rate > 0,
     qualifiedForPhase3: phase3Rate > 0,
   };
+}
+
+export function determineEffectiveAV({
+  av,
+  qgv,
+  qualifiedLegs,
+  bronzeLegs,
+  diamondLegs,
+}: RankInputs): number {
+  let requiredAV = 0;
+
+  for (const rank of PRELIM_RANKS) {
+    if (qgv >= rank.minQGV && qualifiedLegs >= rank.minQL) {
+      requiredAV = Math.max(requiredAV, rank.minAV);
+    }
+  }
+
+  for (const rank of PHASE2_RANKS) {
+    if (qgv >= rank.minQGV && qualifiedLegs >= rank.minQL) {
+      requiredAV = Math.max(requiredAV, rank.minAV);
+    }
+  }
+
+  for (const rank of PHASE3_RANKS) {
+    const additionalBronzeLegs = Math.max(0, bronzeLegs - diamondLegs);
+    const hasVolumeAndLegs =
+      qgv >= rank.minQGV &&
+      qualifiedLegs >= rank.minQL &&
+      diamondLegs >= rank.minDiamondLegs &&
+      additionalBronzeLegs >= rank.minBronzeLegs;
+
+    if (hasVolumeAndLegs) {
+      requiredAV = Math.max(requiredAV, rank.minAV);
+    }
+  }
+
+  if (
+    qgv >= 30000 &&
+    qualifiedLegs >= 12 &&
+    diamondLegs >= 4
+  ) {
+    requiredAV = Math.max(requiredAV, 150);
+  }
+
+  return Math.max(av, requiredAV);
 }
 
 export function estimateLegRank(qgv: number, qualifiedLegs: number): string {

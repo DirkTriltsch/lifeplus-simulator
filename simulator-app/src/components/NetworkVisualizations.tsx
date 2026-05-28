@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
-import type { MonthResult, PersonTreeSnapshot } from '@mlm/simulator-core';
+import type {
+  MonthResult,
+  PersonTreeSnapshot,
+  TreeCompensationResult,
+} from '@mlm/simulator-core';
 import {
   buildSunburstTree,
   buildSunburstTreeFromPersons,
@@ -24,9 +28,14 @@ interface NetworkVisualizationsProps {
   shopperMonthlyVolume: number;
   /** Optional: echte Person-Tree-Snapshots pro Jahresende fuer den Sunburst (Iteration 4). */
   personYearEnds?: PersonTreeSnapshot[];
+  treeCompensationYearEnds?: TreeCompensationResult[];
+  unitToCurrency?: number;
 }
 
 type LevelBreakdown = LegLevelBreakdown;
+
+export type ColorMode = 'leg' | 'rank' | 'status';
+export type AngleMode = 'count' | 'qgv' | 'provision';
 
 const VIEW_TITLES: Record<NetworkView, string> = {
   sunburst: 'Sunburst',
@@ -34,20 +43,70 @@ const VIEW_TITLES: Record<NetworkView, string> = {
   hybrid: 'Hybrid-Tree',
 };
 
+const RANK_COLORS: Record<string, string> = {
+  '7*Diamond': '#1e1b4b',
+  '6*Diamond': '#1e3a8a',
+  '5*Diamond': '#1d4ed8',
+  '4*Diamond': '#2563eb',
+  '3*Diamond': '#3b82f6',
+  '2*Diamond': '#60a5fa',
+  '1*Diamond': '#93c5fd',
+  Diamond: '#0ea5e9',
+  Gold: '#ca8a04',
+  Silver: '#94a3b8',
+  Bronze: '#b45309',
+  Builder: '#0d9488',
+  Believer: '#16a34a',
+  Member: '#9ca3af',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  active: '#10b981',
+  under_qualified: '#f59e0b',
+  inactive: '#9ca3af',
+  not_paid: '#ef4444',
+};
+
+function colorForRank(rank: string | undefined): string {
+  if (!rank) return RANK_COLORS.Member;
+  if (RANK_COLORS[rank]) return RANK_COLORS[rank];
+  const star = rank.match(/^(\d+)\*Diamond$/);
+  if (star) {
+    const n = Number(star[1]);
+    if (n >= 7) return RANK_COLORS['7*Diamond'];
+    const key = `${n}*Diamond`;
+    return RANK_COLORS[key] ?? RANK_COLORS['3*Diamond'];
+  }
+  return RANK_COLORS.Member;
+}
+
+function colorForStatus(status: string | undefined): string {
+  if (!status) return STATUS_COLORS.active;
+  return STATUS_COLORS[status] ?? STATUS_COLORS.active;
+}
+
 export function NetworkVisualizations({
   yearEnds,
   selectedView,
   memberMonthlyVolume,
   shopperMonthlyVolume,
   personYearEnds,
+  treeCompensationYearEnds,
+  unitToCurrency = 1,
 }: NetworkVisualizationsProps) {
   const [year, setYear] = useState(10);
   const [selectedLegId, setSelectedLegId] = useState<number | null>(1);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string>('root');
+  const [colorMode, setColorMode] = useState<ColorMode>('leg');
+  const [angleMode, setAngleMode] = useState<AngleMode>('count');
   const snapshot = yearEnds[Math.min(year - 1, yearEnds.length - 1)] ?? yearEnds[0];
   const personSnapshot =
     personYearEnds?.[Math.min(year - 1, personYearEnds.length - 1)];
+  const treeCompensation =
+    treeCompensationYearEnds?.[
+      Math.min(year - 1, treeCompensationYearEnds.length - 1)
+    ];
 
   const legs = useMemo(
     () => {
@@ -56,11 +115,20 @@ export function NetworkVisualizations({
           snapshot: personSnapshot,
           memberMonthlyVolume,
           shopperMonthlyVolume,
+          compensation: treeCompensation,
+          unitToCurrency,
         });
       }
       return buildLegs(snapshot, memberMonthlyVolume, shopperMonthlyVolume);
     },
-    [snapshot, personSnapshot, memberMonthlyVolume, shopperMonthlyVolume],
+    [
+      snapshot,
+      personSnapshot,
+      treeCompensation,
+      memberMonthlyVolume,
+      shopperMonthlyVolume,
+      unitToCurrency,
+    ],
   );
   const tree = useMemo(
     () => {
@@ -69,6 +137,8 @@ export function NetworkVisualizations({
           snapshot: personSnapshot,
           memberMonthlyVolume,
           shopperMonthlyVolume,
+          compensation: treeCompensation,
+          unitToCurrency,
         });
       }
       return buildSunburstTree({
@@ -77,7 +147,14 @@ export function NetworkVisualizations({
         shopperMonthlyVolume,
       });
     },
-    [snapshot, personSnapshot, memberMonthlyVolume, shopperMonthlyVolume],
+    [
+      snapshot,
+      personSnapshot,
+      treeCompensation,
+      memberMonthlyVolume,
+      shopperMonthlyVolume,
+      unitToCurrency,
+    ],
   );
   const selectedLeg = legs.find((leg) => leg.id === selectedLegId) ?? legs[0];
 
@@ -142,10 +219,14 @@ export function NetworkVisualizations({
           selectedLegId={selectedLegId}
           selectedLevel={selectedLevel}
           focusedNodeId={focusedNodeId}
+          colorMode={colorMode}
+          angleMode={angleMode}
           onSelectSegment={selectSegment}
           onSelectLeg={selectLeg}
           onClear={clearSelection}
           onSetFocus={setFocus}
+          onSetColorMode={setColorMode}
+          onSetAngleMode={setAngleMode}
         />
       )}
       {selectedView === 'legs' && (
@@ -173,10 +254,14 @@ interface SunburstProps {
   selectedLegId: number | null;
   selectedLevel: number | null;
   focusedNodeId: string;
+  colorMode: ColorMode;
+  angleMode: AngleMode;
   onSelectSegment: (legId: number, level: number) => void;
   onSelectLeg: (legId: number | null) => void;
   onClear: () => void;
   onSetFocus: (nodeId: string) => void;
+  onSetColorMode: (mode: ColorMode) => void;
+  onSetAngleMode: (mode: AngleMode) => void;
 }
 
 function Sunburst({
@@ -185,10 +270,14 @@ function Sunburst({
   selectedLegId,
   selectedLevel,
   focusedNodeId,
+  colorMode,
+  angleMode,
   onSelectSegment,
   onSelectLeg,
   onClear,
   onSetFocus,
+  onSetColorMode,
+  onSetAngleMode,
 }: SunburstProps) {
   const focusedNode = findNodeById(tree, focusedNodeId) ?? tree;
   const focusPath = getPath(tree, focusedNode.id);
@@ -220,7 +309,15 @@ function Sunburst({
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
-      <Breadcrumb path={focusPath} onSetFocus={onSetFocus} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Breadcrumb path={focusPath} onSetFocus={onSetFocus} />
+        <ModeToolbar
+          colorMode={colorMode}
+          angleMode={angleMode}
+          onSetColorMode={onSetColorMode}
+          onSetAngleMode={onSetAngleMode}
+        />
+      </div>
 
       <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:items-start">
         <PolarHeatmapSvg
@@ -229,6 +326,8 @@ function Sunburst({
           centerNode={focusedNode}
           selectedLegId={isFocusedRoot ? selectedLegId : null}
           selectedLevel={isFocusedRoot ? selectedLevel : null}
+          colorMode={colorMode}
+          angleMode={angleMode}
           onSelectSegment={(legId, level) => {
             if (isFocusedRoot) {
               onSelectSegment(legId, level);
@@ -287,9 +386,24 @@ interface PolarHeatmapSvgProps {
   centerNode?: SunburstNode;
   selectedLegId: number | null;
   selectedLevel: number | null;
+  colorMode: ColorMode;
+  angleMode: AngleMode;
   onSelectSegment: (legId: number, level: number) => void;
   onCenterClick: () => void;
   onSegmentDoubleClick: (leg: LegData, level: number) => void;
+}
+
+function levelValueFor(level: LegLevelBreakdown | undefined, mode: AngleMode): number {
+  if (!level) return 0;
+  if (mode === 'provision') return level.provisionEUR ?? 0;
+  if (mode === 'qgv') return level.qgv;
+  return level.total;
+}
+
+function segmentStrokeFor(leg: LegData, mode: ColorMode): string {
+  if (mode === 'rank') return colorForRank(leg.rank);
+  if (mode === 'status') return colorForStatus(leg.status);
+  return leg.color;
 }
 
 function PolarHeatmapSvg({
@@ -298,12 +412,19 @@ function PolarHeatmapSvg({
   centerNode,
   selectedLegId,
   selectedLevel,
+  colorMode,
+  angleMode,
   onSelectSegment,
   onCenterClick,
   onSegmentDoubleClick,
 }: PolarHeatmapSvgProps) {
-  const levels = buildLevelTotalsFromLegs(legs);
-  const maxLevel = Math.min(10, Math.max(1, levels.length));
+  const maxLevel = Math.min(
+    10,
+    Math.max(1, ...legs.map((leg) => leg.levels.length), 1),
+  );
+  const levelTotals: number[] = Array.from({ length: maxLevel }, (_, idx) =>
+    legs.reduce((sum, leg) => sum + levelValueFor(leg.levels[idx], angleMode), 0),
+  );
   const center = 190;
   const ringWidth = 18;
   const gap = 4;
@@ -312,11 +433,12 @@ function PolarHeatmapSvg({
 
   return (
     <svg viewBox="0 0 380 380" role="img" aria-label="Sunburst Netzwerk">
-      {levels.slice(0, maxLevel).map((levelTotal, levelIndex) => {
+      {levelTotals.map((levelTotal, levelIndex) => {
         const radius = 58 + levelIndex * (ringWidth + gap);
         let cursor = -90;
         return legs.map((leg) => {
-          const levelValue = leg.levels[levelIndex]?.total ?? 0;
+          const levelBreakdown = leg.levels[levelIndex];
+          const levelValue = levelValueFor(levelBreakdown, angleMode);
           if (levelValue <= 0 || levelTotal <= 0) return null;
           const levelShare = levelValue / levelTotal;
           const angle = 360 * levelShare;
@@ -326,12 +448,25 @@ function PolarHeatmapSvg({
 
           const isLegSelected = selectedLegId === leg.id;
           const isExactSegment = isLegSelected && selectedLevel === levelIndex + 1;
+          const isInPath =
+            isLegSelected &&
+            selectedLevel != null &&
+            levelIndex + 1 <= selectedLevel;
+          const isBeyondPath =
+            isLegSelected &&
+            selectedLevel != null &&
+            levelIndex + 1 > selectedLevel;
           const isOtherLegSelected = selectedLegId != null && !isLegSelected;
-          const opacity = isOtherLegSelected ? 0.18 : 1;
-          const stroke = isExactSegment ? '#0f172a' : leg.color;
+          const opacity = isOtherLegSelected
+            ? 0.18
+            : isBeyondPath
+              ? 0.55
+              : 1;
+          const baseStroke = segmentStrokeFor(leg, colorMode);
+          const stroke = isExactSegment ? '#0f172a' : baseStroke;
           const strokeWidthValue = isExactSegment
             ? ringWidth + 4
-            : isLegSelected
+            : isInPath
               ? ringWidth + 1
               : ringWidth;
 
@@ -450,6 +585,7 @@ function DetailBox({
   const phase3 = node.phase3EUR ?? 0;
   const isFocusable = node.kind !== 'root' && node.id !== focusedNode.id;
   const isRootNode = node.kind === 'root';
+  const isPerson = node.kind === 'person' || node.kind === 'leg';
 
   return (
     <section className="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -463,18 +599,26 @@ function DetailBox({
         <p className="text-xs uppercase tracking-wider text-gray-500">
           Detail
         </p>
+        {node.status && <StatusBadge status={node.status} />}
       </div>
       <p className="mt-1 text-sm font-semibold text-gray-900">
         {node.label}
       </p>
       <p className="text-xs text-gray-500">
+        {node.kind === 'leg' && 'Bein-Wurzel · '}
+        {node.kind === 'person' && 'Person · '}
+        {node.kind === 'level' && 'Ebenen-Aggregat · '}
         Rang: {node.rankName ?? tree.rankName ?? 'Member'}
       </p>
 
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <Stat label="Member" value={formatNumber(node.members)} />
+        {isPerson && node.ownIP != null && node.ownIP > 0 ? (
+          <Stat label="Eigene IP" value={`${formatNumber(node.ownIP)} IP`} />
+        ) : (
+          <Stat label="Member" value={formatNumber(node.members)} />
+        )}
         <Stat label="Shopper" value={formatNumber(node.shoppers)} />
-        <Stat label="QGV" value={`${formatNumber(node.qgv)} IP`} />
+        <Stat label="Team-QGV" value={`${formatNumber(node.qgv)} IP`} />
         <Stat label="Provision" value={formatCurrency(node.provisionEUR)} />
       </dl>
 
@@ -501,6 +645,30 @@ function DetailBox({
         </p>
       )}
     </section>
+  );
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  active: 'aktiv',
+  under_qualified: 'reduziert',
+  inactive: 'inaktiv',
+  not_paid: 'nicht ausgezahlt',
+};
+
+const STATUS_BG: Record<string, string> = {
+  active: 'bg-emerald-100 text-emerald-800',
+  under_qualified: 'bg-amber-100 text-amber-800',
+  inactive: 'bg-gray-200 text-gray-700',
+  not_paid: 'bg-red-100 text-red-800',
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_BG[status] ?? STATUS_BG.active}`}
+    >
+      {STATUS_LABELS[status] ?? status}
+    </span>
   );
 }
 
@@ -536,11 +704,17 @@ function LegLegend({
   selectedLegId: number | null;
   onSelectLeg: (legId: number | null) => void;
 }) {
+  const hasProvisionValues = legs.some((leg) => leg.eur > 0);
+  const sortedLegs = [...legs].sort(
+    (a, b) =>
+      legLegendValue(b, hasProvisionValues) - legLegendValue(a, hasProvisionValues),
+  );
+
   return (
     <div className="space-y-1">
       <p className="text-xs uppercase tracking-wider text-gray-500">{title}</p>
       <div className="space-y-1">
-        {legs.map((leg) => {
+        {sortedLegs.map((leg) => {
           const isSelected = selectedLegId === leg.id;
           return (
             <button
@@ -561,7 +735,9 @@ function LegLegend({
                 {leg.label}
               </span>
               <span className="font-medium text-gray-900">
-                {formatCurrency(leg.eur)}
+                {hasProvisionValues
+                  ? formatCurrency(leg.eur)
+                  : `${formatNumber(leg.qgv)} IP`}
               </span>
             </button>
           );
@@ -571,13 +747,81 @@ function LegLegend({
   );
 }
 
-function buildLevelTotalsFromLegs(legs: LegData[]): number[] {
-  const maxLevels = Math.max(0, ...legs.map((leg) => leg.levels.length));
-  return Array.from({ length: Math.min(10, maxLevels) }, (_, index) =>
-    legs.reduce(
-      (total, leg) => total + (leg.levels[index]?.total ?? 0),
-      0,
-    ),
+function legLegendValue(leg: LegData, useProvision: boolean): number {
+  return useProvision ? leg.eur : leg.qgv;
+}
+
+function ModeToolbar({
+  colorMode,
+  angleMode,
+  onSetColorMode,
+  onSetAngleMode,
+}: {
+  colorMode: ColorMode;
+  angleMode: AngleMode;
+  onSetColorMode: (mode: ColorMode) => void;
+  onSetAngleMode: (mode: AngleMode) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-[11px]">
+      <ModeSelector
+        label="Farbe"
+        value={colorMode}
+        options={[
+          { value: 'leg', label: 'Bein' },
+          { value: 'rank', label: 'Rang' },
+          { value: 'status', label: 'Status' },
+        ]}
+        onChange={onSetColorMode}
+      />
+      <ModeSelector
+        label="Groesse"
+        value={angleMode}
+        options={[
+          { value: 'count', label: 'Knoten' },
+          { value: 'qgv', label: 'QGV' },
+          { value: 'provision', label: 'Provision' },
+        ]}
+        onChange={onSetAngleMode}
+      />
+    </div>
+  );
+}
+
+function ModeSelector<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (next: T) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="uppercase tracking-wider text-gray-500">{label}</span>
+      <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
+        {options.map((opt) => {
+          const isActive = opt.value === value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={`rounded px-2 py-1 transition ${
+                isActive
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -621,6 +865,10 @@ function buildScopedLegs(focusedNode: SunburstNode, legs: LegData[]): LegData[] 
     });
   }
 
+  if (isPersonTreeNode(focusedNode)) {
+    return [];
+  }
+
   if (focusedNode.legId == null) {
     return [];
   }
@@ -651,6 +899,8 @@ function buildScopedLegs(focusedNode: SunburstNode, legs: LegData[]): LegData[] 
       members: level.members * share,
       shoppers: level.shoppers * share,
       total: level.total * share,
+      qgv: level.qgv * share,
+      provisionEUR: (level.provisionEUR ?? 0) * share,
     }));
     const nodes = sumTotals(levels);
     const isCluster = representedMembers > 1;
@@ -673,12 +923,16 @@ function buildScopedLegs(focusedNode: SunburstNode, legs: LegData[]): LegData[] 
   });
 }
 
+function isPersonTreeNode(node: SunburstNode): boolean {
+  return node.kind === 'person' || (node.kind === 'leg' && !node.id.startsWith('leg-'));
+}
+
 function levelsFromNode(node: SunburstNode): LevelBreakdown[] {
   const levels: LevelBreakdown[] = [];
 
   const ensure = (index: number) => {
     while (levels.length <= index) {
-      levels.push({ members: 0, shoppers: 0, total: 0 });
+      levels.push({ members: 0, shoppers: 0, total: 0, qgv: 0 });
     }
   };
 
@@ -686,8 +940,17 @@ function levelsFromNode(node: SunburstNode): LevelBreakdown[] {
     ensure(relativeDepth);
     const childMembers = item.children.reduce((total, child) => total + child.members, 0);
     const childShoppers = item.children.reduce((total, child) => total + child.shoppers, 0);
+    const childQgv = item.children.reduce((total, child) => total + child.qgv, 0);
+    const childProvision = item.children.reduce(
+      (total, child) => total + child.provisionEUR,
+      0,
+    );
     levels[relativeDepth].members += Math.max(0, item.members - childMembers);
     levels[relativeDepth].shoppers += Math.max(0, item.shoppers - childShoppers);
+    levels[relativeDepth].qgv += Math.max(0, item.qgv - childQgv);
+    levels[relativeDepth].provisionEUR =
+      (levels[relativeDepth].provisionEUR ?? 0) +
+      Math.max(0, item.provisionEUR - childProvision);
     levels[relativeDepth].total = levels[relativeDepth].members + levels[relativeDepth].shoppers;
     for (const child of item.children) {
       visit(child, relativeDepth + 1);
@@ -1001,7 +1264,7 @@ function buildLegs(
 ): LegData[] {
   if (snapshot.legs.length > 0) {
     const legTotals = snapshot.legs.map((leg) => {
-      const levels = buildLegLevelBreakdowns(leg);
+      const levels = buildLegLevelBreakdowns(leg, memberMonthlyVolume, shopperMonthlyVolume);
       return {
         levels,
         nodes: sumTotals(levels),
@@ -1046,7 +1309,11 @@ function buildLevelTotals(snapshot: MonthResult): number[] {
   });
 }
 
-function buildLegLevelBreakdowns(leg: MonthResult['legs'][number]): LevelBreakdown[] {
+function buildLegLevelBreakdowns(
+  leg: MonthResult['legs'][number],
+  memberMonthlyVolume: number,
+  shopperMonthlyVolume: number,
+): LevelBreakdown[] {
   const max = Math.max(leg.membersByLevel.length, leg.shoppersByLevel.length, 1);
   return Array.from({ length: max }, (_, index) => {
     const members = leg.membersByLevel[index] ?? 0;
@@ -1055,6 +1322,7 @@ function buildLegLevelBreakdowns(leg: MonthResult['legs'][number]): LevelBreakdo
       members,
       shoppers,
       total: members + shoppers,
+      qgv: members * memberMonthlyVolume + shoppers * shopperMonthlyVolume,
     };
   });
 }
@@ -1074,6 +1342,7 @@ function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
   const legCount = Math.max(1, Math.round(snapshot.directLegs || 1));
   const share = 1 / legCount;
   const levelTotals = buildLevelTotals(snapshot);
+  const sumLevelTotals = Math.max(1, levelTotals.reduce((sum, val) => sum + val, 0));
   const membersByLevel = snapshot.membersByLevel.map((count) => count * share);
   const shoppersByLevel = snapshot.shoppersByLevel.map((count) => count * share);
   const qgvPerLeg = snapshot.qgv * share;
@@ -1094,6 +1363,7 @@ function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
       members: membersByLevel[levelIndex] ?? 0,
       shoppers: shoppersByLevel[levelIndex] ?? 0,
       total: levelTotal * share,
+      qgv: qgvPerLeg * (levelTotal / sumLevelTotals),
     })),
   }));
 }

@@ -1,15 +1,18 @@
 import type {
   PersonTreeSnapshot,
+  PersonRankState,
   SimOrder,
   SimPerson,
+  TreeCompensationResult,
+  TreePayout,
 } from '@mlm/simulator-core';
-import { getUplinePath, personTreeToNetworkSnapshot } from '@mlm/simulator-core';
+import { personTreeToNetworkSnapshot } from '@mlm/simulator-core';
 import {
   PHASE1,
   PHASE1_QUALIFICATION,
   REFERRAL_THRESHOLD_IP,
 } from './constants';
-import { determineRank, type RankResult } from './ranks';
+import { determineEffectiveAV, determineRank } from './ranks';
 import {
   allocatePhase2Slots,
   allocatePhase3Slots,
@@ -20,61 +23,30 @@ export interface TreeCompensationInputs {
   rootPersonalMonthlyVolume: number;
 }
 
-export interface PersonRankState {
-  personId: string;
-  rank: RankResult;
-  av: number;
-  qgv: number;
-  qualifiedLegs: number;
-  bronzeLegs: number;
-  diamondLegs: number;
-}
-
-export interface TreePayout {
-  orderId: string;
-  orderPersonId: string;
-  receiverId: string;
-  phase: 1 | 2 | 3;
-  levelFromOrder: number;
-  slot: string;
-  rate: number;
-  baseVolume: number;
-  amount: number;
-  reason: string;
-}
-
-export interface TreeCompensationResult {
-  totalUnits: number;
-  phase1Units: number;
-  phase2Units: number;
-  phase3Units: number;
-  rankName: string;
-  av: number;
-  qgv: number;
-  networkSize: number;
-  directLegs: number;
-  members: number;
-  shoppers: number;
-  payouts: TreePayout[];
-  rankStates: PersonRankState[];
-}
-
 interface SubtreeStats {
   qgv: number;
   members: number;
   shoppers: number;
 }
 
+interface RankComputation {
+  state: PersonRankState;
+  subtree: SubtreeStats;
+  containsBronze: boolean;
+  containsDiamond: boolean;
+}
+
 export function calculateTreeCompensation(
   snapshot: PersonTreeSnapshot,
   inputs: TreeCompensationInputs,
 ): TreeCompensationResult {
+  const personsById = new Map(snapshot.persons.map((person) => [person.id, person]));
   const rankStates = calculateRankStates(snapshot);
   const rankByPersonId = new Map(
     rankStates.map((state) => [state.personId, state]),
   );
   const payouts = snapshot.orders.flatMap((order) =>
-    calculateOrderPayouts(snapshot, order, rankByPersonId),
+    calculateOrderPayouts(personsById, order, rankByPersonId),
   );
   const rootPayouts = payouts.filter((payout) => payout.receiverId === snapshot.rootId);
   const rootRank = rankByPersonId.get(snapshot.rootId);
@@ -103,18 +75,39 @@ export function calculateTreeCompensation(
 }
 
 function calculateOrderPayouts(
-  snapshot: PersonTreeSnapshot,
+  personsById: Map<string, SimPerson>,
   order: SimOrder,
   rankByPersonId: Map<string, PersonRankState>,
 ): TreePayout[] {
-  const upline = getUplinePath(snapshot, order.personId);
-  const weightedVolume = order.volume * order.weight;
+  const effectiveOrder =
+    order.kind === 'member_order'
+      ? { ...order, volume: rankByPersonId.get(order.personId)?.av ?? order.volume }
+      : order;
+  const upline = getUplinePath(personsById, order.personId);
+  const weightedVolume = effectiveOrder.volume * effectiveOrder.weight;
 
   return [
-    ...calculateOrderPhase1(order, upline, rankByPersonId, weightedVolume),
-    ...calculateOrderPhase2(order, upline, rankByPersonId, weightedVolume),
-    ...calculateOrderPhase3(order, upline, rankByPersonId, weightedVolume),
+    ...calculateOrderPhase1(effectiveOrder, upline, rankByPersonId, weightedVolume),
+    ...calculateOrderPhase2(effectiveOrder, upline, rankByPersonId, weightedVolume),
+    ...calculateOrderPhase3(effectiveOrder, upline, rankByPersonId, weightedVolume),
   ];
+}
+
+function getUplinePath(
+  personsById: Map<string, SimPerson>,
+  personId: string,
+): SimPerson[] {
+  const path: SimPerson[] = [];
+  let current = personsById.get(personId);
+
+  while (current?.sponsorId) {
+    const sponsor = personsById.get(current.sponsorId);
+    if (!sponsor) break;
+    path.push(sponsor);
+    current = sponsor;
+  }
+
+  return path;
 }
 
 function calculateOrderPhase1(
@@ -219,11 +212,38 @@ function calculateOrderPhase3(
 
 function calculateRankStates(snapshot: PersonTreeSnapshot): PersonRankState[] {
   const personsById = new Map(snapshot.persons.map((person) => [person.id, person]));
-  const memo = new Map<string, PersonRankState>();
+  const memo = new Map<string, RankComputation>();
 
-  function rankPerson(person: SimPerson): PersonRankState {
+  function rankPerson(person: SimPerson): RankComputation {
     const cached = memo.get(person.id);
     if (cached) return cached;
+
+    if (!person.active || person.kind === 'shopper') {
+      const subtree = calculateShopperSubtreeStats(person, personsById);
+      const state: PersonRankState = {
+        personId: person.id,
+        rank: determineRank({
+          av: 0,
+          qgv: 0,
+          qualifiedLegs: 0,
+          bronzeLegs: 0,
+          diamondLegs: 0,
+        }),
+        av: 0,
+        qgv: 0,
+        qualifiedLegs: 0,
+        bronzeLegs: 0,
+        diamondLegs: 0,
+      };
+      const computation = {
+        state,
+        subtree,
+        containsBronze: false,
+        containsDiamond: false,
+      };
+      memo.set(person.id, computation);
+      return computation;
+    }
 
     const directMemberChildren = person.childrenIds
       .map((childId) => personsById.get(childId))
@@ -231,42 +251,75 @@ function calculateRankStates(snapshot: PersonTreeSnapshot): PersonRankState[] {
         (child): child is SimPerson =>
           child !== undefined && child.active && child.kind === 'member',
       );
-    const childRanks = directMemberChildren.map(rankPerson);
-    const subtree = calculateSubtreeStats(person, personsById);
-    const qgv =
-      subtree.qgv -
-      (person.kind === 'root' || person.kind === 'member'
-        ? person.personalMonthlyVolume * person.weight
-        : 0);
-    const bronzeLegs = childRanks.filter((state) =>
-      isBronzeOrHigher(state.rank.name),
-    ).length;
-    const diamondLegs = childRanks.filter((state) =>
-      isDiamondOrHigher(state.rank.name),
-    ).length;
-    const av =
+    const childComputations = directMemberChildren.map(rankPerson);
+    const childSubtreeQgv = person.childrenIds
+      .map((childId) => personsById.get(childId))
+      .filter((child): child is SimPerson => child !== undefined && child.active)
+      .reduce((total, child) => total + rankPerson(child).subtree.qgv, 0);
+    const childMembers = person.childrenIds
+      .map((childId) => personsById.get(childId))
+      .filter((child): child is SimPerson => child !== undefined && child.active)
+      .reduce((total, child) => total + rankPerson(child).subtree.members, 0);
+    const childShoppers = person.childrenIds
+      .map((childId) => personsById.get(childId))
+      .filter((child): child is SimPerson => child !== undefined && child.active)
+      .reduce((total, child) => total + rankPerson(child).subtree.shoppers, 0);
+    const qgv = childSubtreeQgv;
+    const qualifiedLegs = directMemberChildren.reduce(
+      (total, child) => total + child.weight,
+      0,
+    );
+    const bronzeLegs = directMemberChildren.reduce((total, child, index) => {
+      const childComputation = childComputations[index];
+      return childComputation?.containsBronze ? total + child.weight : total;
+    }, 0);
+    const diamondLegs = directMemberChildren.reduce((total, child, index) => {
+      const childComputation = childComputations[index];
+      return childComputation?.containsDiamond ? total + child.weight : total;
+    }, 0);
+    const requestedAV =
       person.kind === 'root' || person.kind === 'member'
         ? person.personalMonthlyVolume
         : 0;
-    const rank = determineRank({
-      av,
+    const av = determineEffectiveAV({
+      av: requestedAV,
       qgv,
-      qualifiedLegs: directMemberChildren.length,
+      qualifiedLegs,
       bronzeLegs,
       diamondLegs,
     });
-    const state = {
+    const rank = determineRank({
+      av,
+      qgv,
+      qualifiedLegs,
+      bronzeLegs,
+      diamondLegs,
+    });
+    const ownVolume = person.active ? av * person.weight : 0;
+    const subtree = {
+      qgv: qgv + ownVolume,
+      members: (person.kind === 'member' ? person.weight : 0) + childMembers,
+      shoppers: childShoppers,
+    };
+    const state: PersonRankState = {
       personId: person.id,
       rank,
       av,
       qgv,
-      qualifiedLegs: directMemberChildren.length,
+      qualifiedLegs,
       bronzeLegs,
       diamondLegs,
     };
+    const containsBronze =
+      isBronzeOrHigher(rank.name) ||
+      childComputations.some((child) => child.containsBronze);
+    const containsDiamond =
+      isDiamondOrHigher(rank.name) ||
+      childComputations.some((child) => child.containsDiamond);
+    const computation = { state, subtree, containsBronze, containsDiamond };
 
-    memo.set(person.id, state);
-    return state;
+    memo.set(person.id, computation);
+    return computation;
   }
 
   for (const person of snapshot.persons) {
@@ -275,10 +328,10 @@ function calculateRankStates(snapshot: PersonTreeSnapshot): PersonRankState[] {
     }
   }
 
-  return [...memo.values()];
+  return [...memo.values()].map((entry) => entry.state);
 }
 
-function calculateSubtreeStats(
+function calculateShopperSubtreeStats(
   person: SimPerson,
   personsById: Map<string, SimPerson>,
 ): SubtreeStats {
@@ -289,7 +342,7 @@ function calculateSubtreeStats(
   for (const childId of person.childrenIds) {
     const child = personsById.get(childId);
     if (!child) continue;
-    const childStats = calculateSubtreeStats(child, personsById);
+    const childStats = calculateShopperSubtreeStats(child, personsById);
     members += childStats.members;
     shoppers += childStats.shoppers;
     qgv += childStats.qgv;

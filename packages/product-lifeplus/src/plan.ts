@@ -3,6 +3,7 @@ import type {
   CompensationResult,
 } from '@mlm/simulator-core';
 import { calculateMonthlyCompensation } from './compensation';
+import { calculateTreeCompensation } from './tree-compensation';
 
 export const lifeplusPlan: CompensationPlan = {
   calculateMonth(snapshot, inputs): CompensationResult {
@@ -26,5 +27,11 @@ export const lifeplusPlan: CompensationPlan = {
       members: result.members,
       shoppers: result.shoppers,
     };
+  },
+  calculateTreeMonth(snapshot, inputs) {
+    return calculateTreeCompensation(snapshot, {
+      rootPersonalMonthlyVolume:
+        inputs.personalMonthlyVolume ?? inputs.memberMonthlyVolume,
+    });
   },
 };

@@ -5,13 +5,15 @@
 import {
   PHASE1,
   PHASE1_QUALIFICATION,
-  PHASE2_RANKS,
-  PHASE3_RANKS,
-  PRELIM_RANKS,
   REFERRAL_THRESHOLD_IP,
 } from './constants';
 import type { NetworkSnapshot } from '@mlm/simulator-core';
-import { determineRank, estimateLegRank, type RankResult } from './ranks';
+import {
+  determineEffectiveAV,
+  determineRank,
+  estimateLegRank,
+  type RankResult,
+} from './ranks';
 import {
   allocatePhase2SlotRates,
   allocatePhase3SlotRates,
@@ -207,8 +209,8 @@ export function calculateMonthlyCompensation(
   const directMembers = snapshot.directLegs;
   const qualifiedLegs = Math.floor(directMembers + 1e-9);
   const legStructure = estimateQualifiedLegStructure(snapshot, inputs, qualifiedLegs);
-  const personalMonthlyIP = determineEffectivePersonalAV({
-    requestedAV: inputs.personalMonthlyIP,
+  const personalMonthlyIP = determineEffectiveAV({
+    av: inputs.personalMonthlyIP,
     qgv,
     qualifiedLegs,
     bronzeLegs: legStructure.bronzeLegs,
@@ -315,49 +317,6 @@ function estimateQualifiedLegStructureFromLegs(
     bronzeLegs,
     diamondLegs,
   };
-}
-
-function determineEffectivePersonalAV({
-  requestedAV,
-  qgv,
-  qualifiedLegs,
-  bronzeLegs,
-  diamondLegs,
-}: {
-  requestedAV: number;
-  qgv: number;
-  qualifiedLegs: number;
-  bronzeLegs: number;
-  diamondLegs: number;
-}): number {
-  let requiredAV = 40;
-
-  for (const rank of PRELIM_RANKS) {
-    if (qgv >= rank.minQGV && qualifiedLegs >= rank.minQL) {
-      requiredAV = Math.max(requiredAV, rank.minAV);
-    }
-  }
-
-  for (const rank of PHASE2_RANKS) {
-    if (qgv >= rank.minQGV && qualifiedLegs >= rank.minQL) {
-      requiredAV = Math.max(requiredAV, rank.minAV);
-    }
-  }
-
-  for (const rank of PHASE3_RANKS) {
-    const additionalBronzeLegs = Math.max(0, bronzeLegs - diamondLegs);
-    const hasVolumeAndLegs =
-      qgv >= rank.minQGV &&
-      qualifiedLegs >= rank.minQL &&
-      diamondLegs >= rank.minDiamondLegs &&
-      additionalBronzeLegs >= rank.minBronzeLegs;
-
-    if (hasVolumeAndLegs) {
-      requiredAV = Math.max(requiredAV, rank.minAV);
-    }
-  }
-
-  return Math.max(requestedAV, requiredAV);
 }
 
 function isBronzeLegRank(rank: string): boolean {

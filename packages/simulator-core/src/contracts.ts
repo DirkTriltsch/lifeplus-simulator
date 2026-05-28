@@ -1,4 +1,5 @@
 import type { NetworkSnapshot } from './network';
+import type { PersonTreeSnapshot } from './person-tree';
 
 export type ProductId = 'lifeplus' | 'fitline' | 'eqology';
 
@@ -63,11 +64,45 @@ export interface CompensationResult {
   shoppers: number;
 }
 
+export interface TreePayout {
+  orderId: string;
+  orderPersonId: string;
+  receiverId: string;
+  phase: 1 | 2 | 3;
+  levelFromOrder: number;
+  slot: string;
+  rate: number;
+  baseVolume: number;
+  amount: number;
+  reason: string;
+}
+
+export interface PersonRankState {
+  personId: string;
+  rank: {
+    name: string;
+  };
+  av: number;
+  qgv: number;
+  qualifiedLegs: number;
+  bronzeLegs: number;
+  diamondLegs: number;
+}
+
+export interface TreeCompensationResult extends CompensationResult {
+  payouts: TreePayout[];
+  rankStates: PersonRankState[];
+}
+
 export interface CompensationPlan {
   calculateMonth(
     snapshot: NetworkSnapshot,
     inputs: SimulatorInputs,
   ): CompensationResult;
+  calculateTreeMonth?(
+    snapshot: PersonTreeSnapshot,
+    inputs: SimulatorInputs,
+  ): TreeCompensationResult;
 }
 
 export interface ProductDefinition {

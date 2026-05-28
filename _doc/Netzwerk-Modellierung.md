@@ -321,27 +321,52 @@ Vorschlag A ist weniger ideal fuer:
 
 ### Umsetzungsstand
 
-Ein erster paralleler Personenbaum-Pfad ist umgesetzt:
+Der Personenbaum ist fuer die Hauptsimulation inzwischen die primaere Quelle.
+`runSimulation()` erzeugt zuerst einen `PersonTreeSnapshot` und leitet daraus die
+bisherigen Aggregat-Strukturen (`membersByLevel`, `shoppersByLevel`, `legs`) ab.
+Damit bleiben bestehende Charts und Tabellen nutzbar, aber die fachliche Wahrheit
+liegt im Personenbaum.
+
+Relevante Dateien:
 
 ```text
 packages/simulator-core/src/person-tree.ts
 packages/simulator-core/src/tree-generator.ts
+packages/simulator-core/src/simulation.ts
+packages/simulator-core/tests/person-tree-equivalence.test.ts
+tests/integration/person-tree-reality.test.ts
 packages/product-lifeplus/src/tree-compensation.ts
 packages/product-lifeplus/src/tree-simulation.ts
 packages/product-lifeplus/tests/tree-simulation.test.ts
+simulator-app/src/App.tsx
+simulator-app/src/components/NetworkVisualizations.tsx
 ```
 
-Der neue Pfad kann aus Szenario-Parametern echte, gewichtete Personen-Knoten erzeugen, diese wieder in die bestehenden `MonthResult`-/Chart-Strukturen adaptieren und LifePlus-Bestellungen entlang echter Uplines berechnen.
+Der Pfad kann aus Szenario-Parametern echte, gewichtete Personen-Knoten erzeugen,
+diese wieder in die bestehenden `MonthResult`-/Chart-Strukturen adaptieren und
+LifePlus-Bestellungen entlang echter Uplines berechnen.
 
-Noch nicht vollstaendig umgestellt sind:
+Aktueller Stand:
 
 ```text
-1. UI-Default auf den neuen Tree-Pfad.
-2. Reality-Strategien dirichlet/momentum auf Personenbaum-Ebene.
-3. Klickbare Personen-/Cluster-Visualisierung im Sunburst.
+1. Standard-Simulation: Personenbaum ist Single Source of Truth.
+2. Reality-Strategien dirichlet/momentum: laufen als Tree-Strategien pro werbender Person.
+3. App-Hauptpfad: nutzt `result.personYearEnds` statt einer zweiten Tree-Simulation.
+4. Projektionen: bestehende Charts, Tabellen und Netzwerkansichten lesen weiterhin die abgeleiteten Aggregatwerte.
+5. Legacy-Aggregatpfad: `simulateNetwork()` und `GrowthModulator` existieren noch fuer bestehende Tests und als Rueckfall-/Vergleichsebene.
 ```
 
-Die bestehende App bleibt dadurch stabil, waehrend der neue Berechnungspfad testbar aufgebaut wird.
+Noch offen:
+
+```text
+1. Per-Person-Provision in allen Visualisierungen aus `tree-compensation`.
+2. Vollstaendig klickbare Personen-/Cluster-Visualisierung im Sunburst.
+3. Performance-Optimierung fuer sehr grosse Personenbaeume.
+4. Aufraeumen des alten Aggregatpfads, sobald alle Views und Tests stabil auf dem Baum laufen.
+```
+
+Die wichtigste technische Regel ist damit: Aggregatdaten sind nur noch Projektion,
+nicht mehr Ursprung der Simulation.
 
 Vorschlag B ist die langfristig fachlich staerkere Variante. Dabei wuerde die gesamte Simulation nicht mehr primaer mit aggregierten Ebenen arbeiten, sondern mit echten Personen-/Knotenstrukturen.
 
@@ -411,11 +436,11 @@ Vorschlag B waere sinnvoll, wenn die App spaeter nicht nur Szenarien simuliert, 
 - Zufalls-/Realistic-Growth-Strategien muessen Personen statt Levelwerte modulieren.
 - Bestehende Tests fuer aggregierte Level muessen umgebaut oder parallel gehalten werden.
 
-### Moeglicher Migrationspfad Zu Vorschlag B
+### Migrationspfad Zu Vorschlag B
 
 Vorschlag A ist bewusst so gebaut, dass er spaeter in Vorschlag B aufgehen kann.
 
-Ein sinnvoller Pfad:
+Der urspruengliche Pfad war:
 
 1. **Slot-Engine stabilisieren**
    `payout-slots.ts` bleibt die zentrale Regel fuer Phase 2 und Phase 3.
@@ -435,11 +460,29 @@ Ein sinnvoller Pfad:
 6. **Simulation optional auf Personenbaum umstellen**
    Erst wenn Tests und UI stabil sind, wird die Wachstumssimulation selbst umgebaut.
 
+Aktuell erledigt:
+
+```text
+- Schritt 4 ist umgesetzt.
+- Schritt 5 ist umgesetzt.
+- Schritt 6 ist fuer den Hauptpfad umgesetzt: `runSimulation()` nutzt den Personenbaum.
+- Standard, Zufallsverteilung und Momentum erzeugen alle einen Personenbaum.
+```
+
+Die naechsten sinnvollen Schritte:
+
+```text
+1. `calculateTreeCompensation` an die Hauptsimulation anbinden, damit Provisionen pro Person sichtbar werden.
+2. Sunburst/Bein-Spalten konsequent aus Personen-/Cluster-Knoten rendern.
+3. Alte Aggregat-Reality-Strategien nur noch als Vergleichstests halten oder entfernen.
+4. Bei grossen Netzwerken Clustering und sichtbare Ebenen einfuehren.
+```
+
 ## Empfehlung
 
-Kurzfristig ist Vorschlag A die richtige Wahl. Er macht die Verguetungslogik testbar, erklaerbar und visualisierbar, ohne die ganze Simulation zu gefaehrden.
-
-Langfristig sollte Vorschlag B angestrebt werden, wenn echte Teamstrukturen, detaillierte Personenknoten oder vollstaendige Downline-Berechnungen ein Kernfeature werden.
+Vorschlag A bleibt fuer Beispielrechnungen und den Verguetungsplan-Editor sinnvoll.
+Fuer die Simulation selbst ist Vorschlag B jetzt die fuehrende Architektur:
+ein Personenbaum, daraus Projektionen fuer Charts und Visualisierungen.
 
 Die wichtigste Architekturregel bleibt:
 

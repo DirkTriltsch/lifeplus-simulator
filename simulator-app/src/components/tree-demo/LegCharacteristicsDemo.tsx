@@ -1,5 +1,8 @@
-import type { PersonTreeSnapshot, SimPerson } from '@mlm/simulator-core';
-import type { TreeCompensationResult } from '@mlm/product-lifeplus';
+import type {
+  PersonTreeSnapshot,
+  SimPerson,
+  TreeCompensationResult,
+} from '@mlm/simulator-core';
 
 interface Props {
   snapshot: PersonTreeSnapshot;
