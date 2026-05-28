@@ -22,6 +22,8 @@ export const lifeplusPlan: CompensationPlan = {
       rankName: result.rank.name,
       av: result.av,
       qgv: result.qgv,
+      bronzeLegs: result.bronzeLegs,
+      diamondLegs: result.diamondLegs,
       networkSize: result.networkSize,
       directLegs: result.directLegs,
       members: result.members,

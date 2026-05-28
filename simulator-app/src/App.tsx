@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { getProduct } from '@mlm/product-registry';
 import {
   runSimulation,
@@ -7,7 +7,7 @@ import {
 import { createTreeGrowthStrategy } from '@mlm/simulator-realistic-growth';
 import { evaluateGoals } from '@mlm/simulator-goals';
 import { BrandLockup } from './components/BrandLockup';
-import { Slider } from './components/Slider';
+import { NumberStepper } from './components/NumberStepper';
 import { HeroNumber } from './components/HeroNumber';
 import { StatCard } from './components/StatCard';
 import { ProvisionChart } from './components/ProvisionChart';
@@ -371,12 +371,18 @@ export default function App() {
               onResetAll={resetAll}
             />
             <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-4 mb-5">
-              <Slider label={`${product.terminology.memberLabel} / Jahr`} value={membersPerYear} min={0} max={6} step={0.25} onChange={setMembersPerYear} />
-              <Slider label={`${product.terminology.shopperLabel} / Jahr`} value={shoppersPerYear} min={0} max={6} step={0.25} onChange={setShoppersPerYear} />
-              <Slider label="Umsatz / Monat" value={monthlyIP} min={45} max={500} step={5} unit={` ${product.terminology.volumeUnit}`} onChange={setMonthlyIP} />
-              <Slider label="Duplikation" value={duplication} min={0} max={100} unit="%" onChange={setDuplication} />
-              <Slider label="Fluktuation" value={attrition} min={0} max={50} unit="%" onChange={setAttrition} />
+            <div className="mb-5 space-y-4">
+              <ControlGroup title="Wachstum" cols={2}>
+                <NumberStepper label={`${product.terminology.memberLabel} / Jahr`} value={membersPerYear} min={0} step={0.5} onChange={setMembersPerYear} />
+                <NumberStepper label={`${product.terminology.shopperLabel} / Jahr`} value={shoppersPerYear} min={0} step={0.5} onChange={setShoppersPerYear} />
+              </ControlGroup>
+              <ControlGroup title="Umsätze Members und Shopper">
+                <NumberStepper label="Umsatz / Monat" value={monthlyIP} min={0} step={5} fastStep={25} unit={` ${product.terminology.volumeUnit}`} onChange={setMonthlyIP} />
+              </ControlGroup>
+              <ControlGroup title="Dynamik" cols={2}>
+                <NumberStepper label="Duplikation" value={duplication} min={0} max={100} step={1} fastStep={10} unit="%" onChange={setDuplication} />
+                <NumberStepper label="Fluktuation" value={attrition} min={0} max={50} step={1} fastStep={10} unit="%" onChange={setAttrition} />
+              </ControlGroup>
             </div>
             <HeroNumber monthlyEUR={finalMonth.totalEUR} year={finalMonth.year} />
             <div className="grid grid-cols-2 gap-2.5 mt-4 mb-4">
@@ -445,6 +451,34 @@ export default function App() {
 function activeGoals(goals: GoalUI[]): GoalUI[] {
   return goals.filter(
     (goal) => goal.kind === 'productsRefinanced' || goal.amountEUR > 0,
+  );
+}
+
+function ControlGroup({
+  title,
+  children,
+  cols = 1,
+}: {
+  title: string;
+  children: ReactNode;
+  cols?: 1 | 2 | 3;
+}) {
+  const colsClass =
+    cols === 3
+      ? 'grid-cols-1 lg:grid-cols-3'
+      : cols === 2
+        ? 'grid-cols-1 lg:grid-cols-2'
+        : 'grid-cols-1';
+
+  return (
+    <section>
+      <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
+        {title}
+      </h2>
+      <div className={`grid ${colsClass} gap-x-6 gap-y-3`}>
+        {children}
+      </div>
+    </section>
   );
 }
 

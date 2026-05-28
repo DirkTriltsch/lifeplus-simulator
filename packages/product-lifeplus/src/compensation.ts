@@ -39,6 +39,8 @@ export interface MonthlyCompensation {
   rank: RankResult;
   av: number;
   qgv: number;
+  bronzeLegs: number;
+  diamondLegs: number;
   networkSize: number;
   members: number;
   shoppers: number;
@@ -237,6 +239,8 @@ export function calculateMonthlyCompensation(
     rank,
     av: personalMonthlyIP,
     qgv,
+    bronzeLegs: legStructure.bronzeLegs,
+    diamondLegs: legStructure.diamondLegs,
     networkSize: totalMembers + totalShoppers,
     members: totalMembers,
     shoppers: totalShoppers,

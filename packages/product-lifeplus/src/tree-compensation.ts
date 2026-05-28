@@ -65,6 +65,8 @@ export function calculateTreeCompensation(
     rankName: rootRank?.rank.name ?? 'Member',
     av: rootRank?.av ?? inputs.rootPersonalMonthlyVolume,
     qgv: rootRank?.qgv ?? 0,
+    bronzeLegs: rootRank?.bronzeLegs ?? 0,
+    diamondLegs: rootRank?.diamondLegs ?? 0,
     networkSize: members + shoppers,
     directLegs: network.directLegs,
     members,

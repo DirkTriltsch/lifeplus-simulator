@@ -30,6 +30,8 @@ export interface MonthResult {
   rankName: string;
   av: number;
   qgv: number;
+  bronzeLegs: number;
+  diamondLegs: number;
   networkSize: number;
   directLegs: number;
   members: number;
@@ -48,6 +50,8 @@ export interface YearSummary {
   networkSize: number;
   av: number;
   qgv: number;
+  bronzeLegs: number;
+  diamondLegs: number;
   memberGrowth: number;
   memberAttrition: number;
   shopperGrowth: number;
@@ -101,7 +105,7 @@ export function runSimulation(
   const calculateTreeMonth = product.simulator.plan.calculateTreeMonth;
   const treeCompensations =
     personMonths && calculateTreeMonth
-      ? personMonths.map((personMonth) => calculateTreeMonth(personMonth, inputs))
+      ? calculateAnnualTreeCompensations(personMonths, inputs, calculateTreeMonth)
       : undefined;
 
   const months: MonthResult[] = snapshots.map((snapshot, monthIndex) => {
@@ -123,6 +127,8 @@ export function runSimulation(
       rankName: comp.rankName,
       av: comp.av,
       qgv: comp.qgv,
+      bronzeLegs: comp.bronzeLegs ?? 0,
+      diamondLegs: comp.diamondLegs ?? 0,
       networkSize: comp.networkSize,
       directLegs: comp.directLegs,
       members: comp.members,
@@ -146,6 +152,8 @@ export function runSimulation(
       networkSize: yearEnd.networkSize,
       av: yearEnd.av,
       qgv: yearEnd.qgv,
+      bronzeLegs: yearEnd.bronzeLegs,
+      diamondLegs: yearEnd.diamondLegs,
       memberGrowth: sum(yearMonths.map((m) => m.memberGrowth)),
       memberAttrition: sum(yearMonths.map((m) => m.memberAttrition)),
       shopperGrowth: sum(yearMonths.map((m) => m.shopperGrowth)),
@@ -171,4 +179,35 @@ export function runSimulation(
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
+}
+
+function calculateAnnualTreeCompensations(
+  personMonths: PersonTreeSnapshot[],
+  inputs: SimulatorInputs,
+  calculateTreeMonth: NonNullable<
+    ProductDefinition['simulator']['plan']['calculateTreeMonth']
+  >,
+): TreeCompensationResult[] {
+  const compensations: TreeCompensationResult[] = [];
+  let index = 0;
+
+  while (index < personMonths.length) {
+    const year = personMonths[index].year;
+    let endIndex = index;
+
+    while (
+      endIndex + 1 < personMonths.length &&
+      personMonths[endIndex + 1].year === year
+    ) {
+      endIndex++;
+    }
+
+    const yearEndCompensation = calculateTreeMonth(personMonths[endIndex], inputs);
+    for (let monthIndex = index; monthIndex <= endIndex; monthIndex++) {
+      compensations[monthIndex] = yearEndCompensation;
+    }
+    index = endIndex + 1;
+  }
+
+  return compensations;
 }

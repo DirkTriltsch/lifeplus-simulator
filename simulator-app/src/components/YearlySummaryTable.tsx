@@ -23,6 +23,8 @@ export function YearlySummaryTable({ years }: YearlySummaryTableProps) {
           <tr>
             <HeaderCell>Jahr</HeaderCell>
             <HeaderCell>Beine (GL)</HeaderCell>
+            <HeaderCell>Bronze</HeaderCell>
+            <HeaderCell>Diamond</HeaderCell>
             <HeaderCell>Members</HeaderCell>
             <HeaderCell>Shopper</HeaderCell>
             <HeaderCell>Netzwerk</HeaderCell>
@@ -37,6 +39,8 @@ export function YearlySummaryTable({ years }: YearlySummaryTableProps) {
             <tr key={year.year} className="hover:bg-gray-50/70">
               <BodyCell>Jahr {year.year}</BodyCell>
               <BodyCell>{numberFormat.format(Math.round(year.directLegs))}</BodyCell>
+              <BodyCell>{numberFormat.format(Math.round(year.bronzeLegs))}</BodyCell>
+              <BodyCell>{numberFormat.format(Math.round(year.diamondLegs))}</BodyCell>
               <BodyCell>
                 <GrowthValue
                   total={year.members}

@@ -35,8 +35,8 @@ export const lifeplusProduct: ProductDefinition = {
   simulator: {
     defaultInputs: {
       membersPerYear: 2,
-      shoppersPerYear: 3,
-      duplicationRate: 1,
+      shoppersPerYear: 2,
+      duplicationRate: 0,
       attritionRate: 0,
       memberMonthlyVolume: 45,
       shopperMonthlyVolume: 45,

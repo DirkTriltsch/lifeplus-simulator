@@ -48,6 +48,7 @@ export function simulatePersonTree(
   let persons = [root];
   let nextId = 1;
   const snapshots: PersonTreeSnapshot[] = [];
+  let snapshotPersons = clonePersons(persons);
   options.growthStrategy?.reset?.();
 
   for (let monthIndex = 0; monthIndex < totalMonths; monthIndex++) {
@@ -62,6 +63,7 @@ export function simulatePersonTree(
     if (isYearStart) {
       shopperAttrition = applyTreeShopperAttrition(persons, inputs.attritionRate);
       memberAttrition = applyTreeMemberAttrition(persons, inputs.attritionRate);
+      const activeMemberChildWeights = buildActiveMemberChildWeights(persons);
 
       const sourceMembers = persons.filter(
         (person) =>
@@ -80,7 +82,7 @@ export function simulatePersonTree(
       const rootPerson = persons[0];
       const directCapacity = Math.max(
         0,
-        maxDirect - activeMemberChildWeight(rootPerson, persons),
+        maxDirect - (activeMemberChildWeights.get(rootPerson.id) ?? 0),
       );
       const directMemberWeight = Math.min(inputs.membersPerYear, directCapacity);
       if (directMemberWeight > 0) {
@@ -94,6 +96,11 @@ export function simulatePersonTree(
         nextId = created.nextId;
         rootPerson.childrenIds.push(...created.members.map((member) => member.id));
         persons.push(...created.members);
+        addActiveMemberChildWeight(
+          activeMemberChildWeights,
+          rootPerson.id,
+          directMemberWeight,
+        );
         memberGrowth += directMemberWeight;
       }
 
@@ -116,7 +123,7 @@ export function simulatePersonTree(
         const sourceWeight = sourceWeights[sourceIndex] ?? 1;
         const memberCapacity = Math.max(
           0,
-          maxDirect - activeMemberChildWeight(source, persons),
+          maxDirect - (activeMemberChildWeights.get(source.id) ?? 0),
         );
         const memberWeight = Math.min(
           source.weight *
@@ -136,6 +143,11 @@ export function simulatePersonTree(
           });
           source.childrenIds.push(member.id);
           persons.push(member);
+          addActiveMemberChildWeight(
+            activeMemberChildWeights,
+            source.id,
+            memberWeight,
+          );
           memberGrowth += memberWeight;
         }
 
@@ -158,6 +170,8 @@ export function simulatePersonTree(
           shopperGrowth += shopperWeight;
         }
       }
+
+      snapshotPersons = clonePersons(persons);
     }
 
     snapshots.push({
@@ -165,7 +179,7 @@ export function simulatePersonTree(
       year,
       monthInYear,
       rootId: ROOT_ID,
-      persons: clonePersons(persons),
+      persons: snapshotPersons,
       orders: createMonthlyOrders(persons, monthIndex),
       memberGrowth,
       memberAttrition,
@@ -350,12 +364,29 @@ function createMonthlyOrders(persons: SimPerson[], monthIndex: number): SimOrder
   return orders;
 }
 
-function activeMemberChildWeight(person: SimPerson, persons: SimPerson[]): number {
-  const personsById = new Map(persons.map((item) => [item.id, item]));
-  return person.childrenIds.reduce((total, childId) => {
-    const child = personsById.get(childId);
-    return child?.active && child.kind === 'member' ? total + child.weight : total;
-  }, 0);
+function buildActiveMemberChildWeights(persons: SimPerson[]): Map<string, number> {
+  const weights = new Map<string, number>();
+
+  for (const person of persons) {
+    if (
+      person.active &&
+      person.kind === 'member' &&
+      person.sponsorId !== undefined
+    ) {
+      addActiveMemberChildWeight(weights, person.sponsorId, person.weight);
+    }
+  }
+
+  return weights;
+}
+
+function addActiveMemberChildWeight(
+  weights: Map<string, number>,
+  sponsorId: string,
+  weight: number,
+): void {
+  if (weight <= 0) return;
+  weights.set(sponsorId, (weights.get(sponsorId) ?? 0) + weight);
 }
 
 function clonePersons(persons: SimPerson[]): SimPerson[] {

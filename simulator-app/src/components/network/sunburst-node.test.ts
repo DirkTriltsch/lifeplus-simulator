@@ -109,6 +109,8 @@ function createSnapshot(overrides: Partial<MonthResult>): MonthResult {
     rankName: 'Member',
     av: 150,
     qgv: 150,
+    bronzeLegs: 0,
+    diamondLegs: 0,
     networkSize: 1,
     directLegs: 1,
     members: 1,

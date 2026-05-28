@@ -58,6 +58,8 @@ export interface CompensationResult {
   rankName: string;
   av: number;
   qgv: number;
+  bronzeLegs?: number;
+  diamondLegs?: number;
   networkSize: number;
   directLegs: number;
   members: number;
