@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 interface NumberStepperProps {
   label: string;
@@ -45,21 +45,26 @@ export function NumberStepper({
   const atMax = max !== undefined && value >= max;
 
   return (
-    <div className="flex items-center gap-3">
-      <label className="text-xs text-gray-600">{label}</label>
-      <div className="flex items-center gap-1">
+    <div className="grid grid-cols-[6.75rem_0.375rem_2rem_2rem_3rem_2rem_2rem] items-center gap-x-1 gap-y-1">
+      <label className="truncate text-xs text-gray-600">{label}</label>
+      <div aria-hidden="true" />
+      <Slot>
         {fastStep && (
           <StepButton
-            label={`−${fastStep}`}
+            label={`-${fastStep}`}
             onClick={() => applyStep(-fastStep)}
             disabled={atMin}
           />
         )}
+      </Slot>
+      <Slot>
         <StepButton
-          label={`−${formatValue(step)}`}
+          label={`-${formatValue(step)}`}
           onClick={() => applyStep(-step)}
           disabled={atMin}
         />
+      </Slot>
+      <div>
         {editing ? (
           <input
             type="text"
@@ -72,24 +77,32 @@ export function NumberStepper({
               if (event.key === 'Enter') commitEdit();
               if (event.key === 'Escape') setEditing(false);
             }}
-            className="w-12 rounded-md border border-brand-400 bg-white px-1.5 py-1 text-center text-sm font-semibold text-gray-900 outline-none focus:border-brand-500"
+            className="w-full rounded-md border border-brand-400 bg-white px-1 py-1 text-center text-sm font-semibold text-gray-900 outline-none focus:border-brand-500"
           />
         ) : (
           <button
             type="button"
             onClick={startEdit}
-            className="min-w-12 rounded-md border border-gray-300 bg-white px-1.5 py-1 text-center text-sm font-semibold text-gray-900 transition hover:border-brand-300"
+            className="w-full rounded-md border border-gray-300 bg-white px-1 py-1 text-center text-sm font-semibold text-gray-900 transition hover:border-brand-300"
             title="Tippen zum direkten Eingeben"
           >
             {formatValue(value)}
-            {unit && <span className="ml-0.5 text-[11px] font-medium text-gray-500">{unit}</span>}
+            {unit && (
+              <span className="ml-0.5 text-[11px] font-medium text-gray-500">
+                {unit}
+              </span>
+            )}
           </button>
         )}
+      </div>
+      <Slot>
         <StepButton
           label={`+${formatValue(step)}`}
           onClick={() => applyStep(step)}
           disabled={atMax}
         />
+      </Slot>
+      <Slot>
         {fastStep && (
           <StepButton
             label={`+${fastStep}`}
@@ -97,9 +110,13 @@ export function NumberStepper({
             disabled={atMax}
           />
         )}
-      </div>
+      </Slot>
     </div>
   );
+}
+
+function Slot({ children }: { children: ReactNode }) {
+  return <div className="flex justify-center">{children}</div>;
 }
 
 function StepButton({
@@ -116,7 +133,7 @@ function StepButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="rounded-md border border-gray-300 bg-gray-50 px-1.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-400 hover:bg-white hover:text-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-300"
+      className="w-full rounded-md border border-gray-300 bg-gray-50 px-0.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-400 hover:bg-white hover:text-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-300"
     >
       {label}
     </button>

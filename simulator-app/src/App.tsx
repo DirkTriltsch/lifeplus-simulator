@@ -8,6 +8,7 @@ import { createTreeGrowthStrategy } from '@mlm/simulator-realistic-growth';
 import { evaluateGoals } from '@mlm/simulator-goals';
 import { BrandLockup } from './components/BrandLockup';
 import { NumberStepper } from './components/NumberStepper';
+import { Slider } from './components/Slider';
 import { HeroNumber } from './components/HeroNumber';
 import { StatCard } from './components/StatCard';
 import { ProvisionChart } from './components/ProvisionChart';
@@ -35,6 +36,8 @@ const DEFAULT_GOALS: GoalUI[] = [
   { id: 'free-life',           label: 'Frei leben',             icon: 'crown',  kind: 'monthlyIncome',      amountEUR: 5000, requiresRefinanced: true },
 ];
 
+type InputMode = 'slider' | 'stepper';
+
 interface PersistedAppState {
   membersPerYear?: number;
   shoppersPerYear?: number;
@@ -46,6 +49,7 @@ interface PersistedAppState {
   realityStrategy?: RealityStrategy;
   goals?: GoalUI[];
   monthlyProductCostEUR?: number;
+  inputMode?: InputMode;
 }
 
 const STORAGE_VERSION = 1;
@@ -107,6 +111,9 @@ export default function App() {
       defaults.monthlyProductCostEUR ??
       100,
   );
+  const [inputMode, setInputMode] = useState<InputMode>(
+    persistedState?.inputMode ?? 'slider',
+  );
 
   useEffect(() => {
     savePersistedState(productId, {
@@ -120,6 +127,7 @@ export default function App() {
       realityStrategy,
       goals,
       monthlyProductCostEUR,
+      inputMode,
     });
   }, [
     productId,
@@ -133,6 +141,7 @@ export default function App() {
     realityStrategy,
     goals,
     monthlyProductCostEUR,
+    inputMode,
   ]);
 
   const resetAll = () => {
@@ -371,17 +380,40 @@ export default function App() {
               onResetAll={resetAll}
             />
             <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
+            <div className="mb-3 flex justify-end">
+              <InputModeToggle value={inputMode} onChange={setInputMode} />
+            </div>
             <div className="mb-5 space-y-4">
               <ControlGroup title="Wachstum" cols={2}>
-                <NumberStepper label={`${product.terminology.memberLabel} / Jahr`} value={membersPerYear} min={0} step={0.5} onChange={setMembersPerYear} />
-                <NumberStepper label={`${product.terminology.shopperLabel} / Jahr`} value={shoppersPerYear} min={0} step={0.5} onChange={setShoppersPerYear} />
+                {inputMode === 'slider' ? (
+                  <Slider label={`${product.terminology.memberLabel} / Jahr`} value={membersPerYear} min={0} max={36} step={0.5} onChange={setMembersPerYear} />
+                ) : (
+                  <NumberStepper label={`${product.terminology.memberLabel} / Jahr`} value={membersPerYear} min={0} max={36} step={0.5} onChange={setMembersPerYear} />
+                )}
+                {inputMode === 'slider' ? (
+                  <Slider label={`${product.terminology.shopperLabel} / Jahr`} value={shoppersPerYear} min={0} max={36} step={0.5} onChange={setShoppersPerYear} />
+                ) : (
+                  <NumberStepper label={`${product.terminology.shopperLabel} / Jahr`} value={shoppersPerYear} min={0} max={36} step={0.5} onChange={setShoppersPerYear} />
+                )}
               </ControlGroup>
               <ControlGroup title="Umsätze Members und Shopper">
-                <NumberStepper label="Umsatz / Monat" value={monthlyIP} min={0} step={5} fastStep={25} unit={` ${product.terminology.volumeUnit}`} onChange={setMonthlyIP} />
+                {inputMode === 'slider' ? (
+                  <Slider label="Umsatz / Monat" value={monthlyIP} min={40} max={200} step={5} unit={` ${product.terminology.volumeUnit}`} onChange={setMonthlyIP} />
+                ) : (
+                  <NumberStepper label="Umsatz / Monat" value={monthlyIP} min={40} step={5} fastStep={25} unit={` ${product.terminology.volumeUnit}`} onChange={setMonthlyIP} />
+                )}
               </ControlGroup>
               <ControlGroup title="Dynamik" cols={2}>
-                <NumberStepper label="Duplikation" value={duplication} min={0} max={100} step={1} fastStep={10} unit="%" onChange={setDuplication} />
-                <NumberStepper label="Fluktuation" value={attrition} min={0} max={50} step={1} fastStep={10} unit="%" onChange={setAttrition} />
+                {inputMode === 'slider' ? (
+                  <Slider label="Duplikation" value={duplication} min={0} max={100} step={1} unit="%" onChange={setDuplication} />
+                ) : (
+                  <NumberStepper label="Duplikation" value={duplication} min={0} max={100} step={1} fastStep={10} unit="%" onChange={setDuplication} />
+                )}
+                {inputMode === 'slider' ? (
+                  <Slider label="Fluktuation" value={attrition} min={0} max={50} step={1} unit="%" onChange={setAttrition} />
+                ) : (
+                  <NumberStepper label="Fluktuation" value={attrition} min={0} max={50} step={1} fastStep={10} unit="%" onChange={setAttrition} />
+                )}
               </ControlGroup>
             </div>
             <HeroNumber monthlyEUR={finalMonth.totalEUR} year={finalMonth.year} />
@@ -454,6 +486,56 @@ function activeGoals(goals: GoalUI[]): GoalUI[] {
   );
 }
 
+function InputModeToggle({
+  value,
+  onChange,
+}: {
+  value: InputMode;
+  onChange: (mode: InputMode) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5 text-xs">
+      <button
+        type="button"
+        onClick={() => onChange('slider')}
+        className={`flex items-center gap-1 rounded px-2 py-1 transition ${
+          value === 'slider'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-900'
+        }`}
+        aria-pressed={value === 'slider'}
+        title="Slider"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <circle cx="14" cy="12" r="3" fill="currentColor" />
+        </svg>
+        Slider
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('stepper')}
+        className={`flex items-center gap-1 rounded px-2 py-1 transition ${
+          value === 'stepper'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-900'
+        }`}
+        aria-pressed={value === 'stepper'}
+        title="Stepper"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <rect x="3" y="8" width="5" height="8" rx="1" />
+          <rect x="9.5" y="8" width="5" height="8" rx="1" />
+          <rect x="16" y="8" width="5" height="8" rx="1" />
+          <line x1="5.5" y1="12" x2="5.5" y2="12" />
+          <line x1="18.5" y1="12" x2="18.5" y2="12" />
+        </svg>
+        Stepper
+      </button>
+    </div>
+  );
+}
+
 function ControlGroup({
   title,
   children,
@@ -475,7 +557,7 @@ function ControlGroup({
       <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
         {title}
       </h2>
-      <div className={`grid ${colsClass} gap-x-6 gap-y-3`}>
+      <div className={`grid ${colsClass} gap-x-4 gap-y-3`}>
         {children}
       </div>
     </section>
