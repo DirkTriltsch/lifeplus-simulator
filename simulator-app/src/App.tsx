@@ -26,7 +26,10 @@ import { GoalsLadderPanel } from './components/GoalsLadderPanel';
 import { AccountPanel } from './components/AccountPanel';
 import type { GoalUI } from './components/GoalsEditorDialog';
 import { LineageView } from './components/lineage/LineageView';
-import { TreeDemoView } from './components/tree-demo/TreeDemoView';
+import {
+  PersonTreeVisualizations,
+  type PersonTreeView,
+} from './components/person-tree/PersonTreeVisualizations';
 
 const DEFAULT_GOALS: GoalUI[] = [
   { id: 'products-refinanced', label: 'Produkte refinanziert', icon: 'leaf',   kind: 'productsRefinanced', amountEUR: 100 },
@@ -86,9 +89,11 @@ export default function App() {
   const [ipToEur, setIpToEur] = useState(
     persistedState?.ipToEur ?? defaults.unitToCurrency ?? 1,
   );
-  const [page, setPage] = useState<'chart' | 'network' | 'lineage' | 'tree-demo'>('chart');
+  const [page, setPage] = useState<'chart' | 'network' | 'lineage' | 'person-tree'>('chart');
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
+  const [personTreeView, setPersonTreeView] = useState<PersonTreeView>('radial');
+  const [personTreeMenuOpen, setPersonTreeMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [expandedSection, setExpandedSection] =
     useState<ExpandedSection>(null);
@@ -297,29 +302,65 @@ export default function App() {
             </svg>
           </button>
 
-          <button
-            onClick={() => {
-              setPage('tree-demo');
-              setNetworkMenuOpen(false);
-            }}
-            aria-label="Personenbaum-Demo"
-            title="Personenbaum-Demo"
-            className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
-              page === 'tree-demo' ? 'bg-gray-100 text-brand-700' : ''
-            }`}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="4" r="2" />
-              <circle cx="6" cy="13" r="2" />
-              <circle cx="18" cy="13" r="2" />
-              <circle cx="6" cy="20" r="1.5" />
-              <circle cx="18" cy="20" r="1.5" />
-              <path d="M12 6v3l-6 2" />
-              <path d="M12 9l6 2" />
-              <path d="M6 15v3" />
-              <path d="M18 15v3" />
-            </svg>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => {
+                setPersonTreeMenuOpen((open) => !open);
+                setNetworkMenuOpen(false);
+              }}
+              aria-label="Personenbaum-Ansicht waehlen"
+              title="Personenbaum"
+              className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
+                page === 'person-tree' ? 'bg-gray-100 text-brand-700' : ''
+              }`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="4" r="2" />
+                <circle cx="6" cy="13" r="2" />
+                <circle cx="18" cy="13" r="2" />
+                <circle cx="6" cy="20" r="1.5" />
+                <circle cx="18" cy="20" r="1.5" />
+                <path d="M12 6v3l-6 2" />
+                <path d="M12 9l6 2" />
+                <path d="M6 15v3" />
+                <path d="M18 15v3" />
+              </svg>
+            </button>
+            {personTreeMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg p-1 z-30">
+                <PersonTreeMenuItem
+                  label="Radial Tree"
+                  active={personTreeView === 'radial'}
+                  icon="radial"
+                  onClick={() => {
+                    setPersonTreeView('radial');
+                    setPage('person-tree');
+                    setPersonTreeMenuOpen(false);
+                  }}
+                />
+                <PersonTreeMenuItem
+                  label="Dendrogramm"
+                  active={personTreeView === 'dendrogram'}
+                  icon="dendrogram"
+                  onClick={() => {
+                    setPersonTreeView('dendrogram');
+                    setPage('person-tree');
+                    setPersonTreeMenuOpen(false);
+                  }}
+                />
+                <PersonTreeMenuItem
+                  label="Hyperbolic Tree"
+                  active={personTreeView === 'hyperbolic'}
+                  icon="hyperbolic"
+                  onClick={() => {
+                    setPersonTreeView('hyperbolic');
+                    setPage('person-tree');
+                    setPersonTreeMenuOpen(false);
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
           <SettingsDrawer
             ipToEur={ipToEur}
@@ -445,7 +486,14 @@ export default function App() {
         ) : page === 'lineage' ? (
           <LineageView />
         ) : (
-          <TreeDemoView />
+          <PersonTreeVisualizations
+            personYearEnds={result.personYearEnds ?? []}
+            treeCompensationYearEnds={result.treeCompensationYearEnds}
+            memberMonthlyVolume={inputs.memberMonthlyVolume}
+            shopperMonthlyVolume={inputs.shopperMonthlyVolume}
+            unitToCurrency={inputs.unitToCurrency ?? 1}
+            selectedView={personTreeView}
+          />
         )}
         <p className="text-xs text-gray-500 text-center mt-4 px-4">
           Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
@@ -668,6 +716,71 @@ function MenuIcon({ type }: { type: 'sunburst' | 'columns' | 'tree' }) {
       <circle cx="15" cy="15" r="2" />
       <path d="M9 6 6 13" />
       <path d="M11 6 14 13" />
+    </svg>
+  );
+}
+
+function PersonTreeMenuItem({
+  label,
+  active,
+  icon,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  icon: 'radial' | 'dendrogram' | 'hyperbolic';
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm transition ${active ? 'bg-brand-50 text-brand-800' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950'}`}
+    >
+      <PersonTreeMenuIcon type={icon} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function PersonTreeMenuIcon({ type }: { type: 'radial' | 'dendrogram' | 'hyperbolic' }) {
+  if (type === 'radial') {
+    return (
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <circle cx="10" cy="10" r="1.6" />
+        <circle cx="10" cy="3.5" r="1.2" />
+        <circle cx="16" cy="12" r="1.2" />
+        <circle cx="4.5" cy="13.5" r="1.2" />
+        <path d="M10 5.1 10 8.4" />
+        <path d="M11.3 10.9 14.7 11.7" />
+        <path d="M8.7 10.9 5.8 12.9" />
+      </svg>
+    );
+  }
+  if (type === 'dendrogram') {
+    return (
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <circle cx="4" cy="10" r="1.2" />
+        <circle cx="11" cy="5" r="1.2" />
+        <circle cx="11" cy="15" r="1.2" />
+        <circle cx="16" cy="3" r="1" />
+        <circle cx="16" cy="7" r="1" />
+        <circle cx="16" cy="13" r="1" />
+        <circle cx="16" cy="17" r="1" />
+        <path d="M5.2 10 9.8 5" />
+        <path d="M5.2 10 9.8 15" />
+        <path d="M12 5 15 3" />
+        <path d="M12 5 15 7" />
+        <path d="M12 15 15 13" />
+        <path d="M12 15 15 17" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <circle cx="10" cy="10" r="7" />
+      <path d="M3 10 17 10" />
+      <path d="M5 6 15 14" />
+      <path d="M5 14 15 6" />
     </svg>
   );
 }

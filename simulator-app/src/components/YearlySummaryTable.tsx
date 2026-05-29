@@ -1,5 +1,6 @@
 import type { YearSummary } from '@mlm/simulator-core';
 import type { ReactNode } from 'react';
+import { RankBadge } from './RankBadge';
 
 interface YearlySummaryTableProps {
   years: YearSummary[];
@@ -59,9 +60,12 @@ export function YearlySummaryTable({ years }: YearlySummaryTableProps) {
               <BodyCell align="right">{numberFormat.format(Math.round(year.av))}</BodyCell>
               <BodyCell align="right">{numberFormat.format(Math.round(year.qgv))}</BodyCell>
               <BodyCell>
-                <span className="inline-flex rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
-                  {year.rankName}
-                </span>
+                <RankBadge
+                  rank={year.rankName}
+                  variant="brand"
+                  size="sm"
+                  labelMode="compact"
+                />
               </BodyCell>
               <BodyCell align="right" className="font-medium text-gray-900">
                 {euroFormat.format(Math.round(year.totalEUR))}
