@@ -5,10 +5,10 @@ import Footer from '@shared/components/layout/Footer.astro';
 import DevIndexDefault from '@shared/components/sections/DevIndexDefault.astro';
 import { getBrand } from '@shared/lib/brand';
 
-const brand = await getBrand('lifeplus');
+const brand = await getBrand('fitline');
 ---
-<BrandLayout brand={brand} title="Dev-Index">
+<BrandLayout brand={brand} title="Debug">
   <Header brand={brand} />
-  <DevIndexDefault brand={brand} source="shared/components/sections/DevIndexDefault.astro" />
+  <DevIndexDefault brand={brand} source="brands/fitline/brand.yaml" />
   <Footer brand={brand} />
 </BrandLayout>

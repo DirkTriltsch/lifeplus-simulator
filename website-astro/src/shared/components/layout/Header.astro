@@ -12,7 +12,12 @@ const isHome = active === 'home';
 const conceptHref = isHome ? '#kernbotschaft' : 'index.html#kernbotschaft';
 const faqHref = isHome ? '#faq' : 'index.html#faq';
 ---
-<header class="site-header site-header--dark" data-section="Header.astro" data-source={`brands/${brand.id}/brand.yaml`}>
+<header
+  class="site-header site-header--dark"
+  data-section="Header.astro"
+  data-component-file="shared/components/layout/Header.astro"
+  data-source={`brands/${brand.id}/brand.yaml`}
+>
   <div class="container">
     <a class="lockup lockup--header" href="index.html" aria-label={brand.siteName}>
       <span class="lockup-mark">

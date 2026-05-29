@@ -24,7 +24,12 @@ const paddleConfig = {
 ---
 
 <!-- ===== Page hero ===== -->
-<section class="ph" data-section="PricingPageDefault.astro" data-source={source}>
+<section
+  class="ph"
+  data-section="Pricing Hero"
+  data-component-file="shared/components/sections/PricingPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <div class="ph-eyebrow">{pricing.hero.eyebrow}</div>
     <h1 class="ph-h1" set:html={pricing.hero.h1Html} />
@@ -45,11 +50,21 @@ const paddleConfig = {
 </section>
 
 <!-- ===== Pricing cards ===== -->
-<section class="pricing-section">
+<section
+  class="pricing-section"
+  data-section="Pricing Cards"
+  data-component-file="shared/components/sections/PricingPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <div class="pricing-row">
       {pricing.tiers.map((tier) => (
-        <div class={`price-card${tier.featured ? ' featured' : ''}`}>
+        <div
+          class={`price-card${tier.featured ? ' featured' : ''}`}
+          data-section={`Pricing Card: ${tier.name}`}
+          data-component-file="shared/components/sections/PricingPageDefault.astro"
+          data-source={source}
+        >
           {tier.badge && <div class="pc-badge">{tier.badge}</div>}
           <div class="price-name">{tier.name}</div>
           <div class="price-desc" set:html={tier.descHtml} />
@@ -79,7 +94,7 @@ const paddleConfig = {
             <a
               href={tier.cta.url === '/app/' ? brand.appUrl : tier.cta.url}
               class="price-cta"
-              data-free-start={tier.id === 'free' ? 'true' : undefined}
+              data-free-start={tier.id === 'free' && brand.apiBaseUrl ? 'true' : undefined}
             >
               {tier.cta.label}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -128,7 +143,12 @@ const paddleConfig = {
 </section>
 
 <!-- ===== Comparison ===== -->
-<section class="compare">
+<section
+  class="compare"
+  data-section="Pricing Vergleich"
+  data-component-file="shared/components/sections/PricingPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <h2 class="compare-h" set:html={pricing.compare.headlineHtml} />
     <p class="compare-sub">{pricing.compare.sub}</p>
@@ -172,7 +192,12 @@ const paddleConfig = {
 </section>
 
 <!-- ===== FAQ ===== -->
-<section class="faq-section">
+<section
+  class="faq-section"
+  data-section="Pricing FAQ"
+  data-component-file="shared/components/sections/PricingPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <h2 class="faq-h" set:html={pricing.faq.headlineHtml} />
     <div class="faq-list">
@@ -198,7 +223,13 @@ const paddleConfig = {
 </section>
 
 <!-- ===== Final CTA ===== -->
-<section class="final-cta" id="cta">
+<section
+  class="final-cta"
+  id="cta"
+  data-section="Pricing Final CTA"
+  data-component-file="shared/components/sections/PricingPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <h2 class="final-h" set:html={pricing.finalCta.headlineHtml} />
     <p class="final-sub">{pricing.finalCta.sub}</p>

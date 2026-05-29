@@ -7,5 +7,5 @@ import { contact } from '@shared/lib/contact';
 const brand = await getBrand('lifeplus');
 ---
 <LegalPageLayout brand={brand} title="Widerrufsbelehrung">
-  <LegalWiderrufDefault brand={brand} contact={contact} source="shared/components/sections/LegalWiderrufDefault.astro" />
+  <LegalWiderrufDefault brand={brand} contact={contact} source="shared/lib/contact.ts" />
 </LegalPageLayout>

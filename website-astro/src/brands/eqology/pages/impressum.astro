@@ -7,5 +7,5 @@ import { contact } from '@shared/lib/contact';
 const brand = await getBrand('eqology');
 ---
 <LegalPageLayout brand={brand} title="Impressum">
-  <LegalImpressumDefault brand={brand} contact={contact} source="shared/components/sections/LegalImpressumDefault.astro" />
+  <LegalImpressumDefault brand={brand} contact={contact} source="shared/lib/contact.ts" />
 </LegalPageLayout>

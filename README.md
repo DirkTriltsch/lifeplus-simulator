@@ -104,10 +104,20 @@ nutzt; die Root-Skripte bauen deshalb sequentiell.
 - Pro-Tier Clicks fuer Monthly, Halfyear und Yearly mit Sandbox-Paddle testen:
   Checkout-Intent, Paddle Overlay und Rueckkehr zur Magic-Link-Logik.
 - `mein-konto.html`: Magic-Link-Verify und Account-Status-Render pruefen.
+- FitLine und Eqology vorerst nicht live bewerben: beide Brands enthalten noch
+  Paddle-Platzhalter und keine eigene `apiBaseUrl`. Der Free-Magic-Link-Flow
+  wuerde auf der Marketing-Domain gegen `/api/auth/request-link` laufen.
 - Visuellen Screenshot-Vergleich gegen den letzten akzeptierten Build machen,
   besonders Pricing Cards, Compare-Tabelle, Hero und Footer.
-- `npm audit` separat bearbeiten. Aktueller Stand nach Lockfile-Update:
-  18 Findings, davon 15 moderate und 3 high.
+- `debug.html` nicht aus der Navigation verlinken; die Seite ist nur lokal/fuer Reviews gedacht und per `robots.txt` ausgeschlossen.
+- `npm audit` separat bearbeiten und High-Findings bewerten. Aktueller Stand
+  (Stichtag 2026-05-29): 18 Findings, davon 15 moderate und 3 high. Die drei
+  High-Findings (`@babel/plugin-transform-modules-systemjs`, `fast-uri`,
+  `serialize-javascript`) liegen ausschliesslich in der Dev-/Build-Toolchain
+  (transitive Abhaengigkeiten von `@astrojs/check`, Language Server,
+  Build-Steps). Sie sind nicht im produktiven Output enthalten und nicht
+  Runtime-exponiert. `npm audit fix` ohne `--force` patcht keine davon, ein
+  `--force` waere ein breaking-change Update von `@astrojs/check`.
 
 ## Payment/API-Status
 
@@ -119,7 +129,9 @@ Konfiguration im Repo. Die Konfigurationen liegen in
 FitLine und Eqology haben eigene Product Packs, Astro-Microsites und App-Builds,
 aber noch keine echten Paddle-IDs, API-Subdomains oder Pages-Projekte. Ihre
 `paddle.*`-Werte bleiben Platzhalter, bis die Brand-Setups separat angelegt
-werden.
+werden. Diese beiden Brands sind deshalb als Staging-/Preview-Setups zu
+behandeln; produktiver Magic-Link- und Checkout-Betrieb ist aktuell nur fuer
+LifePlus konfiguriert.
 
 ## Microsite Anpassen
 
@@ -128,6 +140,24 @@ werden.
 - Brand-Pages und Overrides: `website-astro/src/brands/<brand>/pages/`
 - Gemeinsame Komponenten: `website-astro/src/shared/components/`
 - Gemeinsame Styles und Scripts: `website-astro/src/shared/styles/` und `website-astro/src/shared/scripts/`
+
+## Lokaler Debug-Review
+
+Jede Astro-Brand hat eine lokale Review-Seite:
+
+```bash
+cd website-astro
+npm run dev:lifeplus
+```
+
+Dann `http://localhost:4321/debug.html` oeffnen. Die Seite verlinkt alle HTML-
+Seiten mit aktiviertem Debug-Modus. Alternativ kann jede Seite direkt mit
+`?debug=1` geoeffnet werden, zum Beispiel `pricing.html?debug=1`.
+
+Im Debug-Modus markiert ein Rahmen die annotierten Komponenten. Links oben steht
+die Komponenten-Datei, rechts oben stehen verknuepfte Content-, Brand- oder Lib-
+Dateien. Die Links nutzen `vscode://file/...` und oeffnen die jeweilige Datei in
+VS Code. Taste `d` toggelt den Modus; `?debug=0` deaktiviert ihn wieder.
 
 ## Fachliche Drift-Policy
 

@@ -40,80 +40,6 @@ export const brandSchema = z.object({
 });
 export type Brand = z.infer<typeof brandSchema>;
 
-export const heroSchema = z.object({
-  eyebrow: z.string(),
-  claim: z.string().min(5).max(160),
-  subClaim: z.string(),
-  ctaLabel: z.string(),
-  ctaUrl: z.string().optional(),
-});
-export type Hero = z.infer<typeof heroSchema>;
-
-export const trustStripSchema = z.object({
-  headline: z.string().optional(),
-  items: z.array(z.string()).min(1),
-});
-export type TrustStrip = z.infer<typeof trustStripSchema>;
-
-export const coreMessageSchema = z.object({
-  headline: z.string(),
-  body: z.string(),
-});
-export type CoreMessage = z.infer<typeof coreMessageSchema>;
-
-export const featureTeaserSchema = z.object({
-  headline: z.string(),
-  items: z
-    .array(
-      z.object({
-        title: z.string(),
-        body: z.string(),
-      }),
-    )
-    .min(1),
-});
-export type FeatureTeaser = z.infer<typeof featureTeaserSchema>;
-
-export const pricingTeaserSchema = z.object({
-  headline: z.string(),
-  body: z.string(),
-  ctaLabel: z.string(),
-  ctaUrl: z.string().optional(),
-});
-export type PricingTeaser = z.infer<typeof pricingTeaserSchema>;
-
-export const faqSchema = z.object({
-  headline: z.string(),
-  items: z
-    .array(
-      z.object({
-        q: z.string(),
-        a: z.string(),
-      }),
-    )
-    .min(1),
-});
-export type FAQ = z.infer<typeof faqSchema>;
-
-export const finalCtaSchema = z.object({
-  headline: z.string(),
-  body: z.string(),
-  ctaLabel: z.string(),
-  ctaUrl: z.string().optional(),
-});
-export type FinalCTA = z.infer<typeof finalCtaSchema>;
-
-export const homeSchema = z.object({
-  hero: heroSchema,
-  trustStrip: trustStripSchema,
-  coreMessage: coreMessageSchema,
-  featureTeaser: featureTeaserSchema,
-  pricingTeaser: pricingTeaserSchema,
-  faq: faqSchema,
-  finalCta: finalCtaSchema,
-});
-export type Home = z.infer<typeof homeSchema>;
-
 const pricingFeatureSchema = z.object({
   strong: z.string().optional(),
   text: z.string(),
@@ -212,7 +138,6 @@ export const pricingPageSchema = z.object({
 export type PricingPage = z.infer<typeof pricingPageSchema>;
 
 export const pageSchemas = {
-  home: homeSchema,
   pricing: pricingPageSchema,
 } as const;
 export type PageId = keyof typeof pageSchemas;

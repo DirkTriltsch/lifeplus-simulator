@@ -11,7 +11,12 @@ const accountConfig = {
   contactEmail: contact.email,
 };
 ---
-<main class="account-page" data-section="AccountPageDefault.astro" data-source={source}>
+<main
+  class="account-page"
+  data-section="AccountPageDefault.astro"
+  data-component-file="shared/components/sections/AccountPageDefault.astro"
+  data-source={source}
+>
   <div class="container">
     <h1>Mein <em>Konto</em></h1>
     <p class="lead">Sieh deinen Zugang, verwalte dein Abo oder melde dich an.</p>

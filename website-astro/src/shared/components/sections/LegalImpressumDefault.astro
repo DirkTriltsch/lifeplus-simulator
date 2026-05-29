@@ -5,7 +5,11 @@ import type { Contact } from '@shared/lib/contact';
 interface Props { brand: Brand; contact: Contact; source?: string; }
 const { contact, source } = Astro.props;
 ---
-<div data-section="LegalImpressumDefault.astro" data-source={source}>
+<div
+  data-section="LegalImpressumDefault.astro"
+  data-component-file="shared/components/sections/LegalImpressumDefault.astro"
+  data-source={source}
+>
   <p class="legal-meta-top">Rechtliche Informationen</p>
   <h1>Impressum</h1>
 

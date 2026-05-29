@@ -5,7 +5,11 @@ import type { Contact } from '@shared/lib/contact';
 interface Props { brand: Brand; contact: Contact; source?: string; }
 const { contact, source } = Astro.props;
 ---
-<div data-section="LegalWiderrufDefault.astro" data-source={source}>
+<div
+  data-section="LegalWiderrufDefault.astro"
+  data-component-file="shared/components/sections/LegalWiderrufDefault.astro"
+  data-source={source}
+>
   <p class="legal-meta-top">Rechtliche Informationen</p>
   <h1>Widerrufsbelehrung</h1>
   <p class="legal-meta">Für Verbraucher im Sinne des § 13 BGB. Stand: Mai 2026.</p>

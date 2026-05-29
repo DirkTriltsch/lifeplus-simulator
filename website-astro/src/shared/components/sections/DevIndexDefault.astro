@@ -6,45 +6,51 @@ interface Props { brand: Brand; source?: string; }
 const { brand, source } = Astro.props;
 
 const pages = [
-  { href: '/index.html', label: 'Startseite', file: 'pages/index.astro', comp: 'IndexPageDefault.astro' },
-  { href: '/features.html', label: 'Funktionen', file: 'pages/features.astro', comp: 'FeaturesPageDefault.astro' },
-  { href: '/pricing.html', label: 'Preise', file: 'pages/pricing.astro', comp: 'PricingPageDefault.astro' },
-  { href: '/mein-konto.html', label: 'Mein Konto', file: 'pages/mein-konto.astro', comp: 'AccountPageDefault.astro' },
-  { href: '/impressum.html', label: 'Impressum', file: 'pages/impressum.astro', comp: 'LegalImpressumDefault.astro' },
-  { href: '/datenschutz.html', label: 'Datenschutz', file: 'pages/datenschutz.astro', comp: 'LegalDatenschutzDefault.astro' },
-  { href: '/agb.html', label: 'AGB', file: 'pages/agb.astro', comp: 'LegalAgbDefault.astro' },
-  { href: '/widerruf.html', label: 'Widerruf', file: 'pages/widerruf.astro', comp: 'LegalWiderrufDefault.astro' },
+  { href: 'index.html?debug=1', label: 'Startseite', file: `brands/${brand.id}/pages/index.astro`, comp: 'IndexPageDefault.astro', source: `brands/${brand.id}/brand.yaml` },
+  { href: 'features.html?debug=1', label: 'Funktionen', file: `brands/${brand.id}/pages/features.astro`, comp: 'FeaturesPageDefault.astro', source: `brands/${brand.id}/brand.yaml` },
+  { href: 'pricing.html?debug=1', label: 'Preise', file: `brands/${brand.id}/pages/pricing.astro`, comp: 'PricingPageDefault.astro', source: `brands/${brand.id}/content/pricing.yaml` },
+  { href: 'mein-konto.html?debug=1', label: 'Mein Konto', file: `brands/${brand.id}/pages/mein-konto.astro`, comp: 'AccountPageDefault.astro', source: `brands/${brand.id}/brand.yaml` },
+  { href: 'impressum.html?debug=1', label: 'Impressum', file: `brands/${brand.id}/pages/impressum.astro`, comp: 'LegalImpressumDefault.astro', source: 'shared/lib/contact.ts' },
+  { href: 'datenschutz.html?debug=1', label: 'Datenschutz', file: `brands/${brand.id}/pages/datenschutz.astro`, comp: 'LegalDatenschutzDefault.astro', source: 'shared/lib/contact.ts' },
+  { href: 'agb.html?debug=1', label: 'AGB', file: `brands/${brand.id}/pages/agb.astro`, comp: 'LegalAgbDefault.astro', source: 'shared/lib/contact.ts' },
+  { href: 'widerruf.html?debug=1', label: 'Widerruf', file: `brands/${brand.id}/pages/widerruf.astro`, comp: 'LegalWiderrufDefault.astro', source: 'shared/lib/contact.ts' },
 ];
 
-const previews = [
-  { href: '/preview/header.html', label: 'Header (Lockup + Nav)', file: 'shared/components/layout/Header.astro' },
-  { href: '/preview/footer.html', label: 'Footer', file: 'shared/components/layout/Footer.astro' },
+const reviewTargets = [
+  { href: 'index.html?debug=1', label: 'Header im Seitenkontext', file: 'shared/components/layout/Header.astro', source: `brands/${brand.id}/brand.yaml` },
+  { href: 'index.html?debug=1', label: 'Footer im Seitenkontext', file: 'shared/components/layout/Footer.astro', source: 'shared/lib/contact.ts' },
+  { href: 'pricing.html?debug=1', label: 'Pricing mit Paddle-Flow', file: 'shared/components/sections/PricingPageDefault.astro', source: `brands/${brand.id}/content/pricing.yaml` },
+  { href: 'mein-konto.html?debug=1', label: 'Account / Magic-Link', file: 'shared/components/sections/AccountPageDefault.astro', source: `brands/${brand.id}/brand.yaml` },
 ];
 
 const otherBrands: BrandId[] = BRAND_IDS.filter((b) => b !== brand.id);
-
 const isProd = !import.meta.env.DEV;
 ---
-<main class="dev-index" data-section="DevIndexDefault.astro" data-source={source}>
+<main
+  class="dev-index"
+  data-section="DevIndexDefault.astro"
+  data-component-file="shared/components/sections/DevIndexDefault.astro"
+  data-source={source}
+>
   <div class="dev-wrap">
     <div class="dev-header">
-      <span class="dev-tag">DEV-INDEX</span>
-      <h1>Komponenten- und Page-Übersicht</h1>
+      <span class="dev-tag">LOCAL DEBUG</span>
+      <h1>Review-Index fuer Seiten und Komponenten</h1>
       <p class="dev-lead">
-        Diese Seite ist ein internes Werkzeug. Sie listet alle Pages, Komponenten und Tools dieser Brand-Build-Variante.
-        Aktive Brand: <strong>{brand.siteName}</strong> <span class="brand-id">({brand.id})</span>
+        Interne Uebersicht fuer die aktive Brand <strong>{brand.siteName}</strong>
+        <span class="brand-id">({brand.id})</span>. Links oeffnen die Seite direkt mit aktivem Debug-Overlay.
       </p>
 
       {isProd && (
         <div class="dev-warning">
-          <strong>⚠ Production-Build:</strong> Dieser Build enthält Dev-Routen (__dev / __preview). Vor Live-Deploy sollten sie aus <code>robots.txt</code> ausgeschlossen oder gelöscht werden.
+          <strong>Production-Build:</strong> <code>debug.html</code> ist gebaut, aber per <code>robots.txt</code> ausgeschlossen. Nicht aus der Navigation verlinken.
         </div>
       )}
     </div>
 
     <section class="dev-section">
-      <h2>Pages dieser Brand</h2>
-      <p class="dev-sec-lead">Die acht gebauten Marketing-Seiten — direkt verlinkt.</p>
+      <h2>Alle HTML-Seiten</h2>
+      <p class="dev-sec-lead">Direkte Review-Links auf alle gebauten Seiten dieser Brand.</p>
       <ul class="dev-list">
         {pages.map((p) => (
           <li>
@@ -53,7 +59,7 @@ const isProd = !import.meta.env.DEV;
               <span class="dev-list-path">{p.href}</span>
             </a>
             <span class="dev-list-meta">
-              <code>{p.file}</code> → <code>{p.comp}</code>
+              <code>{p.file}</code> -> <code>{p.comp}</code> · <code>{p.source}</code>
             </span>
           </li>
         ))}
@@ -61,17 +67,17 @@ const isProd = !import.meta.env.DEV;
     </section>
 
     <section class="dev-section">
-      <h2>Komponenten-Previews</h2>
-      <p class="dev-sec-lead">Layout-Komponenten isoliert im BrandLayout. (Page-Komponenten sind direkt als Pages oben verlinkt.)</p>
+      <h2>Wichtige Komponenten</h2>
+      <p class="dev-sec-lead">Schnelleinstieg fuer typische Anpassungen: Layout, Pricing, Account und Content.</p>
       <ul class="dev-list">
-        {previews.map((p) => (
+        {reviewTargets.map((p) => (
           <li>
             <a href={p.href}>
               <span class="dev-list-label">{p.label}</span>
               <span class="dev-list-path">{p.href}</span>
             </a>
             <span class="dev-list-meta">
-              <code>{p.file}</code>
+              <code>{p.file}</code> · <code>{p.source}</code>
             </span>
           </li>
         ))}
@@ -80,17 +86,21 @@ const isProd = !import.meta.env.DEV;
 
     <section class="dev-section">
       <h2>Debug-Modus</h2>
-      <p class="dev-sec-lead">Im Dev-Build sind alle Sections mit <code>data-section</code> und <code>data-source</code> annotiert.</p>
+      <p class="dev-sec-lead">
+        Komponenten sind mit <code>data-section</code>, <code>data-component-file</code> und <code>data-source</code> annotiert.
+      </p>
       <div class="dev-cmd">
         <kbd>d</kbd>
-        <span>Toggle Debug-Outlines (rosa Rahmen + Komponentenname + Quelle pro Section). Status wird in localStorage gespeichert.</span>
+        <span>Debug-Outlines toggeln. Links oben: Komponenten-Datei. Rechts oben: verknuepfte Content-, Config- oder Lib-Dateien als VS-Code-Links.</span>
       </div>
-      <p class="dev-note">Debug-Styles sind via <code>body.debug-on</code> aktiv. CSS in <code>shared/styles/debug.css</code>, JS in <code>shared/scripts/debug.ts</code>.</p>
+      <p class="dev-note">
+        Alternativ <code>?debug=1</code> anhaengen. Ausschalten mit <code>?debug=0</code>.
+      </p>
     </section>
 
     <section class="dev-section">
       <h2>Andere Brands</h2>
-      <p class="dev-sec-lead">Jede Brand baut mit eigenem <code>srcDir</code>. Wechsel erfordert eigenen Dev-Server.</p>
+      <p class="dev-sec-lead">Jede Brand baut mit eigenem <code>ASTRO_BRAND</code>. Wechsel erfordert einen eigenen Dev-Server.</p>
       <div class="dev-brand-grid">
         <div class="dev-brand-card current">
           <span class="dev-brand-status">aktiv</span>
@@ -114,9 +124,9 @@ const isProd = !import.meta.env.DEV;
         <li><span>Site-Name</span><code>{brand.siteName}</code></li>
         <li><span>Site-Domain</span><code>{brand.siteDomain}</code></li>
         <li><span>App-URL</span><code>{brand.appUrl}</code></li>
-        <li><span>API-Base</span><code>{brand.apiBaseUrl ?? '— (nicht gesetzt)'}</code></li>
+        <li><span>API-Base</span><code>{brand.apiBaseUrl ?? 'nicht gesetzt'}</code></li>
         <li><span>Paddle-Env</span><code>{brand.paddle.env}</code></li>
-        <li><span>Paddle-Token</span><code>{brand.paddle.clientToken.startsWith('REPLACE_') ? '⚠ Platzhalter' : 'gesetzt'}</code></li>
+        <li><span>Paddle-Token</span><code>{brand.paddle.clientToken.startsWith('REPLACE_') ? 'Platzhalter' : 'gesetzt'}</code></li>
         <li><span>Accent</span><code style={`color:${brand.accentColor}`}>{brand.accentColor}</code></li>
         <li><span>CTA</span><code style={`color:${brand.ctaColor}`}>{brand.ctaColor}</code></li>
       </ul>
@@ -126,8 +136,7 @@ const isProd = !import.meta.env.DEV;
 
 <style>
   .dev-index { padding: 60px 0 120px; background: #fafbf9; min-height: 80vh; }
-  .dev-wrap { max-width: 920px; margin: 0 auto; padding: 0 28px; }
-
+  .dev-wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; }
   .dev-header { margin-bottom: 48px; }
   .dev-tag {
     display: inline-block;
@@ -151,7 +160,6 @@ const isProd = !import.meta.env.DEV;
   .dev-lead { font-size: 16px; color: #4a5c53; line-height: 1.55; margin: 0; }
   .dev-lead strong { color: var(--brand); font-weight: 600; }
   .brand-id { color: #7a8983; font-size: 14px; }
-
   .dev-warning {
     margin-top: 18px;
     padding: 14px 18px;
@@ -162,8 +170,15 @@ const isProd = !import.meta.env.DEV;
     font-size: 14px;
     line-height: 1.55;
   }
-  .dev-warning code { font-family: ui-monospace, monospace; background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; }
-
+  .dev-warning code,
+  .dev-sec-lead code,
+  .dev-note code {
+    font-family: ui-monospace, monospace;
+    background: #eef1ef;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
   .dev-section { margin-bottom: 40px; }
   .dev-section h2 {
     font-family: 'Fraunces', Georgia, serif;
@@ -174,8 +189,6 @@ const isProd = !import.meta.env.DEV;
     letter-spacing: -0.01em;
   }
   .dev-sec-lead { font-size: 14px; color: #4a5c53; margin: 0 0 18px; line-height: 1.55; }
-  .dev-sec-lead code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
-
   .dev-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
   .dev-list li {
     background: #fff;
@@ -194,7 +207,6 @@ const isProd = !import.meta.env.DEV;
   .dev-list-path { font-family: ui-monospace, monospace; font-size: 12px; color: #7a8983; }
   .dev-list-meta { font-size: 11px; color: #7a8983; }
   .dev-list-meta code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 5px; border-radius: 3px; }
-
   .dev-cmd {
     display: flex; align-items: center; gap: 14px;
     background: #fff;
@@ -214,8 +226,6 @@ const isProd = !import.meta.env.DEV;
   }
   .dev-cmd span { font-size: 14px; color: #2c4138; line-height: 1.5; }
   .dev-note { font-size: 12px; color: #7a8983; margin-top: 10px; }
-  .dev-note code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 5px; border-radius: 3px; }
-
   .dev-brand-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
   .dev-brand-card {
     background: #fff;
@@ -238,7 +248,6 @@ const isProd = !import.meta.env.DEV;
   .dev-brand-name { font-weight: 600; font-size: 15px; }
   .dev-brand-cmd { font-size: 12px; color: #4a5c53; }
   .dev-brand-cmd code { font-family: ui-monospace, monospace; background: #eef1ef; padding: 1px 6px; border-radius: 3px; }
-
   .dev-meta { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
   .dev-meta li {
     display: flex;

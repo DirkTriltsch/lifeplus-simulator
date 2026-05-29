@@ -2,6 +2,7 @@
 import '@shared/styles/tokens.css';
 import '@shared/styles/globals.css';
 import '@shared/styles/site.css';
+import '@shared/styles/debug.css';
 import type { Brand } from '@shared/content-schemas/config';
 
 interface Props {
@@ -16,6 +17,7 @@ const fullTitle = title
   ? (title.includes(brand.siteName) ? title : `${title} – ${brand.siteName}`)
   : brand.siteName;
 const apiBase = brand.apiBaseUrl ?? '';
+const debugRoot = process.cwd().replace(/\\/g, '/');
 ---
 <!doctype html>
 <html lang="de">
@@ -32,7 +34,10 @@ const apiBase = brand.apiBaseUrl ?? '';
       rel="stylesheet"
     />
 
-    <script is:inline define:vars={{ apiBase }}>window.LFL_API_BASE = apiBase;</script>
+    <script is:inline define:vars={{ apiBase, debugRoot }}>
+      window.LFL_API_BASE = apiBase;
+      window.LFL_DEBUG_ROOT = debugRoot;
+    </script>
     {paddle && <script src="https://cdn.paddle.com/paddle/v2/paddle.js" is:inline></script>}
   </head>
   <body
@@ -44,6 +49,10 @@ const apiBase = brand.apiBaseUrl ?? '';
     <script>
       import { setupAccountLink } from '@shared/scripts/accountLink';
       setupAccountLink((window as unknown as { LFL_API_BASE?: string }).LFL_API_BASE);
+    </script>
+    <script>
+      import { setupDebug } from '@shared/scripts/debug';
+      setupDebug();
     </script>
   </body>
 </html>

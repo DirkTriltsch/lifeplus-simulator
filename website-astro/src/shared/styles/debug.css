@@ -1,6 +1,7 @@
 :root {
   --debug-color: #d946ef;
   --debug-bg: rgba(217, 70, 239, 0.04);
+  --debug-link-bg: rgba(15, 23, 42, 0.88);
 }
 
 body.debug-on [data-section] {
@@ -10,26 +11,67 @@ body.debug-on [data-section] {
   background-image: linear-gradient(var(--debug-bg), var(--debug-bg));
 }
 
-body.debug-on [data-section]::before {
-  content: attr(data-section);
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: var(--debug-color);
+body.debug-on .debug-panel {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 99998;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9);
   color: #fff;
-  padding: 4px 12px;
-  font: 600 11px/1 ui-monospace, 'JetBrains Mono', monospace;
-  z-index: 10;
+  font: 500 11px/1.2 ui-monospace, 'JetBrains Mono', monospace;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
 }
 
-body.debug-on [data-section]::after {
-  content: attr(data-source);
+body.debug-on .debug-panel a,
+body.debug-on .debug-badge a {
+  color: #fff;
+  text-decoration: none;
+}
+
+body.debug-on .debug-panel a:hover,
+body.debug-on .debug-badge a:hover {
+  text-decoration: underline;
+}
+
+body.debug-on .debug-badge {
   position: absolute;
   top: 0;
+  z-index: 9999;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: min(90vw, 720px);
+  padding: 4px;
+  pointer-events: auto;
+  font: 500 10px/1.2 ui-monospace, 'JetBrains Mono', monospace;
+}
+
+body.debug-on .debug-badge--component {
+  left: 0;
+}
+
+body.debug-on .debug-badge--sources {
   right: 0;
-  background: rgba(0, 0, 0, 0.7);
+  justify-content: flex-end;
+}
+
+body.debug-on .debug-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--debug-link-bg);
   color: #fff;
-  padding: 4px 10px;
-  font: 400 10px/1 ui-monospace, 'JetBrains Mono', monospace;
-  z-index: 10;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.18);
+}
+
+body.debug-on .debug-badge-item--component {
+  background: var(--debug-color);
+  font-weight: 700;
 }

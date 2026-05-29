@@ -6,7 +6,12 @@ const { brand, source } = Astro.props;
 const ac = brand.accentColor;
 ---
 <!-- ===== Hero ===== -->
-<section class="hero" data-section="IndexPageDefault.astro" data-source={source}>
+<section
+  class="hero"
+  data-section="Index Hero"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap hero-inner">
     <div class="hero-grid">
       <div>
@@ -114,7 +119,12 @@ const ac = brand.accentColor;
 </section>
 
 <!-- ===== Trust strip ===== -->
-<section class="trust-strip">
+<section
+  class="trust-strip"
+  data-section="Index Trust Strip"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap trust-inner">
     <div class="trust-label">Eingebaute Logik</div>
     <div class="trust-items">
@@ -128,7 +138,13 @@ const ac = brand.accentColor;
 </section>
 
 <!-- ===== Core Message ===== -->
-<section class="core" id="kernbotschaft">
+<section
+  class="core"
+  id="kernbotschaft"
+  data-section="Index Kernbotschaft"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap core-inner">
     <div class="core-grid-intro">
       <div>
@@ -182,12 +198,22 @@ const ac = brand.accentColor;
     </div>
 
     <div class="core-grid" style="grid-template-columns: repeat(2, 1fr); max-width: 960px; margin: 0 auto;">
-      <div class="core-card">
+      <div
+        class="core-card"
+        data-section="Index Kernbotschaft: Interessentengespraech"
+        data-component-file="shared/components/sections/IndexPageDefault.astro"
+        data-source={source}
+      >
         <div class="core-card-num">01 — Im Interessentengespräch</div>
         <h3 class="core-card-h">Aus Vortrag wird gemeinsames Rechnen.</h3>
         <p class="core-card-p">Statt den kompletten Vergütungsplan zu erklären, fragt der Sponsor: „Wie viele neue Member traust du dir pro Jahr zu? Wie viele Shopper? Welche Duplikation?" Der Interessent bewegt die Slider selbst — und sieht, was aus seinen eigenen Annahmen entsteht. Kein Vortrag, ein Gespräch.</p>
       </div>
-      <div class="core-card">
+      <div
+        class="core-card"
+        data-section="Index Kernbotschaft: Downline"
+        data-component-file="shared/components/sections/IndexPageDefault.astro"
+        data-source={source}
+      >
         <div class="core-card-num">02 — In der eigenen Downline</div>
         <h3 class="core-card-h">Durststrecken einordnen, statt sie wegreden.</h3>
         <p class="core-card-p">Partner zweifeln nicht am Werkzeug — sie zweifeln am Tempo. Der Simulator zeigt, warum Jahr 1 oft klein aussieht, welche Zwischenziele trotzdem realistisch sind und was 12, 24 oder 36 Monate Kontinuität bewirken. Transparenz statt Hype.</p>
@@ -197,7 +223,13 @@ const ac = brand.accentColor;
 </section>
 
 <!-- ===== Feature Teaser ===== -->
-<section class="feat-teaser" id="funktionen">
+<section
+  class="feat-teaser"
+  id="funktionen"
+  data-section="Index Feature Teaser"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <div class="feat-teaser-head">
       <div class="sec-eyebrow">Funktionen im Überblick</div>
@@ -205,7 +237,13 @@ const ac = brand.accentColor;
       <p class="sec-sub">Slider, Verlauf und Ziele-Leiter greifen ineinander — Simulationsmodelle und Netzwerk-Visualisierungen ergänzen das Bild. Details auf der Funktionsseite.</p>
     </div>
     <div class="feat-cards">
-      <a href="features.html#slider" class="feat-card">
+      <a
+        href="features.html#slider"
+        class="feat-card"
+        data-section="Index Feature Card: Slider"
+        data-component-file="shared/components/sections/IndexPageDefault.astro"
+        data-source={source}
+      >
         <div class="feat-card-num">01 / SLIDER</div>
         <h3 class="feat-card-h">Fünf Regler, kein Vergütungsplan-Vortrag</h3>
         <p class="feat-card-p">Member, Shopper, IP, Duplikation, Fluktuation — er stellt selbst ein, was er sich zutraut. Jede Bewegung ist eine Frage.</p>
@@ -214,7 +252,13 @@ const ac = brand.accentColor;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
       </a>
-      <a href="features.html#chart" class="feat-card">
+      <a
+        href="features.html#chart"
+        class="feat-card"
+        data-section="Index Feature Card: Verlauf"
+        data-component-file="shared/components/sections/IndexPageDefault.astro"
+        data-source={source}
+      >
         <div class="feat-card-num">02 / VERLAUF</div>
         <h3 class="feat-card-h">10 Jahre auf einer Kurve</h3>
         <p class="feat-card-p">Der Sprung von Jahr 3 zu Jahr 7 wird sichtbar — als Bild, nicht als Tabelle. Monats- oder Jahresansicht in einem Tap.</p>
@@ -223,7 +267,13 @@ const ac = brand.accentColor;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
       </a>
-      <a href="features.html#ziele" class="feat-card">
+      <a
+        href="features.html#ziele"
+        class="feat-card"
+        data-section="Index Feature Card: Ziele-Leiter"
+        data-component-file="shared/components/sections/IndexPageDefault.astro"
+        data-source={source}
+      >
         <div class="feat-card-num">03 / ZIELE-LEITER</div>
         <h3 class="feat-card-h">Zwischenziele statt Endsumme</h3>
         <p class="feat-card-p">Produktkosten refinanziert, Auto finanziert, mietfrei wohnen, vollwertiges Einkommen — eigene Wegmarken im Jahresverlauf machen Fortschritt greifbar.</p>
@@ -243,7 +293,13 @@ const ac = brand.accentColor;
 </section>
 
 <!-- ===== Pricing Teaser ===== -->
-<section class="pricing-teaser" id="pricing">
+<section
+  class="pricing-teaser"
+  id="pricing"
+  data-section="Index Pricing Teaser"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <div class="pricing-grid">
       <div class="pricing-intro">
@@ -259,7 +315,12 @@ const ac = brand.accentColor;
       </div>
 
       <div class="pricing-cards">
-        <div class="pricing-card">
+        <div
+          class="pricing-card"
+          data-section="Index Pricing Card: Free"
+          data-component-file="shared/components/sections/IndexPageDefault.astro"
+          data-source={source}
+        >
           <div class="pc-tag">Einstieg</div>
           <div class="pc-name">Free</div>
           <div class="pc-price">
@@ -273,7 +334,12 @@ const ac = brand.accentColor;
           </ul>
         </div>
 
-        <div class="pricing-card">
+        <div
+          class="pricing-card"
+          data-section="Index Pricing Card: 1 Monat"
+          data-component-file="shared/components/sections/IndexPageDefault.astro"
+          data-source={source}
+        >
           <div class="pc-tag">Flexibel</div>
           <div class="pc-name">1 Monat</div>
           <div class="pc-price">
@@ -287,7 +353,12 @@ const ac = brand.accentColor;
           </ul>
         </div>
 
-        <div class="pricing-card pc-featured">
+        <div
+          class="pricing-card pc-featured"
+          data-section="Index Pricing Card: 12 Monate"
+          data-component-file="shared/components/sections/IndexPageDefault.astro"
+          data-source={source}
+        >
           <div class="pc-tag pc-tag-highlight">2 Monate gespart</div>
           <div class="pc-name">12 Monate</div>
           <div class="pc-price">
@@ -311,7 +382,13 @@ const ac = brand.accentColor;
 </section>
 
 <!-- ===== FAQ ===== -->
-<section class="faq" id="faq">
+<section
+  class="faq"
+  id="faq"
+  data-section="Index FAQ"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap faq-grid">
     <div>
       <div class="sec-eyebrow">FAQ</div>
@@ -392,7 +469,13 @@ const ac = brand.accentColor;
 </section>
 
 <!-- ===== Final CTA ===== -->
-<section class="final-cta" id="cta">
+<section
+  class="final-cta"
+  id="cta"
+  data-section="Index Final CTA"
+  data-component-file="shared/components/sections/IndexPageDefault.astro"
+  data-source={source}
+>
   <div class="wrap">
     <h2 class="final-h">
       Aus Annahmen wird ein <em>Bild.</em>

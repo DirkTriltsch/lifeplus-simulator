@@ -10,4 +10,4 @@ if (!allowed.has(brand)) {
 }
 
 const outDir = resolve(process.cwd(), '..', 'dist', `${brand}-website`);
-await rm(outDir, { recursive: true, force: true });
+await rm(outDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 });

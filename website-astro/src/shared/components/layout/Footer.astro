@@ -39,7 +39,12 @@ const linksByPage: Record<FooterPage, FooterLink[]> = {
 };
 const links = linksByPage[page] ?? linksByPage.index;
 ---
-<footer class="site-footer" data-section="Footer.astro" data-source="shared/lib/contact.ts">
+<footer
+  class="site-footer"
+  data-section="Footer.astro"
+  data-component-file="shared/components/layout/Footer.astro"
+  data-source="shared/lib/contact.ts"
+>
   <div class="container">
     <span>&copy; {year} {brand.siteName}</span>
     <nav>
