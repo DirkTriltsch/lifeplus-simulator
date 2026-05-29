@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath } from 'node:url';
 import { copyFile, mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 
@@ -19,15 +19,21 @@ export default defineConfig(async ({ mode }) => {
   const base = env.VITE_BASE_PATH ?? '/';
   const themeColor = brandThemeColor[product] ?? brandThemeColor.lifeplus;
 
-  const markSrc = fileURLToPath(new URL(`../website/marks/${product}.svg`, import.meta.url));
-  const faviconDst = fileURLToPath(new URL('./public/favicon.svg', import.meta.url));
-  await mkdir(dirname(faviconDst), { recursive: true });
-  await copyFile(markSrc, faviconDst);
+  const markSrc = fileURLToPath(new URL(`../website-astro/src/brands/${product}/public/favicon.svg`, import.meta.url));
+  const outDir = resolve(repoRoot, 'dist', `${product}-app`);
 
   return {
     base,
     plugins: [
       react(),
+      {
+        name: 'brand-favicon',
+        async writeBundle() {
+          const faviconDst = resolve(outDir, 'favicon.svg');
+          await mkdir(dirname(faviconDst), { recursive: true });
+          await copyFile(markSrc, faviconDst);
+        },
+      },
       {
         name: 'brand-theme-color',
         transformIndexHtml(html: string) {
@@ -73,7 +79,7 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     build: {
-      outDir: `${repoRoot}dist/${product}-app`,
+      outDir,
       emptyOutDir: true,
       sourcemap: false,
     },

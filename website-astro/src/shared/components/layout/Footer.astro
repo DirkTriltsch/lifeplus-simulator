@@ -2,22 +2,50 @@
 import type { Brand } from '@shared/content-schemas/config';
 import { contact } from '@shared/lib/contact';
 
-interface Props { brand: Brand; }
+type FooterPage = 'index' | 'features' | 'pricing' | 'mein-konto' | 'impressum' | 'datenschutz' | 'agb' | 'widerruf';
+
+interface FooterLink {
+  href: string;
+  label: string;
+  account?: boolean;
+}
+
+interface Props { brand: Brand; page?: FooterPage; }
 const { brand } = Astro.props;
 const year = new Date().getFullYear();
+const inferredPage = (Astro.url.pathname.split('/').pop() || 'index.html').replace('.html', '') as FooterPage;
+const page = Astro.props.page ?? (inferredPage || 'index');
+const baseLinks: Record<string, FooterLink> = {
+  home: { href: 'index.html', label: 'Startseite' },
+  account: { href: 'mein-konto.html', label: 'Mein Konto', account: true },
+  features: { href: 'features.html', label: 'Funktionen' },
+  pricing: { href: 'pricing.html', label: 'Preise' },
+  agb: { href: 'agb.html', label: 'AGB' },
+  widerruf: { href: 'widerruf.html', label: 'Widerruf' },
+  widerrufsbelehrung: { href: 'widerruf.html', label: 'Widerrufsbelehrung' },
+  impressum: { href: 'impressum.html', label: 'Impressum' },
+  datenschutz: { href: 'datenschutz.html', label: 'Datenschutz' },
+  contact: { href: `mailto:${contact.email}`, label: 'Kontakt' },
+};
+const linksByPage: Record<FooterPage, FooterLink[]> = {
+  index: [baseLinks.account, baseLinks.features, baseLinks.pricing, baseLinks.agb, baseLinks.widerruf, baseLinks.impressum, baseLinks.datenschutz, baseLinks.contact],
+  features: [baseLinks.home, baseLinks.account, baseLinks.pricing, baseLinks.agb, baseLinks.widerruf, baseLinks.impressum, baseLinks.datenschutz, baseLinks.contact],
+  pricing: [baseLinks.home, baseLinks.account, baseLinks.features, baseLinks.agb, baseLinks.widerruf, baseLinks.impressum, baseLinks.datenschutz, baseLinks.contact],
+  'mein-konto': [baseLinks.home, baseLinks.account, baseLinks.features, baseLinks.pricing, baseLinks.agb, baseLinks.widerruf, baseLinks.impressum, baseLinks.datenschutz, baseLinks.contact],
+  impressum: [baseLinks.home, baseLinks.account, baseLinks.agb, baseLinks.widerruf, baseLinks.datenschutz, baseLinks.contact],
+  datenschutz: [baseLinks.home, baseLinks.account, baseLinks.agb, baseLinks.widerruf, baseLinks.impressum, baseLinks.contact],
+  agb: [baseLinks.home, baseLinks.account, baseLinks.impressum, baseLinks.datenschutz, baseLinks.widerrufsbelehrung, baseLinks.contact],
+  widerruf: [baseLinks.home, baseLinks.account, baseLinks.impressum, baseLinks.datenschutz, baseLinks.agb, baseLinks.contact],
+};
+const links = linksByPage[page] ?? linksByPage.index;
 ---
 <footer class="site-footer" data-section="Footer.astro" data-source="shared/lib/contact.ts">
   <div class="container">
-    <span>© {year} {brand.siteName}</span>
+    <span>&copy; {year} {brand.siteName}</span>
     <nav>
-      <a href="/">Startseite</a>
-      <a href="/mein-konto.html" class="js-account-link">Mein Konto</a>
-      <a href="/features.html">Funktionen</a>
-      <a href="/agb.html">AGB</a>
-      <a href="/widerruf.html">Widerruf</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href={`mailto:${contact.email}`}>Kontakt</a>
+      {links.map((link) => (
+        <a href={link.href} class={link.account ? 'js-account-link' : undefined}>{link.label}</a>
+      ))}
     </nav>
   </div>
 </footer>

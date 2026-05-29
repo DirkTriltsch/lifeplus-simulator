@@ -12,7 +12,9 @@ interface Props {
   paddle?: boolean;
 }
 const { brand, title, description, paddle = false } = Astro.props;
-const fullTitle = title ? `${title} - ${brand.siteName}` : brand.siteName;
+const fullTitle = title
+  ? (title.includes(brand.siteName) ? title : `${title} – ${brand.siteName}`)
+  : brand.siteName;
 const apiBase = brand.apiBaseUrl ?? '';
 ---
 <!doctype html>

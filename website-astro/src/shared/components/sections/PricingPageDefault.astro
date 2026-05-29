@@ -77,7 +77,7 @@ const paddleConfig = {
           </ul>
           {tier.cta.kind === 'link' ? (
             <a
-              href={tier.cta.url}
+              href={tier.cta.url === '/app/' ? brand.appUrl : tier.cta.url}
               class="price-cta"
               data-free-start={tier.id === 'free' ? 'true' : undefined}
             >

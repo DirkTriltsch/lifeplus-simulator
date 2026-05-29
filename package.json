@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "workspaces": [
-    "website",
+    "website-astro",
     "simulator-app",
     "packages/*"
   ],
@@ -15,10 +15,10 @@
     "build:lifeplus": "npm run build --workspace @mlm/simulator-web -- --mode lifeplus && node scripts/write-dist-sftp.mjs lifeplus app",
     "build:fitline": "npm run build --workspace @mlm/simulator-web -- --mode fitline && node scripts/write-dist-sftp.mjs fitline app",
     "build:eqology": "npm run build --workspace @mlm/simulator-web -- --mode eqology && node scripts/write-dist-sftp.mjs eqology app",
-    "build:site:lifeplus": "npm run build:lifeplus --workspace @mlm/marketing-site && node scripts/write-dist-sftp.mjs lifeplus website",
-    "build:site:fitline": "npm run build:fitline --workspace @mlm/marketing-site && node scripts/write-dist-sftp.mjs fitline website",
-    "build:site:eqology": "npm run build:eqology --workspace @mlm/marketing-site && node scripts/write-dist-sftp.mjs eqology website",
-    "build:sites": "npm run build --workspace @mlm/marketing-site",
+    "build:site:lifeplus": "npm --prefix website-astro run build:lifeplus",
+    "build:site:fitline": "npm --prefix website-astro run build:fitline",
+    "build:site:eqology": "npm --prefix website-astro run build:eqology",
+    "build:sites": "npm --prefix website-astro run build:all",
     "build:webroot:lifeplus": "npm run build:site:lifeplus && npm run build:lifeplus && node scripts/build-webroot.mjs lifeplus",
     "build:webroot:fitline": "npm run build:site:fitline && npm run build:fitline && node scripts/build-webroot.mjs fitline",
     "build:webroot:eqology": "npm run build:site:eqology && npm run build:eqology && node scripts/build-webroot.mjs eqology",

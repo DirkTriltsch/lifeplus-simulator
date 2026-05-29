@@ -14,11 +14,11 @@ vatBanner:
 tiers:
   - id: "free"
     name: "Frei"
-    descHtml: "Reduzierter Demo-Zugang,<br>ohne Anmeldung."
+    descHtml: "14 Tage Pro testen,<br>danach Free nutzen."
     currency: "€"
     value: "0"
     unit: "/Monat"
-    billed: "kostenlos · ohne Login · ohne Kreditkarte"
+    billed: "kostenlos · mit Magic-Link · ohne Kreditkarte"
     features:
       - strong: "Jahr 1-4 sichtbar"
         text: "— langfristige Werte bleiben begrenzt"
@@ -95,7 +95,7 @@ notes:
     body: "Automatisch verlängert? Kein Problem. Wir sind von unserem Nutzen überzeugt — und du hoffentlich auch. Wenn du aber nicht weitermachen möchtest, kündigst du einfach monatlich. Was du an vollen Restmonaten schon bezahlt hast, bekommst du anteilig zurück."
   - icon: "doc"
     title: "Saubere Rechnung für deine Unterlagen."
-    body: "Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du FitFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater."
+    body: "Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du LifeFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater."
 
 compare:
   headlineHtml: "Was ist <em>jeweils</em> enthalten?"
@@ -124,7 +124,7 @@ compare:
     - feature: "Netzwerk-Visualisierungen (Tabelle, Sunburst, Bein-Spalten, Hybrid-Tree)"
       cells: ["Basis", "check", "check", "check"]
     - feature: "Szenario per URL teilen (Handy, Tablet, Desktop)"
-      cells: ["-", "check", "check", "check"]
+      cells: ["Magic-Link", "check", "check", "check"]
     - feature: "Abrechnung"
       cells: ["kostenlos", "monatlich", "halbjährlich", "jährlich"]
     - feature: "Kündigungsfrist"

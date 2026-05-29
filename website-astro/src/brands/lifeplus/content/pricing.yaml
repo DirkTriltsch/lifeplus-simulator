@@ -14,11 +14,11 @@ vatBanner:
 tiers:
   - id: "free"
     name: "Frei"
-    descHtml: "Reduzierter Demo-Zugang,<br>ohne Anmeldung."
+    descHtml: "14 Tage Pro testen,<br>danach Free nutzen."
     currency: "€"
     value: "0"
     unit: "/Monat"
-    billed: "kostenlos · ohne Login · ohne Kreditkarte"
+    billed: "kostenlos · mit Magic-Link · ohne Kreditkarte"
     features:
       - strong: "Jahr 1-4 sichtbar"
         text: "— langfristige Werte bleiben begrenzt"
@@ -124,7 +124,7 @@ compare:
     - feature: "Netzwerk-Visualisierungen (Tabelle, Sunburst, Bein-Spalten, Hybrid-Tree)"
       cells: ["Basis", "check", "check", "check"]
     - feature: "Szenario per URL teilen (Handy, Tablet, Desktop)"
-      cells: ["-", "check", "check", "check"]
+      cells: ["Magic-Link", "check", "check", "check"]
     - feature: "Abrechnung"
       cells: ["kostenlos", "monatlich", "halbjährlich", "jährlich"]
     - feature: "Kündigungsfrist"

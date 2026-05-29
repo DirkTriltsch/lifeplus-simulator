@@ -20,8 +20,8 @@ if (inner <= 0) {
 }
 
 const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const srcSvg = join(repoRoot, 'website', 'marks', `${brandId}.svg`);
-const outPng = join(repoRoot, 'website', 'marks', `${brandId}-paddle.png`);
+const srcSvg = join(repoRoot, 'website-astro', 'src', 'brands', brandId, 'public', 'favicon.svg');
+const outPng = join(repoRoot, 'website-astro', 'src', 'brands', brandId, 'public', 'paddle-icon.png');
 
 const svgBuffer = await readFile(srcSvg);
 

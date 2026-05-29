@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /_astro/
 Disallow: /impressum.html
 Disallow: /datenschutz.html
