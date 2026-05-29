@@ -10,6 +10,7 @@ import {
   type PersonTreeNode,
   type PersonTreeStatus,
 } from './person-tree-node';
+import { usePanZoom } from './usePanZoom';
 
 interface HorizontalDendrogramProps {
   tree: PersonNode;
@@ -67,6 +68,7 @@ export function HorizontalDendrogram({
   onToggleCollapse,
 }: HorizontalDendrogramProps) {
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const { svgRef, transform, onPointerDown, reset, isPanning } = usePanZoom();
 
   const layout = useMemo(() => {
     const { hierarchy, isCollapsed } = toVisibleHierarchy(tree, collapsedIds);
@@ -109,7 +111,7 @@ export function HorizontalDendrogram({
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 sm:px-5 pt-4">
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pt-4">
         <div>
           <p className="text-xs uppercase tracking-wider text-gray-500">
             Arbeitsansicht
@@ -118,36 +120,67 @@ export function HorizontalDendrogram({
             Horizontales Dendrogramm
           </h3>
         </div>
-        <Legend />
+        <div className="flex items-center gap-3">
+          <Legend />
+          <ResetButton onClick={reset} />
+        </div>
       </div>
 
-      <div className="px-4 sm:px-5 pb-4 pt-3 overflow-auto" style={{ maxHeight: '70vh' }}>
-        <svg width={layout.width} height={layout.height} role="img" aria-label="Personenbaum als horizontales Dendrogramm">
-          <g>
-            {layout.links.map((link, i) => (
-              <path
-                key={i}
-                d={linkPath(link.source, link.target)}
-                fill="none"
-                stroke="#cbd5e1"
-                strokeWidth={1.25}
-              />
-            ))}
-          </g>
-          <g>
-            {layout.nodes.map((node) => (
-              <NodeMark
-                key={node.data.id}
-                node={node}
-                hovered={hoverId === node.data.id}
-                onHover={setHoverId}
-                onToggleCollapse={onToggleCollapse}
-              />
-            ))}
+      <div className="px-4 sm:px-5 pb-4 pt-3" style={{ maxHeight: '70vh', overflow: 'auto' }}>
+        <svg
+          ref={svgRef}
+          width={layout.width}
+          height={layout.height}
+          role="img"
+          aria-label="Personenbaum als horizontales Dendrogramm, scrollbar mit Mausrad und ziehbar"
+          onPointerDown={onPointerDown}
+          style={{
+            cursor: isPanning ? 'grabbing' : 'grab',
+            userSelect: 'none',
+            touchAction: 'none',
+            display: 'block',
+          }}
+        >
+          <g transform={transform}>
+            <g>
+              {layout.links.map((link, i) => (
+                <path
+                  key={i}
+                  d={linkPath(link.source, link.target)}
+                  fill="none"
+                  stroke="#cbd5e1"
+                  strokeWidth={1.25}
+                />
+              ))}
+            </g>
+            <g>
+              {layout.nodes.map((node) => (
+                <NodeMark
+                  key={node.data.id}
+                  node={node}
+                  hovered={hoverId === node.data.id}
+                  onHover={setHoverId}
+                  onToggleCollapse={onToggleCollapse}
+                />
+              ))}
+            </g>
           </g>
         </svg>
       </div>
     </div>
+  );
+}
+
+function ResetButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-md border border-gray-200 px-2 py-1 text-[10px] uppercase tracking-wider text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition"
+      title="Ansicht zuruecksetzen"
+    >
+      Reset
+    </button>
   );
 }
 
@@ -183,6 +216,7 @@ function NodeMark({ node, hovered, onHover, onToggleCollapse }: NodeMarkProps) {
 
   return (
     <g
+      data-pan-ignore="true"
       transform={`translate(${node.x},${node.y})`}
       onMouseEnter={() => onHover(data.id)}
       onMouseLeave={() => onHover(null)}

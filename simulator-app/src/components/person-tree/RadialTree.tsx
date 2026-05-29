@@ -9,6 +9,7 @@ import {
   type PersonTreeNode,
   type PersonTreeStatus,
 } from './person-tree-node';
+import { usePanZoom } from './usePanZoom';
 
 interface RadialTreeProps {
   tree: PersonNode;
@@ -28,6 +29,8 @@ const SHOPPER_AGGREGATE_COLOR = '#0ea5e9';
 const MEMBER_RADIUS = 5;
 const OUTER_RADIUS = 320;
 const SVG_SIZE = (OUTER_RADIUS + 110) * 2; // Platz fuer Labels aussen herum.
+/** Mindestabstand entlang des Kreisbogens, damit ein Label angezeigt wird. */
+const LABEL_ARC_THRESHOLD_PX = 14;
 
 interface PolarLayoutNode {
   data: PersonTreeNode;
@@ -40,6 +43,8 @@ interface PolarLayoutNode {
   cy: number;
   parent: PolarLayoutNode | null;
   isCollapsed: boolean;
+  /** True, wenn der Knoten zu dicht an Nachbarn liegt und sein Label per Default ausgeblendet wird. */
+  hideLabel: boolean;
 }
 
 function toVisibleHierarchy(root: PersonNode, collapsedIds: Set<string>) {
@@ -54,8 +59,62 @@ function toVisibleHierarchy(root: PersonNode, collapsedIds: Set<string>) {
   return { hierarchy, isCollapsed };
 }
 
+/**
+ * Markiert Knoten als label-versteckt, wenn der Bogen zum naechsten Knoten gleicher Tiefe
+ * kleiner als LABEL_ARC_THRESHOLD_PX ist. Wurzel und direkte Kinder werden nie ausgeblendet.
+ */
+function markLabelDensity(nodes: PolarLayoutNode[], scale: number): void {
+  const byDepth = new Map<number, PolarLayoutNode[]>();
+  for (const node of nodes) {
+    const d = computeDepth(node);
+    const list = byDepth.get(d) ?? [];
+    list.push(node);
+    byDepth.set(d, list);
+  }
+
+  for (const [depth, group] of byDepth) {
+    if (depth <= 1 || group.length <= 1) continue;
+    const sorted = [...group].sort((a, b) => a.angle - b.angle);
+    for (let i = 0; i < sorted.length; i++) {
+      const current = sorted[i];
+      const next = sorted[(i + 1) % sorted.length];
+      const prev = sorted[(i - 1 + sorted.length) % sorted.length];
+      const distNext = angularDistance(current.angle, next.angle);
+      const distPrev = angularDistance(prev.angle, current.angle);
+      const minDist = Math.min(distNext, distPrev);
+      const arcLength = minDist * current.radius * scale;
+      if (arcLength < LABEL_ARC_THRESHOLD_PX) {
+        current.hideLabel = true;
+      }
+    }
+  }
+}
+
+function computeDepth(node: PolarLayoutNode): number {
+  let depth = 0;
+  let cursor: PolarLayoutNode | null = node;
+  while (cursor && cursor.parent) {
+    depth += 1;
+    cursor = cursor.parent;
+  }
+  return depth;
+}
+
+function angularDistance(a: number, b: number): number {
+  const raw = Math.abs(b - a);
+  return Math.min(raw, 2 * Math.PI - raw);
+}
+
 export function RadialTree({ tree, collapsedIds, onToggleCollapse }: RadialTreeProps) {
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const {
+    svgRef,
+    transform,
+    scale,
+    onPointerDown,
+    reset,
+    isPanning,
+  } = usePanZoom();
 
   const layout = useMemo(() => {
     const { hierarchy, isCollapsed } = toVisibleHierarchy(tree, collapsedIds);
@@ -65,9 +124,9 @@ export function RadialTree({ tree, collapsedIds, onToggleCollapse }: RadialTreeP
     const descendants = rooted.descendants();
 
     const nodes: PolarLayoutNode[] = descendants.map((n) => {
-      const angle = n.x; // Radiant, 0..2π
+      const angle = n.x;
       const radius = n.y;
-      const cx = radius * Math.sin(angle); // 0 = Norden, im Uhrzeigersinn
+      const cx = radius * Math.sin(angle);
       const cy = -radius * Math.cos(angle);
       return {
         data: n.data,
@@ -77,6 +136,7 @@ export function RadialTree({ tree, collapsedIds, onToggleCollapse }: RadialTreeP
         cy,
         parent: null,
         isCollapsed: isCollapsed(n.data),
+        hideLabel: false,
       };
     });
 
@@ -85,56 +145,72 @@ export function RadialTree({ tree, collapsedIds, onToggleCollapse }: RadialTreeP
       nodes[i].parent = n.parent ? byD3.get(n.parent) ?? null : null;
     });
 
+    markLabelDensity(nodes, scale);
+
     const links = rooted.links().map((link) => ({
       source: byD3.get(link.source)!,
       target: byD3.get(link.target)!,
     }));
 
     return { nodes, links };
-  }, [tree, collapsedIds]);
+  }, [tree, collapsedIds, scale]);
 
   const half = SVG_SIZE / 2;
   const viewBox = `${-half} ${-half} ${SVG_SIZE} ${SVG_SIZE}`;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 sm:px-5 pt-4">
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pt-4">
         <div>
           <p className="text-xs uppercase tracking-wider text-gray-500">Uebersicht</p>
           <h3 className="text-sm font-semibold text-gray-900">Radial Tree</h3>
         </div>
-        <Legend />
+        <div className="flex items-center gap-3">
+          <Legend />
+          <ResetButton onClick={reset} />
+        </div>
       </div>
 
-      <div className="px-4 sm:px-5 pb-4 pt-3 overflow-auto" style={{ maxHeight: '80vh' }}>
+      <div className="px-4 sm:px-5 pb-4 pt-3" style={{ maxHeight: '80vh', overflow: 'hidden' }}>
         <svg
+          ref={svgRef}
           viewBox={viewBox}
           width="100%"
-          style={{ maxWidth: SVG_SIZE, display: 'block', margin: '0 auto' }}
+          style={{
+            maxWidth: SVG_SIZE,
+            display: 'block',
+            margin: '0 auto',
+            cursor: isPanning ? 'grabbing' : 'grab',
+            userSelect: 'none',
+            touchAction: 'none',
+          }}
+          onPointerDown={onPointerDown}
           role="img"
-          aria-label="Personenbaum als Radial Tree"
+          aria-label="Personenbaum als Radial Tree, scrollbar mit Mausrad und ziehbar"
         >
-          <g>
-            {layout.links.map((link, i) => (
-              <path
-                key={i}
-                d={radialLinkPath(link.source, link.target)}
-                fill="none"
-                stroke="#cbd5e1"
-                strokeWidth={1}
-              />
-            ))}
-          </g>
-          <g>
-            {layout.nodes.map((node) => (
-              <RadialNodeMark
-                key={node.data.id}
-                node={node}
-                hovered={hoverId === node.data.id}
-                onHover={setHoverId}
-                onToggleCollapse={onToggleCollapse}
-              />
-            ))}
+          <g transform={transform}>
+            <g>
+              {layout.links.map((link, i) => (
+                <path
+                  key={i}
+                  d={radialLinkPath(link.source, link.target)}
+                  fill="none"
+                  stroke="#cbd5e1"
+                  strokeWidth={1}
+                />
+              ))}
+            </g>
+            <g>
+              {layout.nodes.map((node) => (
+                <RadialNodeMark
+                  key={node.data.id}
+                  node={node}
+                  hovered={hoverId === node.data.id}
+                  onHover={setHoverId}
+                  onToggleCollapse={onToggleCollapse}
+                />
+              ))}
+            </g>
           </g>
         </svg>
       </div>
@@ -142,10 +218,6 @@ export function RadialTree({ tree, collapsedIds, onToggleCollapse }: RadialTreeP
   );
 }
 
-/**
- * Bezier von Eltern- zu Kindknoten in Polarkoordinaten.
- * Steigt vom Eltern-Radius zum Kind-Radius, krummt sich tangential zum Eltern-Kreis.
- */
 function radialLinkPath(source: PolarLayoutNode, target: PolarLayoutNode): string {
   const sX = source.cx;
   const sY = source.cy;
@@ -181,8 +253,11 @@ function RadialNodeMark({ node, hovered, onHover, onToggleCollapse }: RadialNode
     if (canCollapse) onToggleCollapse(data.id);
   };
 
+  const showLabel = !node.hideLabel || hovered;
+
   return (
     <g
+      data-pan-ignore="true"
       transform={`translate(${node.cx},${node.cy})`}
       onMouseEnter={() => onHover(data.id)}
       onMouseLeave={() => onHover(null)}
@@ -208,7 +283,7 @@ function RadialNodeMark({ node, hovered, onHover, onToggleCollapse }: RadialNode
           {node.isCollapsed ? '+' : '−'}
         </text>
       )}
-      <RadialLabel node={node} hovered={hovered} radius={radius} />
+      {showLabel && <RadialLabel node={node} hovered={hovered} radius={radius} />}
     </g>
   );
 }
@@ -237,7 +312,6 @@ function RadialLabel({
     );
   }
 
-  // Label-Ausrichtung nach Halbkreis: rechte Haelfte normal, linke Haelfte gespiegelt.
   const angleDeg = (node.angle * 180) / Math.PI;
   const onLeftHalf = angleDeg > 180;
   const offset = radius + 6;
@@ -317,6 +391,19 @@ function LegendDot({ color, label }: { color: string; label: string }) {
       />
       {label}
     </span>
+  );
+}
+
+function ResetButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-md border border-gray-200 px-2 py-1 text-[10px] uppercase tracking-wider text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition"
+      title="Ansicht zuruecksetzen"
+    >
+      Reset
+    </button>
   );
 }
 
