@@ -535,8 +535,36 @@ Checkout-Realitaet ab und der Kunde fuehlt sich getaeuscht.
   period     : MO     (oder YR, QT, HY)
   ```
 
-→ Speichern → **Price-ID `pri_01...` notieren** und in die
-Frontend-Konfig eintragen.
+→ Speichern → **Price-ID `pri_01...` notieren** und an drei Stellen
+eintragen:
+
+> ⚠️ **WICHTIG — drei Orte synchron halten**, sonst schlaegt der
+> Checkout mit `invalid_price_id` (HTTP 400) fehl:
+>
+> 1. **Frontend-Konfig** in der Brand-yaml, z.B.
+>    `website-astro/src/brands/lifeplus/brand.yaml`
+>    unter `paddle.priceIdMonthly` / `priceIdHalfYear` / `priceIdYearly`
+> 2. **Backend-Allowlist** als Cloudflare-Pages-Env-Var im Dashboard
+>    (`Pages → lifeflow360-api → Settings → Variables und Geheime Schluessel
+>     → Production`), genau diese drei Variablen-Namen:
+>    ```text
+>    PADDLE_PRICE_MONTHLY   = pri_01...   (Monatlich)
+>    PADDLE_PRICE_HALFYEAR  = pri_01...   (Halbjahr)
+>    PADDLE_PRICE_YEARLY    = pri_01...   (Jahresabo)
+>    ```
+>    Klartext oder Geheimnis ist beides OK — Price-IDs sind nicht
+>    wirklich vertraulich (stehen ohnehin als `data-price-id` im
+>    Frontend-HTML). Wichtig: **nach dem Aendern Production-Deployment
+>    manuell neu ausloesen** (Cloudflare Pages → Deployments → letzten
+>    Deploy → "Retry deployment"), sonst greifen die neuen Werte nicht.
+> 3. **`_doc/Setup Infrastruktur Cloudflare, Resend und IONOS.md`**
+>    Abschnitt 11.2 — dort ist die offizielle Liste der erwarteten
+>    Plain-Vars, ggf. neue Variante (z.B. `PADDLE_PRICE_QUARTERLY`)
+>    ergaenzen.
+>
+> Faustregel: **Wenn du in Paddle eine Price-ID anlegst oder austauschst,
+> sofort Punkte 1 + 2 mit anpassen und Redeploy ausloesen.** Punkt 3 nur,
+> wenn du einen neuen Variablen-Namen einfuehrst.
 
 ### Beispiel: Jahresabo
 
@@ -1213,6 +1241,50 @@ action = "login_required"        → Magic-Link-Flow starten
 
 ## 16. Haeufige Fallstricke
 
+### "Checkout-Button gibt `invalid_price_id` (HTTP 400)"
+
+**Symptom:** Auf der Pricing-Seite klickt der Kunde auf "12 Monate
+starten" (oder einen anderen Paid-CTA), der Browser zeigt die generische
+Fehlermeldung "Checkout konnte nicht vorbereitet werden. Bitte versuche
+es gleich noch einmal." In den DevTools sieht man:
+
+```text
+POST /api/billing/checkout-intent → 400 Bad Request
+{"error":{"code":"invalid_price_id","message":"invalid_price_id"}}
+```
+
+**Ursache:** Das Backend pruegt die vom Frontend uebergebene Price-ID
+gegen eine Allowlist aus den Env-Vars
+`PADDLE_PRICE_MONTHLY` / `PADDLE_PRICE_HALFYEAR` / `PADDLE_PRICE_YEARLY`
+(siehe [Abschnitt 15.4](#154-checkout-intent-endpoint), Funktion
+`allowedPriceIds()`). Wenn die Vars im Cloudflare-Pages-Projekt **fehlen**,
+**leer** sind oder **andere Werte** enthalten als die im Frontend
+ausgelieferten IDs, ist die Allowlist effektiv leer / mismatched und
+**jede** priceId wird mit 400 abgelehnt.
+
+Drei haeufige Auslosen:
+
+- Vars wurden bei initialem Setup nicht angelegt
+- Sandbox-IDs im Frontend, aber Live-IDs in Cloudflare (oder umgekehrt)
+- Vars stehen nur im **Preview**-Environment, nicht in **Production**
+
+**Loesung:**
+
+1. Cloudflare-Dashboard → `Pages → <projekt> → Settings → Variables und
+   Geheime Schluessel → Production` oeffnen
+2. Die drei Vars pruegen / setzen (Werte aus der Brand-yaml,
+   z.B. `website-astro/src/brands/lifeplus/brand.yaml`,
+   `paddle.priceIdMonthly` etc.)
+3. **Production-Deployment manuell neu ausloesen** (sonst greifen die
+   Vars nicht!)
+4. Im Browser Cookies fuer die App-Domain loeschen, dann erneut testen
+5. DevTools → Network → `checkout-intent` → Response sollte jetzt
+   `{"action":"start_checkout","email":"..."}` sein
+
+Praeventiv: Bei jeder Aenderung an Paddle-Preisen die Sync-Regel aus
+[Abschnitt 10](#10-preise-anlegen--felder-im-detail) (orange Hinweisbox)
+einhalten.
+
 ### "Send test event fehlt im Dropdown"
 
 **Symptom:** Im `...`-Menue der Webhook-Destination siehst du nur
@@ -1340,6 +1412,12 @@ Bevor Sandbox auf Live umgestellt wird:
 [ ] Live-Default-Payment-Link-Domain gesetzt
 [ ] Live-Produkte mit identischen SKUs wie Sandbox angelegt
 [ ] Live-Preise mit identischem Sales-tax-Verhalten (Excludes tax)
+[ ] Live-Price-IDs in `PADDLE_PRICE_MONTHLY` / `_HALFYEAR` / `_YEARLY`
+    der Cloudflare-Pages-Production-Env-Vars eingetragen (vgl.
+    Hinweisbox in Abschnitt 10) — sonst gibt der Checkout am Live-Tag
+    `invalid_price_id` zurueck
+[ ] Brand-yaml (`src/brands/<brand>/brand.yaml` → `paddle.priceId*`)
+    auf Live-IDs umgestellt und neu deployt
 [ ] Live-Discount-Codes (falls oeffentlich) eingerichtet
 [ ] PRODUKTIONS-Discount-Code begrenzt (Expiration + Redemptions)
 [ ] AGB, Datenschutz, Widerruf live auf der Domain

@@ -47,6 +47,11 @@ const accountConfig = {
             Login-Link senden
           </button>
         </form>
+        <p class="account-privacy-note">
+          Mit Klick auf "Login-Link senden" verarbeiten wir deine E-Mail-Adresse zur Authentifizierung
+          und Vertragsdurchfuehrung (Art. 6 Abs. 1 lit. b DSGVO). Details siehe
+          <a href="/datenschutz.html">Datenschutzerklaerung</a>.
+        </p>
         <p id="login-msg" class="account-msg hidden"></p>
       </div>
 
@@ -88,7 +93,7 @@ const accountConfig = {
         </div>
 
         <div class="account-actions">
-          <a href={brand.appUrl} class="account-btn-primary">Zum Simulator</a>
+          <a href={brand.appUrl} class="account-btn-primary">App öffnen</a>
           <button type="button" id="portal-btn" class="account-btn-secondary">Abo bei Paddle verwalten</button>
           <a href="/pricing.html" class="account-btn-secondary">Plan wechseln</a>
           <button type="button" id="logout-btn" class="account-btn-link">Abmelden</button>
@@ -158,6 +163,13 @@ const accountConfig = {
   .account-msg { font-size: 13px; color: #4A5C53; margin-top: 8px; }
   .account-msg.error { color: #B91C1C; }
   .account-msg.success { color: #047857; }
+  .account-privacy-note {
+    color: #66766f;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 14px 0 0;
+  }
+  .account-privacy-note a { color: #2C4138; text-decoration: underline; text-underline-offset: 2px; }
   .account-page { padding: 60px 0 120px; min-height: 60vh; }
   .account-page h1 { font-family: 'Fraunces', Georgia, serif; font-size: clamp(32px, 4vw, 44px); font-weight: 400; text-align: center; letter-spacing: -0.02em; margin: 0 0 12px; }
   .account-page h1 em { font-style: italic; color: var(--brand); }

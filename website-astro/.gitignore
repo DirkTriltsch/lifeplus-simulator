@@ -1,5 +1,7 @@
 node_modules
 .astro
+.astro-cache
+.vite-cache
 dist
 .env
 .env.*

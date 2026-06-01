@@ -3,7 +3,7 @@ import type { Brand } from '@shared/content-schemas/config';
 import type { Contact } from '@shared/lib/contact';
 
 interface Props { brand: Brand; contact: Contact; source?: string; }
-const { contact, source } = Astro.props;
+const { brand, contact, source } = Astro.props;
 ---
 <div
   data-section="LegalDatenschutzDefault.astro"
@@ -16,8 +16,8 @@ const { contact, source } = Astro.props;
   <h2>1. Datenschutz auf einen Blick</h2>
   <p>
     Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen
-    Daten passiert, wenn Sie diese Web-App besuchen. Personenbezogene Daten sind alle Daten,
-    mit denen Sie persönlich identifiziert werden können.
+    Daten passiert, wenn Sie die Web-App {brand.siteName} unter {brand.siteDomain} besuchen.
+    Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.
   </p>
 
   <h3>Datenerfassung in dieser Web-App</h3>
@@ -32,8 +32,10 @@ const { contact, source } = Astro.props;
     Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs.
   </p>
   <p>
-    Die Eingaben im Simulator werden lokal im Browser für die Berechnung verwendet und nach
-    aktuellem Stand nicht an einen eigenen Server übertragen.
+    Die Eingaben im Simulator werden im Browser berechnet und nicht an unseren Server übertragen.
+    Davon zu unterscheiden sind Account-bezogene Daten (E-Mail, Plan-Status, Geräteanzahl), die im
+    Zuge der Authentifizierung und Abrechnung serverseitig verarbeitet werden — Details siehe
+    Abschnitt 3 (Verantwortlicher) und Abschnitt 6 (Tools und Dienste).
   </p>
 
   <h2>2. Hosting und technische Bereitstellung</h2>
@@ -131,17 +133,36 @@ const { contact, source } = Astro.props;
     nach Art. 6 Abs. 1 lit. f DSGVO.
   </p>
 
-  <h2>6. Cookies, Analyse-Tools und Drittanbieter</h2>
+  <h2>6. Tools und Dienste</h2>
   <p>
-    Die aktuelle Web-App verwendet nach derzeitigem Stand keine eigenen Analyse-Tools, keine
-    YouTube-Einbettungen und keine eigenen Cookies für Tracking- oder Marketingzwecke.
+    Wir setzen keine eigenen Tracking- oder Analyse-Cookies ein. Für die Bereitstellung der
+    Web-App und die Buchung von Pro-Plänen werden folgende Datenverarbeitungen durchgeführt:
   </p>
-  <p>
-    Als installierbare Web-App kann sie technische Dateien im Browser-Cache speichern, damit die
-    Anwendung schneller lädt und auf geeigneten Geräten zum Homescreen hinzugefügt werden kann.
-    Diese technische Speicherung dient der Bereitstellung der App-Funktion und erfolgt auf
-    Grundlage von Art. 6 Abs. 1 lit. f DSGVO.
-  </p>
+  <ul>
+    <li>
+      <strong>Authentifizierung (Magic Link):</strong> Beim Login speichern wir kurzzeitig einen
+      Session-Token (Local Storage / Cookie) auf Ihrem Gerät. Zweck: Anmeldung und Vertragsdurchführung,
+      Rechtsgrundlage Art. 6 Abs. 1 lit. b DSGVO. Speicherdauer: bis zur Abmeldung oder bis zum
+      Ablauf des Tokens.
+    </li>
+    <li>
+      <strong>Zahlungsabwicklung Paddle:</strong> Beim Aufruf der Pricing- bzw. Checkout-Seite werden
+      Daten an die Paddle.com Market Limited (London) übertragen. Paddle setzt eigene Cookies und kann
+      Daten in Drittländer (z.B. USA) übermitteln. Details siehe
+      <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener">paddle.com/legal/privacy</a>.
+      Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
+    </li>
+    <li>
+      <strong>Schriftarten:</strong> Die Web-App lädt Schriftarten aus dem eigenen Webspace.
+      Es findet keine Übertragung an Drittanbieter wie Google statt.
+    </li>
+    <li>
+      <strong>Service-Worker / installierbare Web-App:</strong> Auf geeigneten Geräten speichert die
+      App technische Dateien im Browser-Cache, damit die Anwendung schneller lädt und zum Homescreen
+      hinzugefügt werden kann. Diese technische Speicherung dient der Bereitstellung der App-Funktion
+      und erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO.
+    </li>
+  </ul>
 
   <p class="legal-meta">Grundlage: angepasst aus dem bestehenden eRecht24-Text.</p>
 </div>

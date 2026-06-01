@@ -3,7 +3,7 @@ import type { Brand } from '@shared/content-schemas/config';
 import type { Contact } from '@shared/lib/contact';
 
 interface Props { brand: Brand; contact: Contact; source?: string; }
-const { contact, source } = Astro.props;
+const { brand, contact, source } = Astro.props;
 ---
 <div
   data-section="LegalImpressumDefault.astro"
@@ -16,7 +16,7 @@ const { contact, source } = Astro.props;
   <h2>Anbieter</h2>
   <address>
     {contact.name}<br />
-    betreibt diese Web-App<br />
+    betreibt {brand.siteName} unter {brand.siteDomain}<br />
     {contact.addressLine1}<br />
     {contact.addressLine2}<br />
     {contact.addressLine3}
@@ -28,8 +28,10 @@ const { contact, source } = Astro.props;
     E-Mail: <a href={`mailto:${contact.email}`}>{contact.email}</a>
   </p>
 
-  <h2>Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+  <h2>Online-Streitbeilegung</h2>
   <p>
+    Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit:
+    <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>.
     Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren
     vor einer Verbraucherschlichtungsstelle teilzunehmen.
   </p>

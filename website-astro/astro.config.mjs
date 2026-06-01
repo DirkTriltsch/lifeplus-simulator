@@ -13,11 +13,13 @@ export default defineConfig({
   srcDir: `./src/brands/${brand}`,
   publicDir: `./src/brands/${brand}/public`,
   outDir: `../dist/${brand}-website`,
+  cacheDir: './.astro-cache',
   build: {
     // erzeugt /pricing.html statt /pricing/index.html — kompatibel zum heutigen Build
     format: 'file',
   },
   vite: {
+    cacheDir: './.vite-cache',
     resolve: {
       alias: {
         '@shared': sharedAlias,

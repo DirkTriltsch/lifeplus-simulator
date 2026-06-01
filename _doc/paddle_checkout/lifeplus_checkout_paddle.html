@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifePlus · Bezahlung</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<style>
+  :root {
+    --lp-primary:  #006F44;
+    --lp-dark:     #13322B;
+    --lp-accent:   #9FBA37;
+    --lp-cta:      #EA7600;
+    --lp-surface:  #EEF3EF;
+    --ink:         #13322B;
+    --muted:       #4A6058;
+    --line:        #D5E2D8;
+    --err:         #C2364B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Manrope', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 500px at 90% -5%,  #E8F5EC, transparent 55%),
+      radial-gradient(800px  400px at -5% 105%,  #D6EDD9, transparent 55%),
+      #F2F6F2;
+    min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 48px 20px;
+  }
+
+  .shell {
+    width: 100%; max-width: 980px;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 0;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(19,50,43,0.40);
+  }
+  @media (max-width: 760px) { .shell { grid-template-columns: 1fr; } }
+
+  /* ---- LEFT ---- */
+  .aside {
+    background: linear-gradient(155deg, var(--lp-primary) 0%, var(--lp-dark) 100%);
+    color: #fff;
+    padding: 40px 38px;
+    position: relative;
+    overflow: hidden;
+  }
+  .aside::before {
+    content: "";
+    position: absolute; top: -60px; right: -60px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(159,186,55,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .aside::after {
+    content: "";
+    position: absolute; bottom: -80px; left: -40px;
+    width: 300px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(234,118,0,0.10) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* Brand lockup */
+  .brand { display: flex; align-items: center; gap: 11px; position: relative; z-index: 1; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.2px;
+    display: flex; align-items: baseline; gap: 1px;
+  }
+  .brand-name .plus { color: var(--lp-accent); }
+  .brand-name .num  { font-size: 11px; color: rgba(255,255,255,0.5); margin-left: 4px; font-weight: 400; }
+
+  .plan-tag {
+    display: inline-block; margin-top: 38px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--lp-accent); position: relative; z-index: 1;
+  }
+  .plan-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px; line-height: 1.15;
+    margin: 8px 0 8px; position: relative; z-index: 1;
+  }
+  .plan-sub {
+    color: rgba(255,255,255,0.70); font-size: 13.5px;
+    line-height: 1.6; max-width: 30ch; position: relative; z-index: 1;
+  }
+
+  .summary { margin-top: 32px; position: relative; z-index: 1; }
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 11px 0; font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .row span:first-child { color: rgba(255,255,255,0.72); }
+  .row.total { border-bottom: none; padding-top: 18px; font-size: 16px; }
+  .row.total .amount {
+    font-family: 'DM Serif Display', serif; font-size: 28px;
+  }
+  .row .note { font-size: 11px; color: rgba(255,255,255,0.48); }
+
+  .trust {
+    margin-top: 32px; display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: rgba(255,255,255,0.55);
+    position: relative; z-index: 1;
+  }
+
+  /* ---- RIGHT ---- */
+  .pay { padding: 40px 38px; }
+  .pay h1 {
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400; font-size: 24px; margin: 0 0 4px;
+  }
+  .pay .lead { color: var(--muted); font-size: 13.5px; margin: 0 0 24px; }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 600;
+    margin-bottom: 5px; color: var(--ink); letter-spacing: 0.01em;
+  }
+  .field input {
+    width: 100%; padding: 11px 13px; font-size: 14px; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: #FAFCFA; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus {
+    outline: none; border-color: var(--lp-primary);
+    box-shadow: 0 0 0 3px rgba(0,111,68,0.13); background: #fff;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Paddle inline container */
+  .paddle-wrap {
+    margin: 6px 0 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 60px;
+    border: 1px solid var(--line);
+    background: #FAFCFA;
+    transition: border-color .15s;
+  }
+  .paddle-wrap.loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--muted);
+  }
+  /* Override Paddle iframe background */
+  .paddle-wrap iframe { border: none !important; }
+
+  /* Status banner - shows after checks unlock */
+  .paddle-notice {
+    display: none;
+    padding: 9px 12px; margin-bottom: 12px;
+    background: #EEF3EF; border: 1px solid var(--line);
+    border-radius: 9px; font-size: 12px; color: var(--muted);
+    align-items: center; gap: 8px;
+  }
+  .paddle-notice.show { display: flex; }
+  .paddle-notice svg { flex-shrink: 0; }
+
+  /* Checkboxes */
+  .checks { display: flex; flex-direction: column; margin: 0 0 20px; }
+  .check {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 11px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: #FAFCFA;
+  }
+  .check + .check { margin-top: 8px; }
+  .check:hover { border-color: #A8C8B0; }
+  .check.checked  { border-color: var(--lp-primary); background: #F0F7F2; }
+  .check.error    { border-color: var(--err); background: #FDF3F4; }
+  .check input    { position: absolute; opacity: 0; width: 0; height: 0; }
+  .box {
+    flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px;
+    border: 1.6px solid #B4CDB9; border-radius: 6px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .check.checked .box { background: var(--lp-primary); border-color: var(--lp-primary); }
+  .box svg { opacity: 0; transition: opacity .12s; }
+  .check.checked .box svg { opacity: 1; }
+  .check .txt { font-size: 13px; line-height: 1.5; color: var(--ink); }
+  .check .txt a { color: var(--lp-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .check .txt .sub { display: block; margin-top: 3px; font-size: 11.5px; color: var(--muted); }
+
+  /* Withdrawal checkbox — warm tint */
+  .check.withdrawal             { background: #FDF8F2; border-color: #E8D8BE; }
+  .check.withdrawal:hover       { border-color: #D4B88A; }
+  .check.withdrawal.checked     { background: #FBF2E4; border-color: var(--lp-cta); }
+  .check.withdrawal .box        { border-color: #D4B88A; }
+  .check.withdrawal.checked .box{ background: var(--lp-cta); border-color: var(--lp-cta); }
+
+  /* CTA button */
+  .pay-btn {
+    width: 100%; padding: 15px; font-size: 15px; font-weight: 700;
+    font-family: inherit; letter-spacing: 0.01em;
+    color: #fff; background: var(--lp-cta);
+    border: none; border-radius: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    transition: background .15s, transform .08s, opacity .15s;
+    box-shadow: 0 4px 18px -4px rgba(234,118,0,0.45);
+  }
+  .pay-btn:hover:not(:disabled)  { background: #d06800; }
+  .pay-btn:active:not(:disabled) { transform: translateY(1px); }
+  .pay-btn:disabled {
+    opacity: 0.45; cursor: not-allowed;
+    box-shadow: none; background: var(--lp-cta);
+  }
+  .pay-btn .spinner {
+    display: none; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .pay-btn.loading .spinner { display: block; }
+  .pay-btn.loading .btn-icon,
+  .pay-btn.loading .btn-label { opacity: 0.4; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .err-msg { color: var(--err); font-size: 12px; margin: 10px 0 0; display: none; }
+  .err-msg.show { display: block; }
+  .legal {
+    margin-top: 14px; font-size: 11px; color: var(--muted);
+    line-height: 1.6; text-align: center;
+  }
+  .legal a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ===== ASIDE ===== -->
+  <div class="aside">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="14" viewBox="0 0 36 22">
+          <path d="M 3 17 Q 13 14, 22 9 T 33 4"
+                stroke="#9FBA37" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <circle cx="33" cy="4" r="2.8" fill="#9FBA37"/>
+        </svg>
+      </div>
+      <div class="brand-name">
+        life<span class="plus">+</span>plus<span class="num">360</span>
+      </div>
+    </div>
+
+    <div class="plan-tag">Jahresabo · automatische Verlängerung</div>
+    <div class="plan-title">LifePlus 360<br>Pro-Mitgliedschaft</div>
+    <p class="plan-sub">Vollständiger Zugriff auf alle Simulator-Features, unbegrenzte Szenarien, alle drei Brands.</p>
+
+    <div class="summary">
+      <div class="row"><span>Pro-Jahresabo</span><span>89,00 €</span></div>
+      <div class="row"><span>Versand</span><span>—</span></div>
+      <div class="row"><span>USt. (19 %)</span><span>14,22 €</span></div>
+      <div class="row total">
+        <span>Heute fällig <span class="note">/ Jahr</span></span>
+        <span class="amount">89,00 €</span>
+      </div>
+    </div>
+
+    <div class="trust">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="#9FBA37" stroke-width="2">
+        <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+      </svg>
+      Zahlung verschlüsselt abgewickelt durch Paddle.com
+    </div>
+  </div>
+
+  <!-- ===== FORM ===== -->
+  <div class="pay">
+    <h1>Bezahlung abschließen</h1>
+    <p class="lead">Bitte lies und bestätige die folgenden Punkte — danach öffnet sich das Paddle-Zahlungsfeld.</p>
+
+    <div class="field">
+      <label for="email">E-Mail-Adresse</label>
+      <input id="email" type="email" placeholder="name@beispiel.de" autocomplete="email">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="fname">Vorname</label>
+        <input id="fname" type="text" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label for="lname">Nachname</label>
+        <input id="lname" type="text" autocomplete="family-name">
+      </div>
+    </div>
+
+    <!-- Checkboxes — müssen VOR dem Paddle-Checkout bestätigt werden -->
+    <div class="checks">
+      <label class="check" id="wrap-agb">
+        <input type="checkbox" id="chk-agb">
+        <span class="box">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+        </span>
+        <span class="txt">
+          Ich akzeptiere die
+          <a href="/agb.html" target="_blank">Allgemeinen Geschäftsbedingungen</a>.
+        </span>
+      </label>
+
+      <label class="check" id="wrap-dse">
+        <input type="checkbox" id="chk-dse">
+        <span class="box">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+        </span>
+        <span class="txt">
+          Ich habe die
+          <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a>
+          gelesen und zur Kenntnis genommen.
+        </span>
+      </label>
+
+      <label class="check withdrawal" id="wrap-widerruf">
+        <input type="checkbox" id="chk-widerruf">
+        <span class="box">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+        </span>
+        <span class="txt">
+          Ich verlange ausdrücklich, dass mit der Leistung sofort begonnen wird,
+          und bestätige mein Wissen, dass ich mit Beginn der Ausführung mein
+          14-tägiges Widerrufsrecht verliere.
+          <span class="sub">Erforderlich für die sofortige Aktivierung des Abos.</span>
+        </span>
+      </label>
+    </div>
+
+    <!-- Paddle inline checkout — wird erst eingeblendet wenn alle Checks ok -->
+    <div class="paddle-notice" id="paddleNotice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="var(--lp-primary)" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+      </svg>
+      Zahlungsfeld geladen — du kannst jetzt sicher bezahlen.
+    </div>
+
+    <!-- Paddle mountet hier das Iframe per displayMode: inline -->
+    <div class="paddle-wrap loading" id="paddleWrap">
+      Zahlungsfeld erscheint nach Bestätigung der Checkboxen …
+    </div>
+
+    <button class="pay-btn" id="payBtn" disabled>
+      <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="#fff" stroke-width="2">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+      </svg>
+      <span class="btn-label">Jetzt kostenpflichtig bestellen</span>
+      <span class="spinner"></span>
+    </button>
+    <p class="err-msg" id="errMsg">Bitte bestätige alle drei Punkte, um fortzufahren.</p>
+
+    <p class="legal">
+      Mit dem Klick schließt du einen Jahresvertrag mit automatischer Verlängerung ab.
+      Abwicklung &amp; Rechnungsstellung durch unseren Reseller
+      <a href="https://paddle.com" target="_blank">Paddle.com</a>.
+    </p>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  KONFIGURATION — hier deine echten IDs setzen
+// ─────────────────────────────────────────────
+const PADDLE_CONFIG = {
+  token:   'live_xxxxxxxxxxxxxxxx',   // Paddle Client-side Token (Billing v2)
+  priceId: 'pri_xxxxxxxxxxxxxxxx',    // Paddle Price ID für das Jahresabo
+  sandbox: true                        // true = Sandbox, false = Produktion
+};
+
+// ─────────────────────────────────────────────
+//  Paddle initialisieren
+// ─────────────────────────────────────────────
+if (PADDLE_CONFIG.sandbox) {
+  Paddle.Environment.set('sandbox');
+}
+Paddle.Initialize({
+  token: PADDLE_CONFIG.token,
+  eventCallback: function(event) {
+    // Paddle-Events abfangen
+    if (event.name === 'checkout.completed') {
+      // Erfolg — z.B. zur Bestätigungsseite weiterleiten
+      window.location.href = '/danke.html';
+    }
+    if (event.name === 'checkout.error') {
+      console.error('Paddle checkout error:', event.data);
+    }
+  }
+});
+
+// ─────────────────────────────────────────────
+//  DOM-Referenzen
+// ─────────────────────────────────────────────
+const checks      = Array.from(document.querySelectorAll('.check input[type="checkbox"]'));
+const btn         = document.getElementById('payBtn');
+const errMsg      = document.getElementById('errMsg');
+const paddleWrap  = document.getElementById('paddleWrap');
+const paddleNotice= document.getElementById('paddleNotice');
+
+let checkoutOpened = false;
+
+// ─────────────────────────────────────────────
+//  Checkboxen — State updaten
+// ─────────────────────────────────────────────
+function refresh() {
+  checks.forEach(cb => {
+    cb.closest('.check').classList.toggle('checked', cb.checked);
+    if (cb.checked) cb.closest('.check').classList.remove('error');
+  });
+
+  const allChecked = checks.every(cb => cb.checked);
+  btn.disabled = !allChecked;
+  if (allChecked) {
+    errMsg.classList.remove('show');
+    openInlineCheckout();
+  } else {
+    // Inline-Checkout ausblenden wenn eine Checkbox wieder deaktiviert wird
+    if (checkoutOpened) {
+      paddleWrap.innerHTML   = 'Zahlungsfeld erscheint nach Bestätigung der Checkboxen …';
+      paddleWrap.classList.add('loading');
+      paddleNotice.classList.remove('show');
+      checkoutOpened = false;
+    }
+  }
+}
+
+checks.forEach(cb => cb.addEventListener('change', refresh));
+
+// ─────────────────────────────────────────────
+//  Paddle Inline Checkout öffnen
+// ─────────────────────────────────────────────
+function openInlineCheckout() {
+  if (checkoutOpened) return;
+  checkoutOpened = true;
+
+  paddleWrap.classList.remove('loading');
+  paddleWrap.innerHTML = '';   // Paddle mountet das Iframe hier rein
+
+  const email = document.getElementById('email').value.trim();
+
+  Paddle.Checkout.open({
+    settings: {
+      displayMode:  'inline',
+      frameTarget:  'paddle-wrap',       // CSS-Klasse oder ID des Containers
+      frameStyle:   'width:100%; min-height:420px; border:none; border-radius:0;',
+      theme:        'light',
+      locale:       'de'
+    },
+    items: [{
+      priceId:  PADDLE_CONFIG.priceId,
+      quantity: 1
+    }],
+    customer: email ? { email } : undefined,
+    customData: {
+      acceptedAgb:       true,
+      acceptedDse:       true,
+      waivedWithdrawal:  true,
+      timestamp:         new Date().toISOString()
+    }
+  });
+
+  paddleNotice.classList.add('show');
+}
+
+// ─────────────────────────────────────────────
+//  Kauf-Button — als Fallback / Overlay
+// ─────────────────────────────────────────────
+btn.addEventListener('click', () => {
+  if (!checks.every(cb => cb.checked)) {
+    errMsg.classList.add('show');
+    checks.filter(cb => !cb.checked)
+          .forEach(cb => cb.closest('.check').classList.add('error'));
+    return;
+  }
+
+  // Inline-Checkout bereits geöffnet → Button scrollt dorthin
+  if (checkoutOpened) {
+    paddleWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Fallback: Overlay-Checkout (falls Inline-Mount fehlgeschlagen)
+  btn.classList.add('loading');
+  const email = document.getElementById('email').value.trim();
+
+  Paddle.Checkout.open({
+    items: [{ priceId: PADDLE_CONFIG.priceId, quantity: 1 }],
+    customer: email ? { email } : undefined,
+    customData: {
+      acceptedAgb:      true,
+      acceptedDse:      true,
+      waivedWithdrawal: true,
+      timestamp:        new Date().toISOString()
+    }
+  });
+
+  setTimeout(() => btn.classList.remove('loading'), 2000);
+});
+
+refresh();
+</script>
+</body>
+</html>

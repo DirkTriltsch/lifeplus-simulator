@@ -4,7 +4,7 @@ seo:
 
 hero:
   eyebrow: "Preise & Konditionen"
-  h1Html: "Ein Werkzeug.<br><em>Vier klare Optionen.</em>"
+  h1Html: "Vier Pläne.<br><em>Eine Entscheidung.</em>"
   subHtml: "Frei starten, flexibel monatlich nutzen oder mit 6 bzw. 12 Monaten vorausplanen — du wählst die passende Form. Die Bezahlpläne sind als <strong>Betriebsausgabe</strong> absetzbar."
 
 vatBanner:
@@ -14,7 +14,7 @@ vatBanner:
 tiers:
   - id: "free"
     name: "Frei"
-    descHtml: "14 Tage Pro testen,<br>danach Free nutzen."
+    descHtml: "14 Tage Pro testen — danach<br>automatisch zurück in Free."
     currency: "€"
     value: "0"
     unit: "/Monat"
@@ -26,7 +26,7 @@ tiers:
       - text: "Ideal, um das Prinzip kennenzulernen"
     cta:
       kind: "link"
-      label: "Plan jetzt starten"
+      label: "Kostenlos starten"
       url: "/app/"
 
   - id: "monthly"
@@ -40,11 +40,11 @@ tiers:
     features:
       - strong: "Voller Funktionsumfang"
         text: "— alle Jahre und Kennzahlen"
-      - text: "Handy, Tablet & Desktop"
+      - text: "Handy, Tablet & Desktop (bis zu 3 Geräte gleichzeitig)"
       - text: "Monatlich kündbar"
     cta:
       kind: "paddle"
-      label: "Plan jetzt starten"
+      label: "1 Monat starten"
       plan: "monthly"
       priceIdKey: "monthly"
 
@@ -64,13 +64,13 @@ tiers:
       - text: "Monatlich kündbar, Restmonate zurück"
     cta:
       kind: "paddle"
-      label: "Plan jetzt starten"
+      label: "6 Monate starten"
       plan: "halfyear"
       priceIdKey: "halfyear"
 
   - id: "yearly"
     featured: true
-    badge: "Empfehlung · 2 Monate gratis"
+    badge: "Empfehlung · 2 Monate sparen ggü. Monatsabo"
     name: "12 Monate"
     descHtml: "Jährlich sparen,<br>zwei Monate gratis."
     currency: "€"
@@ -85,17 +85,17 @@ tiers:
       - text: "Monatlich kündbar, Restmonate zurück"
     cta:
       kind: "paddle"
-      label: "Plan jetzt starten"
+      label: "12 Monate starten"
       plan: "yearly"
       priceIdKey: "yearly"
 
 notes:
   - icon: "info"
-    title: "Jahresrabatt ohne Jahresfalle."
+    title: "Auch der Jahresplan bleibt monatlich kündbar."
     body: "Automatisch verlängert? Kein Problem. Wir sind von unserem Nutzen überzeugt — und du hoffentlich auch. Wenn du aber nicht weitermachen möchtest, kündigst du einfach monatlich. Was du an vollen Restmonaten schon bezahlt hast, bekommst du anteilig zurück."
   - icon: "doc"
     title: "Saubere Rechnung für deine Unterlagen."
-    body: "Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du LifeFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater."
+    body: "Du erhältst eine ordnungsgemäße Rechnung mit allen relevanten Angaben. Wenn du LifeFlow360 im Rahmen deiner Sponsoring-Tätigkeit nutzt, kann das Abo steuerlich relevant sein — die konkrete steuerliche Behandlung klärst du bitte mit deinem Steuerberater."
 
 compare:
   headlineHtml: "Was ist <em>jeweils</em> enthalten?"
@@ -140,10 +140,10 @@ faq:
     - q: "Kann ich vom Monats- aufs Jahresabo wechseln (oder umgekehrt)?"
       a:
         - "Ja. Du kannst zwischen 1, 6 und 12 Monaten wechseln. Nicht verbrauchte Restzeit wird dabei angerechnet oder anteilig erstattet."
-    - q: "Ist LifeFlow360 als Betriebsausgabe absetzbar?"
+    - q: "Kann ich das Abo steuerlich geltend machen?"
       a:
-        - "Für Sponsoren, die mit dem Abo ihre Sponsoring-Tätigkeit unterstützen, ist es in aller Regel als Betriebsausgabe absetzbar. Die Rechnung enthält alle steuerlich relevanten Angaben."
-        - "Wir sind keine Steuerberater — sprich im Zweifelsfall mit deinem."
+        - "Wenn du den Pro-Plan im Rahmen deiner Sponsoring-Tätigkeit nutzt, kann das Abo steuerlich relevant sein. Die konkrete steuerliche Behandlung hängt von deiner Situation ab und ist mit deinem Steuerberater zu klären."
+        - "Wir stellen eine ordnungsgemäße Rechnung mit allen relevanten Angaben aus."
     - q: "Welche Zahlungsmethoden gibt es?"
       a:
         - "Kreditkarte (Visa, Mastercard, Amex), SEPA-Lastschrift und PayPal. Für 6- und 12-Monats-Laufzeiten zusätzlich Überweisung auf Anfrage."
@@ -161,4 +161,4 @@ faq:
 finalCta:
   headlineHtml: "Eine Entscheidung. <em>Ein Werkzeug.</em>"
   sub: "Frei testen oder direkt im Gespräch nutzen — beides startet mit einem Klick."
-  ctaLabel: "Simulator starten"
+  ctaLabel: "Jetzt starten"

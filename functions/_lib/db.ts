@@ -154,3 +154,34 @@ export async function grantFreeEntitlementIfMissing(
     .bind(id(), userId, brandId, 'free', null, 'free_signup', now, now)
     .run();
 }
+
+// Beta-Gnadenfrist bis die 14-Tage-Trial-Logik nachgezogen ist: jeder
+// erfolgreich verifizierte User bekommt Pro mit valid_until=NULL.
+// source='beta_grace' macht spaeter per SQL auffindbar, welche
+// Entitlements aus dieser Phase stammen.
+export async function grantProEntitlementIfMissing(
+  env: Env,
+  userId: string,
+  brandId: string,
+  now: number,
+  id: () => string,
+): Promise<void> {
+  const existing = await getEntitlementForBrand(env, userId, brandId);
+  if (existing && isEntitlementActive(existing, now)) return;
+
+  if (existing) {
+    await env.DB.prepare(
+      'UPDATE entitlements SET access_level = ?, valid_until = ?, source = ?, updated_at = ? WHERE id = ?',
+    )
+      .bind('pro', null, 'beta_grace', now, existing.id)
+      .run();
+    return;
+  }
+
+  await env.DB.prepare(
+    `INSERT INTO entitlements (id, user_id, brand_id, access_level, valid_until, source, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(id(), userId, brandId, 'pro', null, 'beta_grace', now, now)
+    .run();
+}

@@ -517,6 +517,50 @@ Faustregel: alles, was man "rotieren" wuerde, gehoert in `secret`.
 Alles, was Teil der Architektur-Konfig ist (Brand-ID, Cookie-Domain,
 TTLs), kann in `[vars]`.
 
+### 11.3 Paddle-Price-IDs — nur im Dashboard, nicht in wrangler.toml
+
+Aus historischen Gruenden ("binding name already in use"-Deploy-Error,
+wenn dieselbe Variable gleichzeitig in `wrangler.toml [vars]` und im
+Pages-Dashboard steht) werden die drei Paddle-Price-IDs **ausschliesslich
+im Cloudflare-Pages-Dashboard** gefuehrt — **nicht** in `wrangler.toml`:
+
+```text
+PADDLE_PRICE_MONTHLY   = pri_01...   Monatsabo  (Klartext oder Geheimnis)
+PADDLE_PRICE_HALFYEAR  = pri_01...   Halbjahr   (Klartext oder Geheimnis)
+PADDLE_PRICE_YEARLY    = pri_01...   Jahresabo  (Klartext oder Geheimnis)
+```
+
+Diese Vars sind die **Allowlist**, gegen die der Checkout-Intent-Endpoint
+([Setup Paddle.md → 15.4](Setup%20Paddle%20Products,%20Prices,%20Discount-Codes.md#154-checkout-intent-endpoint))
+die vom Frontend uebergebene Price-ID prueft. Fehlt eine Var oder steht
+darin ein anderer Wert als in der Brand-yaml
+(`src/brands/<brand>/brand.yaml` → `paddle.priceIdMonthly` etc.),
+schlaegt der Checkout mit `invalid_price_id` (HTTP 400) fehl —
+siehe auch
+[Setup Paddle.md → Fallstrick "invalid_price_id"](Setup%20Paddle%20Products,%20Prices,%20Discount-Codes.md#checkout-button-gibt-invalid_price_id-http-400).
+
+> ⚠️ **Sync-Regel bei Preis-Aenderungen:** Wer eine Price-ID in Paddle
+> austauscht (z.B. weil ein altes Produkt eingestellt wird), **muss
+> beide Orte synchron aktualisieren**:
+>
+> 1. Brand-yaml im Frontend-Code (`paddle.priceId*`)
+> 2. Cloudflare-Pages-Env-Var (`PADDLE_PRICE_*`) + **Production-Deploy
+>    neu ausloesen** (sonst greift die neue Var nicht)
+>
+> Klartext vs. Geheimnis ist beides funktional OK — Price-IDs sind
+> nicht wirklich vertraulich (stehen ohnehin als `data-price-id` im
+> Frontend-HTML). Wer mag, fuehrt sie als Klartext, damit sie im
+> Dashboard schnell sichtbar/pruefbar sind.
+
+Weitere Price-Varianten in Zukunft (z.B. `PADDLE_PRICE_QUARTERLY`,
+`PADDLE_PRICE_LIFETIME`) folgen demselben Muster:
+
+- Neue Var-Konstante im Frontend (Brand-yaml-Schema erweitern)
+- Neue Var im Pages-Dashboard
+- Backend: `allowedPriceIds()` in
+  `functions/api/billing/checkout-intent.ts` um die neue Var ergaenzen
+- Diese Liste hier in Abschnitt 11.3 erweitern
+
 ---
 
 ## 12. Verifikation und Smoke-Tests
