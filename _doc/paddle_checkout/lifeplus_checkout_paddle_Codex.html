@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYP - nicht fuer Live.
+  Codex-Mockup fuer den Pro-Plan-Checkout.
+  Kein Gast-User, keine erneute E-Mail-Eingabe.
+  Pflicht: AGB + Datenschutz + Widerrufsverzicht.
+  Optional: Newsletter.
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifePlus 360 - Pro Checkout Codex</title>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<style>
+  :root {
+    --brand: #006f44;
+    --brand-dark: #13322b;
+    --accent: #9fba37;
+    --cta: #ea7600;
+    --paper: #f4f7f3;
+    --surface: #eef3ef;
+    --line: #d5e2d8;
+    --ink: #13322b;
+    --muted: #52645c;
+    --err: #c2364b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 420px at 95% 0%, #e7f4eb, transparent 58%),
+      radial-gradient(760px 360px at 0% 100%, #dceede, transparent 58%),
+      var(--paper);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 18px;
+  }
+  .checkout {
+    width: min(1080px, 100%);
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 26px 72px rgba(19,50,43,.16);
+  }
+  @media (max-width: 820px) { .checkout { grid-template-columns: 1fr; } }
+  .summary {
+    background: linear-gradient(150deg, var(--brand), var(--brand-dark));
+    color: #fff;
+    padding: 36px;
+  }
+  .brand {
+    font-weight: 850;
+    font-size: 19px;
+    margin-bottom: 42px;
+  }
+  .brand span { color: var(--accent); }
+  .tag {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 8px 0 12px;
+    font-size: 35px;
+    line-height: 1.06;
+  }
+  .summary p {
+    color: rgba(255,255,255,.76);
+    line-height: 1.62;
+    margin: 0 0 28px;
+  }
+  .price-lines {
+    border-top: 1px solid rgba(255,255,255,.15);
+  }
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(255,255,255,.13);
+    font-size: 14px;
+  }
+  .price-row span:first-child { color: rgba(255,255,255,.68); }
+  .price-row.total {
+    align-items: baseline;
+    border-bottom: 0;
+    padding-top: 18px;
+  }
+  .price-row.total strong {
+    font-size: 30px;
+  }
+  .content {
+    padding: 36px;
+  }
+  h2 {
+    margin: 0 0 6px;
+    font-size: 25px;
+  }
+  .lead {
+    margin: 0 0 20px;
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: 14px;
+  }
+  .account {
+    display: grid;
+    gap: 4px;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    margin-bottom: 14px;
+  }
+  .account label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .paddle {
+    border: 1px solid var(--line);
+    background: #fbfcfb;
+    border-radius: 13px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .paddle-frame {
+    min-height: 230px;
+    border: 1px dashed #b6cabb;
+    border-radius: 11px;
+    background: #fff;
+    padding: 18px;
+  }
+  .paddle-frame strong { display: block; margin-bottom: 10px; }
+  .paddle-field {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 11px 12px;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .checks { display: grid; gap: 10px; }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fbfcfb;
+    padding: 13px 14px;
+    cursor: pointer;
+  }
+  .check input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--brand);
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+  .check span {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .check a { color: var(--brand); }
+  .check.withdrawal {
+    background: #fff8ef;
+    border-color: #e7d4b9;
+  }
+  .pill {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--err);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .optional {
+    color: var(--muted);
+  }
+  .button {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 16px;
+    background: var(--cta);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 8px 26px rgba(234,118,0,.24);
+  }
+  .button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .message {
+    display: none;
+    margin-top: 12px;
+    color: var(--err);
+    font-size: 13px;
+  }
+  .message.show { display: block; }
+  .success {
+    display: none;
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid #b8d8bf;
+    border-radius: 12px;
+    background: #f0f8f2;
+    font-size: 14px;
+  }
+  .success.show { display: block; }
+  .legal {
+    margin: 15px 0 0;
+    color: var(--muted);
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+</style>
+</head>
+<body>
+<main class="checkout">
+  <aside class="summary">
+    <div class="brand">life<span>+</span>plus360</div>
+    <div class="tag">Pro Checkout</div>
+    <h1>LifePlus 360 Pro</h1>
+    <p>
+      Bezahltes Upgrade fuer dein bestehendes Konto. Die Zahlung laeuft ueber
+      Paddle, dein Zugang wird nach dem Webhook automatisch aktiviert.
+    </p>
+    <div class="price-lines">
+      <div class="price-row"><span>Konto</span><strong>belinda@example.com</strong></div>
+      <div class="price-row"><span>Plan</span><strong>Jahresabo</strong></div>
+      <div class="price-row"><span>Verlaengerung</span><strong>automatisch</strong></div>
+      <div class="price-row total"><span>Heute faellig</span><strong>89,00 EUR</strong></div>
+    </div>
+  </aside>
+
+  <section class="content">
+    <h2>Zahlung vorbereiten</h2>
+    <p class="lead">
+      Bestaetige die Pflichtpunkte. Der Newsletter ist optional und blockiert
+      den Checkout nicht.
+    </p>
+
+    <div class="account">
+      <label>Konto-E-Mail</label>
+      <strong id="accountEmail">belinda@example.com</strong>
+    </div>
+
+    <div class="paddle" id="paddleWrap">
+      <div class="paddle-frame">
+        <strong>Paddle Zahlungsfeld</strong>
+        <div class="paddle-field">E-Mail: belinda@example.com</div>
+        <div class="paddle-field">Karte / SEPA / PayPal</div>
+        <div class="paddle-field">Rechnungsland, Steuerdaten, Zusammenfassung</div>
+      </div>
+    </div>
+
+    <div class="checks">
+      <label class="check">
+        <input type="checkbox" id="agb">
+        <span>Ich akzeptiere die <a href="/agb.html" target="_blank">Allgemeinen Geschaeftsbedingungen</a>.<span class="pill">Pflicht</span></span>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" id="privacy">
+        <span>Ich habe die <a href="/datenschutz.html" target="_blank">Datenschutzerklaerung</a> gelesen und zur Kenntnis genommen.<span class="pill">Pflicht</span></span>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" id="newsletter">
+        <span><span class="optional">Optional:</span> Ja, ich moechte den LifePlus-Newsletter erhalten. Abmeldung jederzeit per Klick in jeder E-Mail moeglich.</span>
+      </label>
+
+      <label class="check withdrawal">
+        <input type="checkbox" id="withdrawal">
+        <span>Ich verlange ausdruecklich, dass mit der Leistung sofort begonnen wird, und bestaetige mein Wissen, dass ich mit Beginn der Ausfuehrung mein 14-taegiges Widerrufsrecht verliere.<span class="pill">Pflicht</span></span>
+      </label>
+    </div>
+
+    <button class="button" id="submit" disabled>Jetzt kostenpflichtig bestellen</button>
+    <div class="message" id="message">Bitte bestaetige AGB, Datenschutz und Widerrufsverzicht.</div>
+    <div class="success" id="success">Demo: Pflichtpunkte bestaetigt. Im echten Flow wird Paddle mit den Consent-Daten geoeffnet oder finalisiert.</div>
+
+    <p class="legal">
+      Abwicklung und Rechnungsstellung durch Paddle. Newsletter-Opt-in ist
+      freiwillig und getrennt vom kostenpflichtigen Vertrag.
+    </p>
+  </section>
+</main>
+
+<script>
+  const CHECKOUT = {
+    simulate: true,
+    brandId: 'lifeplus',
+    userId: 'usr_demo',
+    accountEmail: 'belinda@example.com',
+    priceId: 'pri_demo_yearly',
+    consentVersion: '2026-06-01'
+  };
+
+  const required = [
+    document.getElementById('agb'),
+    document.getElementById('privacy'),
+    document.getElementById('withdrawal')
+  ];
+  const newsletter = document.getElementById('newsletter');
+  const submit = document.getElementById('submit');
+  const message = document.getElementById('message');
+  const success = document.getElementById('success');
+
+  function allRequiredChecked() {
+    return required.every((item) => item.checked);
+  }
+
+  function refresh() {
+    const ok = allRequiredChecked();
+    submit.disabled = !ok;
+    if (ok) message.classList.remove('show');
+  }
+
+  function buildCustomData() {
+    return {
+      brand_id: CHECKOUT.brandId,
+      user_id: CHECKOUT.userId,
+      checkout_email: CHECKOUT.accountEmail,
+      consent: {
+        agb: true,
+        privacy: true,
+        withdrawal_waiver: true,
+        newsletter: newsletter.checked,
+        version: CHECKOUT.consentVersion,
+        timestamp: new Date().toISOString()
+      }
+    };
+  }
+
+  required.forEach((item) => item.addEventListener('change', refresh));
+
+  submit.addEventListener('click', () => {
+    if (!allRequiredChecked()) {
+      message.classList.add('show');
+      return;
+    }
+
+    if (CHECKOUT.simulate) {
+      console.info('Codex checkout customData', buildCustomData());
+      success.classList.add('show');
+      return;
+    }
+
+    Paddle.Checkout.open({
+      items: [{ priceId: CHECKOUT.priceId, quantity: 1 }],
+      customer: { email: CHECKOUT.accountEmail },
+      customData: buildCustomData(),
+      settings: {
+        displayMode: 'inline',
+        frameTarget: 'paddleWrap',
+        frameInitialHeight: 450,
+        frameStyle: 'width:100%; min-width:312px; background-color:transparent; border:none;',
+        allowLogout: false,
+        locale: 'de',
+        theme: 'light'
+      }
+    });
+  });
+
+  refresh();
+</script>
+</body>
+</html>

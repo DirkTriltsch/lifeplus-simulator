@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifePlus 360 - Free Consent</title>
+<style>
+  :root {
+    --lp-primary: #006f44;
+    --lp-dark: #13322b;
+    --lp-accent: #9fba37;
+    --lp-cta: #ea7600;
+    --surface: #eef3ef;
+    --ink: #13322b;
+    --muted: #52645c;
+    --line: #d5e2d8;
+    --err: #c2364b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Manrope, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 420px at 100% 0%, #e6f3e9, transparent 60%),
+      radial-gradient(720px 360px at 0% 100%, #dceede, transparent 60%),
+      #f4f7f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 18px;
+  }
+  .shell {
+    width: min(940px, 100%);
+    display: grid;
+    grid-template-columns: .95fr 1fr;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 28px 70px rgba(19,50,43,.16);
+  }
+  @media (max-width: 760px) { .shell { grid-template-columns: 1fr; } }
+  .aside {
+    background: linear-gradient(150deg, var(--lp-primary), var(--lp-dark));
+    color: #fff;
+    padding: 36px;
+  }
+  .brand {
+    font-weight: 750;
+    font-size: 19px;
+    margin-bottom: 42px;
+  }
+  .brand span { color: var(--lp-accent); }
+  .tag {
+    color: var(--lp-accent);
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 750;
+  }
+  h1 {
+    margin: 9px 0 12px;
+    font-size: 34px;
+    line-height: 1.08;
+  }
+  .aside p {
+    color: rgba(255,255,255,.76);
+    line-height: 1.65;
+    margin: 0 0 24px;
+  }
+  .status {
+    display: grid;
+    gap: 10px;
+    margin-top: 28px;
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,.13);
+    padding: 10px 0;
+    font-size: 14px;
+  }
+  .status-row span:first-child { color: rgba(255,255,255,.68); }
+  .form {
+    padding: 36px;
+  }
+  .form h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+  }
+  .lead {
+    margin: 0 0 24px;
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: 14px;
+  }
+  .account {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 14px;
+    margin-bottom: 18px;
+  }
+  .account label {
+    display: block;
+    font-size: 12px;
+    font-weight: 750;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .account strong { font-size: 15px; }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    background: #fbfcfb;
+  }
+  .check input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--lp-primary);
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+  .check span {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .check a { color: var(--lp-primary); }
+  .button {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+    background: var(--lp-cta);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 8px 26px rgba(234,118,0,.24);
+  }
+  .button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .msg {
+    display: none;
+    margin-top: 14px;
+    color: var(--err);
+    font-size: 13px;
+  }
+  .msg.show { display: block; }
+  .success {
+    display: none;
+    border: 1px solid #b8d8bf;
+    background: #f0f8f2;
+    color: var(--lp-dark);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  .success.show { display: block; }
+  .fineprint {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+<main class="shell">
+  <aside class="aside">
+    <div class="brand">life<span>+</span>plus360</div>
+    <div class="tag">Free-User Consent</div>
+    <h1>Kostenlosen Zugang aktivieren</h1>
+    <p>
+      Dieses Interface ist fuer angemeldete Free-User gedacht. Es fragt keine
+      E-Mail-Adresse ab, sondern protokolliert nur AGB und Datenschutz.
+    </p>
+    <div class="status">
+      <div class="status-row"><span>Konto</span><strong>bekannt</strong></div>
+      <div class="status-row"><span>Zahlung</span><strong>keine</strong></div>
+      <div class="status-row"><span>Consent</span><strong>AGB + Datenschutz</strong></div>
+    </div>
+  </aside>
+
+  <section class="form">
+    <h2>Bitte bestaetigen</h2>
+    <p class="lead">
+      Danach kannst du deinen Free-Zugang nutzen. Wenn du dich noch im
+      14-Tage-Trial befindest, bleiben die Pro-Funktionen bis zum Trial-Ende aktiv.
+    </p>
+
+    <div class="account">
+      <label>Konto-E-Mail</label>
+      <strong id="accountEmail">belinda@example.com</strong>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" id="agb">
+      <span>Ich akzeptiere die <a href="/agb.html" target="_blank">Allgemeinen Geschaeftsbedingungen</a>.</span>
+    </label>
+
+    <label class="check">
+      <input type="checkbox" id="privacy">
+      <span>Ich habe die <a href="/datenschutz.html" target="_blank">Datenschutzerklaerung</a> gelesen und zur Kenntnis genommen.</span>
+    </label>
+
+    <label class="check">
+      <input type="checkbox" id="newsletter">
+      <span>Optional: Ja, ich moechte den LifePlus-Newsletter erhalten. Abmeldung jederzeit per Klick in jeder E-Mail moeglich.</span>
+    </label>
+
+    <button class="button" id="submit" disabled>Free-Zugang aktivieren</button>
+    <div class="msg" id="msg">Bitte bestaetige AGB und Datenschutz.</div>
+    <div class="success" id="success">
+      Zustimmung gespeichert. Der Free-Zugang ist aktiv.
+    </div>
+
+    <p class="fineprint">
+      Kein Widerrufsverzicht in diesem Flow: Es wird kein kostenpflichtiger
+      Vertrag geschlossen und keine Zahlung gestartet.
+    </p>
+  </section>
+</main>
+
+<script>
+  const checks = [document.getElementById('agb'), document.getElementById('privacy')];
+  const submit = document.getElementById('submit');
+  const msg = document.getElementById('msg');
+  const success = document.getElementById('success');
+
+  function refresh() {
+    const ok = checks.every((check) => check.checked);
+    submit.disabled = !ok;
+    if (ok) msg.classList.remove('show');
+  }
+
+  checks.forEach((check) => check.addEventListener('change', refresh));
+  submit.addEventListener('click', () => {
+    if (!checks.every((check) => check.checked)) {
+      msg.classList.add('show');
+      return;
+    }
+    success.classList.add('show');
+    submit.disabled = true;
+  });
+
+  refresh();
+</script>
+</body>
+</html>

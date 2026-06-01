@@ -25,4 +25,15 @@ export interface Env {
   MAGIC_LINK_SECRET: string;
   RESEND_API_KEY: string;
   DIAGNOSTIC_TOKEN?: string;
+
+  // Local-dev override (.dev.vars): wenn '1' werden Session-Cookies ohne
+  // Secure-Flag gesetzt, damit sie ueber http://localhost akzeptiert werden.
+  // Production immer leer/unset.
+  INSECURE_COOKIES?: string;
+
+  // Local-dev Magic-Link-Helper. Wenn '1' UND INSECURE_COOKIES='1' wird der
+  // Klartext-Token bei Mailer-Fehler in der Response zurueckgegeben. Beide
+  // Flags muessen explizit gesetzt sein — verhindert versehentliche
+  // Aktivierung in Production, falls jemand RESEND_API_KEY rotiert/loescht.
+  DEV_MAGIC_LINK_DEBUG?: string;
 }

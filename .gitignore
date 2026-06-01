@@ -1,7 +1,9 @@
 node_modules
 dist
 .npm-cache
+.wrangler
 .env
+.dev.vars
 .DS_Store
 *.log
 *.tsbuildinfo

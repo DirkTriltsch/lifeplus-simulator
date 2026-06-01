@@ -1,9 +1,16 @@
 import type { Env } from '../../env';
 import { randomId } from '../../_lib/crypto';
-import { upsertUserByEmail } from '../../_lib/db';
+import {
+  type CheckoutIntentRow,
+  findUserById,
+  getCheckoutIntentById,
+  insertConsentLog,
+  markCheckoutIntentConsumed,
+  upsertUserByEmail,
+} from '../../_lib/db';
 import { verifyPaddleSignature } from '../../_lib/paddle-sig';
 import { error, json, methodNotAllowed, text } from '../../_lib/responses';
-import { daysFromNow, nowMs } from '../../_lib/time';
+import { nowMs } from '../../_lib/time';
 
 const GRACE_DAYS_PAST_DUE = 7;
 
@@ -37,6 +44,19 @@ interface PaddleCustomerResponse {
   };
 }
 
+// customData-Schema, das wir aus dem Frontend reinreichen (siehe
+// checkoutInline.ts):
+//   brand_id, session_user_id?, checkout_email,
+//   consent: { agb, privacy, newsletter, withdrawal_waiver, version, timestamp }
+interface CheckoutConsent {
+  agb?: boolean;
+  privacy?: boolean;
+  newsletter?: boolean;
+  withdrawal_waiver?: boolean;
+  version?: string;
+  timestamp?: string;
+}
+
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'POST') return methodNotAllowed(['POST']);
 
@@ -64,9 +84,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   const eventType = event.event_type;
   if (!eventId || !eventType) return error(400, 'missing_event_fields');
 
-  // Idempotency: insert into webhook_events, ignore on conflict. If a previous
-  // processing attempt failed, processed_at stays NULL so Paddle retries can
-  // run the handler again.
+  // Idempotency: insert into webhook_events, ignore on conflict.
   const insertResult = await env.DB.prepare(
     'INSERT OR IGNORE INTO webhook_events (id, type, payload_json, received_at) VALUES (?, ?, ?, ?)',
   )
@@ -110,13 +128,12 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
     case 'subscription.paused':
     case 'subscription.resumed':
     case 'subscription.trialing':
-      await upsertSubscription(env, data);
+      await upsertSubscription(env, data, type);
       break;
 
     case 'transaction.paid':
-      // Renewals and one-shots. If the transaction is linked to a subscription
-      // the subscription.updated event carries the canonical state, so we only
-      // act here when there is no subscription_id (i.e. one-shot purchases).
+      // Renewals und one-shots. Bei Subscription-Transaktionen ist subscription.*
+      // die kanonische Quelle — hier nur Transaction-ID nachtragen.
       if (data.subscription_id) {
         await storeTransactionForSubscription(env, data);
       } else {
@@ -126,7 +143,7 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
 
     case 'transaction.payment_failed':
     case 'transaction.canceled':
-      // Soft events — Paddle will follow up with subscription.* state changes.
+      // Soft events — Paddle folgt mit subscription.* state changes.
       break;
 
     case 'adjustment.created':
@@ -136,26 +153,32 @@ async function processEvent(env: Env, event: PaddleEvent): Promise<void> {
       break;
 
     default:
-      // Unhandled — recorded in webhook_events for audit.
+      // Unhandled — fuer Audit in webhook_events erhalten.
       break;
   }
 }
 
-async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void> {
+async function upsertSubscription(
+  env: Env,
+  data: PaddleEventData,
+  eventType: string,
+): Promise<void> {
   if (!customDataMatchesBrand(env, data.custom_data)) {
     console.warn('paddle_webhook_brand_mismatch', data.custom_data);
     return;
   }
 
-  const customerEmail =
-    data.customer?.email ??
-    data.email ??
-    customDataEmail(data.custom_data) ??
-    (await fetchPaddleCustomerEmail(env, data.customer_id));
-  if (!customerEmail) return;
+  // Identitaetsregel: Server-seitiger Intent ist authoritative.
+  // Fallback (Bestands-Subs ohne Intent): customer.email aus Paddle-Payload.
+  const identity = await resolveSubscriberIdentity(env, data);
+  if (!identity.email) return;
 
+  const checkoutEmail = identity.email;
   const now = nowMs();
-  const user = await upsertUserByEmail(env, customerEmail, now, () => crypto.randomUUID());
+  const user = identity.userId
+    ? (await findUserById(env, identity.userId)) ??
+      (await upsertUserByEmail(env, checkoutEmail, now, () => crypto.randomUUID()))
+    : await upsertUserByEmail(env, checkoutEmail, now, () => crypto.randomUUID());
 
   const subscriptionId = data.subscription_id ?? data.id ?? null;
   if (!subscriptionId) return;
@@ -177,6 +200,8 @@ async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void
   )
     .bind(subscriptionId)
     .first<{ id: string }>();
+
+  const isFirstSeen = !existing;
 
   if (existing) {
     await env.DB.prepare(
@@ -210,6 +235,33 @@ async function upsertSubscription(env: Env, data: PaddleEventData): Promise<void
   }
 
   await recomputeEntitlement(env, user.id, status, periodEndsAt, 'subscription');
+
+  // Server-Intent als konsumiert markieren (idempotent durch WHERE consumed_at IS NULL).
+  if (identity.intent) {
+    await markCheckoutIntentConsumed(
+      env,
+      identity.intent.id,
+      now,
+      subscriptionId,
+      null,
+    );
+  }
+
+  // Consent persistieren — nur beim allerersten Webhook-Event fuer diese Sub,
+  // damit subscription.updated / .activated etc. nicht duplicate consent_logs
+  // erzeugen. Bei verspaeteten Webhooks (z.B. ohne customData beim
+  // subscription.updated) prueft consentLogExistsForSubscription zusaetzlich.
+  if (isFirstSeen || eventType === 'subscription.created') {
+    await maybeInsertConsentLogForSubscription(env, {
+      checkoutUserId:       user.id,
+      checkoutEmail,
+      subscriptionId,
+      customData:           data.custom_data,
+      sessionUserId:        identity.intent
+        ? identity.intent.user_id
+        : customDataSessionUserId(data.custom_data),
+    });
+  }
 }
 
 async function storeTransactionForSubscription(env: Env, data: PaddleEventData): Promise<void> {
@@ -234,6 +286,16 @@ async function storeTransactionForSubscription(env: Env, data: PaddleEventData):
      WHERE paddle_subscription_id = ?`,
   )
     .bind(transactionId, nowMs(), subscriptionId)
+    .run();
+
+  // Falls der zugehoerige consent_log noch keine paddle_transaction_id hat
+  // (subscription.created kam vor transaction.paid), die TX-ID nachreichen.
+  await env.DB.prepare(
+    `UPDATE consent_log
+     SET paddle_transaction_id = ?
+     WHERE paddle_subscription_id = ? AND paddle_transaction_id IS NULL`,
+  )
+    .bind(transactionId, subscriptionId)
     .run();
 }
 
@@ -279,17 +341,39 @@ async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<vo
     return;
   }
 
-  const customerEmail = data.customer?.email ?? data.email ?? customDataEmail(data.custom_data);
-  if (!customerEmail) return;
-  const now = nowMs();
-  const user = await upsertUserByEmail(env, customerEmail, now, () => crypto.randomUUID());
+  const identity = await resolveSubscriberIdentity(env, data);
+  if (!identity.email) return;
 
-  // For lifetime-style one-shots, valid_until = null means "forever".
+  const checkoutEmail = identity.email;
+  const now = nowMs();
+  const user = identity.userId
+    ? (await findUserById(env, identity.userId)) ??
+      (await upsertUserByEmail(env, checkoutEmail, now, () => crypto.randomUUID()))
+    : await upsertUserByEmail(env, checkoutEmail, now, () => crypto.randomUUID());
+
+  // Lifetime-style: valid_until=null = "forever".
   await writeEntitlement(env, user.id, 'lifetime', null, 'one_shot_purchase');
+
+  const transactionId = data.id ?? data.transaction_id ?? data.transaction?.id ?? null;
+
+  if (identity.intent) {
+    await markCheckoutIntentConsumed(env, identity.intent.id, now, null, transactionId);
+  }
+
+  if (transactionId) {
+    await maybeInsertConsentLogForTransaction(env, {
+      checkoutUserId: user.id,
+      checkoutEmail,
+      transactionId,
+      customData:     data.custom_data,
+      sessionUserId:  identity.intent
+        ? identity.intent.user_id
+        : customDataSessionUserId(data.custom_data),
+    });
+  }
 }
 
 async function handleRefund(env: Env, data: PaddleEventData): Promise<void> {
-  // Adjustments and refunds reference a transaction or subscription.
   const subscriptionId = data.subscription_id ?? data.subscription?.id ?? null;
   const transactionId = data.transaction_id ?? data.transaction?.id ?? data.id ?? null;
 
@@ -311,6 +395,10 @@ async function handleRefund(env: Env, data: PaddleEventData): Promise<void> {
   await writeEntitlement(env, sub.user_id, 'pro', nowMs(), 'refund_revoked');
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────
+
 function isAllowedPriceId(env: Env, priceId: string): boolean {
   return [env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_HALFYEAR, env.PADDLE_PRICE_YEARLY]
     .filter(Boolean)
@@ -325,9 +413,179 @@ function customDataMatchesBrand(
   return brandId === undefined || brandId === env.BRAND_ID;
 }
 
-function customDataEmail(customData: Record<string, unknown> | null | undefined): string | null {
+function customDataCheckoutEmail(
+  customData: Record<string, unknown> | null | undefined,
+): string | null {
   const email = customData?.checkout_email;
-  return typeof email === 'string' && email.includes('@') ? email.toLowerCase() : null;
+  if (typeof email !== 'string' || !email.includes('@')) return null;
+  return email.toLowerCase();
+}
+
+function customDataConsent(
+  customData: Record<string, unknown> | null | undefined,
+): CheckoutConsent | null {
+  const consent = customData?.consent;
+  if (!consent || typeof consent !== 'object') return null;
+  return consent as CheckoutConsent;
+}
+
+function customDataSessionUserId(
+  customData: Record<string, unknown> | null | undefined,
+): string | null {
+  const id = customData?.session_user_id;
+  return typeof id === 'string' && id.length > 0 ? id : null;
+}
+
+function customDataIntentId(
+  customData: Record<string, unknown> | null | undefined,
+): string | null {
+  const id = customData?.intent_id;
+  return typeof id === 'string' && id.length > 0 ? id : null;
+}
+
+// Identitaetsregel (verstaerkt): Server-Intent ueber intent_id ist
+// authoritative. Wenn der Intent valide ist, gewinnt sein user_id +
+// checkout_email — selbst wenn customData.checkout_email manipuliert wurde.
+//
+// Fallback (Bestands-Subs ohne Intent, intent abgelaufen, Webhook-Replay
+// nach Intent-Cleanup): customData.checkout_email → Paddle-customer.email →
+// Paddle-API. Diese Pfade landen mit Warning im Log.
+async function resolveSubscriberIdentity(
+  env: Env,
+  data: PaddleEventData,
+): Promise<{
+  email: string | null;
+  userId: string | null;
+  intent: CheckoutIntentRow | null;
+}> {
+  const intentId = customDataIntentId(data.custom_data);
+  if (intentId) {
+    const intent = await getCheckoutIntentById(env, intentId);
+    if (intent && intent.brand_id === env.BRAND_ID) {
+      // Falls customData.checkout_email mitgesendet wurde, MUSS sie zum
+      // Server-Intent passen — sonst ist es ein Manipulationsversuch.
+      const customDataEmail = customDataCheckoutEmail(data.custom_data);
+      if (customDataEmail && customDataEmail !== intent.checkout_email) {
+        console.warn('webhook_intent_email_mismatch', {
+          intentId,
+          intentEmail: intent.checkout_email,
+          customDataEmail,
+        });
+        return { email: null, userId: null, intent: null };
+      }
+      return { email: intent.checkout_email, userId: intent.user_id, intent };
+    }
+    console.warn('webhook_invalid_intent_id', { intentId });
+  }
+
+  // Fallback ohne Intent
+  const fallback =
+    customDataCheckoutEmail(data.custom_data) ??
+    (typeof data.customer?.email === 'string' ? data.customer.email.toLowerCase() : null) ??
+    (typeof data.email === 'string' ? data.email.toLowerCase() : null) ??
+    (await fetchPaddleCustomerEmail(env, data.customer_id));
+
+  if (fallback) {
+    console.warn('webhook_no_intent_using_fallback_email', { fallback });
+  }
+  return { email: fallback, userId: null, intent: null };
+}
+
+async function consentLogExistsForSubscription(
+  env: Env,
+  subscriptionId: string,
+): Promise<boolean> {
+  const row = await env.DB.prepare(
+    "SELECT 1 AS hit FROM consent_log WHERE paddle_subscription_id = ? AND context = 'pro_checkout' LIMIT 1",
+  )
+    .bind(subscriptionId)
+    .first<{ hit: number }>();
+  return row !== null;
+}
+
+async function consentLogExistsForTransaction(
+  env: Env,
+  transactionId: string,
+): Promise<boolean> {
+  const row = await env.DB.prepare(
+    "SELECT 1 AS hit FROM consent_log WHERE paddle_transaction_id = ? AND context = 'pro_checkout' LIMIT 1",
+  )
+    .bind(transactionId)
+    .first<{ hit: number }>();
+  return row !== null;
+}
+
+interface MaybeInsertParams {
+  checkoutUserId: string;
+  checkoutEmail: string;
+  customData: Record<string, unknown> | null | undefined;
+  sessionUserId: string | null;
+}
+
+async function maybeInsertConsentLogForSubscription(
+  env: Env,
+  params: MaybeInsertParams & { subscriptionId: string },
+): Promise<void> {
+  if (await consentLogExistsForSubscription(env, params.subscriptionId)) return;
+  const consent = customDataConsent(params.customData);
+  if (!consent || consent.agb !== true || consent.privacy !== true) {
+    console.warn('webhook_consent_missing_or_invalid', {
+      subscriptionId: params.subscriptionId,
+      hasConsent:     consent !== null,
+    });
+    return;
+  }
+  await insertConsentLog(env, nowMs(), randomId, {
+    checkoutUserId:           params.checkoutUserId,
+    sessionUserId:            params.sessionUserId,
+    checkoutEmail:            params.checkoutEmail,
+    sessionEmail:             null,
+    brandId:                  env.BRAND_ID,
+    context:                  'pro_checkout',
+    acceptedAgb:              true,
+    acceptedPrivacy:          true,
+    acceptedWithdrawalWaiver: consent.withdrawal_waiver === true,
+    newsletterOptIn:          consent.newsletter === true,
+    documentVersion:          consent.version ?? 'unknown',
+    clientTimestampIso:       consent.timestamp ?? null,
+    paddleSubscriptionId:     params.subscriptionId,
+    paddleTransactionId:      null,
+    requestIp:                null,
+    userAgent:                null,
+  });
+}
+
+async function maybeInsertConsentLogForTransaction(
+  env: Env,
+  params: MaybeInsertParams & { transactionId: string },
+): Promise<void> {
+  if (await consentLogExistsForTransaction(env, params.transactionId)) return;
+  const consent = customDataConsent(params.customData);
+  if (!consent || consent.agb !== true || consent.privacy !== true) {
+    console.warn('webhook_oneshot_consent_missing', {
+      transactionId: params.transactionId,
+      hasConsent:    consent !== null,
+    });
+    return;
+  }
+  await insertConsentLog(env, nowMs(), randomId, {
+    checkoutUserId:           params.checkoutUserId,
+    sessionUserId:            params.sessionUserId,
+    checkoutEmail:            params.checkoutEmail,
+    sessionEmail:             null,
+    brandId:                  env.BRAND_ID,
+    context:                  'pro_checkout',
+    acceptedAgb:              true,
+    acceptedPrivacy:          true,
+    acceptedWithdrawalWaiver: consent.withdrawal_waiver === true,
+    newsletterOptIn:          consent.newsletter === true,
+    documentVersion:          consent.version ?? 'unknown',
+    clientTimestampIso:       consent.timestamp ?? null,
+    paddleSubscriptionId:     null,
+    paddleTransactionId:      params.transactionId,
+    requestIp:                null,
+    userAgent:                null,
+  });
 }
 
 async function recomputeEntitlement(
@@ -338,19 +596,18 @@ async function recomputeEntitlement(
   source: string,
 ): Promise<void> {
   let validUntil: number | null = null;
-  let accessLevel = 'pro';
+  const accessLevel = 'pro';
 
   switch (status) {
     case 'active':
     case 'trialing':
-      validUntil = periodEndsAt; // null acts as open-ended until next update
+      validUntil = periodEndsAt;
       break;
     case 'past_due':
       validUntil =
         periodEndsAt !== null ? periodEndsAt + GRACE_DAYS_PAST_DUE * 86_400_000 : null;
       break;
     case 'canceled':
-      // Access until period end if known, else immediate.
       validUntil = periodEndsAt ?? nowMs();
       break;
     case 'paused':

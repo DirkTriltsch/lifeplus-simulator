@@ -1,0 +1,19 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import LoginPage from '@shared/components/sections/LoginPage.astro';
+import { getBrand } from '@shared/lib/brand';
+
+const brand = await getBrand('lifeplus');
+---
+
+<BrandLayout
+  brand={brand}
+  title={`Anmelden · ${brand.siteName}`}
+  description={`Bei ${brand.siteName} anmelden und Login-Link per E-Mail erhalten.`}
+>
+  <Header brand={brand} />
+  <LoginPage brand={brand} source="brands/lifeplus/pages/login.astro" />
+  <Footer brand={brand} />
+</BrandLayout>

@@ -162,3 +162,4 @@ finalCta:
   headlineHtml: "Eine Entscheidung. <em>Ein Werkzeug.</em>"
   sub: "Frei testen oder direkt im Gespräch nutzen — beides startet mit einem Klick."
   ctaLabel: "Jetzt starten"
+  ctaUrl: "/login.html"

@@ -53,7 +53,7 @@ export function sessionCookieHeader(env: Env, value: string, maxAgeSeconds: numb
     maxAgeSeconds,
     sameSite: 'Lax',
     httpOnly: true,
-    secure: true,
+    secure: env.INSECURE_COOKIES !== '1',
     domain: env.COOKIE_DOMAIN || undefined,
   });
 }
@@ -63,7 +63,7 @@ export function clearedSessionCookieHeader(env: Env): string {
     maxAgeSeconds: 0,
     sameSite: 'Lax',
     httpOnly: true,
-    secure: true,
+    secure: env.INSECURE_COOKIES !== '1',
     domain: env.COOKIE_DOMAIN || undefined,
   });
 }

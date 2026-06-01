@@ -1,20 +1,20 @@
 ---
+// Free-Signup / Consent (Codex-Modell).
+// Vorlage: _doc/paddle_checkout/lifeplus_signup_free_Claude.html
 import BrandLayout from '@shared/components/layout/BrandLayout.astro';
 import Header from '@shared/components/layout/Header.astro';
 import Footer from '@shared/components/layout/Footer.astro';
-import PricingPageDefault from '@shared/components/sections/PricingPageDefault.astro';
+import SignupPage from '@shared/components/sections/SignupPage.astro';
 import { getBrand } from '@shared/lib/brand';
-import { getPage } from '@shared/lib/pageContent';
 
 const brand = await getBrand('lifeplus');
-const pricing = await getPage('lifeplus', 'pricing');
 ---
 <BrandLayout
   brand={brand}
-  title={pricing.seo.title}
-  description={pricing.seo.description}
+  title={`Kostenlos starten · ${brand.siteName}`}
+  description={`${brand.siteName} 14 Tage Pro kostenlos testen — kein Zahlungsmittel noetig.`}
 >
   <Header brand={brand} active="pricing" />
-  <PricingPageDefault brand={brand} pricing={pricing} source="brands/lifeplus/content/pricing.yaml" />
+  <SignupPage brand={brand} source="brands/lifeplus/pages/signup.astro" />
   <Footer brand={brand} />
 </BrandLayout>

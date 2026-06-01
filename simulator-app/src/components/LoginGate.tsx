@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { requestMagicLink, verifyMagicLink } from '../auth/api';
 
-export function LoginGate(): JSX.Element {
+interface LoginGateProps {
+  pricingUrl: string;
+}
+
+export function LoginGate({ pricingUrl }: LoginGateProps): JSX.Element {
   const { refresh } = useAuth();
   const [email, setEmail] = useState(() => {
     if (typeof window === 'undefined') return '';
     return new URL(window.location.href).searchParams.get('email') ?? '';
   });
-  const [phase, setPhase] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'error'>(
+  const [phase, setPhase] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'not_found' | 'error'>(
     'idle',
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -26,11 +30,14 @@ export function LoginGate(): JSX.Element {
 
     setPhase('verifying');
     verifyMagicLink(token, access)
-      .then(async () => {
+      .then(async (result) => {
         url.searchParams.delete('token');
         url.searchParams.delete('access');
         window.history.replaceState({}, '', url.toString());
         await refresh();
+        if (result.nextUrl) {
+          window.location.href = result.nextUrl;
+        }
       })
       .catch((err) => {
         setErrorMsg(err instanceof Error ? err.message : String(err));
@@ -47,7 +54,12 @@ export function LoginGate(): JSX.Element {
       await requestMagicLink(email.trim());
       setPhase('sent');
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : String(err));
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === 'account_not_found') {
+        setPhase('not_found');
+        return;
+      }
+      setErrorMsg(message);
       setPhase('error');
     }
   };
@@ -70,6 +82,22 @@ export function LoginGate(): JSX.Element {
         <p className="text-xs text-gray-500 mt-3">
           Du kannst dieses Fenster offen lassen und auf den Link in der Mail klicken.
         </p>
+      </CenteredCard>
+    );
+  }
+
+  if (phase === 'not_found') {
+    return (
+      <CenteredCard title="Kein Account gefunden">
+        <p className="text-sm text-gray-700 mb-4">
+          Fuer diese E-Mail-Adresse gibt es noch keinen aktiven Account.
+        </p>
+        <a
+          href={pricingUrl}
+          className="block w-full text-center rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
+        >
+          Jetzt Plan auswaehlen
+        </a>
       </CenteredCard>
     );
   }

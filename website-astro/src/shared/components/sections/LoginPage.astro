@@ -1,0 +1,287 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+
+interface Props {
+  brand: Brand;
+  source?: string;
+}
+
+const { brand, source } = Astro.props;
+
+const envApiBase = import.meta.env.PUBLIC_API_BASE_URL;
+const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
+  ? envApiBase
+  : (brand.apiBaseUrl ?? '');
+---
+
+<section
+  class="login"
+  data-section="Login"
+  data-component-file="shared/components/sections/LoginPage.astro"
+  data-source={source}
+  data-api-base={apiBaseUrl}
+  data-app-url={brand.appUrl}
+>
+  <div class="login-card">
+    <div id="loginFormView">
+      <p class="eyebrow">Anmelden</p>
+      <h1>Willkommen zurueck</h1>
+      <p class="lead">Gib deine E-Mail-Adresse ein. Wir schicken dir einen einmaligen Login-Link.</p>
+
+      <div class="email-block">
+        <label for="loginEmail">E-Mail-Adresse</label>
+        <input
+          id="loginEmail"
+          type="email"
+          autocomplete="email"
+          inputmode="email"
+          spellcheck="false"
+          required
+          placeholder="name@beispiel.de"
+        />
+        <p class="email-hint" id="loginEmailHint">Wir senden dir einen einmaligen Login-Link.</p>
+      </div>
+
+      <button class="cta" id="loginBtn" disabled>
+        <span class="cta-label">Login-Link senden</span>
+        <span class="spinner"></span>
+      </button>
+      <p class="err-msg" id="loginErrMsg">Der Login-Link konnte gerade nicht gesendet werden.</p>
+    </div>
+
+    <div class="sent" id="loginSentView" hidden>
+      <div class="sent-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#006F44" stroke-width="2">
+          <path d="M4 6l8 7 8-7M4 6v12h16V6M4 6h16"/>
+        </svg>
+      </div>
+      <h2>Schau in dein Postfach</h2>
+      <p><span id="loginSentIntro">Wir haben dir einen Login-Link an </span><span class="target" id="loginSentEmail">name@beispiel.de</span> gesendet.</p>
+      <p>Klicke auf den Link in der Mail, um dich anzumelden. Der Link ist 15 Minuten gueltig.</p>
+      <p class="sent-hint">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>
+      <button class="resend-btn" id="loginResendBtn">Erneut senden</button>
+      <p class="resend-status" id="loginResendStatus" aria-live="polite"></p>
+    </div>
+
+    <div class="sent" id="loginNotFoundView" hidden>
+      <div class="sent-icon sent-icon--warn">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EA7600" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 8v5M12 16h.01" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Kein Account gefunden</h2>
+      <p>Fuer diese E-Mail-Adresse gibt es noch keinen aktiven Account.</p>
+      <a href="pricing.html" class="cta-link">Jetzt Plan auswaehlen</a>
+      <button class="link-btn" id="loginTryAgainBtn" type="button">Andere E-Mail verwenden</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { setupLoginInline } from '@shared/scripts/loginInline';
+  setupLoginInline();
+</script>
+
+<style>
+  .login {
+    min-height: calc(100vh - 160px);
+    padding: 72px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background:
+      radial-gradient(760px 340px at 100% 0%, color-mix(in srgb, var(--brand) 15%, white), transparent 64%),
+      radial-gradient(620px 300px at 0% 100%, color-mix(in srgb, var(--brand) 10%, white), transparent 64%),
+      #FAFBF9;
+    color: #0F1B17;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid #E1E5E2;
+    border-radius: 18px;
+    padding: 32px 30px;
+    box-shadow: 0 30px 80px -42px rgba(15,27,23,0.32);
+  }
+
+  .eyebrow {
+    margin: 0 0 8px;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand);
+    font-weight: 600;
+  }
+
+  h1, h2 {
+    margin: 0 0 8px;
+    font-size: 23px;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    font-weight: 650;
+  }
+
+  .lead {
+    margin: 0 0 22px;
+    font-size: 14px;
+    color: #4A5C53;
+    line-height: 1.55;
+  }
+
+  .email-block { margin-bottom: 18px; }
+  .email-block label {
+    display: block;
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10.5px;
+    color: #4A5C53;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .email-block input {
+    width: 100%;
+    padding: 12px 13px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #0F1B17;
+    background: #fff;
+    border: 1px solid #E1E5E2;
+    border-radius: 10px;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .email-block input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
+  }
+  .email-block input.invalid {
+    border-color: #C2364B;
+    background: #FDF3F4;
+  }
+  .email-hint {
+    margin: 6px 0 0;
+    font-size: 11.5px;
+    color: #7A8983;
+    line-height: 1.5;
+  }
+  .email-hint.error { color: #C2364B; }
+
+  .cta, .cta-link {
+    width: 100%;
+    min-height: 46px;
+    padding: 13px 16px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--cta);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    text-decoration: none;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--cta) 40%, transparent);
+    transition: background .12s, transform .08s, opacity .12s;
+  }
+  .cta:hover:not(:disabled), .cta-link:hover { background: var(--cta-dark); text-decoration: none; }
+  .cta:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .spinner {
+    display: none;
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: login-spin .7s linear infinite;
+  }
+  .cta.loading .spinner { display: block; }
+  .cta.loading .cta-label { opacity: 0.5; }
+  @keyframes login-spin { to { transform: rotate(360deg); } }
+
+  .err-msg {
+    display: none;
+    margin: 9px 0 0;
+    color: #C2364B;
+    font-size: 12px;
+  }
+  .err-msg.show { display: block; }
+
+  .sent {
+    text-align: center;
+    padding: 8px 2px;
+  }
+  .sent-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #F0F7F2;
+    border: 1.5px solid #006F44;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .sent-icon--warn {
+    background: #FFF7ED;
+    border-color: #EA7600;
+  }
+  .sent p {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: #4A5C53;
+    line-height: 1.55;
+  }
+  .target { color: #0F1B17; font-weight: 650; }
+  .sent-hint {
+    margin-top: 18px !important;
+    font-size: 12px !important;
+    color: #7A8983 !important;
+  }
+  .resend-btn {
+    margin-top: 20px;
+    padding: 10px 22px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--brand);
+    background: #fff;
+    border: 1.5px solid var(--brand);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .resend-btn:hover:not(:disabled) {
+    background: var(--brand);
+    color: #fff;
+  }
+  .resend-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .resend-status {
+    min-height: 16px;
+    margin-top: 10px !important;
+    font-size: 12px !important;
+    color: #4A5C53 !important;
+  }
+  .link-btn {
+    margin-top: 14px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #4A5C53;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px;
+  }
+  .link-btn:hover { color: var(--brand); }
+</style>

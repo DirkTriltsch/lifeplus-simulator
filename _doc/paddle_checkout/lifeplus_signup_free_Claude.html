@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYP — nicht fuer Live.
+  Demo-Mockup fuer das Free-Consent-Interface (Codex-Modell).
+  Zielgruppe: angemeldete User, die ihren Free-Zugang aktivieren oder
+  fehlende Pflicht-Zustimmungen nachholen. KEIN Email-Feld (kein Gast).
+  Siehe _doc/paddle_checkout/paddle_checkout_dokumentation-Codex.md
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifePlus · Kostenlos starten</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lp-primary:  #006F44;
+    --lp-dark:     #13322B;
+    --lp-accent:   #9FBA37;
+    --lp-cta:      #EA7600;
+    --lp-surface:  #EEF3EF;
+    --ink:         #13322B;
+    --muted:       #4A6058;
+    --line:        #D5E2D8;
+    --err:         #C2364B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Manrope', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 500px at 90% -5%,  #E8F5EC, transparent 55%),
+      radial-gradient(800px  400px at -5% 105%,  #D6EDD9, transparent 55%),
+      #F2F6F2;
+    min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 48px 20px;
+  }
+
+  .shell {
+    width: 100%; max-width: 920px;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 0;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(19,50,43,0.40);
+  }
+  @media (max-width: 760px) { .shell { grid-template-columns: 1fr; } }
+
+  /* ---- LEFT (Aside) ---- */
+  .aside {
+    background: linear-gradient(155deg, var(--lp-primary) 0%, var(--lp-dark) 100%);
+    color: #fff;
+    padding: 40px 38px;
+    position: relative;
+    overflow: hidden;
+  }
+  .aside::before {
+    content: "";
+    position: absolute; top: -60px; right: -60px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(159,186,55,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .aside::after {
+    content: "";
+    position: absolute; bottom: -80px; left: -40px;
+    width: 300px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(234,118,0,0.10) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .brand { display: flex; align-items: center; gap: 11px; position: relative; z-index: 1; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.2px;
+    display: flex; align-items: baseline; gap: 1px;
+  }
+  .brand-name .plus { color: var(--lp-accent); }
+  .brand-name .num  { font-size: 11px; color: rgba(255,255,255,0.5); margin-left: 4px; font-weight: 400; }
+
+  .trial-tag {
+    display: inline-block; margin-top: 38px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--lp-accent); position: relative; z-index: 1;
+  }
+  .trial-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px; line-height: 1.15;
+    margin: 8px 0 12px; position: relative; z-index: 1;
+  }
+  .trial-sub {
+    color: rgba(255,255,255,0.78); font-size: 14px;
+    line-height: 1.6; max-width: 32ch; position: relative; z-index: 1;
+  }
+
+  .perks { margin-top: 28px; position: relative; z-index: 1; }
+  .perk {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 11px 0; font-size: 13.5px;
+    color: rgba(255,255,255,0.92);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .perk:last-child { border-bottom: none; }
+  .perk svg { flex-shrink: 0; margin-top: 3px; }
+  .perk strong { color: #fff; font-weight: 600; display: block; margin-bottom: 2px; }
+  .perk span { color: rgba(255,255,255,0.65); font-size: 12px; }
+
+  .after-trial {
+    margin-top: 24px; padding: 14px 16px;
+    background: rgba(255,255,255,0.08);
+    border-left: 2px solid var(--lp-accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 12.5px; line-height: 1.5;
+    color: rgba(255,255,255,0.78);
+    position: relative; z-index: 1;
+  }
+  .after-trial strong { color: #fff; }
+
+  /* ---- RIGHT (Form) ---- */
+  .form { padding: 40px 38px; }
+  .form h1 {
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400; font-size: 24px; margin: 0 0 4px;
+  }
+  .form .lead { color: var(--muted); font-size: 13.5px; margin: 0 0 20px; }
+
+  /* Konto-Anzeige (read-only, Codex-Modell) */
+  .konto {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    background: var(--lp-surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin: 0 0 22px;
+    font-size: 13.5px;
+  }
+  .konto svg { flex-shrink: 0; color: var(--lp-primary); }
+  .konto .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .konto .email { font-weight: 600; color: var(--ink); }
+  .konto .sep { color: var(--muted); margin: 0 2px; }
+
+  .section-label {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+
+  /* Checkboxes — beide Pflicht */
+  .checks { display: flex; flex-direction: column; margin: 0 0 20px; }
+  .check {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 11px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: #FAFCFA;
+  }
+  .check + .check { margin-top: 8px; }
+  .check:hover { border-color: #A8C8B0; }
+  .check.checked  { border-color: var(--lp-primary); background: #F0F7F2; }
+  .check.error    { border-color: var(--err); background: #FDF3F4; }
+  .check input    { position: absolute; opacity: 0; width: 0; height: 0; }
+  .box {
+    flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px;
+    border: 1.6px solid #B4CDB9; border-radius: 6px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .check.checked .box { background: var(--lp-primary); border-color: var(--lp-primary); }
+  .box svg { opacity: 0; transition: opacity .12s; }
+  .check.checked .box svg { opacity: 1; }
+  .check .txt { font-size: 13px; line-height: 1.5; color: var(--ink); }
+  .check .txt a { color: var(--lp-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .check .pflicht {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: var(--err); letter-spacing: 0.08em; text-transform: uppercase;
+    margin-left: 6px;
+  }
+
+  /* CTA button */
+  .cta-btn {
+    width: 100%; padding: 15px; font-size: 15px; font-weight: 700;
+    font-family: inherit; letter-spacing: 0.01em;
+    color: #fff; background: var(--lp-cta);
+    border: none; border-radius: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    transition: background .15s, transform .08s, opacity .15s;
+    box-shadow: 0 4px 18px -4px rgba(234,118,0,0.45);
+  }
+  .cta-btn:hover:not(:disabled)  { background: #d06800; }
+  .cta-btn:active:not(:disabled) { transform: translateY(1px); }
+  .cta-btn:disabled {
+    opacity: 0.45; cursor: not-allowed;
+    box-shadow: none; background: var(--lp-cta);
+  }
+  .cta-btn .spinner {
+    display: none; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .cta-btn.loading .spinner { display: block; }
+  .cta-btn.loading .btn-icon,
+  .cta-btn.loading .btn-label { opacity: 0.4; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .err-msg { color: var(--err); font-size: 12px; margin: 10px 0 0; display: none; }
+  .err-msg.show { display: block; }
+  .legal {
+    margin-top: 14px; font-size: 11px; color: var(--muted);
+    line-height: 1.6; text-align: center;
+  }
+  .legal a { color: var(--muted); }
+
+  /* Success-Screen (ersetzt Form nach Aktivierung) */
+  .activated {
+    display: none;
+    text-align: center;
+    padding: 20px 8px;
+  }
+  .activated.show { display: block; }
+  .activated .icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #F0F7F2;
+    border: 1.5px solid var(--lp-primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .activated h2 {
+    font-family: 'DM Serif Display', serif; font-weight: 400;
+    font-size: 22px; margin: 0 0 10px;
+  }
+  .activated p {
+    font-size: 14px; line-height: 1.55; color: var(--muted);
+    margin: 0 0 10px;
+  }
+  .activated .target { color: var(--ink); font-weight: 600; }
+  .activated .open-app {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px;
+    padding: 12px 22px; font-size: 14px; font-weight: 700;
+    color: #fff; background: var(--lp-primary);
+    border: none; border-radius: 10px; cursor: pointer;
+    text-decoration: none;
+  }
+  .activated .open-app:hover { background: #005835; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ===== ASIDE ===== -->
+  <div class="aside">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="14" viewBox="0 0 36 22">
+          <path d="M 3 17 Q 13 14, 22 9 T 33 4"
+                stroke="#9FBA37" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <circle cx="33" cy="4" r="2.8" fill="#9FBA37"/>
+        </svg>
+      </div>
+      <div class="brand-name">
+        life<span class="plus">+</span>plus<span class="num">360</span>
+      </div>
+    </div>
+
+    <div class="trial-tag">Kostenlos · ohne Karte</div>
+    <div class="trial-title">14 Tage Pro<br>geschenkt</div>
+    <p class="trial-sub">Voller Funktionsumfang fuer zwei Wochen — keine Zahlungsdaten, keine automatische Verlaengerung.</p>
+
+    <div class="perks">
+      <div class="perk">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="#9FBA37" stroke-width="2.2">
+          <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div><strong>Alle Pro-Features sofort</strong>
+          <span>Unbegrenzte Szenarien, alle drei Brands</span></div>
+      </div>
+      <div class="perk">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="#9FBA37" stroke-width="2.2">
+          <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div><strong>Keine Zahlungsdaten noetig</strong>
+          <span>Wir kennen dein Konto bereits</span></div>
+      </div>
+      <div class="perk">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="#9FBA37" stroke-width="2.2">
+          <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div><strong>Keine automatische Verlaengerung</strong>
+          <span>Nach 14 Tagen wechselt dein Zugang automatisch auf Free</span></div>
+      </div>
+    </div>
+
+    <div class="after-trial">
+      <strong>Nach den 14 Tagen:</strong> Dein Konto bleibt bestehen mit
+      eingeschraenktem Free-Zugang — du kannst jederzeit auf Pro upgraden.
+    </div>
+  </div>
+
+  <!-- ===== FORM ===== -->
+  <div class="form">
+
+    <!-- Initial view -->
+    <div id="formView">
+      <h1>Kostenlosen Zugang aktivieren</h1>
+      <p class="lead">Bestaetige die Pflicht-Zustimmungen, um deinen 14-taegigen Pro-Testzeitraum zu starten.</p>
+
+      <!-- Konto-Anzeige (read-only) -->
+      <div class="konto">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+        </svg>
+        <span class="label">Konto</span>
+        <span class="sep">·</span>
+        <span class="email" id="kontoEmail">belinda@example.com</span>
+      </div>
+
+      <!-- Pflicht-Zustimmungen — kein Widerrufsverzicht, da keine Zahlung -->
+      <div class="section-label">Pflicht-Zustimmungen</div>
+      <div class="checks">
+        <label class="check" id="wrap-agb">
+          <input type="checkbox" id="chk-agb">
+          <span class="box">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <span class="txt">
+            Ich akzeptiere die
+            <a href="/agb.html" target="_blank">Allgemeinen Geschaeftsbedingungen</a>.
+            <span class="pflicht">Pflicht</span>
+          </span>
+        </label>
+
+        <label class="check" id="wrap-dse">
+          <input type="checkbox" id="chk-dse">
+          <span class="box">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <span class="txt">
+            Ich habe die
+            <a href="/datenschutz.html" target="_blank">Datenschutzerklaerung</a>
+            gelesen und zur Kenntnis genommen.
+            <span class="pflicht">Pflicht</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Optional · Newsletter -->
+      <div class="section-label">Optional</div>
+      <div class="checks">
+        <label class="check" id="wrap-newsletter">
+          <input type="checkbox" id="chk-newsletter">
+          <span class="box">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <span class="txt">
+            Ja, ich moechte den LifePlus-Newsletter erhalten (Produkt-Updates,
+            Tipps, gelegentliche Aktionen). Abmeldung jederzeit per Klick in
+            jeder E-Mail moeglich.
+          </span>
+        </label>
+      </div>
+
+      <button class="cta-btn" id="ctaBtn" disabled>
+        <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="2">
+          <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="btn-label">Free-Zugang aktivieren</span>
+        <span class="spinner"></span>
+      </button>
+      <p class="err-msg" id="errMsg">Bitte bestaetige AGB und Datenschutz, um fortzufahren.</p>
+
+      <p class="legal">
+        Keine Zahlung. Kein Widerrufsverzicht. Nach 14 Tagen wechselt dein
+        Zugang automatisch auf den eingeschraenkten Free-Plan.
+      </p>
+    </div>
+
+    <!-- Success view -->
+    <div class="activated" id="activatedView">
+      <div class="icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="#006F44" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>Pro-Zugang aktiviert</h2>
+      <p>Dein <span class="target">14-taegiger Pro-Testzeitraum</span> hat
+        gerade gestartet. Du kannst sofort loslegen.</p>
+      <p>Wir haben deine Zustimmung protokolliert. Eine Bestaetigung
+        liegt in deinem Postfach.</p>
+      <a href="/app" class="open-app">
+        Zur App
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  KONFIGURATION
+// ─────────────────────────────────────────────
+const CONSENT_CONFIG = {
+  // Account-Daten (im echten Flow aus Session, hier Demo)
+  accountEmail: 'belinda@example.com',
+  brandId:      'lifeplus',
+  userId:       'usr_demo_001',
+  // Endpoint des Backends. Im Prototyp wird der Call nur simuliert.
+  apiBaseUrl:   '',
+  endpoint:     '/api/consent/free',
+  simulate:     true
+};
+
+// ─────────────────────────────────────────────
+//  DOM-Referenzen
+// ─────────────────────────────────────────────
+const chkAgb       = document.getElementById('chk-agb');
+const chkDse       = document.getElementById('chk-dse');
+const chkNewsletter= document.getElementById('chk-newsletter');
+const btn          = document.getElementById('ctaBtn');
+const errMsg       = document.getElementById('errMsg');
+const formView     = document.getElementById('formView');
+const activatedView= document.getElementById('activatedView');
+
+// Konto-Anzeige aus Session (Demo: aus Config)
+document.getElementById('kontoEmail').textContent = CONSENT_CONFIG.accountEmail;
+
+// ─────────────────────────────────────────────
+//  Checkbox-State → Button-Aktivierung
+// ─────────────────────────────────────────────
+function refresh() {
+  [chkAgb, chkDse, chkNewsletter].forEach(cb => {
+    cb.closest('.check').classList.toggle('checked', cb.checked);
+    if (cb.checked) cb.closest('.check').classList.remove('error');
+  });
+
+  const allOk = chkAgb.checked && chkDse.checked;
+  btn.disabled = !allOk;
+  if (allOk) errMsg.classList.remove('show');
+}
+
+[chkAgb, chkDse, chkNewsletter].forEach(cb => cb.addEventListener('change', refresh));
+
+// ─────────────────────────────────────────────
+//  Submit
+// ─────────────────────────────────────────────
+btn.addEventListener('click', async () => {
+  if (!(chkAgb.checked && chkDse.checked)) {
+    errMsg.classList.add('show');
+    [chkAgb, chkDse].filter(cb => !cb.checked)
+      .forEach(cb => cb.closest('.check').classList.add('error'));
+    return;
+  }
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  const payload = {
+    user_id:  CONSENT_CONFIG.userId,
+    brand_id: CONSENT_CONFIG.brandId,
+    consent: {
+      agb:        true,
+      privacy:    true,
+      newsletter: chkNewsletter.checked,
+      version:    '2026-06-01',
+      timestamp:  new Date().toISOString()
+    }
+  };
+
+  try {
+    if (!CONSENT_CONFIG.simulate) {
+      const res = await fetch(CONSENT_CONFIG.apiBaseUrl + CONSENT_CONFIG.endpoint, {
+        method:      'POST',
+        headers:     { 'content-type': 'application/json' },
+        credentials: 'include',
+        body:        JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('consent_failed_' + res.status);
+    } else {
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    formView.style.display = 'none';
+    activatedView.classList.add('show');
+  } catch (err) {
+    console.error('consent submit failed:', err);
+    errMsg.textContent = 'Die Aktivierung ist gerade fehlgeschlagen. Bitte versuche es gleich noch einmal.';
+    errMsg.classList.add('show');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+});
+
+refresh();
+</script>
+</body>
+</html>

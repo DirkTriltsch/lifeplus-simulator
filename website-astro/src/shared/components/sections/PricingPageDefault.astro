@@ -1,4 +1,11 @@
 ---
+// Pricing-CTAs sind seit Phase 0.3 reine Links zu /signup.html (Free) bzw.
+// /checkout/{plan}.html (Pro) — kein Paddle-Init und kein prompt() mehr auf
+// dieser Seite. Die Paddle-Daten kommen erst auf der Checkout-Page aus
+// brand.yaml in CheckoutPage.astro zum Einsatz.
+//
+// Phase 3.6: client-side /api/me-Check biegt anonyme Pro-Klicks auf
+// /signup?next=/checkout/{plan}.html um — spart einen Roundtrip.
 import type { Brand, PricingPage } from '@shared/content-schemas/config';
 
 interface Props {
@@ -8,19 +15,12 @@ interface Props {
 }
 const { brand, pricing, source } = Astro.props;
 
-const priceIdByKey = {
-  monthly: brand.paddle.priceIdMonthly,
-  halfyear: brand.paddle.priceIdHalfYear ?? '',
-  yearly: brand.paddle.priceIdYearly,
-};
-
-const paddleConfig = {
-  clientToken: brand.paddle.clientToken,
-  env: brand.paddle.env,
-  appUrl: brand.appUrl,
-  brandId: brand.id,
-  apiBaseUrl: brand.apiBaseUrl ?? '',
-};
+// Leeren String explizit als "nicht gesetzt" behandeln, damit Production-
+// Build nicht durch .env.local mit PUBLIC_API_BASE_URL= überschrieben wird.
+const envApiBase = import.meta.env.PUBLIC_API_BASE_URL;
+const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
+  ? envApiBase
+  : (brand.apiBaseUrl ?? '');
 ---
 
 <!-- ===== Page hero ===== -->
@@ -29,6 +29,7 @@ const paddleConfig = {
   data-section="Pricing Hero"
   data-component-file="shared/components/sections/PricingPageDefault.astro"
   data-source={source}
+  data-api-base={apiBaseUrl}
 >
   <div class="wrap">
     <div class="ph-eyebrow">{pricing.hero.eyebrow}</div>
@@ -92,9 +93,12 @@ const paddleConfig = {
           </ul>
           {tier.cta.kind === 'link' ? (
             <a
-              href={tier.cta.url === '/app/' ? brand.appUrl : tier.cta.url}
+              href={tier.id === 'free'
+                ? '/signup.html'
+                : tier.cta.url === '/app/'
+                  ? brand.appUrl
+                  : tier.cta.url}
               class="price-cta"
-              data-free-start={tier.id === 'free' && brand.apiBaseUrl ? 'true' : undefined}
             >
               {tier.cta.label}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -102,17 +106,16 @@ const paddleConfig = {
               >
             </a>
           ) : (
-            <button
-              type="button"
+            <a
+              href={`/checkout/${tier.cta.plan}.html`}
               class="price-cta"
               data-plan={tier.cta.plan}
-              data-price-id={priceIdByKey[tier.cta.priceIdKey]}
             >
               {tier.cta.label}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 ><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" /></svg
               >
-            </button>
+            </a>
           )}
         </div>
       ))}
@@ -244,16 +247,8 @@ const paddleConfig = {
   </div>
 </section>
 
-<script is:inline define:vars={{ paddleConfig }}>
-  window.__PADDLE_CFG__ = paddleConfig;
-</script>
 <script>
-  import { setupPaddleCheckout } from '@shared/scripts/paddleCheckout';
-  type Cfg = Parameters<typeof setupPaddleCheckout>[0];
-  const cfg = (window as unknown as { __PADDLE_CFG__: Cfg }).__PADDLE_CFG__;
-  setupPaddleCheckout(cfg);
-
-  // FAQ-Akkordeon (aus pricing.html uebernommen)
+  // FAQ-Akkordeon (aus pricing.html uebernommen).
   document.querySelectorAll<HTMLButtonElement>('.faq-q').forEach((btn) => {
     btn.addEventListener('click', () => {
       const item = btn.parentElement;
@@ -263,6 +258,34 @@ const paddleConfig = {
       if (!isOpen) item.classList.add('open');
     });
   });
+
+  // Phase 3.6: Pro-CTAs (data-plan) gehen direkt auf /signup?next=...
+  // wenn der User nicht eingeloggt ist. Spart den Roundtrip ueber /checkout
+  // mit anschliessendem login_required-Redirect.
+  (async () => {
+    const root = document.querySelector<HTMLElement>('.ph');
+    const apiBase = (root?.dataset.apiBase ?? '').replace(/\/$/, '');
+    const apiUrl = (path: string): string => (apiBase ? apiBase + path : path);
+
+    let authenticated = false;
+    try {
+      const res = await fetch(apiUrl('/api/me'), { credentials: 'include' });
+      if (res.ok) {
+        const me = (await res.json()) as { authenticated?: boolean };
+        authenticated = me.authenticated === true;
+      }
+    } catch {
+      /* ignore: bei API-down bleibt default → /checkout-Roundtrip */
+    }
+    if (authenticated) return;
+
+    document.querySelectorAll<HTMLAnchorElement>('a.price-cta[data-plan]').forEach((link) => {
+      const plan = link.dataset.plan;
+      if (!plan) return;
+      const next = `/checkout/${plan}.html`;
+      link.href = `/signup.html?next=${encodeURIComponent(next)}`;
+    });
+  })();
 </script>
 
 <style>

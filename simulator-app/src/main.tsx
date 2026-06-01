@@ -13,11 +13,12 @@ initializePwaUpdates();
 const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
 const product = getProduct(productId);
 const pricingUrl = `${product.siteUrl}pricing.html`;
+const loginUrl = `${product.siteUrl}login.html`;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
-      <AuthGate pricingUrl={pricingUrl}>
+      <AuthGate pricingUrl={pricingUrl} loginUrl={loginUrl}>
         <App />
       </AuthGate>
     </AuthProvider>

@@ -1,0 +1,58 @@
+---
+// Pro-Plan-Checkout (Codex-Modell). Dynamic-Route.
+// URL: /checkout/yearly | /checkout/halfyear | /checkout/monthly
+// Vorlage: _doc/paddle_checkout/lifeplus_checkout_paddle_Claude.html
+// Plan-Param liegt im URL-Pfad — funktioniert sowohl im SSG-Build (statisch
+// vorgebaut per getStaticPaths) als auch im Dev-Server, ohne SSR-Adapter.
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import CheckoutPage from '@shared/components/sections/CheckoutPage.astro';
+import { getBrand } from '@shared/lib/brand';
+import { getPage } from '@shared/lib/pageContent';
+
+export function getStaticPaths() {
+  return [
+    { params: { plan: 'monthly' } },
+    { params: { plan: 'halfyear' } },
+    { params: { plan: 'yearly' } },
+  ];
+}
+
+type PlanKey = 'monthly' | 'halfyear' | 'yearly';
+const plan = Astro.params.plan as PlanKey;
+
+const brand = await getBrand('lifeplus');
+const pricing = await getPage('lifeplus', 'pricing');
+
+const tier = pricing.tiers.find(
+  (t) => t.cta.kind === 'paddle' && t.cta.priceIdKey === plan,
+);
+if (!tier || tier.cta.kind !== 'paddle') {
+  return Astro.redirect('/pricing.html');
+}
+
+const priceIdMap: Record<PlanKey, string | undefined> = {
+  monthly:  brand.paddle.priceIdMonthly,
+  halfyear: brand.paddle.priceIdHalfYear,
+  yearly:   brand.paddle.priceIdYearly,
+};
+const priceId = priceIdMap[plan];
+if (!priceId) return Astro.redirect('/pricing.html');
+---
+<BrandLayout
+  brand={brand}
+  title={`Bezahlung · ${brand.siteName} ${tier.name}`}
+  description={`${brand.siteName} ${tier.name} sicher per Paddle bezahlen.`}
+  paddle
+>
+  <Header brand={brand} active="pricing" />
+  <CheckoutPage
+    brand={brand}
+    tier={tier}
+    plan={plan}
+    priceId={priceId}
+    source={`brands/lifeplus/pages/checkout/[plan].astro?plan=${plan}`}
+  />
+  <Footer brand={brand} />
+</BrandLayout>

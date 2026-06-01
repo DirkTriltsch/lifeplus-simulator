@@ -1,6 +1,7 @@
 import type { Env } from '../env';
 import { parseCookies, SESSION_COOKIE } from '../_lib/cookies';
 import {
+  degradeExpiredTrial,
   findUserById,
   getActiveDevices,
   getEntitlementForBrand,
@@ -37,7 +38,11 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   const user = await findUserById(env, ctx.user.id);
   if (!user) return error(500, 'user_missing');
 
-  const entitlement = await getEntitlementForBrand(env, user.id, env.BRAND_ID);
+  const now = nowMs();
+  const rawEntitlement = await getEntitlementForBrand(env, user.id, env.BRAND_ID);
+  // Lazy-Trial-Degradierung: abgelaufene Trials kommen hier auf
+  // access_level='free' / source='trial_expired'. Idempotent + Race-safe.
+  const entitlement = await degradeExpiredTrial(env, rawEntitlement, now);
   const devices = await getActiveDevices(env, user.id);
 
   return json({
@@ -50,7 +55,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
           {
             brand: entitlement.brand_id,
             plan: entitlement.access_level,
-            active: isEntitlementActive(entitlement, nowMs()),
+            active: isEntitlementActive(entitlement, now),
             validUntil: entitlement.valid_until,
             source: entitlement.source,
           },

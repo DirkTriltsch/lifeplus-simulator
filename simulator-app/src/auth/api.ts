@@ -67,6 +67,21 @@ async function asJson<T>(res: Response): Promise<T> {
         `API nicht erreichbar (${res.status}). Bitte pruefe, ob api.lifeflow360.app auf Cloudflare zeigt und die Pages Functions deployed sind.`,
       );
     }
+    let code: string | undefined;
+    try {
+      const parsed = JSON.parse(detail) as { error?: { code?: string } };
+      code = parsed.error?.code;
+    } catch {
+      // keep generic error below
+    }
+    if (code === 'free_signup_token_missing_intent') {
+      throw new Error(
+        'Dieser Login-Link aktiviert keinen Free-Zugang. Bitte starte erneut ueber die Signup-Seite.',
+      );
+    }
+    if (code === 'account_not_found') {
+      throw new Error('account_not_found');
+    }
     throw new Error(`Request failed (${res.status}): ${detail.slice(0, 200)}`);
   }
   return (await res.json()) as T;
@@ -94,13 +109,13 @@ export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
 export function verifyMagicLink(
   token: string,
   access?: 'free',
-): Promise<{ ok: boolean; sessionKind: string }> {
+): Promise<{ ok: boolean; sessionKind: string; nextUrl?: string | null }> {
   return fetch(apiUrl('/api/auth/verify-link'), {
     method: 'POST',
     headers,
     credentials: 'include',
     body: JSON.stringify(access ? { token, access } : { token }),
-  }).then(asJson<{ ok: boolean; sessionKind: string }>);
+  }).then(asJson<{ ok: boolean; sessionKind: string; nextUrl?: string | null }>);
 }
 
 export function logout(): Promise<{ ok: boolean }> {

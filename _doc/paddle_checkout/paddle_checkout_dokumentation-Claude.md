@@ -1,27 +1,108 @@
 # Paddle Checkout Integration — LifePlus 360
 
-**Zweck:** Dokumentation der Checkout-Seite `lifeplus_checkout_paddle.html`  
-**Stand:** 2026-05-31  
-**Scope:** Paddle Billing v2 · Inline Checkout · 3 Pflicht-Checkboxen · LifePlus-Branding
+**Zweck:** Dokumentation aller Checkout-/Signup-Interfaces der LifePlus-Brand  
+**Stand:** 2026-06-01  
+**Scope:** Paddle Billing v2 · Inline Checkout · Free-Signup · 3 User-Typen · LifePlus-Branding
 
 ---
 
 ## 1. Übersicht & Flow
 
+### 1.1 Drei User-Typen
+
+| Typ | DB-Zustand | Zugang | Consent-Pflicht |
+|---|---|---|---|
+| **A: Free-in-Trial** | `access_level='pro'`, `source='trial'`, `valid_until=signup+14d` | voller Pro-Zugang während Trial | AGB + DSE (beim Signup) |
+| **B: Free-post-Trial** | `access_level='free'`, `source='free_signup'`, `valid_until=NULL` | eingeschränkter Free-Zugang | bereits beim Signup gegeben |
+| **C: Pro** | `access_level='pro'`, `source='subscription'`, `valid_until=period_end` | voller Zugang | AGB + DSE + Widerruf (beim Pro-Kauf) |
+
+> Anmerkung: „Es gibt keinen Gast-User" — in der DB hat jeder einen Account.
+> Der erste Touch (Pricing → Checkout) passiert unangemeldet; beim Pro-Kauf
+> legt der Webhook (`upsertUserByEmail`) den Account automatisch an.
+
+### 1.2 Drei Web-Interfaces
+
+| Interface | Datei (Prototyp) | Zielgruppe | Felder |
+|---|---|---|---|
+| **`/signup`** | `lifeplus_signup_free_Claude.html` | unangemeldet → Typ A | Email, AGB, DSE |
+| **`/checkout?priceId=...`** | `lifeplus_checkout_paddle_Claude.html` | unangemeldet / A / B → Typ C | Email, Paddle Inline, AGB, DSE, Widerruf |
+| **`/app?manage=1`** | (kein Prototyp — Paddle-gehostet) | Typ C | – (Server-Redirect zum Paddle Customer-Portal) |
+
+### 1.3 Pricing-CTA-Matrix
+
+Welcher User landet bei welchem Klick wo?
+
+| Status | „Kostenlos starten" | „Pro starten" |
+|---|---|---|
+| Unangemeldet | → `/signup` | → `/checkout?priceId=...` |
+| A: Trial | → `/app` (Pro hat er schon) | → `/checkout?priceId=...` (Email vorbefüllt) |
+| B: Post-Trial | → `/app` (Free hat er schon) | → `/checkout?priceId=...` (Email vorbefüllt) |
+| C: Pro | → `/app` | → `/app?manage=1` |
+
+### 1.4 Flow — Free-Signup
+
 ```
-Nutzer öffnet Checkout-Seite
+Unangemeldet auf /pricing → Klick "Kostenlos starten"
         │
         ▼
-E-Mail + Name eingeben  (optional, befüllt Paddle-Formular vor)
+/signup zeigt:
+  - E-Mail-Feld
+  - ☐ AGB    ☐ Datenschutz
+  - Button "Kostenlosen Zugang starten" (disabled bis alle ✓)
         │
         ▼
-3 Checkboxen bestätigen  ◄─── alle drei Pflicht, Button bleibt disabled
+POST /api/auth/request-link
+  { email, access: 'free', consent: { agb, dse, ts } }
         │
-        ▼  (sobald alle drei ✓)
-Paddle Inline Checkout öffnet sich automatisch im Container
+        ▼
+"Schau in dein Postfach" → User klickt Magic-Link in Mail
         │
-        ├── Erfolg → checkout.completed → Weiterleitung /danke.html
-        └── Fehler → checkout.error    → console.error + Paddle zeigt Fehlermeldung
+        ▼
+Magic-Link-Login:
+  - User anlegen falls neu
+  - Entitlement: access_level='pro', source='trial', valid_until=now+14d
+  - Session-Cookie setzen → Redirect /app
+        │
+        ▼  (nach 14 Tagen, per Cron oder lazy-Check)
+Trial-Ende: Entitlement degradiert zu
+  access_level='free', source='free_post_trial', valid_until=NULL
+```
+
+### 1.5 Flow — Pro-Checkout
+
+```
+Klick "Pro starten" auf /pricing
+        │
+        ▼
+Server-Check (priceId + Session-Cookie):
+  - C (Pro)        → /app?manage=1                 [Customer-Portal]
+  - A (Trial)      → /checkout (Email vorbefüllt)
+  - B (Post-Trial) → /checkout (Email vorbefüllt)
+  - unangemeldet   → /checkout (Email-Feld leer)
+        │
+        ▼
+/checkout zeigt:
+  - Plan-Summary (Brand, Preis, Period)
+  - E-Mail-Feld (vorbefüllt + read-only wenn login)
+  - [Paddle Inline Iframe: Adresse, Karte/SEPA/PayPal]
+  - ☐ AGB    ☐ Datenschutz    ☐ Widerrufsverzicht
+  - Button "Jetzt kostenpflichtig bestellen" (disabled bis alle ✓)
+        │
+        ▼
+Paddle.Checkout submit → checkout.completed
+        │
+        ▼
+POST /api/billing/post-checkout (neu):
+  - Session-Cookie setzen (Auto-Login auf gleichem Gerät)
+  - Magic-Link parallel senden (Audit + andere Geräte)
+  - Redirect /app
+        │
+        ▼ (parallel)
+Paddle-Webhook subscription.created:
+  - Account upsert (falls unangemeldeter Käufer)
+  - Subscription anlegen
+  - Entitlement: access_level='pro', source='subscription', valid_until=period_end
+  - Consent in consent_log persistieren (custom_data)
 ```
 
 ---
@@ -237,7 +318,7 @@ app.post('/webhook/paddle', async (req) => {
 ## 8. Dateistruktur
 
 ```
-lifeplus_checkout_paddle.html   ← diese Datei
+lifeplus_checkout_paddle_Claude.html   ← diese Datei
     │
     ├── <link> Google Fonts (Manrope, DM Serif Display, JetBrains Mono)
     ├── <script src="https://cdn.paddle.com/paddle/v2/paddle.js">

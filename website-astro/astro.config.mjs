@@ -25,5 +25,18 @@ export default defineConfig({
         '@shared': sharedAlias,
       },
     },
+    // Dev-only: /api/* an den lokalen Wrangler weiterreichen, damit
+    // Frontend und API same-origin sind (kein CORS, kein Cookie-Drama in
+    // Firefox). PUBLIC_API_BASE_URL muss dafuer leer / unset sein, damit
+    // Frontend relative URLs nutzt.
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8788',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
   },
 });

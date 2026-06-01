@@ -1,0 +1,505 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+
+interface Props {
+  brand: Brand;
+  source?: string;
+}
+const { brand, source } = Astro.props;
+
+const consentVersion = '2026-06-01';
+
+// Lokale Dev-Overrides via .env.local (PUBLIC_API_BASE_URL). In Production
+// ist die Var nicht gesetzt → fallback auf brand.yaml.
+// WICHTIG: leeren String explizit als "nicht gesetzt" behandeln, damit der
+// Production-Build nicht versehentlich relative /api/...-URLs hardcoded.
+const envApiBase = import.meta.env.PUBLIC_API_BASE_URL;
+const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
+  ? envApiBase
+  : (brand.apiBaseUrl ?? '');
+---
+
+<section
+  class="signup"
+  data-section="Free Signup"
+  data-component-file="shared/components/sections/SignupPage.astro"
+  data-source={source}
+  data-api-base={apiBaseUrl}
+  data-brand-id={brand.id}
+  data-app-url={brand.appUrl}
+  data-consent-version={consentVersion}
+>
+  <div class="shell">
+
+    <!-- ============== LEFT (Trial-Story) ============== -->
+    <aside class="aside">
+      <!-- Brand-Spacer: Logo ist im Header, hier nur Hoehe als Abstand -->
+      <div class="brand-spacer" aria-hidden="true"></div>
+
+      <div class="trial-tag">Kostenlos · ohne Karte</div>
+      <div class="trial-title">14 Tage Pro kostenlos testen</div>
+      <p class="trial-sub">
+        Voller Funktionsumfang fuer zwei Wochen — keine Zahlungsdaten,
+        keine automatische Verlaengerung.
+      </p>
+
+      <div class="perks">
+        <div class="perk">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="#9FBA37" stroke-width="2.2">
+            <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong>Alle Pro-Features sofort</strong>
+            <span>Unbegrenzte Szenarien, alle drei Brands</span>
+          </div>
+        </div>
+        <div class="perk">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="#9FBA37" stroke-width="2.2">
+            <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong>Keine Zahlungsdaten noetig</strong>
+            <span>Nur deine E-Mail-Adresse, sonst nichts</span>
+          </div>
+        </div>
+        <div class="perk">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="#9FBA37" stroke-width="2.2">
+            <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong>Keine automatische Verlaengerung</strong>
+            <span>Nach 14 Tagen wechselt dein Zugang automatisch auf Free</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="after-trial">
+        <strong>Nach den 14 Tagen:</strong> Dein Konto bleibt bestehen mit
+        eingeschraenktem Free-Zugang — du kannst jederzeit auf Pro upgraden.
+      </div>
+    </aside>
+
+    <!-- ============== RIGHT (Form) ============== -->
+    <section class="form">
+
+      <!-- Initial view -->
+      <div id="formView">
+        <h1>Kostenlosen Zugang aktivieren</h1>
+        <p class="lead">
+          Bestaetige die Pflicht-Zustimmungen, um deinen 14-taegigen
+          Pro-Testzeitraum zu starten.
+        </p>
+
+        <!-- Hinweis wenn ein next-Ziel mitgegeben wurde (Pro-CTA von Pricing) -->
+        <p class="next-hint" id="nextHint" hidden>
+          Nach der Aktivierung leiten wir dich automatisch zur Pro-Auswahl weiter.
+        </p>
+
+        <!-- E-Mail (editierbar; aus Session vorbefuellt, falls eingeloggt) -->
+        <div class="email-block">
+          <label for="signupEmail">E-Mail-Adresse</label>
+          <input
+            id="signupEmail"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            spellcheck="false"
+            required
+            placeholder="name@beispiel.de"
+          />
+          <p class="email-hint" id="emailHint">
+            Wir senden dir einen Login-Link an diese Adresse. Aenderbar — der
+            Free-Zugang wird fuer die hier eingetragene Adresse aktiviert.
+          </p>
+        </div>
+
+        <div class="sec-label">Zustimmungen</div>
+        <div class="checks">
+
+          <label class="check" id="wrap-agb">
+            <input type="checkbox" id="chk-agb">
+            <span class="cbox">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                   stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="label">
+              Ich akzeptiere die <a href="agb.html" target="_blank">AGB</a><span class="req">*</span>
+            </span>
+          </label>
+
+          <label class="check" id="wrap-dse">
+            <input type="checkbox" id="chk-dse">
+            <span class="cbox">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                   stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="label">
+              Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklaerung</a> gelesen<span class="req">*</span>
+            </span>
+          </label>
+
+          <label class="check" id="wrap-newsletter">
+            <input type="checkbox" id="chk-newsletter">
+            <span class="cbox">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                   stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="label">
+              Newsletter mit Produkt-Updates erhalten<span class="opt">(optional)</span>
+            </span>
+          </label>
+        </div>
+        <p class="check-footnote"><span class="req">*</span> Pflichtfeld</p>
+
+        <button class="cta" id="signupBtn" disabled>
+          <span class="cta-label">Free-Zugang aktivieren</span>
+          <span class="spinner"></span>
+        </button>
+        <p class="err-msg" id="errMsg">Bitte E-Mail, AGB und Datenschutz bestaetigen.</p>
+
+        <p class="legal">
+          Keine Zahlung. Kein Widerrufsverzicht. Nach 14 Tagen wechselt dein
+          Zugang automatisch auf den eingeschraenkten Free-Plan.
+        </p>
+      </div>
+
+      <!-- Success view (replaces formView after submit) -->
+      <div class="sent" id="sentView" hidden>
+        <div class="sent-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+               stroke="#006F44" stroke-width="2">
+            <path d="M4 6l8 7 8-7M4 6v12h16V6M4 6h16"/>
+          </svg>
+        </div>
+        <h2>Schau in dein Postfach</h2>
+        <p>Wir haben dir einen Login-Link an
+          <span class="target" id="sentEmail">name@beispiel.de</span> gesendet.</p>
+        <p>Klicke auf den Link in der Mail, um dein Konto zu aktivieren.
+           Der Link ist 15 Minuten gueltig.</p>
+        <p class="sent-hint">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>
+
+        <button class="resend-btn" id="resendBtn">Erneut senden</button>
+        <p class="resend-status" id="resendStatus" aria-live="polite"></p>
+      </div>
+    </section>
+  </div>
+</section>
+
+<script>
+  import { setupSignupInline } from '@shared/scripts/signupInline';
+  setupSignupInline();
+</script>
+
+<style>
+  .signup {
+    background:
+      radial-gradient(900px 420px at 100% 0%, color-mix(in srgb, var(--brand) 18%, white), transparent 60%),
+      radial-gradient(720px 360px at 0% 100%, color-mix(in srgb, var(--brand) 12%, white), transparent 60%),
+      #FAFBF9;
+    min-height: 100vh;
+    padding: 48px 20px;
+    display: flex; align-items: flex-start; justify-content: center;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #0F1B17;
+    line-height: 1.55;
+  }
+
+  .shell {
+    width: 100%; max-width: 920px;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    background: #fff;
+    border: 1px solid #E1E5E2;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(15,27,23,0.30);
+  }
+  @media (max-width: 820px) { .shell { grid-template-columns: 1fr; } }
+
+  /* ============== LEFT (Trial-Story, dunkelgruen) ============== */
+  .aside {
+    background: linear-gradient(155deg, #006F44 0%, #13322B 100%);
+    color: #fff;
+    padding: 40px 38px;
+    position: relative;
+    overflow: hidden;
+  }
+  .aside::before {
+    content: "";
+    position: absolute; top: -60px; right: -60px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(159,186,55,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .aside::after {
+    content: "";
+    position: absolute; bottom: -80px; left: -40px;
+    width: 300px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(234,118,0,0.10) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* Brand ist im Header — hier nur Hoehe als Abstand */
+  .brand-spacer { height: 34px; margin-bottom: 38px; }
+
+  .trial-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: #9FBA37;
+    position: relative; z-index: 1;
+  }
+  .trial-title {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    margin: 8px 0 12px;
+    position: relative; z-index: 1;
+  }
+  @media (max-width: 920px) { .trial-title { white-space: normal; } }
+  .trial-sub {
+    color: rgba(255,255,255,0.78); font-size: 14px;
+    line-height: 1.6; max-width: 32ch; margin: 0;
+    position: relative; z-index: 1;
+  }
+
+  .perks { margin-top: 28px; position: relative; z-index: 1; }
+  .perk {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 11px 0; font-size: 13.5px;
+    color: rgba(255,255,255,0.92);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .perk:last-child { border-bottom: none; }
+  .perk svg { flex-shrink: 0; margin-top: 3px; }
+  .perk strong { color: #fff; font-weight: 600; display: block; margin-bottom: 2px; }
+  .perk span { color: rgba(255,255,255,0.65); font-size: 12px; }
+
+  .after-trial {
+    margin-top: 24px; padding: 14px 16px;
+    background: rgba(255,255,255,0.08);
+    border-left: 2px solid #9FBA37;
+    border-radius: 0 8px 8px 0;
+    font-size: 12.5px; line-height: 1.5;
+    color: rgba(255,255,255,0.78);
+    position: relative; z-index: 1;
+  }
+  .after-trial strong { color: #fff; }
+
+  /* ============== RIGHT (Form) — wie Checkout ============== */
+  .form {
+    padding: 32px 30px;
+    display: flex; flex-direction: column;
+  }
+  .form h1 {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.3px;
+    color: #0F1B17; margin-bottom: 4px;
+  }
+  .form .lead {
+    font-size: 13.5px; color: #4A5C53;
+    margin: 0 0 20px;
+  }
+
+  .email-block { margin-bottom: 18px; }
+  .email-block label {
+    display: block;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10.5px; color: #4A5C53;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .email-block input {
+    width: 100%;
+    padding: 11px 13px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #0F1B17;
+    background: #fff;
+    border: 1px solid #E1E5E2;
+    border-radius: 10px;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .email-block input::placeholder { color: #A8B2AD; }
+  .email-block input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
+  }
+  .email-block input.invalid {
+    border-color: #C2364B;
+    background: #FDF3F4;
+  }
+  .email-hint {
+    margin: 6px 0 0;
+    font-size: 11.5px; color: #7A8983;
+    line-height: 1.5;
+  }
+  .email-hint.error { color: #C2364B; }
+
+  .sec-label {
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10.5px; color: #4A5C53;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  /* Compact checkboxes — "*" Pflicht-Pattern */
+  .checks { margin-bottom: 8px; }
+  .check {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0;
+    cursor: pointer;
+    border-bottom: 1px solid #EEF1EF;
+  }
+  .check:last-child { border-bottom: none; }
+  .check input {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+  .check .cbox {
+    flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px;
+    border: 1.5px solid #B4CDB9; border-radius: 5px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .12s, border-color .12s;
+  }
+  .check.checked .cbox {
+    background: var(--brand); border-color: var(--brand);
+  }
+  .check.error .cbox { border-color: #C2364B; background: #FDF3F4; }
+  .cbox svg { opacity: 0; transition: opacity .1s; }
+  .check.checked .cbox svg { opacity: 1; }
+  .check .label {
+    font-size: 13px; line-height: 1.45; color: #2C4138;
+  }
+  .check .label .req {
+    color: #C2364B; font-weight: 700; margin-left: 1px;
+  }
+  .check .label .opt {
+    color: #7A8983; font-size: 12px; margin-left: 4px; font-style: italic;
+  }
+  .check .label a {
+    color: var(--brand); text-decoration: underline; text-underline-offset: 2px;
+  }
+
+  .check-footnote {
+    font-size: 11px; color: #7A8983;
+    margin: 6px 0 16px 28px;
+  }
+  .check-footnote .req {
+    color: #C2364B; font-weight: 700;
+  }
+
+  .cta {
+    width: 100%; padding: 14px;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    color: #fff; background: var(--cta);
+    border: none; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--cta) 40%, transparent);
+    transition: background .12s, transform .08s, opacity .12s;
+    letter-spacing: 0.01em;
+  }
+  .cta:hover:not(:disabled) { background: var(--cta-dark); }
+  .cta:active:not(:disabled) { transform: translateY(1px); }
+  .cta:disabled {
+    opacity: 0.4; cursor: not-allowed;
+    background: var(--cta); box-shadow: none;
+  }
+  .cta .spinner {
+    display: none;
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff; border-radius: 50%;
+    animation: cta-spin .7s linear infinite;
+  }
+  .cta.loading .spinner { display: block; }
+  .cta.loading .cta-label { opacity: 0.5; }
+  @keyframes cta-spin { to { transform: rotate(360deg); } }
+
+  .err-msg {
+    display: none;
+    color: #C2364B; font-size: 12px;
+    margin-top: 8px;
+  }
+  .err-msg.show { display: block; }
+
+  .legal {
+    margin-top: 14px;
+    font-size: 11px; line-height: 1.55;
+    color: #7A8983; text-align: center;
+  }
+
+  /* Success view */
+  .sent {
+    text-align: center;
+    padding: 20px 8px;
+  }
+  .sent-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #F0F7F2;
+    border: 1.5px solid #006F44;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .sent h2 {
+    font-family: inherit;
+    font-weight: 600; font-size: 22px;
+    margin: 0 0 10px;
+    color: #0F1B17;
+  }
+  .sent p {
+    font-size: 14px; line-height: 1.55; color: #4A5C53;
+    margin: 0 0 10px;
+  }
+  .sent .target { color: #0F1B17; font-weight: 600; }
+  .sent .sent-hint {
+    font-size: 12px; color: #7A8983;
+    margin-top: 18px;
+  }
+
+  /* Next-Hint im Initial-View — Pro-CTA-Pfad sichtbar machen */
+  .next-hint {
+    padding: 10px 14px;
+    margin: 0 0 18px;
+    background: var(--brand-surface);
+    border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+    border-radius: 10px;
+    font-size: 12.5px; line-height: 1.5;
+    color: #0F1B17;
+  }
+
+  /* Resend-Button im Success-View */
+  .resend-btn {
+    margin-top: 22px;
+    padding: 10px 22px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    color: var(--brand);
+    background: #fff;
+    border: 1.5px solid var(--brand);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .12s, color .12s, opacity .12s;
+  }
+  .resend-btn:hover:not(:disabled) {
+    background: var(--brand);
+    color: #fff;
+  }
+  .resend-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .resend-status {
+    margin-top: 10px;
+    font-size: 12px; color: #4A5C53;
+    min-height: 16px;
+  }
+</style>
