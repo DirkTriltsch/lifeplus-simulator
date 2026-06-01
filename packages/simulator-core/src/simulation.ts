@@ -7,9 +7,8 @@ import type {
   SimulatorInputs,
   TreeCompensationResult,
 } from './contracts';
-import { simulateNetwork, type Leg, type NetworkInputs } from './network';
+import type { Leg } from './network-snapshot';
 import { personTreeToNetworkSnapshot, type PersonTreeSnapshot } from './person-tree';
-import type { GrowthModulator } from './pipeline';
 import { simulatePersonTree, type TreeGrowthStrategy } from './tree-generator';
 
 const DEFAULT_UNIT_TO_CURRENCY = 1;
@@ -72,7 +71,6 @@ export interface SimulationResult {
 }
 
 export interface RunSimulationOptions {
-  growthModulator?: GrowthModulator;
   treeGrowthStrategy?: TreeGrowthStrategy;
 }
 
@@ -84,24 +82,10 @@ export function runSimulation(
 ): SimulationResult {
   const unitToCurrency = inputs.unitToCurrency ?? DEFAULT_UNIT_TO_CURRENCY;
 
-  const networkInputs: NetworkInputs = {
-    membersPerYear: inputs.membersPerYear,
-    shoppersPerYear: inputs.shoppersPerYear,
-    duplicationRate: inputs.duplicationRate,
-    attritionRate: inputs.attritionRate,
-    maxDirectMembersPerMember: inputs.maxDirectMembersPerMember,
-  };
-
-  const personMonths = options.growthModulator
-    ? undefined
-    : simulatePersonTree(inputs, totalMonths, {
-        growthStrategy: options.treeGrowthStrategy,
-      });
-  const snapshots = options.growthModulator
-    ? simulateNetwork(networkInputs, totalMonths, {
-        growthModulator: options.growthModulator,
-      })
-    : personMonths?.map(personTreeToNetworkSnapshot) ?? [];
+  const personMonths = simulatePersonTree(inputs, totalMonths, {
+    growthStrategy: options.treeGrowthStrategy,
+  });
+  const snapshots = personMonths.map(personTreeToNetworkSnapshot);
   const calculateTreeMonth = product.simulator.plan.calculateTreeMonth;
   const treeCompensations =
     personMonths && calculateTreeMonth

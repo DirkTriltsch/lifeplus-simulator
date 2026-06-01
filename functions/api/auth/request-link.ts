@@ -80,14 +80,6 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     };
   }
 
-  let accountFound = false;
-  if (accessIntent !== 'free') {
-    accountFound = !!(await findUserByEmail(env, email));
-    if (!accountFound) {
-      return error(404, 'account_not_found');
-    }
-  }
-
   const ip = clientIp(request);
   const ipLimit = await consumeRateLimit(env, `rl:auth:request-link:ip:${ip}`, 5, 600);
   if (!ipLimit.allowed) return error(429, 'rate_limited');
@@ -95,7 +87,14 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   const emailLimit = await consumeRateLimit(env, `rl:auth:request-link:email:${email}`, 3, 1800);
   // Even if email is over its limit, return neutral 200 so we don't leak existence.
   if (!emailLimit.allowed) {
-    return json({ ok: true, accountFound });
+    return json({ ok: true });
+  }
+
+  if (accessIntent !== 'free') {
+    const accountFound = !!(await findUserByEmail(env, email));
+    if (!accountFound) {
+      return json({ ok: true });
+    }
   }
 
   const ttlMinutes = Number(env.MAGIC_LINK_TTL_MINUTES || '15');
@@ -139,6 +138,20 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   const isDevDebug =
     env.DEV_MAGIC_LINK_DEBUG === '1' && env.INSECURE_COOKIES === '1';
 
+  async function invalidateOlderMagicLinks(): Promise<void> {
+    const invalidatedAt = nowMs();
+    await env.DB.prepare(
+      `UPDATE magic_login_tokens
+          SET used_at = ?
+        WHERE email_lower = ?
+          AND id != ?
+          AND used_at IS NULL
+          AND expires_at > ?`,
+    )
+      .bind(invalidatedAt, email, id, invalidatedAt)
+      .run();
+  }
+
   try {
     await sendMagicLink(env, {
       to: email,
@@ -150,6 +163,11 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     if (isDevDebug) {
       console.log('[DEV] mailer not configured. Magic-Link token for', email, ':', token);
       console.log('[DEV] full link:', link);
+      try {
+        await invalidateOlderMagicLinks();
+      } catch (cleanupErr) {
+        console.warn('magic_link_old_token_invalidation_failed', cleanupErr);
+      }
       return json({ ok: true, dev_token: token, dev_link: link });
     }
     // Production: Mailer-Fehler → Token wieder loeschen, damit kein "toter"
@@ -164,7 +182,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return error(502, 'mail_send_failed');
   }
 
-  return json({ ok: true, accountFound });
+  try {
+    await invalidateOlderMagicLinks();
+  } catch (err) {
+    console.warn('magic_link_old_token_invalidation_failed', err);
+  }
+
+  return json({ ok: true });
 };
 
 function trimSlash(value: string): string {

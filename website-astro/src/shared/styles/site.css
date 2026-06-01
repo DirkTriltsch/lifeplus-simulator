@@ -76,6 +76,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
   padding: 0.7rem 1.3rem;
   border-radius: 100px;
   font-size: 0.9rem;
@@ -120,7 +121,41 @@
   font-weight: 600;
 }
 @media (max-width: 860px) {
-  .site-nav-links { display: none; }
+  .site-header .container {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .lockup--header {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .site-nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    justify-content: center;
+    gap: clamp(0.8rem, 4vw, 1.5rem);
+    margin: 0;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.8rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .site-nav-links::-webkit-scrollbar { display: none; }
+
+  .nav-cta--dark {
+    grid-column: 3;
+    grid-row: 1;
+    padding: 0.62rem 0.9rem;
+    font-size: 0.84rem;
+  }
 }
 
 /* ---------- Footer ---------- */
@@ -138,6 +173,28 @@
 .site-footer nav { display: flex; gap: 1.25rem; flex-wrap: wrap; }
 .site-footer a { color: #64748b; text-decoration: none; }
 .site-footer a:hover { color: var(--brand); }
+
+/* ---------- "Mein Konto"-Icon (im Nav) ---------- */
+.site-account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.site-account:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+.site-account.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+.site-account svg { display: block; }
 
 /* ---------- "Mein Konto"-Link Sichtbarkeit ---------- */
 .js-account-link:not(.is-visible) { display: none !important; }

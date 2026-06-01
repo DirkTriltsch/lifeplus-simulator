@@ -76,11 +76,8 @@ async function asJson<T>(res: Response): Promise<T> {
     }
     if (code === 'free_signup_token_missing_intent') {
       throw new Error(
-        'Dieser Login-Link aktiviert keinen Free-Zugang. Bitte starte erneut ueber die Signup-Seite.',
+        'Dieser Link ist nicht mehr fuer diesen Vorgang gueltig. Bitte fordere einen neuen Link an.',
       );
-    }
-    if (code === 'account_not_found') {
-      throw new Error('account_not_found');
     }
     throw new Error(`Request failed (${res.status}): ${detail.slice(0, 200)}`);
   }
@@ -103,7 +100,23 @@ export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
     headers,
     credentials: 'include',
     body: JSON.stringify({ email }),
-  }).then(asJson<{ ok: boolean }>);
+  }).then(async (res) => {
+    if (res.ok) return (await res.json()) as { ok: boolean };
+
+    let code = '';
+    try {
+      const data = (await res.clone().json()) as { error?: { code?: string } };
+      code = data.error?.code ?? '';
+    } catch {
+      // fall through to the regular error path below
+    }
+
+    // Older API deployments returned 404 for unknown login emails. Treat it
+    // neutrally so the app does not leak account existence.
+    if (code === 'account_not_found') return { ok: true };
+
+    return asJson<{ ok: boolean }>(res);
+  });
 }
 
 export function verifyMagicLink(

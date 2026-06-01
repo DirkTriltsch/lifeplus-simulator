@@ -12,7 +12,7 @@ export function LoginGate({ pricingUrl }: LoginGateProps): JSX.Element {
     if (typeof window === 'undefined') return '';
     return new URL(window.location.href).searchParams.get('email') ?? '';
   });
-  const [phase, setPhase] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'not_found' | 'error'>(
+  const [phase, setPhase] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'error'>(
     'idle',
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -55,10 +55,6 @@ export function LoginGate({ pricingUrl }: LoginGateProps): JSX.Element {
       setPhase('sent');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      if (message === 'account_not_found') {
-        setPhase('not_found');
-        return;
-      }
       setErrorMsg(message);
       setPhase('error');
     }
@@ -82,21 +78,11 @@ export function LoginGate({ pricingUrl }: LoginGateProps): JSX.Element {
         <p className="text-xs text-gray-500 mt-3">
           Du kannst dieses Fenster offen lassen und auf den Link in der Mail klicken.
         </p>
-      </CenteredCard>
-    );
-  }
-
-  if (phase === 'not_found') {
-    return (
-      <CenteredCard title="Kein Account gefunden">
-        <p className="text-sm text-gray-700 mb-4">
-          Fuer diese E-Mail-Adresse gibt es noch keinen aktiven Account.
-        </p>
         <a
           href={pricingUrl}
-          className="block w-full text-center rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          className="mt-4 block text-center text-sm font-medium text-brand-700 hover:text-brand-800"
         >
-          Jetzt Plan auswaehlen
+          Noch keinen Zugang? Jetzt Plan auswaehlen
         </a>
       </CenteredCard>
     );

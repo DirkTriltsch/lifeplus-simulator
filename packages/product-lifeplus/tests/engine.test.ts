@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { simulateNetwork, totalNetworkSize, runSimulation } from '@mlm/simulator-core';
+import {
+  personTreeToNetworkSnapshot,
+  runSimulation,
+  simulatePersonTree,
+  totalNetworkSize,
+  type NetworkSnapshot,
+  type SimulatorInputs,
+} from '@mlm/simulator-core';
 import {
   PHASE1,
   REFERRAL_THRESHOLD_IP,
@@ -81,7 +88,7 @@ describe('Phase 1 aus dem Verguetungsplan', () => {
 
 describe('Netzwerk-Wachstum', () => {
   it('waechst bei Duplikation 0 Prozent nur auf Ebene 1 linear', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 12,
         shoppersPerYear: 0,
@@ -96,7 +103,7 @@ describe('Netzwerk-Wachstum', () => {
   });
 
   it('erzeugt bei Duplikation tiefere Ebenen ab dem dritten Jahr', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 12,
         shoppersPerYear: 0,
@@ -116,7 +123,7 @@ describe('Netzwerk-Wachstum', () => {
     // Jahr 1: L0 = 2 (die 2 frischen werben noch nicht)
     // Jahr 2: L0 = 4 (2 alt + 2 neu), L1 = 4 (nur die 2 ALTEN werben je 2)
     // Jahr 3: L0 = 6, L1 = 4 + (4 alte L0 * 2) = 12, L2 = (4 alte L1 * 2) = 8
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 2,
         shoppersPerYear: 0,
@@ -144,7 +151,7 @@ describe('Netzwerk-Wachstum', () => {
   it('laesst Shopper aus dem Folgejahr-Recruiting nur von alten Members entstehen', () => {
     // membersPerYear=2, shoppersPerYear=3, dupRate=1, attrition=0
     // Jahr 2: Du wirbst 3 neue Shopper auf L0. Die 2 ALTEN Members werben je 3 Shopper auf L1 = 6.
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 2,
         shoppersPerYear: 3,
@@ -162,7 +169,7 @@ describe('Netzwerk-Wachstum', () => {
   });
 
   it('zaehlt direkte Shopper auch ohne Member-Beine', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 0,
         shoppersPerYear: 3,
@@ -181,10 +188,11 @@ describe('Netzwerk-Wachstum', () => {
 
   it('liefert pro Bein asymmetrische membersByLevel/shoppersByLevel (alte Beine voller als neue)', () => {
     // membersPerYear=2, shoppersPerYear=3, dupRate=1, attrition=0
-    // Jahr 2 erwartet:
-    //   leg-1, leg-2 (alt, aus Jahr 1): members=[1, 2], shoppers=[1.5, 3]
-    //   leg-3, leg-4 (neu, in Jahr 2): members=[1],    shoppers=[1.5]
-    const snapshots = simulateNetwork(
+    // Jahr 2 erwartet im Personenbaum:
+    //   leg-1, leg-2 (alt, aus Jahr 1): members=[1, 2], shoppers=[0, 3]
+    //   leg-3, leg-4 (neu, in Jahr 2): members=[1],    shoppers=[]
+    // Direkte Root-Shopper zaehlen im Snapshot auf Level 0, bilden aber keine Beine.
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 2,
         shoppersPerYear: 3,
@@ -203,14 +211,14 @@ describe('Netzwerk-Wachstum', () => {
     for (const leg of oldLegs) {
       expect(leg.membersByLevel[0]).toBeCloseTo(1, 5);
       expect(leg.membersByLevel[1]).toBeCloseTo(2, 5);
-      expect(leg.shoppersByLevel[0]).toBeCloseTo(1.5, 5);
+      expect(leg.shoppersByLevel[0] ?? 0).toBeCloseTo(0, 5);
       expect(leg.shoppersByLevel[1]).toBeCloseTo(3, 5);
     }
 
     for (const leg of newLegs) {
       expect(leg.membersByLevel[0]).toBeCloseTo(1, 5);
       expect(leg.membersByLevel[1] ?? 0).toBeCloseTo(0, 5);
-      expect(leg.shoppersByLevel[0]).toBeCloseTo(1.5, 5);
+      expect(leg.shoppersByLevel[0] ?? 0).toBeCloseTo(0, 5);
       expect(leg.shoppersByLevel[1] ?? 0).toBeCloseTo(0, 5);
     }
   });
@@ -218,7 +226,7 @@ describe('Netzwerk-Wachstum', () => {
   it('haelt jedes Bein bei Fluktuation seine Wurzel (Level 0) ueber alle Jahre', () => {
     // attrition=0.3 sollte tiefere Ebenen reduzieren, aber jede Bein-Wurzel
     // bleibt erhalten (sonst loesen sich Beine auf).
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 2,
         shoppersPerYear: 0,
@@ -266,7 +274,7 @@ describe('Netzwerk-Wachstum', () => {
   });
 
   it('weist Member-Fluktuation am Jahresanfang aus', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 12,
         shoppersPerYear: 0,
@@ -280,7 +288,7 @@ describe('Netzwerk-Wachstum', () => {
   });
 
   it('reduziert das Netzwerk durch Fluktuation', () => {
-    const noAttrition = simulateNetwork(
+    const noAttrition = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 12,
         shoppersPerYear: 0,
@@ -289,7 +297,7 @@ describe('Netzwerk-Wachstum', () => {
       },
       120,
     );
-    const withAttrition = simulateNetwork(
+    const withAttrition = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 12,
         shoppersPerYear: 0,
@@ -305,7 +313,7 @@ describe('Netzwerk-Wachstum', () => {
   });
 
   it('wendet Shopper-Fluktuation auf bestehende Shopper an', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 1,
         shoppersPerYear: 10,
@@ -323,7 +331,7 @@ describe('Netzwerk-Wachstum', () => {
 
 describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
   it('begrenzt direkte Members des Users auf den Cap', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 10,
         shoppersPerYear: 0,
@@ -345,8 +353,8 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
       duplicationRate: 1,
       attritionRate: 0,
     };
-    const implicit = simulateNetwork(inputs, 120);
-    const explicit = simulateNetwork(
+    const implicit = simulatePersonNetworkSnapshots(inputs, 120);
+    const explicit = simulatePersonNetworkSnapshots(
       { ...inputs, maxDirectMembersPerMember: 29 },
       120,
     );
@@ -359,7 +367,7 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
   });
 
   it('cappt auch die Duplikation pro Source-Member', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 20,
         shoppersPerYear: 0,
@@ -376,7 +384,7 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
   });
 
   it('laesst Compression durch Fluktuation nicht ueber den Cap springen', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 10,
         shoppersPerYear: 0,
@@ -393,7 +401,7 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
   });
 
   it('normalisiert nicht-positive Caps auf mindestens einen direkten Member', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 10,
         shoppersPerYear: 0,
@@ -410,7 +418,7 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
 
 describe('Beine im NetworkSnapshot', () => {
   it('liefert genau directLegs Beine', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 3,
         shoppersPerYear: 0,
@@ -426,7 +434,7 @@ describe('Beine im NetworkSnapshot', () => {
   });
 
   it('summiert Beine zu membersByLevel und bewahrt das Geburtsjahr der Beine', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 2,
         shoppersPerYear: 3,
@@ -457,7 +465,7 @@ describe('Beine im NetworkSnapshot', () => {
   });
 
   it('legt neue Beine im Jahr frisch ohne rueckwirkende Downline an', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 2,
         shoppersPerYear: 3,
@@ -469,24 +477,24 @@ describe('Beine im NetworkSnapshot', () => {
 
     expect(snapshots[23].legs[0]).toMatchObject({
       membersByLevel: [1, 2],
-      shoppersByLevel: [1.5, 3],
+      shoppersByLevel: [0, 3],
     });
     expect(snapshots[23].legs[1]).toMatchObject({
       membersByLevel: [1, 2],
-      shoppersByLevel: [1.5, 3],
+      shoppersByLevel: [0, 3],
     });
     expect(snapshots[23].legs[2]).toMatchObject({
       membersByLevel: [1],
-      shoppersByLevel: [1.5],
+      shoppersByLevel: [],
     });
     expect(snapshots[23].legs[3]).toMatchObject({
       membersByLevel: [1],
-      shoppersByLevel: [1.5],
+      shoppersByLevel: [],
     });
   });
 
   it('bildet auch fractional Members/Jahr als Teil-Bein ab', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 0.25,
         shoppersPerYear: 1,
@@ -499,11 +507,12 @@ describe('Beine im NetworkSnapshot', () => {
     expect(snapshots[11].directLegs).toBeCloseTo(0.25, 5);
     expect(snapshots[11].membersByLevel[0]).toBeCloseTo(0.25, 5);
     expect(snapshots[11].legs[0].membersByLevel[0]).toBeCloseTo(0.25, 5);
-    expect(snapshots[11].legs[0].shoppersByLevel[0]).toBeCloseTo(1, 5);
+    expect(snapshots[11].legs[0].shoppersByLevel[0] ?? 0).toBeCloseTo(0, 5);
+    expect(snapshots[11].shoppersByLevel[0]).toBeCloseTo(1, 5);
   });
 
   it('liefert leere legs-Liste bei membersPerYear = 0', () => {
-    const snapshots = simulateNetwork(
+    const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 0,
         shoppersPerYear: 0,
@@ -883,3 +892,24 @@ describe('Vollstaendige Simulation', () => {
     expect(r2.finalMonth.totalEUR).toBeCloseTo(r1.finalMonth.totalEUR / 2, 2);
   });
 });
+
+function simulatePersonNetworkSnapshots(
+  inputs: Pick<
+    SimulatorInputs,
+    | 'membersPerYear'
+    | 'shoppersPerYear'
+    | 'duplicationRate'
+    | 'attritionRate'
+    | 'maxDirectMembersPerMember'
+  >,
+  totalMonths: number,
+): NetworkSnapshot[] {
+  return simulatePersonTree(
+    {
+      ...inputs,
+      memberMonthlyVolume: 150,
+      shopperMonthlyVolume: 150,
+    },
+    totalMonths,
+  ).map(personTreeToNetworkSnapshot);
+}

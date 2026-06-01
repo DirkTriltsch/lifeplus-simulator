@@ -1,4 +1,4 @@
-import type { NetworkSnapshot } from './network';
+import type { NetworkSnapshot } from './network-snapshot';
 import type { PersonTreeSnapshot } from './person-tree';
 
 export type ProductId = 'lifeplus' | 'fitline' | 'eqology';

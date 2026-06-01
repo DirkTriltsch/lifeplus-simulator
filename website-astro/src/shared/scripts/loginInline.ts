@@ -10,6 +10,7 @@ export function setupLoginInline(): void {
   const apiBase = (root.dataset.apiBase ?? '').replace(/\/$/, '');
   const appUrl = root.dataset.appUrl ?? '/app/';
 
+  const checkingView = document.getElementById('loginCheckingView');
   const formView = document.getElementById('loginFormView');
   const sentView = document.getElementById('loginSentView');
   const notFoundView = document.getElementById('loginNotFoundView');
@@ -57,8 +58,7 @@ export function setupLoginInline(): void {
   }
 
   interface LoginLinkResult {
-    status: 'ok' | 'not_found' | 'error';
-    accountFound: boolean;
+    status: 'ok' | 'error';
   }
 
   async function requestLoginLink(email: string): Promise<LoginLinkResult> {
@@ -70,15 +70,7 @@ export function setupLoginInline(): void {
         body: JSON.stringify({ email }),
       });
       if (res.ok) {
-        let accountFound = false;
-        try {
-          const data = (await res.json()) as { accountFound?: boolean };
-          accountFound = data.accountFound === true;
-        } catch {
-          // Old/unknown API response: ok is enough to continue, but not enough
-          // to claim that the backend explicitly found the account.
-        }
-        return { status: 'ok', accountFound };
+        return { status: 'ok' };
       }
       let code = '';
       try {
@@ -87,17 +79,34 @@ export function setupLoginInline(): void {
       } catch {
         // keep generic error below
       }
-      return {
-        status: code === 'account_not_found' ? 'not_found' : 'error',
-        accountFound: false,
-      };
+      if (code === 'account_not_found') return { status: 'ok' };
+      return { status: 'error' };
     } catch (err) {
       console.warn('[login] request-link unreachable:', err);
-      return { status: 'error', accountFound: false };
+      return { status: 'error' };
     }
   }
 
+  async function redirectAuthenticatedSession(): Promise<boolean> {
+    try {
+      const res = await fetch(apiUrl('/api/me'), {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      if (!res.ok) return false;
+      const data = (await res.json()) as { authenticated?: boolean };
+      if (data.authenticated === true) {
+        window.location.replace(appUrl);
+        return true;
+      }
+    } catch (err) {
+      console.warn('[login] /api/me unreachable:', err);
+    }
+    return false;
+  }
+
   function showForm(): void {
+    if (checkingView) checkingView.hidden = true;
     formView!.hidden = false;
     sentView!.hidden = true;
     notFoundView!.hidden = true;
@@ -105,23 +114,12 @@ export function setupLoginInline(): void {
     refreshEmailUI();
   }
 
-  function showSent(email: string, accountFound: boolean): void {
+  function showSent(email: string): void {
     if (sentEmail) sentEmail.textContent = email;
-    const intro = document.getElementById('loginSentIntro');
-    if (intro) {
-      intro.textContent = accountFound
-        ? 'Wir haben dich gefunden und dir einen Login-Link an '
-        : 'Wir haben dir einen Login-Link an ';
-    }
     formView!.hidden = true;
+    if (checkingView) checkingView.hidden = true;
     sentView!.hidden = false;
     notFoundView!.hidden = true;
-  }
-
-  function showNotFound(): void {
-    formView!.hidden = true;
-    sentView!.hidden = true;
-    notFoundView!.hidden = false;
   }
 
   function startResendCooldown(): void {
@@ -157,12 +155,8 @@ export function setupLoginInline(): void {
 
     if (result.status === 'ok') {
       lastSubmittedEmail = email;
-      showSent(email, result.accountFound);
+      showSent(email);
       startResendCooldown();
-      return;
-    }
-    if (result.status === 'not_found') {
-      showNotFound();
       return;
     }
 
@@ -176,10 +170,8 @@ export function setupLoginInline(): void {
     if (resendStatus) resendStatus.textContent = '';
     const result = await requestLoginLink(lastSubmittedEmail);
     if (result.status === 'ok') {
-      if (resendStatus) resendStatus.textContent = `Login-Link wurde erneut an ${lastSubmittedEmail} gesendet.`;
+      if (resendStatus) resendStatus.textContent = 'Falls ein Konto existiert, wurde erneut ein Login-Link gesendet.';
       startResendCooldown();
-    } else if (result.status === 'not_found') {
-      showNotFound();
     } else if (resendStatus) {
       resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte spaeter erneut versuchen.';
     }
@@ -190,13 +182,19 @@ export function setupLoginInline(): void {
   resendBtn?.addEventListener('click', () => void resend());
   tryAgainBtn?.addEventListener('click', showForm);
 
-  const urlEmail = new URL(window.location.href).searchParams.get('email')?.trim().toLowerCase();
-  if (urlEmail && isEmailValid(urlEmail)) emailInput.value = urlEmail;
-  refreshEmailUI();
+  (async () => {
+    if (await redirectAuthenticatedSession()) return;
 
-  if (new URL(window.location.href).searchParams.get('continue') === 'app') {
-    window.history.replaceState({}, '', window.location.pathname);
-  }
+    const url = new URL(window.location.href);
+    const urlEmail = url.searchParams.get('email')?.trim().toLowerCase();
+    if (urlEmail && isEmailValid(urlEmail)) emailInput.value = urlEmail;
+    refreshEmailUI();
 
-  root.dataset.ready = appUrl;
+    if (url.searchParams.get('continue') === 'app') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    showForm();
+    root.dataset.ready = appUrl;
+  })();
 }

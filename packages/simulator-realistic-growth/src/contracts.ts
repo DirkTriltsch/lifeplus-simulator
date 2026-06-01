@@ -1,4 +1,4 @@
-import type { GrowthModulator, TreeGrowthStrategy } from '@mlm/simulator-core';
+import type { TreeGrowthStrategy } from '@mlm/simulator-core';
 
 export type StrategyId = 'none' | 'dirichlet' | 'momentum' | 'lifecycle';
 
@@ -18,4 +18,4 @@ export interface GrowthOptions {
   seed?: number;
 }
 
-export type { GrowthModulator, TreeGrowthStrategy };
+export type { TreeGrowthStrategy };

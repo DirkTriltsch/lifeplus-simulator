@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getProduct } from '@mlm/product-registry';
 import {
   runSimulation,
@@ -23,7 +23,6 @@ import {
   type RealityStrategy,
 } from './components/AdvancedSettingsPanel';
 import { GoalsLadderPanel } from './components/GoalsLadderPanel';
-import { AccountPanel } from './components/AccountPanel';
 import type { GoalUI } from './components/GoalsEditorDialog';
 import { LineageView } from './components/lineage/LineageView';
 import {
@@ -91,14 +90,29 @@ export default function App() {
   );
   const [page, setPage] = useState<'chart' | 'network' | 'lineage' | 'person-tree'>('chart');
   const [networkView, setNetworkView] = useState<NetworkView>('sunburst');
-  const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
   const [personTreeView, setPersonTreeView] = useState<PersonTreeView>('radial');
-  const [personTreeMenuOpen, setPersonTreeMenuOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
   const [expandedSection, setExpandedSection] =
     useState<ExpandedSection>(null);
 
-  const pricingUrl = `${product.siteUrl}pricing.html`;
+  useEffect(() => {
+    if (!viewMenuOpen) return;
+    function handlePointerDown(e: MouseEvent) {
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
+        setViewMenuOpen(false);
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setViewMenuOpen(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [viewMenuOpen]);
 
   const [maxDirectMembersPerMember, setMaxDirectMembersPerMember] = useState(
     persistedState?.maxDirectMembersPerMember ??
@@ -252,38 +266,8 @@ export default function App() {
             </svg>
           </button>
 
-          <div className="relative">
-            <button
-              onClick={() => setNetworkMenuOpen((open) => !open)}
-              aria-label="Netzwerkansicht waehlen"
-              title="Netzwerk"
-              className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
-                page === 'network' ? 'bg-gray-100 text-brand-700' : ''
-              }`}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-                <circle cx="12" cy="5" r="2.5" />
-                <circle cx="6" cy="18" r="2.5" />
-                <circle cx="18" cy="18" r="2.5" />
-                <path d="M10.8 7.2 7.2 15.8" />
-                <path d="M13.2 7.2 16.8 15.8" />
-                <path d="M8.5 18h7" />
-              </svg>
-            </button>
-            {networkMenuOpen && (
-              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-gray-200 bg-white shadow-lg p-1 z-30">
-                <NetworkMenuItem label="Sunburst" active={networkView === 'sunburst'} icon="sunburst" onClick={() => { setNetworkView('sunburst'); setPage('network'); setNetworkMenuOpen(false); }} />
-                <NetworkMenuItem label="Bein-Spalten" active={networkView === 'legs'} icon="columns" onClick={() => { setNetworkView('legs'); setPage('network'); setNetworkMenuOpen(false); }} />
-                <NetworkMenuItem label="Hybrid-Tree" active={networkView === 'hybrid'} icon="tree" onClick={() => { setNetworkView('hybrid'); setPage('network'); setNetworkMenuOpen(false); }} />
-              </div>
-            )}
-          </div>
-
           <button
-            onClick={() => {
-              setPage('lineage');
-              setNetworkMenuOpen(false);
-            }}
+            onClick={() => setPage('lineage')}
             aria-label="Verguetungsplan erklaeren"
             title="Verguetungsplan"
             className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
@@ -302,16 +286,13 @@ export default function App() {
             </svg>
           </button>
 
-          <div className="relative">
+          <div className="relative" ref={viewMenuRef}>
             <button
-              onClick={() => {
-                setPersonTreeMenuOpen((open) => !open);
-                setNetworkMenuOpen(false);
-              }}
-              aria-label="Personenbaum-Ansicht waehlen"
-              title="Personenbaum"
+              onClick={() => setViewMenuOpen((open) => !open)}
+              aria-label="Netzwerk- oder Personenbaum-Ansicht waehlen"
+              title="Netzwerk / Personenbaum"
               className={`text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100 ${
-                page === 'person-tree' ? 'bg-gray-100 text-brand-700' : ''
+                page === 'person-tree' || page === 'network' ? 'bg-gray-100 text-brand-700' : ''
               }`}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -326,37 +307,58 @@ export default function App() {
                 <path d="M18 15v3" />
               </svg>
             </button>
-            {personTreeMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg p-1 z-30">
+            {viewMenuOpen && (
+              <div className="absolute right-0 mt-2 w-60 rounded-lg border border-gray-200 bg-white shadow-lg p-1 z-30">
+                <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  Personen
+                </div>
                 <PersonTreeMenuItem
                   label="Radial Tree"
-                  active={personTreeView === 'radial'}
+                  active={page === 'person-tree' && personTreeView === 'radial'}
                   icon="radial"
                   onClick={() => {
                     setPersonTreeView('radial');
                     setPage('person-tree');
-                    setPersonTreeMenuOpen(false);
+                    setViewMenuOpen(false);
                   }}
                 />
                 <PersonTreeMenuItem
                   label="Dendrogramm"
-                  active={personTreeView === 'dendrogram'}
+                  active={page === 'person-tree' && personTreeView === 'dendrogram'}
                   icon="dendrogram"
                   onClick={() => {
                     setPersonTreeView('dendrogram');
                     setPage('person-tree');
-                    setPersonTreeMenuOpen(false);
+                    setViewMenuOpen(false);
                   }}
                 />
                 <PersonTreeMenuItem
                   label="Hyperbolic Tree"
-                  active={personTreeView === 'hyperbolic'}
+                  active={false}
                   icon="hyperbolic"
-                  onClick={() => {
-                    setPersonTreeView('hyperbolic');
-                    setPage('person-tree');
-                    setPersonTreeMenuOpen(false);
-                  }}
+                  disabled
+                  onClick={() => {}}
+                />
+                <div className="px-3 pt-2 pb-1 mt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 border-t border-gray-100">
+                  Gruppen
+                </div>
+                <NetworkMenuItem
+                  label="Sunburst"
+                  active={page === 'network' && networkView === 'sunburst'}
+                  icon="sunburst"
+                  onClick={() => { setNetworkView('sunburst'); setPage('network'); setViewMenuOpen(false); }}
+                />
+                <NetworkMenuItem
+                  label="Bein-Spalten"
+                  active={page === 'network' && networkView === 'legs'}
+                  icon="columns"
+                  onClick={() => { setNetworkView('legs'); setPage('network'); setViewMenuOpen(false); }}
+                />
+                <NetworkMenuItem
+                  label="Hybrid-Tree"
+                  active={page === 'network' && networkView === 'hybrid'}
+                  icon="tree"
+                  onClick={() => { setNetworkView('hybrid'); setPage('network'); setViewMenuOpen(false); }}
                 />
               </div>
             )}
@@ -367,27 +369,8 @@ export default function App() {
             onIpToEurChange={setIpToEur}
             productName={product.terminology.productName}
           />
-
-          <button
-            onClick={() => setAccountOpen(true)}
-            aria-label="Mein Konto"
-            title="Mein Konto"
-            className="text-gray-500 hover:text-gray-900 transition p-2 rounded-md hover:bg-gray-100"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <circle cx="12" cy="8" r="3.5" />
-              <path d="M5 20c1.5-3.5 4.5-5 7-5s5.5 1.5 7 5" strokeLinecap="round" />
-            </svg>
-          </button>
         </div>
       </header>
-
-      {accountOpen && (
-        <AccountPanel
-          pricingUrl={pricingUrl}
-          onClose={() => setAccountOpen(false)}
-        />
-      )}
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
         {page === 'chart' ? (
@@ -725,19 +708,31 @@ function PersonTreeMenuItem({
   active,
   icon,
   onClick,
+  disabled,
 }: {
   label: string;
   active: boolean;
   icon: 'radial' | 'dendrogram' | 'hyperbolic';
   onClick: () => void;
+  disabled?: boolean;
 }) {
+  const stateClass = disabled
+    ? 'text-gray-300 cursor-not-allowed'
+    : active
+      ? 'bg-brand-50 text-brand-800'
+      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950';
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm transition ${active ? 'bg-brand-50 text-brand-800' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-950'}`}
+      disabled={disabled}
+      title={disabled ? 'In Vorbereitung' : undefined}
+      className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm transition ${stateClass}`}
     >
       <PersonTreeMenuIcon type={icon} />
       <span>{label}</span>
+      {disabled && (
+        <span className="ml-auto text-[10px] uppercase tracking-wide text-gray-400">bald</span>
+      )}
     </button>
   );
 }

@@ -64,7 +64,17 @@ const faqHref = isHome ? '#faq' : 'index.html#faq';
       <a href="features.html" class={cls('features')}>Funktionen</a>
       <a href="pricing.html" class={cls('pricing')}>Preise</a>
       <a href={faqHref} class={cls('faq')}>FAQ</a>
-      <a href="mein-konto.html" class={`js-account-link ${cls('account') ?? ''}`.trim()}>Mein Konto</a>
+      <a
+        href="mein-konto.html"
+        class={`site-account js-account-link ${cls('account') ?? ''}`.trim()}
+        aria-label="Mein Konto"
+        title="Mein Konto"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="22" height="22" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 20c1.5-3.5 4.5-5 7-5s5.5 1.5 7 5" stroke-linecap="round" />
+        </svg>
+      </a>
     </nav>
     <a class="nav-cta nav-cta--dark" href="/login.html">
       Jetzt starten

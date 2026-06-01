@@ -118,6 +118,29 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       devLink = link;
     } else {
       console.warn('post_checkout_mail_failed', err);
+      try {
+        await env.DB.prepare('DELETE FROM magic_login_tokens WHERE id = ?').bind(tokenId).run();
+      } catch (cleanupErr) {
+        console.warn('post_checkout_token_cleanup_failed', cleanupErr);
+      }
+    }
+  }
+
+  if (mailSent || devLink) {
+    try {
+      const invalidatedAt = nowMs();
+      await env.DB.prepare(
+        `UPDATE magic_login_tokens
+            SET used_at = ?
+          WHERE email_lower = ?
+            AND id != ?
+            AND used_at IS NULL
+            AND expires_at > ?`,
+      )
+        .bind(invalidatedAt, checkoutEmail, tokenId, invalidatedAt)
+        .run();
+    } catch (err) {
+      console.warn('post_checkout_old_token_invalidation_failed', err);
     }
   }
 

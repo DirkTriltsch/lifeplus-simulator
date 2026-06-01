@@ -1,4 +1,4 @@
-import type { Leg, NetworkSnapshot } from './network';
+import type { Leg, NetworkSnapshot } from './network-snapshot';
 
 export type SimPersonKind = 'root' | 'member' | 'shopper';
 export type SimOrderKind = 'member_order' | 'shopper_order';

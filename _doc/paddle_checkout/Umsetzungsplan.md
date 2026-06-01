@@ -373,3 +373,7 @@ if (data.ok && data.nextUrl) {
 | Remote-Migration ohne Backup | Phase 4.1 erzwingt `wrangler d1 export` vor Apply | im Plan |
 | App-`nextUrl`-Redirect fehlt | Phase 4.8 als Pflicht-Punkt | offen |
 | Legal-Texte zu Variante 1 nicht in AGB + Bestätigungs-Mail | Phase 4.5 vor Live-Gang | offen |
+ 
+### Known Limitations
+
+- **Magic-Link-Verify / Session-Idempotenz:** Wenn `verify-link` nach `createSessionForNewDevice` serverseitig fehlschlaegt und den Token wieder freigibt, kann ein Retry eine zweite Session erzeugen. Das ist selten und betrifft nur Fehler nach der Session-Erstellung. Spaetere robuste Loesung: Session-Erstellung an `magic_token_id` binden oder eine idempotente Session-Origin-Tabelle einfuehren.
