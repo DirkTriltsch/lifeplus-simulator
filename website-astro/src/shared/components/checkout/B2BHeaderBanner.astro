@@ -1,0 +1,43 @@
+---
+// B2B-Hinweis-Banner ueber dem Checkout-Shell (und perspektivisch auch ueber
+// der Pricing-Seite, damit das Bild konsistent ist).
+// Siehe _doc/paddle_checkout/lifeplus_checkout_legal_review_B2B_only.md
+// Finding 5: konsistente B2B-Auszeichnung ueber mehrere Touchpoints ist
+// Voraussetzung fuer den B2B-Status nach BGH-Rechtsprechung.
+
+interface Props {
+  siteName: string;
+}
+const { siteName } = Astro.props;
+---
+
+<div class="b2b-banner" role="note">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2">
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+  </svg>
+  <span>
+    <strong>B2B-Angebot:</strong>
+    {siteName} richtet sich ausschliesslich an Unternehmer und Selbststaendige im Sinne §14 BGB.
+  </span>
+</div>
+
+<style>
+  .b2b-banner {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto 16px;
+    padding: 10px 16px;
+    background: var(--brand-surface);
+    border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #2C4138;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  .b2b-banner svg { color: var(--brand); flex-shrink: 0; }
+  .b2b-banner strong { color: var(--brand); font-weight: 600; }
+</style>

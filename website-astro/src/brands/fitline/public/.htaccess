@@ -1,7 +1,24 @@
-# .htaccess - Vorab-Sperre fuer nicht oeffentliche Produktstaende
-# Upload-Ort: Root-Verzeichnis der jeweiligen Produktdomain.
+# .htaccess - FitFlow360
+# Wird beim Astro-Build automatisch nach dist/fitline-website/.htaccess kopiert.
+# Apache liest die Datei hierarchisch, daher gelten die Regeln auch fuer
+# Unterordner wie /app/.
+#
+# Aktuell auf Staging-Subdomain (fitflow360.triltsch.com). Sobald eine eigene
+# Top-Level-Domain (z.B. fitflow360.de) live geht, hier den Apex->www-Redirect
+# analog zur LifePlus-.htaccess aktivieren.
 
-# TDM-Nutzungsvorbehalt nach Paragraph 44b UrhG als HTTP-Header.
+# ---------------------------------------------------------------------------
+# HTTPS erzwingen
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Cache-Steuerung + TDM-Nutzungsvorbehalt (Paragraph 44b UrhG)
+# ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
     Header set X-Robots-Tag "noai, noimageai, noindex, nofollow, noarchive, nosnippet"
     Header set Tdm-Reservation "1"
@@ -19,7 +36,9 @@
     </FilesMatch>
 </IfModule>
 
-# Bekannte KI- und Scraper-Bots blockieren, normale Suchmaschinen aber zulassen.
+# ---------------------------------------------------------------------------
+# Bekannte KI- und Scraper-Bots blockieren (normale Suchmaschinen bleiben zu)
+# ---------------------------------------------------------------------------
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
@@ -63,7 +82,9 @@
     RewriteRule ^.*$ - [F,L]
 </IfModule>
 
-# Robots-/AI-/LLMs-Dateien explizit zugaenglich halten.
+# ---------------------------------------------------------------------------
+# Robots-/AI-/LLMs-Dateien explizit zugaenglich halten
+# ---------------------------------------------------------------------------
 <FilesMatch "^(robots\.txt|ai\.txt|llms\.txt)$">
     <IfModule mod_authz_core.c>
         Require all granted
@@ -73,18 +94,13 @@
     </IfModule>
 </FilesMatch>
 
+# ---------------------------------------------------------------------------
+# Verzeichnislistings und versteckte Dateien
+# ---------------------------------------------------------------------------
 Options -Indexes
 
-# Versteckte Dateien schuetzen, .htaccess wird von Apache weiterhin gelesen.
 <FilesMatch "^\.">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
 </FilesMatch>
-
-# Optional HTTPS erzwingen, sobald SSL fuer die jeweilige Domain aktiv ist.
-# <IfModule mod_rewrite.c>
-#     RewriteEngine On
-#     RewriteCond %{HTTPS} off
-#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-# </IfModule>

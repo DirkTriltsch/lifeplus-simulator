@@ -22,6 +22,9 @@ export function setupLoginInline(): void {
   const resendBtn = document.getElementById('loginResendBtn') as HTMLButtonElement | null;
   const resendStatus = document.getElementById('loginResendStatus');
   const tryAgainBtn = document.getElementById('loginTryAgainBtn') as HTMLButtonElement | null;
+  const planLinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('.sent-plan-link, .cta-link'),
+  );
 
   if (!formView || !sentView || !notFoundView || !emailInput || !btn || !errMsg) {
     console.warn('[login] missing DOM nodes - abort');
@@ -47,6 +50,7 @@ export function setupLoginInline(): void {
     const valid = isEmailValid(email);
     emailInput!.classList.toggle('invalid', email.length > 0 && !valid);
     btn!.disabled = !valid;
+    refreshPlanLinks(valid ? email : lastSubmittedEmail);
     if (!emailHint) return;
     if (email.length > 0 && !valid) {
       emailHint.textContent = 'Bitte eine gueltige E-Mail-Adresse eingeben.';
@@ -55,6 +59,19 @@ export function setupLoginInline(): void {
       emailHint.textContent = 'Wir senden dir einen einmaligen Login-Link.';
       emailHint.classList.remove('error');
     }
+  }
+
+  function pricingHref(email: string): string {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!isEmailValid(cleanEmail)) return 'pricing.html';
+    return `pricing.html?email=${encodeURIComponent(cleanEmail)}`;
+  }
+
+  function refreshPlanLinks(email: string): void {
+    const href = pricingHref(email);
+    planLinks.forEach((link) => {
+      link.href = href;
+    });
   }
 
   interface LoginLinkResult {
@@ -155,6 +172,7 @@ export function setupLoginInline(): void {
 
     if (result.status === 'ok') {
       lastSubmittedEmail = email;
+      refreshPlanLinks(email);
       showSent(email);
       startResendCooldown();
       return;

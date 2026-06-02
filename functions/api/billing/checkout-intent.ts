@@ -5,41 +5,110 @@ import {
   createCheckoutIntent,
   getEntitlementForBrand,
   isEntitlementActive,
+  setCheckoutIntentPaddleTransaction,
 } from '../../_lib/db';
+import {
+  PaddleApiError,
+  paddleCreateB2BTransaction,
+} from '../../_lib/paddle';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
 import { loadSessionFromToken } from '../../_lib/session';
 import { nowMs } from '../../_lib/time';
 
-// Phase 2.3 — Pre-Checkout-Intent + Server-side Intent-Persistierung
-// (verstaerkt nach Review).
+// Phase 2.3 — Pre-Checkout-Intent + Server-side Intent-Persistierung.
+// Mit B2B-Pivot v6: validiert vollstaendige Rechnungsdaten, erstellt eine
+// Paddle Transaction serverseitig (Paddle Billing API) und gibt die
+// transactionId an den Client zurueck. Der Client oeffnet das Inline-Iframe
+// via Paddle.Checkout.open({ transactionId }).
 //
-// Identitaetsregel:
-//   Pro-Checkout nur mit Session (kein Gast).
-//   checkoutEmail MUSS == session.email — kein Kauf fuer fremde Adresse.
-//   Bei action='start_checkout' wird ein Eintrag in checkout_intents
-//   geschrieben (intentId in Response + customData). Der Webhook verifiziert
-//   ueber diesen Eintrag, dass das Paddle-Event tatsaechlich zum
-//   eingeloggten User gehoert — verhindert customData-Manipulation via
-//   public Paddle Token.
-//
-// Request:  { plan, checkoutEmail }
-// Response: { action, priceId?, checkoutEmail?, sessionUserId?, brandId, intentId? }
+// Architektur siehe _doc/paddle_checkout/lifeplus_checkout_paddle_b2b_setup.md.
+// Pflicht-Logging (Legal-Review Finding 7) wird im Intent persistiert; der
+// Webhook reicht es spaeter ins consent_log durch.
 
 interface Body {
   plan?: string;
   checkoutEmail?: string;
+  companyName?: string;
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string;
+  discountCode?: string | null;
+  vatId?: string | null;
+  b2bConfirmation?: {
+    checked?: boolean;
+    version?: string;
+    displayedHintsHash?: string;
+  };
+  consent?: {
+    agb?: boolean;
+    privacy?: boolean;
+    newsletter?: boolean;
+    withdrawal_waiver?: boolean;
+    version?: string;
+    timestamp?: string;
+  };
 }
 
 const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const VAT_RX = /^[A-Z]{2}[A-Z0-9]{8,12}$/;
 const ALLOWED_PLANS = ['monthly', 'halfyear', 'yearly'] as const;
 type PlanKey = (typeof ALLOWED_PLANS)[number];
-const INTENT_TTL_MS = 30 * 60_000;                      // 30 Minuten
+const ALLOWED_COUNTRIES = new Set([
+  'DE','AT','CH',
+  'BE','BG','HR','CY','CZ','DK','EE','ES','FI','FR','GR','HU','IE','IT',
+  'LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK',
+]);
+const COMPANY_MIN = 2;
+const COMPANY_MAX = 200;
+const STREET_MIN = 3;
+const POSTAL_MIN = 3;
+const CITY_MIN = 2;
+const DISCOUNT_MAX = 40;
+const INTENT_TTL_MS = 30 * 60_000;
 
 function priceIdForPlan(env: Env, plan: PlanKey): string | undefined {
   if (plan === 'monthly')  return env.PADDLE_PRICE_MONTHLY;
   if (plan === 'halfyear') return env.PADDLE_PRICE_HALFYEAR;
   if (plan === 'yearly')   return env.PADDLE_PRICE_YEARLY;
   return undefined;
+}
+
+function clientIp(request: Request): string | null {
+  return request.headers.get('cf-connecting-ip') ?? null;
+}
+
+// Mappt Paddle-API-Fehler auf benutzerfreundliche Field-Errors fuer das UI.
+function mapPaddleErrorToField(err: PaddleApiError): { field: string | null; message: string } {
+  // Bekannte Faelle, die wir spezifisch melden
+  if (err.code === 'discount_not_found') {
+    return { field: 'discount', message: err.detail };
+  }
+  if (err.code === 'config_missing') {
+    return { field: null, message: 'Paddle ist auf dem Server nicht konfiguriert.' };
+  }
+  // Field-Errors aus dem Paddle-Response auswerten
+  for (const fe of err.fieldErrors) {
+    if (fe.field.startsWith('tax_identifier') || fe.field.includes('tax')) {
+      return { field: 'vat', message: 'USt-IdNr ist ungueltig: ' + fe.message };
+    }
+    if (fe.field.startsWith('postal_code')) {
+      return { field: 'postalCode', message: 'PLZ ist ungueltig: ' + fe.message };
+    }
+    if (fe.field.startsWith('country_code')) {
+      return { field: 'country', message: 'Land ist ungueltig: ' + fe.message };
+    }
+    if (fe.field.startsWith('first_line') || fe.field.startsWith('street')) {
+      return { field: 'street', message: 'Strasse ist ungueltig: ' + fe.message };
+    }
+    if (fe.field.startsWith('city')) {
+      return { field: 'city', message: 'Ort ist ungueltig: ' + fe.message };
+    }
+    if (fe.field.startsWith('email')) {
+      return { field: 'email', message: 'E-Mail ist ungueltig: ' + fe.message };
+    }
+  }
+  return { field: null, message: err.detail };
 }
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
@@ -52,7 +121,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return error(400, 'bad_json');
   }
 
-  // 1. Plan validieren + priceId mappen
+  // 1. Plan + priceId
   const planRaw = (body.plan ?? '').trim();
   if (!(ALLOWED_PLANS as readonly string[]).includes(planRaw)) {
     return json({ action: 'invalid_plan', brandId: env.BRAND_ID });
@@ -64,13 +133,47 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return json({ action: 'invalid_plan', brandId: env.BRAND_ID });
   }
 
-  // 2. checkoutEmail validieren
+  // 2. E-Mail
   const checkoutEmail = (body.checkoutEmail ?? '').trim().toLowerCase();
   if (!checkoutEmail || !EMAIL_RX.test(checkoutEmail) || checkoutEmail.length > 254) {
     return error(400, 'invalid_email');
   }
 
-  // 3. Session zwingend (kein Gast)
+  // 3. Rechnungsempfaenger (v6-Pflichtfelder)
+  const companyName = (body.companyName ?? '').trim();
+  if (companyName.length < COMPANY_MIN || companyName.length > COMPANY_MAX) {
+    return error(400, 'invalid_company_name');
+  }
+  const street = (body.street ?? '').trim();
+  if (street.length < STREET_MIN) return error(400, 'invalid_street');
+  const postalCode = (body.postalCode ?? '').trim();
+  if (postalCode.length < POSTAL_MIN) return error(400, 'invalid_postal_code');
+  const city = (body.city ?? '').trim();
+  if (city.length < CITY_MIN) return error(400, 'invalid_city');
+  const countryCode = (body.countryCode ?? '').trim().toUpperCase();
+  if (!ALLOWED_COUNTRIES.has(countryCode)) return error(400, 'invalid_country');
+
+  // 4. Optionale Rabatt/VAT
+  const discountRaw = (body.discountCode ?? '').trim().toUpperCase();
+  if (discountRaw.length > DISCOUNT_MAX) return error(400, 'invalid_discount_code');
+  const discountCode = discountRaw.length > 0 ? discountRaw : null;
+
+  const vatRaw = (body.vatId ?? '').replace(/\s/g, '').toUpperCase();
+  if (vatRaw.length > 0 && !VAT_RX.test(vatRaw)) return error(400, 'invalid_vat_id');
+  const vatId = vatRaw.length > 0 ? vatRaw : null;
+
+  // 5. B2B-Bestaetigung Pflicht (Beweislast — Legal-Review Finding 7)
+  const confirmationChecked = body.b2bConfirmation?.checked === true;
+  const confirmationVersion = (body.b2bConfirmation?.version ?? '').trim();
+  const displayedHintsHash  = (body.b2bConfirmation?.displayedHintsHash ?? '').trim();
+  if (!confirmationChecked || !confirmationVersion || !displayedHintsHash) {
+    return error(400, 'missing_b2b_confirmation');
+  }
+  if (body.consent?.agb !== true || body.consent?.privacy !== true) {
+    return error(400, 'missing_required_consent');
+  }
+
+  // 6. Session zwingend
   const cookies = parseCookies(request.headers.get('cookie'));
   const token = cookies[SESSION_COOKIE];
   if (!token) {
@@ -81,7 +184,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return json({ action: 'login_required', checkoutEmail, brandId: env.BRAND_ID });
   }
 
-  // 4. Email-Match Pflicht — kein Kauf fuer fremde Adresse
+  // 7. Email-Match Pflicht
   const sessionEmail = ctx.user.email.toLowerCase();
   if (sessionEmail !== checkoutEmail) {
     return json({
@@ -92,7 +195,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     });
   }
 
-  // 5. Aktive bezahlte Sub → Customer Portal
+  // 8. Aktive bezahlte Sub → Portal
   const hasOpenSub = await env.DB.prepare(
     `SELECT id, status FROM subscriptions
        WHERE user_id = ? AND status IN ('active', 'trialing', 'past_due')
@@ -100,18 +203,14 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   )
     .bind(ctx.user.id)
     .first<{ id: string; status: string }>();
-
   if (hasOpenSub) {
     return json({
       action: 'manage_subscription',
-      priceId,
-      checkoutEmail,
-      sessionUserId: ctx.user.id,
-      brandId: env.BRAND_ID,
+      priceId, checkoutEmail, sessionUserId: ctx.user.id, brandId: env.BRAND_ID,
     });
   }
 
-  // 6. Aktives Lifetime/One-Shot → already_paid
+  // 9. Aktives One-Shot → already_paid
   const entitlement = await getEntitlementForBrand(env, ctx.user.id, env.BRAND_ID);
   if (
     entitlement &&
@@ -120,33 +219,108 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   ) {
     return json({
       action: 'already_paid',
-      priceId,
-      checkoutEmail,
-      sessionUserId: ctx.user.id,
-      brandId: env.BRAND_ID,
+      priceId, checkoutEmail, sessionUserId: ctx.user.id, brandId: env.BRAND_ID,
     });
   }
 
-  // 7. Server-Intent persistieren — Webhook verifiziert spaeter darueber
+  // 10. Intent anlegen — VOR Paddle-API, damit wir die intent_id schon haben
+  //     fuer customData (Webhook-Verifizierung).
   const intentId = randomId();
   const now = nowMs();
+  const ipAddress = clientIp(request);
+  const userAgent = request.headers.get('user-agent');
   await createCheckoutIntent(env, {
-    id:            intentId,
-    userId:        ctx.user.id,
-    brandId:       env.BRAND_ID,
+    id:                       intentId,
+    userId:                   ctx.user.id,
+    brandId:                  env.BRAND_ID,
     plan,
     priceId,
     checkoutEmail,
+    companyName,
+    street,
+    postalCode,
+    city,
+    countryCode,
+    discountCode,
+    vatId,
+    b2bConfirmationVersion:   confirmationVersion,
+    displayedHintsHash,
+    ipAddress,
+    userAgent,
     now,
-    ttlMs:         INTENT_TTL_MS,
+    ttlMs:                    INTENT_TTL_MS,
   });
 
+  // 11. Paddle-Transaction erstellen (customer + address + business + discount)
+  let transactionId: string;
+  let paddleTotals: unknown = null;
+  try {
+    const result = await paddleCreateB2BTransaction(env, {
+      email:        checkoutEmail,
+      companyName,
+      address: {
+        countryCode,
+        postalCode,
+        firstLine: street,
+        city,
+      },
+      vatId,
+      discountCode,
+      priceId,
+      customData: {
+        brand_id:       env.BRAND_ID,
+        intent_id:      intentId,
+        checkout_email: checkoutEmail,
+        plan,
+        consent: {
+          agb:                       true,
+          privacy:                   true,
+          newsletter:                body.consent?.newsletter === true,
+          withdrawal_waiver:         false,
+          version:                   body.consent?.version ?? 'unknown',
+          timestamp:                 body.consent?.timestamp ?? new Date(now).toISOString(),
+          b2b_confirmation:          true,
+          b2b_confirmation_version:  confirmationVersion,
+          displayed_hints_hash:      displayedHintsHash,
+        },
+      },
+    });
+    transactionId = result.transactionId;
+    paddleTotals = result.totals;
+    await setCheckoutIntentPaddleTransaction(env, intentId, transactionId);
+  } catch (err) {
+    if (err instanceof PaddleApiError) {
+      const mapped = mapPaddleErrorToField(err);
+      console.warn('paddle_transaction_create_failed', {
+        intentId, code: err.code, detail: err.detail, status: err.status,
+      });
+      return json({
+        action:      'paddle_error',
+        errorCode:   err.code,
+        errorDetail: mapped.message,
+        errorField:  mapped.field,
+        brandId:     env.BRAND_ID,
+      }, 200);
+    }
+    console.error('paddle_transaction_create_unexpected', err);
+    return json({
+      action:      'paddle_error',
+      errorCode:   'unknown',
+      errorDetail: 'Unerwarteter Fehler bei der Paddle-Anbindung. Bitte erneut versuchen.',
+      errorField:  null,
+      brandId:     env.BRAND_ID,
+    }, 200);
+  }
+
   return json({
-    action: 'start_checkout',
+    action:        'start_checkout',
+    transactionId,
+    totals: paddleTotals,
+    discountCode,
+    intentId,
     priceId,
     checkoutEmail,
     sessionUserId: ctx.user.id,
     brandId:       env.BRAND_ID,
-    intentId,
   });
 };

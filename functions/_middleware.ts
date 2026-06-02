@@ -9,7 +9,7 @@ import type { Env } from './env';
 
 function allowedOrigins(env: Env): string[] {
   const raw = (env as unknown as { ALLOWED_ORIGINS?: string }).ALLOWED_ORIGINS;
-  if (!raw) return ['https://www.lifeflow360.app'];
+  if (!raw) return ['https://www.lifeflow360.app', 'https://lifeflow360.app'];
   return raw
     .split(',')
     .map((s) => s.trim())

@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Change this value to delete another test user.
-$EmailToDelete = "budweiser.belinda@gmail.com"
+$EmailToDelete = "dao@triltsch-online.de"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $sqlFile = Join-Path $repoRoot "scripts\sql\delete-dao-user.sql"

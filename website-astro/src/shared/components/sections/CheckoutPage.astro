@@ -1,5 +1,6 @@
 ---
 import type { Brand, PricingPage } from '@shared/content-schemas/config';
+import B2BHeaderBanner from '@shared/components/checkout/B2BHeaderBanner.astro';
 
 type Tier = PricingPage['tiers'][number];
 type PlanKey = 'monthly' | 'halfyear' | 'yearly';
@@ -13,17 +14,15 @@ interface Props {
 }
 const { brand, tier, plan, priceId, source } = Astro.props;
 
-// Pricing-Logik server-side. netPeriod ist der Netto-Betrag der gesamten
-// Abrechnungsperiode (nicht /Monat) — aus pricing.yaml billed-Text destilliert.
-// vatRate ist Default 19% (DE) — Paddle berechnet im Checkout den
-// kundenstandort-spezifischen Satz; unsere Sidebar zeigt nur die DE-Annahme.
+// Server-side Initial-Render. Die echten Werte kommen aus der serverseitig
+// erstellten Paddle-Transaktion (Step 2). Bis dahin zeigen wir die DE-
+// Default-Werte. Siehe Hinweis "preview-hint" unter den Totals.
 const planPricing: Record<PlanKey, { netPeriod: number; periodLabel: string; periodMonths: number }> = {
   monthly:  { netPeriod: 14.95,  periodLabel: 'Monat',     periodMonths: 1  },
   halfyear: { netPeriod: 82.23,  periodLabel: 'Halbjahr',  periodMonths: 6  },
   yearly:   { netPeriod: 149.50, periodLabel: 'Jahr',      periodMonths: 12 },
 };
 const VAT_RATE = 0.19;
-
 const net = planPricing[plan].netPeriod;
 const vat = net * VAT_RATE;
 const gross = net + vat;
@@ -41,17 +40,16 @@ function eur(value: number): string {
 }
 
 const consentVersion = '2026-06-01';
+const b2bConfirmationVersion = 'b2b-v2026-06-02';
+const displayedHintsHash     = 'hints-v2026-06-02';
 
-// Lokale Dev-Overrides via .env.local (PUBLIC_API_BASE_URL). In Production
-// ist die Var nicht gesetzt → fallback auf brand.yaml.
-// WICHTIG: leeren String explizit als "nicht gesetzt" behandeln. Sonst wuerde
-// `PUBLIC_API_BASE_URL=` (leer fuer Vite-Proxy-Dev) den brand.yaml-Wert
-// auch im Production-Build ueberschreiben → relative URLs → 404 auf IONOS.
 const envApiBase = import.meta.env.PUBLIC_API_BASE_URL;
 const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   ? envApiBase
   : (brand.apiBaseUrl ?? '');
 ---
+
+<B2BHeaderBanner siteName={brand.siteName} />
 
 <section
   class="checkout"
@@ -68,22 +66,64 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   data-net-period={net.toFixed(2)}
   data-vat-rate={VAT_RATE.toString()}
   data-consent-version={consentVersion}
+  data-b2b-confirmation-version={b2bConfirmationVersion}
+  data-displayed-hints-hash={displayedHintsHash}
 >
   <div class="shell">
 
     <!-- ============== LEFT: Bestelluebersicht ============== -->
-    <aside class="summary">
+    <aside class="summary" id="summary">
+
+      <div class="lock-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <span>Daten gesperrt. Aenderungen ueber <strong>"Daten aendern"</strong> rechts.</span>
+      </div>
+
       <div class="sum-h">Bestelluebersicht</div>
 
-      <div class="price-hero">
-        <span class="amount">{eur(gross)}</span>
-        <span class="tax">inkl. MwSt.</span>
-      </div>
-      <div class="price-sub">
-        dann {eur(gross)} pro {periodLabel}
-        <span class="info-icon" title="Automatische Verlaengerung — jederzeit kuendbar">i</span>
+      <!-- Rabattcode (einziger Input in der linken Spalte) -->
+      <div class="inline-field" id="discountField">
+        <div class="inline-field-header">
+          <span class="inline-field-label">
+            Rabattcode <span class="optional">optional</span>
+          </span>
+          <span class="status-pill" id="discountPill">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Code gespeichert
+          </span>
+        </div>
+        <div class="inline-field-row">
+          <input
+            type="text" id="discountInput"
+            placeholder="z.B. DAO20"
+            autocomplete="off" spellcheck="false" maxlength="40"
+          />
+          <button class="inline-field-btn" id="discountApplyBtn">Anwenden</button>
+        </div>
+        <p class="inline-field-hint">
+          Hast du einen Sponsor- oder Aktionscode? Wird bei "Weiter zur Zahlung" gegen Paddle validiert.
+        </p>
+        <p class="inline-field-feedback" id="discountFeedback"></p>
       </div>
 
+      <!-- Hero-Preis -->
+      <div class="price-hero">
+        <div class="amount-row">
+          <span class="amount-main" id="heroAmount">{eur(net)}</span>
+          <span class="amount-tax-label" id="heroTaxLabel">zzgl. USt.</span>
+        </div>
+        <div class="recurring">dann <span id="periodRecurring">{eur(net)}</span> netto pro {periodLabel}</div>
+        <div class="gross-hint" id="grossHint">{eur(gross)} brutto inkl. 19% USt. (DE)</div>
+      </div>
+
+      <!-- Produkt-Karte -->
       <div class="product">
         <div class="product-icon">
           <img
@@ -98,18 +138,21 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </div>
       </div>
 
+      <!-- Rechnungs-Zeilen -->
       <div class="lines">
         <div class="line">
           <span class="label">Zwischensumme (netto)</span>
-          <span class="value">{eur(net)}</span>
+          <span class="value" id="lineNet">{eur(net)}</span>
         </div>
-        <div class="line discount-hint">
-          <span class="label">Rabattcode</span>
-          <span class="value-soft">im Zahlungsfeld einloesen</span>
+        <div class="line discount-line" id="lineDiscount" style="display:none">
+          <span class="label">Rabatt <span id="lineDiscountLabel"></span></span>
+          <span class="value" id="lineDiscountValue">-0,00 EUR</span>
         </div>
-        <div class="line">
-          <span class="label">MwSt. (19%)</span>
-          <span class="value">{eur(vat)}</span>
+        <div class="line tax-line" id="lineTax">
+          <span class="label">
+            USt. <span class="label-soft" id="lineTaxRate">(19%)</span>
+          </span>
+          <span class="value" id="lineTaxValue">{eur(vat)}</span>
         </div>
       </div>
 
@@ -118,13 +161,17 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       <div class="totals">
         <div class="total">
           <span>Heute faellig</span>
-          <span class="value">{eur(gross)}</span>
+          <span class="value" id="totalToday">{eur(gross)}</span>
         </div>
         <div class="future">
           <span>Faellig am {renewalLabel}</span>
-          <span>{eur(gross)}</span>
+          <span id="totalFuture">{eur(gross)}</span>
         </div>
       </div>
+
+      <p class="preview-hint" id="previewHint">
+        Vorlaeufige Berechnung. Endgueltige Steuer richtet sich nach Land + USt-IdNr (Paddle).
+      </p>
 
       <div class="trust">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -135,50 +182,124 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       </div>
     </aside>
 
-    <!-- ============== RIGHT: Form (Wizard 2 Steps) ============== -->
-    <section class="form form-active">
-      <h1>Bezahlung abschliessen</h1>
+    <!-- ============== RIGHT: Wizard ============== -->
+    <div class="right">
 
-      <!-- Stepper-Indicator -->
-      <div class="stepper" role="progressbar" aria-valuemin="1" aria-valuemax="2">
-        <div class="step-dot step-dot--active" id="dot1"><span>1</span></div>
-        <div class="step-line"><div class="step-line-fill" id="stepLineFill"></div></div>
-        <div class="step-dot" id="dot2"><span>2</span></div>
-      </div>
-      <div class="step-labels">
-        <span class="step-label step-label--active" id="label1">Daten</span>
-        <span class="step-label" id="label2">Zahlung</span>
-      </div>
+      <!-- ===== STEP 1: Rechnungsdaten ===== -->
+      <section class="step-panel" id="step1">
+        <h1 class="panel-h">Bezahlung abschliessen</h1>
 
-      <!-- Banner fuer Server-Intent-Hinweise (Email-Mismatch, login_required etc.) -->
-      <div class="intent-banner" id="intentBanner" role="alert" aria-live="polite">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
-        </svg>
-        <span id="intentBannerText"></span>
-      </div>
+        <div class="stepper">
+          <div class="step-dot active" id="dot1"><span>1</span></div>
+          <div class="step-line" id="stepLine"></div>
+          <div class="step-dot" id="dot2"><span>2</span></div>
+        </div>
+        <div class="step-labels">
+          <span class="step-label active" id="label1">Rechnungsdaten</span>
+          <span class="step-label" id="label2">Zahlung</span>
+        </div>
 
-      <!-- ===== STEP 1: Daten + Pflicht-Consents ===== -->
-      <div class="step" id="step1">
-        <p class="lead">
-          Pruefe deine E-Mail-Adresse und bestaetige die Pflicht-Zustimmungen.
+        <div class="intent-banner" id="intentBanner" role="alert" aria-live="polite">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+          </svg>
+          <span id="intentBannerText"></span>
+        </div>
+
+        <p class="panel-sub">
+          Gib deine vollstaendigen Rechnungsdaten ein. Diese erscheinen auf
+          deiner Paddle-Rechnung.
         </p>
 
-        <div class="email-block">
-          <label for="checkoutEmail">E-Mail-Adresse</label>
-          <input
-            id="checkoutEmail"
-            type="email"
-            autocomplete="email"
-            inputmode="email"
-            spellcheck="false"
-            required
-            placeholder="name@beispiel.de"
-          />
-          <p class="email-hint" id="emailHint">
-            Wird fuer Rechnung, Zugang und Login verwendet.
-          </p>
+        <div class="invoice-block">
+          <div class="invoice-block-h">Rechnungsempfaenger</div>
+
+          <div class="field-block">
+            <label for="checkoutEmail">E-Mail-Adresse <span class="req">*</span></label>
+            <input id="checkoutEmail" type="email" autocomplete="email"
+                   inputmode="email" spellcheck="false" required
+                   placeholder="name@beispiel.de" />
+            <p class="field-hint" id="emailHint">Fuer Rechnung, Zugang und Login.</p>
+          </div>
+
+          <div class="field-block">
+            <label for="checkoutCompany">Firma / Name <span class="req">*</span></label>
+            <input id="checkoutCompany" type="text" autocomplete="organization"
+                   maxlength="200" required
+                   placeholder="z.B. Max Mustermann Vertrieb" />
+            <p class="field-hint">Erscheint so auf der Rechnung. Einzelunternehmer: Vor- und Nachname.</p>
+          </div>
+
+          <div class="field-block">
+            <label for="checkoutStreet">Strasse und Hausnummer <span class="req">*</span></label>
+            <input id="checkoutStreet" type="text" autocomplete="street-address"
+                   maxlength="100" required
+                   placeholder="z.B. Musterstrasse 12" />
+          </div>
+
+          <div class="field-row">
+            <div class="field-block">
+              <label for="checkoutZip">PLZ <span class="req">*</span></label>
+              <input id="checkoutZip" type="text" autocomplete="postal-code"
+                     maxlength="10" required placeholder="12345" />
+            </div>
+            <div class="field-block">
+              <label for="checkoutCity">Ort <span class="req">*</span></label>
+              <input id="checkoutCity" type="text" autocomplete="address-level2"
+                     maxlength="100" required placeholder="Musterstadt" />
+            </div>
+          </div>
+
+          <div class="field-block">
+            <label for="checkoutCountry">Land <span class="req">*</span></label>
+            <select id="checkoutCountry" required>
+              <optgroup label="DACH">
+                <option value="DE" selected>Deutschland</option>
+                <option value="AT">Oesterreich</option>
+                <option value="CH">Schweiz</option>
+              </optgroup>
+              <optgroup label="EU (weitere)">
+                <option value="BE">Belgien</option>
+                <option value="BG">Bulgarien</option>
+                <option value="CY">Zypern</option>
+                <option value="CZ">Tschechien</option>
+                <option value="DK">Daenemark</option>
+                <option value="EE">Estland</option>
+                <option value="ES">Spanien</option>
+                <option value="FI">Finnland</option>
+                <option value="FR">Frankreich</option>
+                <option value="GR">Griechenland</option>
+                <option value="HR">Kroatien</option>
+                <option value="HU">Ungarn</option>
+                <option value="IE">Irland</option>
+                <option value="IT">Italien</option>
+                <option value="LT">Litauen</option>
+                <option value="LU">Luxemburg</option>
+                <option value="LV">Lettland</option>
+                <option value="MT">Malta</option>
+                <option value="NL">Niederlande</option>
+                <option value="PL">Polen</option>
+                <option value="PT">Portugal</option>
+                <option value="RO">Rumaenien</option>
+                <option value="SE">Schweden</option>
+                <option value="SI">Slowenien</option>
+                <option value="SK">Slowakei</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="field-block vat-field" style="margin-bottom: 0;">
+            <label for="checkoutVat">USt-IdNr. <span class="optional">optional</span></label>
+            <input id="checkoutVat" type="text" autocomplete="off"
+                   spellcheck="false" maxlength="20"
+                   placeholder="z.B. AT123456789" />
+            <p class="field-hint">
+              Bei EU-USt-IdNr ausserhalb DE entfaellt die deutsche USt (Reverse-Charge).
+              Paddle prueft via VIES.
+            </p>
+            <p class="vat-field-feedback" id="vatFeedback"></p>
+          </div>
         </div>
 
         <div class="sec-label">Zustimmungen</div>
@@ -205,6 +326,21 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
             </span>
           </label>
 
+          <label class="check check--b2b" id="wrap-b2b">
+            <input type="checkbox" id="chk-b2b">
+            <span class="cbox">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                   stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="label">
+              Ich bestaetige, dass ich diesen Vertrag in Ausuebung meiner gewerblichen
+              oder selbststaendigen beruflichen Taetigkeit (§14 BGB) abschliesse und
+              nicht als Verbraucher. Mir ist bewusst, dass hierdurch
+              <strong>kein Widerrufsrecht</strong> nach §312g BGB besteht.<span class="req">*</span>
+              <span class="hint">{brand.siteName} ist ein Angebot ausschliesslich fuer gewerbliche und selbststaendige Nutzer.</span>
+            </span>
+          </label>
+
           <label class="check" id="wrap-newsletter">
             <input type="checkbox" id="chk-newsletter">
             <span class="cbox">
@@ -226,62 +362,80 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           </svg>
           <span class="spinner"></span>
         </button>
-        <p class="err-msg" id="errMsgStep1">Bitte E-Mail, AGB und Datenschutz bestaetigen.</p>
-      </div>
+        <p class="cta-missing-hint" id="missingHint"></p>
+      </section>
 
-      <!-- ===== STEP 2: Zahlung + Widerruf + Submit ===== -->
-      <div class="step" id="step2" hidden>
-        <p class="lead">
-          Gib deine Zahlungsdaten ein und schliesse den Kauf ab.
-        </p>
+      <!-- ===== STEP 2: Zahlung ===== -->
+      <section class="step-panel" id="step2" hidden>
+        <h1 class="panel-h">Bezahlung abschliessen</h1>
+
+        <div class="stepper">
+          <div class="step-dot done"><span>&check;</span></div>
+          <div class="step-line done"></div>
+          <div class="step-dot active"><span>2</span></div>
+        </div>
+        <div class="step-labels">
+          <span class="step-label">Rechnungsdaten</span>
+          <span class="step-label active">Zahlung</span>
+        </div>
+
+        <p class="panel-sub">Schliesse die Zahlung im sicheren Paddle-Feld ab.</p>
 
         <div class="konto-readonly">
-          <div class="konto-label">Konto</div>
-          <div class="konto-row">
-            <span class="konto-email" id="kontoEmail">name@beispiel.de</span>
+          <div class="konto-label">
+            <span>Rechnungsempfaenger</span>
             <button type="button" class="link-btn" id="backBtn">&larr; Daten aendern</button>
+          </div>
+          <div class="konto-data">
+            <div class="konto-row">
+              <span class="konto-row-label">E-Mail</span>
+              <span class="konto-row-value" id="kontoEmail">—</span>
+            </div>
+            <div class="konto-row">
+              <span class="konto-row-label">Firma</span>
+              <span class="konto-row-value" id="kontoCompany">—</span>
+            </div>
+            <div class="konto-row">
+              <span class="konto-row-label">Anschrift</span>
+              <span class="konto-row-value multiline" id="kontoAddress">—</span>
+            </div>
+            <div class="konto-row" id="kontoVatRow" style="display:none">
+              <span class="konto-row-label">USt-IdNr.</span>
+              <span class="konto-row-value" id="kontoVat">—</span>
+            </div>
           </div>
         </div>
 
-        <div class="sec-label">Sofortstart</div>
-        <label class="check check--withdrawal" id="wrap-widerruf">
-          <input type="checkbox" id="chk-widerruf">
-          <span class="cbox">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                 stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
-          </span>
-          <span class="label">
-            Ich stimme ausdruecklich zu, dass LifeFlow360 Pro sofort startet, und bestaetige, dass ich dadurch mein Widerrufsrecht fuer den bereits gestarteten digitalen Dienst verliere.
-            <span class="opt">(optional)</span>
-          </span>
-        </label>
+        <div class="sync-banner" id="syncBanner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.4">
+            <path d="M21 12a9 9 0 1 1-3.5-7.1" stroke-linecap="round"/>
+            <polyline points="21 4 21 10 15 10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong id="syncBannerTitle">Paddle-Transaktion erstellt</strong>
+            <div class="sync-sub" id="syncBannerSub">
+              Rechnungsdaten und ggf. Rabatt + USt-IdNr wurden serverseitig an Paddle uebermittelt.
+            </div>
+          </div>
+        </div>
 
-        <p class="legal checkout-prep">
-          Ohne diese Zustimmung bleibt dein 14-taegiges Widerrufsrecht bestehen.
-          Der finale Zahlungsklick erfolgt im Paddle-Zahlungsfeld.
-        </p>
-
-        <button class="cta" id="payBtn" disabled>
-          <span class="cta-label" id="payBtnLabel">Kauf abschliessen</span>
-          <span class="spinner"></span>
-        </button>
-        <p class="err-msg" id="errMsg">Bitte lade zuerst das Zahlungsfeld.</p>
+        <p class="err-msg" id="errMsg">Bitte spaeter erneut versuchen.</p>
 
         <div class="sec-label">Zahlungsfeld</div>
         <div class="paddle-wrap" id="paddleWrap">
-          <div class="paddle-placeholder">Waehle zuerst, ob du sofort starten moechtest. Danach laden wir das sichere Paddle-Zahlungsfeld.</div>
+          <div class="paddle-placeholder">Paddle-Zahlungsfeld wird geladen ...</div>
         </div>
 
         <p class="legal">
           Abwicklung &amp; Rechnungsstellung durch <a href="https://paddle.com" target="_blank">Paddle.com</a>.
           Automatische Verlaengerung, jederzeit im Customer-Portal kuendbar.
-          <span class="opt-hint" id="optHint">Du behaeltst dein 14-taegiges Widerrufsrecht.</span>
         </p>
-      </div>
-    </section>
+      </section>
+    </div>
 
-    <!-- Success-View nach checkout.completed (initial hidden) -->
-    <section class="form success-view" id="successView" hidden>
+    <!-- Success-View nach checkout.completed -->
+    <section class="step-panel success-view" id="successView" hidden>
       <div class="success-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5">
@@ -289,9 +443,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </svg>
       </div>
       <h2>Vielen Dank fuer deinen Kauf</h2>
-      <p>
-        Wir haben die Zahlungsbestaetigung von Paddle erhalten und verarbeiten deinen Zugang.
-      </p>
+      <p>Wir haben die Zahlungsbestaetigung von Paddle erhalten und verarbeiten deinen Zugang.</p>
       <p>
         Konto-E-Mail: <strong id="successEmail"></strong><br/>
         <span id="successMail" class="success-mail-status"></span>
@@ -313,7 +465,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       radial-gradient(720px 360px at 0% 100%, color-mix(in srgb, var(--brand) 12%, white), transparent 60%),
       #FAFBF9;
     min-height: 100vh;
-    padding: 48px 20px;
+    padding: 0 20px 48px;
     display: flex; align-items: flex-start; justify-content: center;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: #0F1B17;
@@ -321,58 +473,143 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   }
 
   .shell {
-    width: 100%; max-width: 980px;
+    width: 100%; max-width: 1000px;
     display: grid;
-    grid-template-columns: 1fr 1.05fr;
+    grid-template-columns: 0.95fr 1.1fr;
     background: #fff;
     border: 1px solid #E1E5E2;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 30px 80px -40px rgba(15,27,23,0.30);
   }
-  @media (max-width: 820px) { .shell { grid-template-columns: 1fr; } }
+  @media (max-width: 860px) { .shell { grid-template-columns: 1fr; } }
 
-  /* ============== LEFT: Bestelluebersicht ============== */
+  /* LEFT */
   .summary {
     background: linear-gradient(180deg, #fff 0%, var(--brand-surface) 100%);
     border-right: 1px solid #E1E5E2;
-    padding: 32px 30px;
+    padding: 28px 26px;
     display: flex; flex-direction: column;
+    position: relative;
   }
-  @media (max-width: 820px) {
+  @media (max-width: 860px) {
     .summary { border-right: none; border-bottom: 1px solid #E1E5E2; }
   }
 
   .sum-h {
     font-size: 22px; font-weight: 600;
     letter-spacing: -0.3px;
-    color: #0F1B17;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 
-  .price-hero {
+  .lock-hint {
+    display: none;
+    margin: 0 0 12px;
+    padding: 9px 12px;
+    background: #fff;
+    border: 1px solid #E1E5E2;
+    border-left: 3px solid var(--brand);
+    border-radius: 7px;
+    font-size: 11.5px; color: #4A5C53;
+    line-height: 1.45;
+    align-items: center; gap: 8px;
+  }
+  .summary.locked .lock-hint { display: flex; }
+  .lock-hint svg { flex-shrink: 0; color: var(--brand); }
+
+  .inline-field {
+    margin: 4px 0 14px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #E1E5E2;
+    border-radius: 10px;
+    transition: border-color .15s, background .15s, opacity .15s;
+  }
+  .inline-field.applied { border-color: #B6DCC1; background: #ECF6EF; }
+  .inline-field.invalid { border-color: #C2364B; background: #FDF3F4; }
+  .summary.locked .inline-field { opacity: 0.7; pointer-events: none; }
+  .summary.locked .inline-field input { background: transparent; }
+  .summary.locked .inline-field-btn { display: none; }
+
+  .inline-field-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 7px; min-height: 18px;
+  }
+  .inline-field-label {
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10.5px; color: #4A5C53;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+  }
+  .inline-field-label .optional {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; color: #7A8983;
+    text-transform: none; letter-spacing: 0;
+    font-style: italic; font-weight: 400;
+    margin-left: 6px;
+  }
+  .status-pill {
+    display: none; align-items: center; gap: 5px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600;
+    background: #2C7A4D; color: #fff;
+  }
+  .inline-field.applied .status-pill { display: inline-flex; }
+
+  .inline-field-row { display: flex; gap: 8px; }
+  .inline-field input {
+    flex: 1; padding: 9px 11px;
+    font-family: inherit; font-size: 13.5px;
+    background: #fff; border: 1px solid #E1E5E2;
+    border-radius: 8px; color: #0F1B17;
+  }
+  .inline-field input:focus {
+    outline: none; border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
+  }
+  .inline-field.applied input { border-color: #B6DCC1; }
+  .inline-field-btn {
+    padding: 9px 14px;
+    background: var(--brand); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, opacity .12s;
+  }
+  .inline-field-btn:hover:not(:disabled) { background: var(--brand-dark); }
+  .inline-field-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .inline-field-btn.remove {
+    background: transparent; color: #4A5C53;
+    border: 1px solid #E1E5E2;
+  }
+  .inline-field-btn.remove:hover {
+    background: #FDF3F4; color: #C2364B; border-color: #C2364B;
+  }
+  .inline-field-hint {
+    margin-top: 7px; font-size: 11.5px; line-height: 1.45;
+    color: #7A8983; font-style: italic;
+  }
+  .inline-field-feedback {
+    margin-top: 7px; font-size: 11.5px; line-height: 1.45;
+    color: #C2364B; display: none;
+    align-items: flex-start; gap: 6px;
+  }
+  .inline-field-feedback.show { display: flex; }
+
+  .price-hero { margin-top: 8px; }
+  .price-hero .amount-row {
     display: flex; align-items: baseline; gap: 8px;
-    margin-bottom: 4px;
   }
-  .price-hero .amount {
-    font-size: 36px; font-weight: 700;
+  .price-hero .amount-main {
+    font-size: 30px; font-weight: 700;
     color: var(--brand);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.4px;
   }
-  .price-hero .tax {
-    font-size: 13px; color: #4A5C53; font-weight: 500;
-  }
-  .price-sub {
-    font-size: 13px; color: #4A5C53;
-    margin-bottom: 22px;
-  }
-  .price-sub .info-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 14px; height: 14px; margin-left: 2px;
-    border-radius: 50%; background: #E1E5E2;
-    color: #7A8983; font-size: 9px; font-weight: 700;
-    vertical-align: middle; cursor: help;
-  }
+  .price-hero .amount-tax-label { font-size: 13px; color: #4A5C53; font-weight: 500; }
+  .price-hero .amount-tax-label.reverse-charge { color: #2C7A4D; font-weight: 600; }
+  .price-hero .recurring { font-size: 12.5px; color: #7A8983; margin-top: 4px; }
+  .price-hero .gross-hint { font-size: 11.5px; color: #7A8983; margin-top: 3px; font-style: italic; }
+  .price-hero .gross-hint.reverse-charge { color: #2C7A4D; font-style: normal; }
 
   .product {
     display: flex; gap: 12px; align-items: flex-start;
@@ -380,7 +617,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     background: #fff;
     border: 1px solid #E1E5E2;
     border-radius: 12px;
-    margin-bottom: 18px;
+    margin: 16px 0 14px;
   }
   .product-icon {
     width: 44px; height: 44px; flex-shrink: 0;
@@ -388,19 +625,10 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     overflow: hidden;
     background: var(--brand-surface);
   }
-  .product-icon img {
-    width: 100%; height: 100%; display: block;
-    object-fit: cover;
-  }
+  .product-icon img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .product-info { flex: 1; min-width: 0; }
-  .product-name {
-    font-weight: 600; font-size: 14px;
-    color: #0F1B17; margin-bottom: 2px;
-  }
-  .product-plan {
-    font-size: 12px; color: #4A5C53;
-    margin-bottom: 4px;
-  }
+  .product-name { font-weight: 600; font-size: 14px; color: #0F1B17; margin-bottom: 2px; }
+  .product-plan { font-size: 12px; color: #4A5C53; margin-bottom: 4px; }
   .product-qty {
     font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
     font-size: 10.5px; color: #7A8983;
@@ -410,60 +638,119 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   .lines { margin-bottom: 4px; }
   .line {
     display: flex; justify-content: space-between; align-items: baseline;
-    padding: 8px 0;
+    padding: 7px 0;
     font-size: 13.5px;
   }
   .line .label { color: #4A5C53; }
   .line .value { color: #0F1B17; font-weight: 500; }
-  .line .value-soft { color: var(--brand); font-weight: 500; font-size: 12.5px; }
-  .line.discount-hint { padding: 6px 0; }
+  .line.discount-line .label { color: #2C7A4D; }
+  .line.discount-line .value { color: #2C7A4D; font-weight: 600; }
+  .line.tax-line .label-soft { color: #7A8983; font-size: 11.5px; }
+  .line.tax-reverse .value,
+  .line.tax-reverse .label-soft { color: #2C7A4D; font-weight: 600; }
 
-  .divider {
-    height: 1px; background: #E1E5E2;
-    margin: 6px 0;
-  }
+  .divider { height: 1px; background: #E1E5E2; margin: 6px 0; }
 
-  .totals { margin-top: 8px; }
+  .totals { margin-top: 4px; }
   .total {
     display: flex; justify-content: space-between; align-items: baseline;
     padding: 10px 0;
     font-size: 14px; font-weight: 700;
     color: #0F1B17;
   }
-  .total .value {
-    font-size: 18px; font-weight: 700;
-    color: var(--brand);
-  }
+  .total .value { font-size: 20px; font-weight: 700; color: var(--brand); }
   .future {
     display: flex; justify-content: space-between; align-items: baseline;
     padding: 6px 0 2px;
     font-size: 12px; color: #7A8983;
   }
 
+  .preview-hint {
+    margin-top: 10px;
+    font-size: 11px; line-height: 1.5;
+    color: #7A8983; font-style: italic;
+  }
+
   .trust {
-    margin-top: auto; padding-top: 22px;
+    margin-top: auto; padding-top: 18px;
     display: flex; align-items: center; gap: 7px;
     font-size: 11.5px; color: #7A8983;
   }
   .trust svg { color: var(--brand); flex-shrink: 0; }
 
-  /* ============== RIGHT: Form ============== */
-  .form {
-    padding: 32px 30px;
+  /* RIGHT */
+  .right { display: flex; flex-direction: column; }
+  .step-panel {
+    padding: 28px 30px;
     display: flex; flex-direction: column;
   }
-  .form h1 {
+  .step-panel[hidden] { display: none !important; }
+
+  .panel-h {
     font-size: 22px; font-weight: 600;
     letter-spacing: -0.3px;
-    color: #0F1B17; margin-bottom: 4px;
+    color: #0F1B17;
+    margin-bottom: 4px;
   }
-  .form .lead {
-    font-size: 13.5px; color: #4A5C53;
-    margin-bottom: 20px;
+  .panel-sub { font-size: 13.5px; color: #4A5C53; margin-bottom: 18px; }
+
+  .stepper { display: flex; align-items: center; gap: 0; margin: 4px 0 6px; }
+  .step-dot {
+    flex-shrink: 0; width: 28px; height: 28px;
+    border-radius: 50%; background: #fff;
+    border: 1.5px solid #D5D8D6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #7A8983;
+  }
+  .step-dot.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .step-dot.done { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: #E1E5E2; margin: 0 4px; border-radius: 1px; }
+  .step-line.done { background: var(--brand); }
+  .step-labels {
+    display: flex; justify-content: space-between;
+    margin: 6px 0 22px; padding: 0 2px;
+  }
+  .step-label {
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10.5px; color: #7A8983;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .step-label.active { color: var(--brand); font-weight: 600; }
+
+  .intent-banner {
+    display: none;
+    align-items: flex-start; gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px; line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .intent-banner.show { display: flex; }
+  .intent-banner svg { flex-shrink: 0; margin-top: 2px; }
+  .intent-banner--info { background: var(--brand-surface); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); color: #0F1B17; }
+  .intent-banner--info svg { color: var(--brand); }
+  .intent-banner--warn { background: #FFF8EE; border: 1px solid #F0D8A8; color: #6E4A00; }
+  .intent-banner--warn svg { color: #B57700; }
+  .intent-banner--error { background: #FDF3F4; border: 1px solid #F4C4CB; color: #8C1B2E; }
+  .intent-banner--error svg { color: #C2364B; }
+
+  .invoice-block {
+    padding: 16px;
+    background: #FAFBF9;
+    border: 1px solid #E1E5E2;
+    border-radius: 10px;
+    margin-bottom: 18px;
+  }
+  .invoice-block-h {
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10px; color: #4A5C53;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 12px;
   }
 
-  .email-block { margin-bottom: 18px; }
-  .email-block label {
+  .field-block { margin-bottom: 12px; }
+  .field-block label {
     display: block;
     font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
     font-size: 10.5px; color: #4A5C53;
@@ -471,66 +758,61 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     font-weight: 500;
     margin-bottom: 6px;
   }
-  .email-block input {
-    width: 100%;
-    padding: 11px 13px;
-    font-family: inherit;
-    font-size: 14px;
-    color: #0F1B17;
-    background: #fff;
-    border: 1px solid #E1E5E2;
-    border-radius: 10px;
-    transition: border-color .15s, box-shadow .15s, background .15s;
+  .field-block label .req { color: #C2364B; margin-left: 2px; }
+  .field-block label .optional {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; color: #7A8983;
+    text-transform: none; letter-spacing: 0;
+    font-style: italic; font-weight: 400;
+    margin-left: 6px;
   }
-  .email-block input::placeholder { color: #A8B2AD; }
-  .email-block input:focus {
-    outline: none;
-    border-color: var(--brand);
+  .field-block input,
+  .field-block select {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: inherit; font-size: 13.5px;
+    background: #fff; border: 1px solid #E1E5E2;
+    border-radius: 9px;
+    color: #0F1B17;
+  }
+  .field-block input::placeholder { color: #A8B2AD; }
+  .field-block input:focus,
+  .field-block select:focus {
+    outline: none; border-color: var(--brand);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
   }
-  .email-block input.invalid {
-    border-color: #C2364B;
-    background: #FDF3F4;
+  .field-block input.invalid { border-color: #C2364B; background: #FDF3F4; }
+  .field-hint { margin-top: 5px; font-size: 11px; color: #7A8983; line-height: 1.5; }
+  .field-hint.error { color: #C2364B; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 0.4fr 0.6fr;
+    gap: 10px;
+    margin-bottom: 12px;
   }
-  .email-hint {
-    margin: 6px 0 0;
-    font-size: 11.5px; color: #7A8983;
-    line-height: 1.5;
+  @media (max-width: 500px) { .field-row { grid-template-columns: 1fr; } }
+  .field-row .field-block { margin-bottom: 0; }
+
+  .vat-field-feedback {
+    margin-top: 6px;
+    font-size: 11.5px; line-height: 1.45;
+    display: none;
+    align-items: flex-start; gap: 6px;
   }
-  .email-hint.error { color: #C2364B; }
+  .vat-field-feedback.show { display: flex; }
+  .vat-field-feedback.error { color: #C2364B; }
+  .vat-field-feedback.ok { color: #2C7A4D; }
+  .vat-field-feedback svg { flex-shrink: 0; margin-top: 1px; }
 
   .sec-label {
     font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
     font-size: 10.5px; color: #4A5C53;
     letter-spacing: 0.08em; text-transform: uppercase;
     font-weight: 500;
-    margin-bottom: 8px;
+    margin: 8px 0 8px;
   }
 
-  .paddle-wrap {
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #E1E5E2;
-    background: #FAFBF9;
-    margin-bottom: 18px;
-    /* Kompakte Mindesthoehe fuer Placeholder; Paddle setzt das Iframe spaeter
-       per frameStyle: min-height:420px;. */
-    min-height: 64px;
-  }
-  /* Hat das Iframe Hoehe, wird die paddle-wrap automatisch hoeher. Sobald
-     Paddle gemountet ist, fuehlt sich die Box trotzdem nicht "kollabierend"
-     an dank Iframe-Innenhoehe. */
-  .paddle-wrap:has(iframe) { min-height: 420px; }
-  .paddle-wrap iframe { border: none !important; display: block; }
-  .paddle-placeholder {
-    padding: 18px 20px;
-    text-align: center;
-    color: #7A8983;
-    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-    font-size: 11.5px; line-height: 1.55;
-  }
-
-  /* Compact checkboxes — "*" Pflicht-Pattern */
   .checks { margin-bottom: 8px; }
   .check {
     display: flex; align-items: flex-start; gap: 10px;
@@ -539,41 +821,38 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     border-bottom: 1px solid #EEF1EF;
   }
   .check:last-child { border-bottom: none; }
-  .check input {
-    position: absolute; opacity: 0; width: 0; height: 0;
-  }
+  .check input { position: absolute; opacity: 0; width: 0; height: 0; }
   .check .cbox {
     flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px;
     border: 1.5px solid #B4CDB9; border-radius: 5px; background: #fff;
     display: flex; align-items: center; justify-content: center;
-    transition: background .12s, border-color .12s;
   }
-  .check.checked .cbox {
-    background: var(--brand); border-color: var(--brand);
-  }
+  .check.checked .cbox { background: var(--brand); border-color: var(--brand); }
   .check.error .cbox { border-color: #C2364B; background: #FDF3F4; }
   .cbox svg { opacity: 0; transition: opacity .1s; }
   .check.checked .cbox svg { opacity: 1; }
-  .check .label {
-    font-size: 13px; line-height: 1.45; color: #2C4138;
+  .check .label { font-size: 13px; line-height: 1.45; color: #2C4138; }
+  .check .label .req { color: #C2364B; font-weight: 700; margin-left: 1px; }
+  .check .label .opt { color: #7A8983; font-size: 12px; margin-left: 4px; font-style: italic; }
+  .check .label a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
+  .check .label .hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11.5px; color: #7A8983; font-style: italic;
   }
-  .check .label .req {
-    color: #C2364B; font-weight: 700; margin-left: 1px;
+  .check--b2b {
+    background: var(--brand-surface);
+    border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
+    border-radius: 11px;
+    padding: 11px 13px;
+    margin: 6px 0;
   }
-  .check .label .opt {
-    color: #7A8983; font-size: 12px; margin-left: 4px; font-style: italic;
-  }
-  .check .label a {
-    color: var(--brand); text-decoration: underline; text-underline-offset: 2px;
+  .check--b2b.checked {
+    background: color-mix(in srgb, var(--brand) 8%, white);
   }
 
-  .check-footnote {
-    font-size: 11px; color: #7A8983;
-    margin: 6px 0 16px 28px;
-  }
-  .check-footnote .req {
-    color: #C2364B; font-weight: 700;
-  }
+  .check-footnote { font-size: 11px; color: #7A8983; margin: 6px 0 16px 28px; }
+  .check-footnote .req { color: #C2364B; font-weight: 700; }
 
   .cta {
     width: 100%; padding: 14px;
@@ -583,7 +862,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     display: flex; align-items: center; justify-content: center; gap: 9px;
     box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--cta) 40%, transparent);
     transition: background .12s, transform .08s, opacity .12s;
-    letter-spacing: 0.01em;
+    margin-top: 6px;
   }
   .cta:hover:not(:disabled) { background: var(--cta-dark); }
   .cta:active:not(:disabled) { transform: translateY(1px); }
@@ -601,6 +880,16 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   .cta.loading .spinner { display: block; }
   .cta.loading .cta-label { opacity: 0.5; }
   @keyframes cta-spin { to { transform: rotate(360deg); } }
+  .cta-arrow { margin-left: 4px; transition: transform .15s; }
+  .cta:not(:disabled):hover .cta-arrow { transform: translateX(3px); }
+
+  .cta-missing-hint {
+    margin-top: 6px;
+    font-size: 11px; color: #7A8983;
+    text-align: center;
+    min-height: 16px;
+  }
+  .cta-missing-hint.show { color: #B57700; }
 
   .err-msg {
     display: none;
@@ -609,170 +898,90 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   }
   .err-msg.show { display: block; }
 
-  .cta-arrow {
-    margin-left: 4px;
-    transition: transform .15s;
-  }
-  .cta:not(:disabled):hover .cta-arrow { transform: translateX(3px); }
-
-  /* hidden-Attribut greift sonst nicht auf .form, weil .form display:flex hat */
-  .form[hidden], section[hidden], div[hidden] { display: none !important; }
-
-  /* ============== STEPPER ============== */
-  .stepper {
-    display: flex; align-items: center; gap: 0;
-    margin: 4px 0 6px;
-  }
-  .step-dot {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: #fff;
-    border: 1.5px solid #D5D8D6;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 600;
-    color: #7A8983;
-    transition: background .2s, border-color .2s, color .2s;
-  }
-  .step-dot--active {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: #fff;
-  }
-  .step-dot--done {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: #fff;
-  }
-  .step-dot--done span { display: none; }
-  .step-dot--done::after {
-    content: "";
-    width: 12px; height: 8px;
-    border-left: 2.5px solid #fff;
-    border-bottom: 2.5px solid #fff;
-    transform: rotate(-45deg) translate(1px, -1px);
-  }
-  .step-line {
-    flex: 1; height: 2px;
-    background: #E1E5E2;
-    margin: 0 4px;
-    position: relative;
-    border-radius: 1px;
-    overflow: hidden;
-  }
-  .step-line-fill {
-    height: 100%; width: 0;
-    background: var(--brand);
-    transition: width .35s ease;
-  }
-  .step-line-fill.full { width: 100%; }
-  .step-labels {
-    display: flex; justify-content: space-between;
-    margin: 6px 0 22px;
-    padding: 0 2px;
-  }
-  .step-label {
-    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-    font-size: 10.5px;
-    color: #7A8983;
-    letter-spacing: 0.08em; text-transform: uppercase;
-  }
-  .step-label--active { color: var(--brand); font-weight: 600; }
-
-  /* Konto-readonly im Step 2 */
   .konto-readonly {
-    padding: 12px 14px;
+    padding: 14px;
     background: var(--brand-surface);
     border: 1px solid #E1E5E2;
     border-radius: 10px;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
   }
   .konto-readonly .konto-label {
     font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
     font-size: 10px; color: #4A5C53;
     letter-spacing: 0.08em; text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .konto-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px;
-  }
-  .konto-email {
-    font-weight: 600; color: #0F1B17;
-    font-size: 14px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
   }
   .link-btn {
     background: none; border: none; padding: 0;
     color: var(--brand);
-    font-family: inherit;
-    font-size: 12px; font-weight: 500;
-    cursor: pointer;
-    flex-shrink: 0;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer; flex-shrink: 0;
   }
   .link-btn:hover { color: var(--brand-dark); text-decoration: underline; }
+  .konto-data { font-size: 13px; line-height: 1.55; }
+  .konto-row {
+    display: flex; gap: 10px; align-items: baseline;
+    padding: 3px 0;
+  }
+  .konto-row-label {
+    font-size: 10.5px; color: #7A8983;
+    width: 80px; flex-shrink: 0;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .konto-row-value {
+    color: #0F1B17; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .konto-row-value.multiline { white-space: normal; }
 
-  /* Widerruf-Checkbox: visuell etwas abgesetzt vom Paddle-Bereich */
-  .check--withdrawal {
-    margin-top: 6px;
-    background: #FFF8EE;
-    border: 1px solid #F0D8A8;
-    border-radius: 11px;
-    padding: 10px 12px;
-  }
-  .check--withdrawal.checked {
-    background: #FCF0DC;
-    border-color: var(--cta);
-  }
-  .check--withdrawal.checked .cbox {
-    background: var(--cta); border-color: var(--cta);
-  }
-
-  /* Intent-Banner (Mismatch, login_required, etc.) */
-  .intent-banner {
+  .sync-banner {
     display: none;
-    align-items: flex-start; gap: 10px;
     padding: 11px 14px;
+    background: #ECF6EF;
+    border: 1px solid #B6DCC1;
     border-radius: 10px;
-    font-size: 13px; line-height: 1.5;
-    margin-bottom: 16px;
+    color: #2C7A4D;
+    font-size: 12.5px; line-height: 1.45;
+    align-items: flex-start; gap: 9px;
+    margin-bottom: 12px;
   }
-  .intent-banner.show { display: flex; }
-  .intent-banner svg { flex-shrink: 0; margin-top: 2px; }
-  .intent-banner--info {
-    background: var(--brand-surface);
-    border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
-    color: #0F1B17;
+  .sync-banner.show { display: flex; }
+  .sync-banner svg { flex-shrink: 0; margin-top: 1px; }
+  .sync-banner strong { font-weight: 700; }
+  .sync-banner .sync-sub {
+    color: #4A5C53; font-weight: 400;
+    margin-top: 2px; font-size: 11.5px;
   }
-  .intent-banner--info svg { color: var(--brand); }
-  .intent-banner--warn {
-    background: #FFF8EE; border: 1px solid #F0D8A8; color: #6E4A00;
-  }
-  .intent-banner--warn svg { color: #B57700; }
-  .intent-banner--error {
-    background: #FDF3F4; border: 1px solid #F4C4CB; color: #8C1B2E;
-  }
-  .intent-banner--error svg { color: #C2364B; }
 
-  /* Paddle-Placeholder Varianten */
+  .paddle-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #E1E5E2;
+    background: #FAFBF9;
+    margin-bottom: 14px;
+    min-height: 64px;
+  }
+  .paddle-wrap:has(iframe) { min-height: 420px; }
+  .paddle-wrap iframe { border: none !important; display: block; }
+  .paddle-placeholder {
+    padding: 18px 20px;
+    text-align: center;
+    color: #7A8983;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 11.5px; line-height: 1.55;
+  }
   .paddle-placeholder--warn { color: #B57700; }
   .paddle-placeholder--error { color: #C2364B; }
 
-  /* Success-View nach Checkout */
-  .success-view {
-    padding: 48px 30px;
-    text-align: center;
-  }
+  .success-view { padding: 48px 30px; text-align: center; }
   .success-view h2 {
-    font-family: inherit;
-    font-size: 22px; font-weight: 600;
-    margin: 18px 0 10px;
-    color: #0F1B17;
+    font-family: inherit; font-size: 22px; font-weight: 600;
+    margin: 18px 0 10px; color: #0F1B17;
   }
   .success-view p {
     font-size: 14px; line-height: 1.55;
-    color: #4A5C53;
-    margin: 0 0 10px;
+    color: #4A5C53; margin: 0 0 10px;
   }
   .success-view strong { color: #0F1B17; font-weight: 600; }
   .success-icon {
@@ -784,13 +993,8 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     display: inline-flex; align-items: center; justify-content: center;
     border: 1.5px solid var(--brand);
   }
-  .success-mail-status {
-    font-size: 13px; color: #4A5C53;
-  }
-  .success-hint {
-    font-size: 12px; color: #7A8983;
-    margin-top: 18px;
-  }
+  .success-mail-status { font-size: 13px; color: #4A5C53; }
+  .success-hint { font-size: 12px; color: #7A8983; margin-top: 18px; }
 
   .legal {
     margin-top: 14px;
@@ -798,9 +1002,4 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     color: #7A8983; text-align: center;
   }
   .legal a { color: #4A5C53; }
-  .legal .opt-hint {
-    display: none;
-    margin-top: 5px; color: var(--brand); font-weight: 600;
-  }
-  .legal .opt-hint.show { display: block; }
 </style>

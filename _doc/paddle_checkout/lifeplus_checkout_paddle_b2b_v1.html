@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYP / MOCKUP — nicht fuer Live.
+
+  Optimierte Variante von "Option A" aus der Checkout-UX-Diskussion:
+    - B2B/B2C-Radio (Default: Geschaeftlich) steuert sichtbare Felder + Widerrufs-UI
+    - Rabattcode + USt-IdNr stehen LINKS in der Rechnung
+    - Eingabe-Werte werden an Paddle.PricePreview() weitergegeben → echte Berechnung
+    - Reverse-Charge wird automatisch in der "Heute faellig"-Zeile abgebildet
+    - Bei B2C: Widerrufsverzicht-Checkbox sichtbar. Bei B2B: ausgeblendet (§312g BGB).
+    - Fehlermeldungen pro Feld inline, klar und sofort
+
+  Hinweis: Die Paddle-API-Aufrufe in diesem Mockup sind simuliert (kein echtes
+  Paddle-Token). Die Eingabe-Logik zeigt, wie sich die linke Rechnung aktualisiert,
+  damit das UX-Verhalten vor Implementierung bewertet werden kann.
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeFlow360 · Bezahlung (B2B-Variante)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lp-primary:       #006F44;
+    --lp-primary-dark:  #00553A;
+    --lp-primary-soft:  #7FB6A1;
+    --lp-dark:          #13322B;
+    --lp-accent:        #9FBA37;
+    --lp-cta:           #EA7600;
+    --lp-cta-dark:      #C45F00;
+    --lp-surface:       #EEF3EF;
+
+    --ink:        #0F1B17;
+    --ink-2:      #2C4138;
+    --ink-3:      #4A5C53;
+    --ink-4:      #7A8983;
+    --line:       #E1E5E2;
+    --line-soft:  #EEF1EF;
+    --paper:      #FAFBF9;
+    --err:        #C2364B;
+    --err-bg:     #FDF3F4;
+    --warn:       #B57700;
+    --warn-bg:    #FFF8EE;
+    --ok:         #2C7A4D;
+    --ok-bg:      #ECF6EF;
+
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(900px 420px at 100% 0%, #E6F2EA, transparent 60%),
+      radial-gradient(720px 360px at 0% 100%, #DCEEDE, transparent 60%),
+      var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 48px 20px;
+  }
+
+  /* ============== SHELL ============== */
+  .shell {
+    width: 100%; max-width: 1000px;
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(15,27,23,0.30);
+  }
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; }
+  }
+
+  /* ============== LEFT: ORDER SUMMARY ============== */
+  .summary {
+    background: linear-gradient(180deg, #fff 0%, var(--lp-surface) 100%);
+    border-right: 1px solid var(--line);
+    padding: 32px 30px;
+    display: flex; flex-direction: column;
+  }
+  @media (max-width: 860px) {
+    .summary { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+
+  .sum-h {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 12px;
+  }
+
+  /* Hero swapped: B2B → Netto big, Brutto small; B2C → Brutto big, Netto hidden */
+  .price-hero { margin-bottom: 4px; }
+  .price-hero .amount-row {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .price-hero .amount-main {
+    font-size: 36px; font-weight: 700;
+    color: var(--lp-primary);
+    letter-spacing: -0.5px;
+    transition: color .2s;
+  }
+  .price-hero .amount-tax-label {
+    font-size: 13px; color: var(--ink-3); font-weight: 500;
+  }
+  .price-hero .amount-secondary {
+    font-size: 12.5px; color: var(--ink-4);
+    margin-top: 2px;
+  }
+  .price-sub {
+    font-size: 13px; color: var(--ink-3);
+    margin-bottom: 22px;
+  }
+  .info-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; margin-left: 2px;
+    border-radius: 50%; background: #E1E5E2;
+    color: var(--ink-4); font-size: 9px; font-weight: 700;
+    vertical-align: middle; cursor: help;
+  }
+
+  /* Product */
+  .product {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 18px;
+  }
+  .product-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: 9px;
+    background: var(--lp-surface);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--lp-primary);
+  }
+  .product-info { flex: 1; min-width: 0; }
+  .product-name {
+    font-weight: 600; font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .product-plan {
+    font-size: 12px; color: var(--ink-3);
+    margin-bottom: 4px;
+  }
+  .product-qty {
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  /* Inline fields in left column (Rabattcode + UStID) */
+  .inline-field {
+    margin: 10px 0;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color .15s;
+  }
+  .inline-field.applied {
+    border-color: var(--ok);
+    background: var(--ok-bg);
+  }
+  .inline-field.invalid {
+    border-color: var(--err);
+    background: var(--err-bg);
+  }
+  .inline-field-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 7px;
+  }
+  .inline-field-label .optional {
+    font-family: var(--sans);
+    font-size: 11px; color: var(--ink-4);
+    text-transform: none; letter-spacing: 0;
+    font-style: italic; font-weight: 400;
+  }
+  .inline-field-row {
+    display: flex; gap: 8px;
+  }
+  .inline-field input {
+    flex: 1;
+    padding: 9px 11px;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .inline-field input:focus {
+    outline: none;
+    border-color: var(--lp-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-primary) 14%, transparent);
+  }
+  .inline-field.applied input {
+    background: #fff;
+    border-color: var(--ok);
+  }
+  .inline-field-btn {
+    padding: 9px 14px;
+    background: var(--lp-primary);
+    color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background .12s, opacity .12s;
+    white-space: nowrap;
+  }
+  .inline-field-btn:hover { background: var(--lp-primary-dark); }
+  .inline-field-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .inline-field-btn.remove {
+    background: transparent;
+    color: var(--ink-3);
+    border: 1px solid var(--line);
+  }
+  .inline-field-btn.remove:hover {
+    background: var(--err-bg);
+    color: var(--err);
+    border-color: var(--err);
+  }
+  .inline-field-feedback {
+    margin-top: 6px;
+    font-size: 11.5px; line-height: 1.45;
+    color: var(--ink-3);
+    display: flex; gap: 6px; align-items: flex-start;
+  }
+  .inline-field-feedback.ok { color: var(--ok); }
+  .inline-field-feedback.error { color: var(--err); }
+  .inline-field-feedback svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* USt-IdNr block hidden in B2C mode */
+  .vat-block { display: block; }
+  .b2c .vat-block { display: none; }
+
+  /* Lines (subtotal, discount, VAT, total) */
+  .lines { margin: 16px 0 4px; }
+  .line {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 7px 0;
+    font-size: 13.5px;
+  }
+  .line .label { color: var(--ink-3); }
+  .line .value { color: var(--ink); font-weight: 500; }
+  .line.discount-line .label { color: var(--ok); }
+  .line.discount-line .value { color: var(--ok); font-weight: 600; }
+  .line.vat-line .label-soft { color: var(--ink-4); font-size: 11.5px; }
+  .line.vat-reverse .value { color: var(--ok); font-weight: 600; }
+
+  .divider {
+    height: 1px; background: var(--line);
+    margin: 6px 0;
+  }
+
+  .totals { margin-top: 8px; }
+  .total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 0;
+    font-size: 14px; font-weight: 700;
+  }
+  .total .value {
+    font-size: 20px; font-weight: 700;
+    color: var(--lp-primary);
+  }
+  .future {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0 2px;
+    font-size: 12px; color: var(--ink-4);
+  }
+
+  .trust {
+    margin-top: auto; padding-top: 22px;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11.5px; color: var(--ink-4);
+  }
+  .trust svg { color: var(--lp-primary); flex-shrink: 0; }
+
+  /* ============== RIGHT: FORM ============== */
+  .form {
+    padding: 32px 30px;
+    display: flex; flex-direction: column;
+  }
+  .form h1 {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .form .lead {
+    font-size: 13.5px; color: var(--ink-3);
+    margin-bottom: 18px;
+  }
+
+  /* MODE TOGGLE (B2B / B2C) — first thing in the right column */
+  .mode-toggle {
+    margin-bottom: 22px;
+    padding: 4px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    position: relative;
+  }
+  .mode-option {
+    cursor: pointer;
+    padding: 11px 14px;
+    border-radius: 8px;
+    text-align: center;
+    transition: background .15s, color .15s, box-shadow .15s;
+    position: relative;
+  }
+  .mode-option input { position: absolute; opacity: 0; pointer-events: none; }
+  .mode-option .mode-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--ink-3);
+    transition: color .15s;
+  }
+  .mode-option .mode-sub {
+    display: block;
+    font-size: 11px; color: var(--ink-4);
+    margin-top: 2px;
+    transition: color .15s;
+  }
+  .mode-option:hover .mode-title { color: var(--ink); }
+  .mode-option.active {
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15,27,23,0.08), 0 0 0 1px var(--lp-primary);
+  }
+  .mode-option.active .mode-title { color: var(--lp-primary); }
+  .mode-option.active .mode-sub { color: var(--ink-3); }
+
+  /* Stepper */
+  .stepper {
+    display: flex; align-items: center; gap: 0;
+    margin: 4px 0 6px;
+  }
+  .step-dot {
+    flex-shrink: 0; width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid #D5D8D6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    color: var(--ink-4);
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .step-dot.active {
+    background: var(--lp-primary);
+    border-color: var(--lp-primary);
+    color: #fff;
+  }
+  .step-line {
+    flex: 1; height: 2px;
+    background: var(--line);
+    margin: 0 4px;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .step-labels {
+    display: flex; justify-content: space-between;
+    margin: 6px 0 22px;
+    padding: 0 2px;
+  }
+  .step-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--ink-4);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .step-label.active { color: var(--lp-primary); font-weight: 600; }
+
+  /* Email + form */
+  .field-block { margin-bottom: 16px; }
+  .field-block label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .field-block input {
+    width: 100%;
+    padding: 11px 13px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field-block input:focus {
+    outline: none;
+    border-color: var(--lp-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-primary) 14%, transparent);
+  }
+  .field-hint {
+    margin-top: 6px;
+    font-size: 11.5px; color: var(--ink-4);
+    line-height: 1.5;
+  }
+
+  .sec-label {
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin: 10px 0 8px;
+  }
+
+  /* Checkboxes */
+  .checks { margin-bottom: 8px; }
+  .check {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .check:last-child { border-bottom: none; }
+  .check input {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+  .check .cbox {
+    flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px;
+    border: 1.5px solid #B4CDB9; border-radius: 5px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .12s, border-color .12s;
+  }
+  .check.checked .cbox {
+    background: var(--lp-primary); border-color: var(--lp-primary);
+  }
+  .cbox svg { opacity: 0; transition: opacity .1s; }
+  .check.checked .cbox svg { opacity: 1; }
+  .check .label {
+    font-size: 13px; line-height: 1.45; color: var(--ink-2);
+  }
+  .check .label .req { color: var(--err); font-weight: 700; margin-left: 1px; }
+  .check .label .opt { color: var(--ink-4); font-size: 12px; margin-left: 4px; font-style: italic; }
+  .check .label a {
+    color: var(--lp-primary); text-decoration: underline; text-underline-offset: 2px;
+  }
+
+  .check-footnote {
+    font-size: 11px; color: var(--ink-4);
+    margin: 6px 0 16px 28px;
+  }
+  .check-footnote .req { color: var(--err); font-weight: 700; }
+
+  /* B2C-only widerruf block */
+  .widerruf-block { display: block; }
+  .b2b .widerruf-block { display: none; }
+
+  .check--withdrawal {
+    margin-top: 6px;
+    background: var(--warn-bg);
+    border: 1px solid #F0D8A8;
+    border-radius: 11px;
+    padding: 10px 12px;
+  }
+  .check--withdrawal.checked {
+    background: #FCF0DC;
+    border-color: var(--lp-cta);
+  }
+  .check--withdrawal.checked .cbox {
+    background: var(--lp-cta); border-color: var(--lp-cta);
+  }
+
+  /* B2B-only legal disclaimer */
+  .b2b-notice { display: none; }
+  .b2b .b2b-notice {
+    display: block;
+    padding: 10px 12px;
+    background: var(--lp-surface);
+    border: 1px solid color-mix(in srgb, var(--lp-primary) 22%, transparent);
+    border-radius: 10px;
+    font-size: 12px; line-height: 1.5;
+    color: var(--ink-2);
+    margin: 6px 0 4px;
+  }
+  .b2b-notice strong { color: var(--lp-primary); }
+
+  /* CTA */
+  .cta {
+    width: 100%; padding: 14px;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    color: #fff; background: var(--lp-cta);
+    border: none; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--lp-cta) 40%, transparent);
+    transition: background .12s, transform .08s, opacity .12s;
+    margin-top: 14px;
+  }
+  .cta:hover:not(:disabled) { background: var(--lp-cta-dark); }
+  .cta:disabled {
+    opacity: 0.4; cursor: not-allowed; box-shadow: none;
+  }
+
+  /* Paddle frame placeholder */
+  .paddle-wrap {
+    border-radius: 12px;
+    border: 1px dashed var(--line);
+    background: var(--paper);
+    padding: 18px;
+    text-align: center;
+    color: var(--ink-4);
+    font-family: var(--mono);
+    font-size: 11.5px; line-height: 1.6;
+    margin-top: 10px;
+  }
+  .paddle-wrap em {
+    font-style: normal; color: var(--lp-primary); font-weight: 600;
+  }
+
+  .legal {
+    margin-top: 14px;
+    font-size: 11px; line-height: 1.55;
+    color: var(--ink-4); text-align: center;
+  }
+  .legal a { color: var(--ink-3); }
+
+  /* Loading spinner mini */
+  .spinner-mini {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border: 2px solid color-mix(in srgb, var(--lp-primary) 28%, transparent);
+    border-top-color: var(--lp-primary);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: -1px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body class="b2b">
+  <div class="shell">
+
+    <!-- ============== LEFT: ORDER SUMMARY ============== -->
+    <aside class="summary">
+      <div class="sum-h">Bestelluebersicht</div>
+
+      <div class="price-hero">
+        <div class="amount-row">
+          <span class="amount-main" id="heroAmount">14,95 EUR</span>
+          <span class="amount-tax-label" id="heroTaxLabel">netto</span>
+        </div>
+        <div class="amount-secondary" id="heroSecondary">
+          17,79 EUR brutto (inkl. 19% MwSt.)
+        </div>
+      </div>
+      <div class="price-sub">
+        dann <span id="periodRecurring">17,79 EUR</span> pro Monat
+        <span class="info-icon" title="Automatische Verlaengerung, jederzeit kuendbar">i</span>
+      </div>
+
+      <div class="product">
+        <div class="product-icon">LF</div>
+        <div class="product-info">
+          <div class="product-name">LifeFlow360 Pro</div>
+          <div class="product-plan">Monatlich · automatische Verlaengerung</div>
+          <div class="product-qty">Menge: 1</div>
+        </div>
+      </div>
+
+      <!-- Rabattcode-Block (immer sichtbar) -->
+      <div class="inline-field" id="discountField">
+        <div class="inline-field-label">
+          <span>Rabattcode</span>
+          <span class="optional">optional</span>
+        </div>
+        <div class="inline-field-row">
+          <input
+            type="text"
+            id="discountInput"
+            placeholder="z.B. SPONSOR-2026"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="40"
+          />
+          <button class="inline-field-btn" id="discountApplyBtn">Anwenden</button>
+        </div>
+        <div class="inline-field-feedback" id="discountFeedback" style="display:none"></div>
+      </div>
+
+      <!-- USt-IdNr-Block (nur B2B sichtbar) -->
+      <div class="inline-field vat-block" id="vatField">
+        <div class="inline-field-label">
+          <span>USt-IdNr.</span>
+          <span class="optional">optional · nur bei EU-Bestellung relevant</span>
+        </div>
+        <div class="inline-field-row">
+          <input
+            type="text"
+            id="vatInput"
+            placeholder="z.B. DE123456789"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="20"
+          />
+          <button class="inline-field-btn" id="vatApplyBtn">Anwenden</button>
+        </div>
+        <div class="inline-field-feedback" id="vatFeedback" style="display:none"></div>
+      </div>
+
+      <!-- Rechnungs-Zeilen -->
+      <div class="lines">
+        <div class="line">
+          <span class="label">Zwischensumme (netto)</span>
+          <span class="value" id="lineNet">14,95 EUR</span>
+        </div>
+        <div class="line discount-line" id="lineDiscount" style="display:none">
+          <span class="label">Rabatt <span id="lineDiscountLabel"></span></span>
+          <span class="value" id="lineDiscountValue">-0,00 EUR</span>
+        </div>
+        <div class="line vat-line" id="lineVat">
+          <span class="label">
+            MwSt. <span class="label-soft" id="lineVatRate">(19%)</span>
+          </span>
+          <span class="value" id="lineVatValue">2,84 EUR</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="totals">
+        <div class="total">
+          <span>Heute faellig</span>
+          <span class="value" id="totalToday">17,79 EUR</span>
+        </div>
+        <div class="future">
+          <span>Faellig am <span id="renewalDate">02.07.2026</span></span>
+          <span id="totalFuture">17,79 EUR</span>
+        </div>
+      </div>
+
+      <div class="trust">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+        </svg>
+        Zahlung &amp; Rechnung ueber Paddle als Merchant of Record
+      </div>
+    </aside>
+
+    <!-- ============== RIGHT: FORM ============== -->
+    <section class="form">
+
+      <!-- MODE TOGGLE -->
+      <div class="mode-toggle" role="radiogroup" aria-label="Kaufmodus">
+        <label class="mode-option active" id="modeB2B">
+          <input type="radio" name="mode" value="b2b" checked>
+          <span class="mode-title">Geschaeftlich</span>
+          <span class="mode-sub">Selbststaendige &amp; Unternehmen</span>
+        </label>
+        <label class="mode-option" id="modeB2C">
+          <input type="radio" name="mode" value="b2c">
+          <span class="mode-title">Privat</span>
+          <span class="mode-sub">Verbraucher mit Widerrufsrecht</span>
+        </label>
+      </div>
+
+      <h1>Bezahlung abschliessen</h1>
+      <p class="lead">
+        Pruefe deine E-Mail-Adresse und bestaetige die Pflicht-Zustimmungen.
+      </p>
+
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="step-dot active"><span>1</span></div>
+        <div class="step-line"></div>
+        <div class="step-dot"><span>2</span></div>
+      </div>
+      <div class="step-labels">
+        <span class="step-label active">Daten</span>
+        <span class="step-label">Zahlung</span>
+      </div>
+
+      <!-- E-Mail -->
+      <div class="field-block">
+        <label for="checkoutEmail">E-Mail-Adresse</label>
+        <input
+          id="checkoutEmail"
+          type="email"
+          placeholder="name@beispiel.de"
+        />
+        <p class="field-hint">Wird fuer Rechnung, Zugang und Login verwendet.</p>
+      </div>
+
+      <!-- B2B-Notice -->
+      <div class="b2b-notice">
+        <strong>Hinweis fuer Geschaeftskunden:</strong>
+        Du kaufst als Unternehmer. Ein Widerrufsrecht fuer Verbrauchervertraege
+        besteht nicht (§312g BGB). Die Rechnung wird auf die im Paddle-Zahlungsfeld
+        angegebenen Geschaefts-/Firmendaten ausgestellt.
+      </div>
+
+      <!-- Pflicht-Consents -->
+      <div class="sec-label">Zustimmungen</div>
+      <div class="checks">
+        <label class="check" data-required>
+          <input type="checkbox">
+          <span class="cbox">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </span>
+          <span class="label">
+            Ich akzeptiere die <a href="#">AGB</a><span class="req">*</span>
+          </span>
+        </label>
+
+        <label class="check" data-required>
+          <input type="checkbox">
+          <span class="cbox">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </span>
+          <span class="label">
+            Ich habe die <a href="#">Datenschutzerklaerung</a> gelesen<span class="req">*</span>
+          </span>
+        </label>
+
+        <label class="check">
+          <input type="checkbox">
+          <span class="cbox">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </span>
+          <span class="label">
+            Newsletter mit Produkt-Updates erhalten<span class="opt">(optional)</span>
+          </span>
+        </label>
+      </div>
+      <p class="check-footnote"><span class="req">*</span> Pflichtfeld</p>
+
+      <!-- Widerruf-Block (nur B2C) -->
+      <div class="widerruf-block">
+        <div class="sec-label">Sofortstart</div>
+        <label class="check check--withdrawal">
+          <input type="checkbox">
+          <span class="cbox">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </span>
+          <span class="label">
+            Ich stimme ausdruecklich zu, dass LifeFlow360 Pro sofort startet,
+            und bestaetige, dass ich dadurch mein Widerrufsrecht fuer den bereits
+            gestarteten digitalen Dienst verliere.
+            <span class="opt">(optional)</span>
+          </span>
+        </label>
+        <p class="legal" style="text-align:left;margin-top:8px;">
+          Ohne diese Zustimmung bleibt dein 14-taegiges Widerrufsrecht bestehen.
+        </p>
+      </div>
+
+      <!-- CTA + Paddle-Frame -->
+      <button class="cta">
+        <span>Weiter zur Zahlung</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="paddle-wrap">
+        <em>Zahlungsfeld erscheint nach Klick auf "Weiter zur Zahlung"</em><br>
+        (Paddle-Inline-Iframe — Rabatt &amp; USt-IdNr sind dort bereits gesetzt)
+      </div>
+
+      <p class="legal">
+        Abwicklung &amp; Rechnungsstellung durch <a href="#">Paddle.com</a>.
+        Automatische Verlaengerung, jederzeit im Customer-Portal kuendbar.
+      </p>
+    </section>
+
+  </div>
+
+<script>
+  // ====================================================================
+  // MOCKUP-LOGIK — simuliert Paddle.PricePreview-Antworten
+  // In Produktion ersetzen durch echte Paddle.PricePreview-Calls.
+  // ====================================================================
+
+  const PRICE = {
+    netPerMonth: 14.95,
+    vatRate: 0.19,
+  };
+
+  // Fake-Discount-DB. In Produktion macht das Paddle.
+  const DISCOUNTS = {
+    'SPONSOR-2026':  { type: 'percent', value: 20, label: '-20%' },
+    'LAUNCH50':      { type: 'percent', value: 50, label: '-50%' },
+    'PARTNER10':     { type: 'amount',  value: 5,  label: '-5,00 EUR' },
+  };
+
+  // Fake-VAT-Validierung. Paddle macht real VIES-Lookup.
+  // Reverse-Charge greift fuer EU non-DE.
+  function fakeValidateVat(input) {
+    const cleaned = input.replace(/\s/g, '').toUpperCase();
+    if (!/^[A-Z]{2}[A-Z0-9]{8,12}$/.test(cleaned)) {
+      return { ok: false, reason: 'format' };
+    }
+    const country = cleaned.slice(0, 2);
+    const isEu = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR',
+                  'HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'].includes(country);
+    if (!isEu) return { ok: false, reason: 'non-eu' };
+    if (cleaned === 'DE000000000') return { ok: false, reason: 'invalid' };
+    return {
+      ok: true,
+      country,
+      cleaned,
+      reverseCharge: country !== 'DE',
+    };
+  }
+
+  // ====================================================================
+  // State
+  // ====================================================================
+  const state = {
+    mode: 'b2b',
+    discount: null,   // { code, type, value, label }
+    vat: null,        // { cleaned, country, reverseCharge }
+  };
+
+  // ====================================================================
+  // Helpers
+  // ====================================================================
+  function eur(value) {
+    return value.toFixed(2).replace('.', ',') + ' EUR';
+  }
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+  function setDisplay(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = value;
+  }
+
+  function renderTotals() {
+    const net = PRICE.netPerMonth;
+    let discountAmount = 0;
+    if (state.discount) {
+      discountAmount = state.discount.type === 'percent'
+        ? net * (state.discount.value / 100)
+        : Math.min(state.discount.value, net);
+    }
+    const netAfterDiscount = Math.max(net - discountAmount, 0);
+
+    const reverseCharge = state.mode === 'b2b' && state.vat && state.vat.reverseCharge;
+    const vat = reverseCharge ? 0 : netAfterDiscount * PRICE.vatRate;
+    const gross = netAfterDiscount + vat;
+
+    // Hero: B2B → Netto big, B2C → Brutto big
+    if (state.mode === 'b2b') {
+      setText('heroAmount', eur(netAfterDiscount));
+      setText('heroTaxLabel', 'netto');
+      const sub = reverseCharge
+        ? 'Reverse-Charge: keine MwSt'
+        : eur(gross) + ' brutto (inkl. 19% MwSt.)';
+      setText('heroSecondary', sub);
+    } else {
+      setText('heroAmount', eur(gross));
+      setText('heroTaxLabel', 'inkl. MwSt.');
+      setText('heroSecondary', eur(netAfterDiscount) + ' netto');
+    }
+
+    setText('periodRecurring', eur(gross));
+
+    // Lines
+    setText('lineNet', eur(net));
+    if (state.discount) {
+      setDisplay('lineDiscount', 'flex');
+      setText('lineDiscountLabel', '(' + state.discount.label + ')');
+      setText('lineDiscountValue', '-' + eur(discountAmount));
+    } else {
+      setDisplay('lineDiscount', 'none');
+    }
+
+    const lineVat = document.getElementById('lineVat');
+    if (reverseCharge) {
+      lineVat.classList.add('vat-reverse');
+      setText('lineVatRate', '(Reverse-Charge)');
+      setText('lineVatValue', '0,00 EUR');
+    } else {
+      lineVat.classList.remove('vat-reverse');
+      setText('lineVatRate', '(19%)');
+      setText('lineVatValue', eur(vat));
+    }
+
+    setText('totalToday', eur(gross));
+    setText('totalFuture', eur(gross));
+  }
+
+  // ====================================================================
+  // Mode toggle (B2B / B2C)
+  // ====================================================================
+  function setMode(mode) {
+    state.mode = mode;
+    document.body.classList.toggle('b2b', mode === 'b2b');
+    document.body.classList.toggle('b2c', mode === 'b2c');
+    document.getElementById('modeB2B').classList.toggle('active', mode === 'b2b');
+    document.getElementById('modeB2C').classList.toggle('active', mode === 'b2c');
+    // Bei Wechsel auf B2C: USt-IdNr-Eingabe verwerfen (Feld unsichtbar)
+    if (mode === 'b2c' && state.vat) {
+      state.vat = null;
+      resetField('vatField', 'vatInput', 'vatFeedback', 'vatApplyBtn');
+    }
+    renderTotals();
+  }
+  document.querySelectorAll('input[name="mode"]').forEach(r => {
+    r.addEventListener('change', e => setMode(e.target.value));
+  });
+
+  // ====================================================================
+  // Rabattcode
+  // ====================================================================
+  const discountBtn = document.getElementById('discountApplyBtn');
+  const discountInput = document.getElementById('discountInput');
+  const discountField = document.getElementById('discountField');
+  const discountFeedback = document.getElementById('discountFeedback');
+
+  function setFeedback(el, type, text) {
+    el.className = 'inline-field-feedback ' + type;
+    el.style.display = 'flex';
+    const icon = type === 'ok'
+      ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>';
+    el.innerHTML = icon + '<span>' + text + '</span>';
+  }
+
+  function resetField(fieldId, inputId, fbId, btnId) {
+    document.getElementById(fieldId).classList.remove('applied', 'invalid');
+    document.getElementById(inputId).value = '';
+    document.getElementById(inputId).disabled = false;
+    document.getElementById(fbId).style.display = 'none';
+    const btn = document.getElementById(btnId);
+    btn.textContent = 'Anwenden';
+    btn.classList.remove('remove');
+  }
+
+  discountBtn.addEventListener('click', () => {
+    // Wenn schon applied → "Entfernen"
+    if (state.discount) {
+      state.discount = null;
+      resetField('discountField', 'discountInput', 'discountFeedback', 'discountApplyBtn');
+      renderTotals();
+      return;
+    }
+    const code = discountInput.value.trim().toUpperCase();
+    if (!code) {
+      discountField.classList.add('invalid');
+      setFeedback(discountFeedback, 'error', 'Bitte einen Code eingeben.');
+      return;
+    }
+    // Simuliere Paddle.PricePreview-Call mit kleinem Delay
+    discountBtn.disabled = true;
+    discountBtn.innerHTML = '<span class="spinner-mini"></span>';
+    setTimeout(() => {
+      discountBtn.disabled = false;
+      discountBtn.textContent = 'Anwenden';
+      const hit = DISCOUNTS[code];
+      if (!hit) {
+        discountField.classList.remove('applied');
+        discountField.classList.add('invalid');
+        setFeedback(discountFeedback, 'error',
+          'Dieser Rabattcode ist Paddle nicht bekannt. Bitte Schreibweise pruefen.');
+        return;
+      }
+      state.discount = { code, ...hit };
+      discountField.classList.remove('invalid');
+      discountField.classList.add('applied');
+      discountInput.disabled = true;
+      discountBtn.textContent = 'Entfernen';
+      discountBtn.classList.add('remove');
+      setFeedback(discountFeedback, 'ok',
+        'Rabatt "' + code + '" angewendet (' + hit.label + ').');
+      renderTotals();
+    }, 600);
+  });
+
+  discountInput.addEventListener('input', () => {
+    if (discountField.classList.contains('invalid')) {
+      discountField.classList.remove('invalid');
+      discountFeedback.style.display = 'none';
+    }
+  });
+
+  // ====================================================================
+  // USt-IdNr.
+  // ====================================================================
+  const vatBtn = document.getElementById('vatApplyBtn');
+  const vatInput = document.getElementById('vatInput');
+  const vatField = document.getElementById('vatField');
+  const vatFeedback = document.getElementById('vatFeedback');
+
+  vatBtn.addEventListener('click', () => {
+    if (state.vat) {
+      state.vat = null;
+      resetField('vatField', 'vatInput', 'vatFeedback', 'vatApplyBtn');
+      renderTotals();
+      return;
+    }
+    const input = vatInput.value.trim();
+    if (!input) {
+      vatField.classList.add('invalid');
+      setFeedback(vatFeedback, 'error', 'Bitte eine USt-IdNr. eingeben.');
+      return;
+    }
+    vatBtn.disabled = true;
+    vatBtn.innerHTML = '<span class="spinner-mini"></span>';
+    setTimeout(() => {
+      vatBtn.disabled = false;
+      vatBtn.textContent = 'Anwenden';
+      const result = fakeValidateVat(input);
+      if (!result.ok) {
+        vatField.classList.remove('applied');
+        vatField.classList.add('invalid');
+        const msg = result.reason === 'format'
+          ? 'Format ungueltig. Beispiel: DE123456789'
+          : result.reason === 'non-eu'
+          ? 'USt-IdNr muss aus einem EU-Land stammen.'
+          : 'USt-IdNr nicht bestaetigt (VIES). Bitte pruefen.';
+        setFeedback(vatFeedback, 'error', msg);
+        return;
+      }
+      state.vat = result;
+      vatField.classList.remove('invalid');
+      vatField.classList.add('applied');
+      vatInput.value = result.cleaned;
+      vatInput.disabled = true;
+      vatBtn.textContent = 'Entfernen';
+      vatBtn.classList.add('remove');
+      const msg = result.reverseCharge
+        ? 'USt-IdNr bestaetigt. Reverse-Charge greift — keine MwSt auf der Rechnung.'
+        : 'USt-IdNr bestaetigt. Da DE: MwSt wird regulaer berechnet.';
+      setFeedback(vatFeedback, 'ok', msg);
+      renderTotals();
+    }, 700);
+  });
+
+  vatInput.addEventListener('input', () => {
+    if (vatField.classList.contains('invalid')) {
+      vatField.classList.remove('invalid');
+      vatFeedback.style.display = 'none';
+    }
+  });
+
+  // ====================================================================
+  // Check-UI (kosmetisch)
+  // ====================================================================
+  document.querySelectorAll('.check').forEach(label => {
+    const cb = label.querySelector('input[type="checkbox"]');
+    cb.addEventListener('change', () => {
+      label.classList.toggle('checked', cb.checked);
+    });
+  });
+
+  // Init
+  renderTotals();
+</script>
+</body>
+</html>

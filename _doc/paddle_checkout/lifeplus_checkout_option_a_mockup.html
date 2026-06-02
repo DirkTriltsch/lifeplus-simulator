@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<!--
+  UX-Mockup - nicht fuer Live.
+  Optimierte Option A: linke Rechnung mit Rabattcode + B2B/VAT-Flow.
+  Demo-Interaktion simuliert Paddle.TransactionPreview und Checkout-Sync.
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifePlus 360 - Checkout Option A Mockup</title>
+<style>
+  :root {
+    --brand: #0b6f49;
+    --brand-dark: #12362d;
+    --accent: #8aa834;
+    --cta: #ee7b00;
+    --paper: #f3f6f2;
+    --surface: #ffffff;
+    --soft: #eef5f0;
+    --line: #d9e4dc;
+    --ink: #18342c;
+    --muted: #60746b;
+    --good: #14965f;
+    --warn: #b86b00;
+    --err: #c43b52;
+    --focus: #1b8d61;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+
+  .topbar {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    background: #092c24;
+    color: #fff;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .brand {
+    font-size: 18px;
+    font-weight: 850;
+  }
+
+  .brand span { color: #b7d44a; }
+
+  .page {
+    width: min(1180px, calc(100% - 32px));
+    margin: 28px auto 44px;
+  }
+
+  .checkout {
+    display: grid;
+    grid-template-columns: minmax(330px, 455px) minmax(0, 1fr);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 22px 60px rgba(18, 54, 45, .12);
+  }
+
+  @media (max-width: 860px) {
+    .checkout { grid-template-columns: 1fr; }
+  }
+
+  .summary {
+    padding: 30px;
+    background: #f9fbfa;
+    border-right: 1px solid var(--line);
+  }
+
+  @media (max-width: 860px) {
+    .summary { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+
+  .eyebrow {
+    margin: 0 0 7px;
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.14;
+    letter-spacing: 0;
+  }
+
+  h2 {
+    margin: 0 0 7px;
+    font-size: 20px;
+    line-height: 1.24;
+    letter-spacing: 0;
+  }
+
+  .lead {
+    margin: 10px 0 24px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.58;
+  }
+
+  .choice {
+    display: grid;
+    gap: 10px;
+    margin: 22px 0;
+  }
+
+  .choice-label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .radio-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .radio-pill {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    min-height: 76px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .radio-pill:has(input:checked) {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(27, 141, 97, .12);
+    background: #f6fbf7;
+  }
+
+  .radio-pill input {
+    width: 17px;
+    height: 17px;
+    margin: 2px 0 0;
+    accent-color: var(--brand);
+  }
+
+  .radio-pill strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 14px;
+  }
+
+  .radio-pill span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .field-group {
+    margin: 18px 0 20px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .field-card {
+    padding: 13px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .field-card.is-good {
+    border-color: rgba(20, 150, 95, .45);
+    background: #f6fbf8;
+  }
+
+  .field-card.is-error {
+    border-color: rgba(196, 59, 82, .5);
+    background: #fff7f8;
+  }
+
+  .field-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .field-top label {
+    font-weight: 820;
+    font-size: 14px;
+  }
+
+  .state {
+    min-height: 18px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  .state.good { color: var(--good); }
+  .state.error { color: var(--err); }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #cdd9d1;
+    border-radius: 6px;
+    padding: 0 12px;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px rgba(27, 141, 97, .13);
+  }
+
+  .mini-btn {
+    min-width: 104px;
+    height: 42px;
+    border: 0;
+    border-radius: 6px;
+    padding: 0 13px;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .mini-btn.secondary {
+    background: #e7eee9;
+    color: var(--brand-dark);
+  }
+
+  .field-note {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.42;
+  }
+
+  .price-lines {
+    margin-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+
+  .price-row span:first-child {
+    color: var(--muted);
+  }
+
+  .price-row.discount strong,
+  .price-row.reverse strong {
+    color: var(--good);
+  }
+
+  .price-row.total {
+    align-items: baseline;
+    border-bottom: 0;
+    padding-top: 18px;
+  }
+
+  .price-row.total span:first-child {
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 850;
+  }
+
+  .price-row.total strong {
+    color: var(--good);
+    font-size: 27px;
+  }
+
+  .due-note {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .content {
+    padding: 30px;
+  }
+
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .dot {
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    font-size: 12px;
+  }
+
+  .line {
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .account-box {
+    display: grid;
+    gap: 3px;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--soft);
+    margin-bottom: 16px;
+  }
+
+  .account-box span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .account-box strong {
+    font-size: 14px;
+  }
+
+  .consent {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 17px;
+  }
+
+  .check {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 13px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .check input {
+    width: 19px;
+    height: 19px;
+    margin: 1px 0 0;
+    accent-color: var(--brand);
+    flex: 0 0 auto;
+  }
+
+  .check span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .check strong {
+    color: var(--ink);
+  }
+
+  .check.withdrawal {
+    border-color: #f1c27c;
+    background: #fff8ef;
+  }
+
+  .business-hint {
+    margin: 0 0 17px;
+    padding: 12px 13px;
+    border: 1px solid #c8ded0;
+    border-radius: 8px;
+    background: #f4fbf6;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.48;
+  }
+
+  .business-hint strong {
+    color: var(--ink);
+  }
+
+  .paddle-shell {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fbfcfb;
+    padding: 12px;
+  }
+
+  .paddle-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .sync-pill {
+    color: var(--good);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+  }
+
+  .paddle-frame {
+    min-height: 345px;
+    padding: 16px;
+    border: 1px solid #cddbd2;
+    border-radius: 7px;
+    background: #fff;
+  }
+
+  .test-mode {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: #1681ff;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .payment-option {
+    height: 45px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 15px;
+    border: 1px solid #1681ff;
+    border-radius: 5px;
+    color: #064aa3;
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    color: #3d4d46;
+    font-size: 14px;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: "";
+    height: 1px;
+    background: var(--line);
+    flex: 1 1 auto;
+  }
+
+  .fake-field {
+    margin-top: 12px;
+  }
+
+  .fake-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .fake-input {
+    height: 39px;
+    border: 1px solid #ccd8d0;
+    border-radius: 5px;
+    color: #a6b4ad;
+    display: flex;
+    align-items: center;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .buy-btn {
+    width: 100%;
+    height: 48px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 6px;
+    background: #22a477;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .small-print {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: center;
+  }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">LifePlus <span>360</span></div>
+  </header>
+
+  <main class="page">
+    <section class="checkout" aria-label="Checkout Option A Mockup">
+      <aside class="summary">
+        <p class="eyebrow">Pro Checkout</p>
+        <h1>Bestellung pruefen</h1>
+        <p class="lead">
+          Rabatt und USt-IdNr. werden hier angewendet, bevor das Paddle-Zahlungsfeld final startet.
+        </p>
+
+        <div class="choice" aria-label="Kaeufertyp">
+          <span class="choice-label">Ich kaufe</span>
+          <div class="radio-row">
+            <label class="radio-pill">
+              <input type="radio" name="buyerType" value="business" checked>
+              <span>
+                <strong>Geschaeftlich</strong>
+                <span>Standard fuer Selbststaendige und Unternehmer.</span>
+              </span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="buyerType" value="private">
+              <span>
+                <strong>Privat</strong>
+                <span>Mit Verbraucher-Widerrufsrecht.</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <section class="field-card" id="discountCard">
+            <div class="field-top">
+              <label for="discountCode">Rabattcode</label>
+              <span class="state" id="discountState">optional</span>
+            </div>
+            <div class="input-row">
+              <input id="discountCode" type="text" autocomplete="off" value="DAO20" aria-describedby="discountNote">
+              <button class="mini-btn" id="applyDiscount" type="button">Anwenden</button>
+            </div>
+            <p class="field-note" id="discountNote">Demo: DAO20 ist gueltig, FALSCH erzeugt eine Fehlermeldung.</p>
+          </section>
+
+          <section class="field-card is-good" id="vatCard">
+            <div class="field-top">
+              <label for="vatId">USt-IdNr.</label>
+              <span class="state good" id="vatState">Reverse-Charge bereit</span>
+            </div>
+            <div class="input-row">
+              <input id="vatId" type="text" autocomplete="off" value="DE123456789">
+              <button class="mini-btn" id="applyVat" type="button">Anwenden</button>
+            </div>
+            <p class="field-note">Bei gueltiger USt-IdNr. uebergibt der Checkout Business-Daten an Paddle.</p>
+          </section>
+        </div>
+
+        <div class="price-lines" aria-live="polite">
+          <div class="price-row">
+            <span>Zwischensumme netto</span>
+            <strong id="subtotal">14,95 EUR</strong>
+          </div>
+          <div class="price-row discount" id="discountRow">
+            <span>Rabatt DAO20</span>
+            <strong id="discountAmount">-2,99 EUR</strong>
+          </div>
+          <div class="price-row reverse" id="reverseRow">
+            <span>USt. Reverse-Charge</span>
+            <strong>0,00 EUR</strong>
+          </div>
+          <div class="price-row" id="taxRow" hidden>
+            <span>MwSt. 19%</span>
+            <strong id="taxAmount">2,27 EUR</strong>
+          </div>
+          <div class="price-row total">
+            <span>Heute faellig</span>
+            <strong id="totalAmount">11,96 EUR</strong>
+          </div>
+        </div>
+        <div class="due-note">
+          <span>Naechste Abrechnung</span>
+          <strong id="recurringAmount">11,96 EUR monatlich ab 02.07.2026</strong>
+        </div>
+      </aside>
+
+      <section class="content">
+        <div class="steps">
+          <div class="step"><span class="dot">1</span> Daten</div>
+          <div class="line"></div>
+          <div class="step"><span class="dot">2</span> Zahlung</div>
+        </div>
+
+        <h2>Zahlung abschliessen</h2>
+        <p class="lead">
+          Das Paddle-Zahlungsfeld erhaelt Rabattcode, Kaeufertyp und USt-IdNr. aus der Rechnung links.
+        </p>
+
+        <div class="account-box">
+          <span>Konto</span>
+          <strong>dao@triltsch-online.de</strong>
+        </div>
+
+        <div class="business-hint" id="businessHint">
+          <strong>Geschaeftlicher Kauf:</strong> Kein Verbraucher-Widerrufsverzicht noetig. Die USt-IdNr. wird an Paddle uebergeben.
+        </div>
+
+        <div class="consent" id="privateConsent" hidden>
+          <label class="check withdrawal">
+            <input type="checkbox">
+            <span>
+              <strong>Sofortstart mit Widerrufsverzicht</strong><br>
+              Ich stimme ausdruecklich zu, dass LifeFlow360 Pro sofort startet, und bestaetige, dass mein Widerrufsrecht fuer den bereits gestarteten digitalen Dienst erlischt.
+            </span>
+          </label>
+        </div>
+
+        <div class="paddle-shell">
+          <div class="paddle-head">
+            <span>Zahlungsfeld</span>
+            <span class="sync-pill" id="syncState">DAO20 + DE123456789 synchronisiert</span>
+          </div>
+          <div class="paddle-frame">
+            <span class="test-mode">Test Mode</span>
+            <div class="payment-option">PayPal</div>
+            <div class="divider">Oder per Karte zahlen</div>
+            <div class="fake-field">
+              <label>Kartennummer</label>
+              <div class="fake-input">xxxx xxxx xxxx xxxx</div>
+            </div>
+            <div class="fake-field">
+              <label>Name auf der Karte</label>
+              <div class="fake-input">Name des Karteninhabers</div>
+            </div>
+            <button class="buy-btn" type="button">Jetzt kaufen</button>
+            <p class="small-print" id="paddlePrint">
+              Paddle berechnet 11,96 EUR heute und 11,96 EUR monatlich. Rabatt und USt-IdNr. wurden bereits uebernommen.
+            </p>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+<script>
+  const net = 14.95;
+  let buyerType = "business";
+  let discountOk = true;
+  let discountCode = "DAO20";
+  let vatOk = true;
+
+  const eur = (n) => n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " EUR";
+  const $ = (id) => document.getElementById(id);
+
+  function render() {
+    const isBusiness = buyerType === "business";
+    const discount = discountOk ? net * 0.2 : 0;
+    const taxable = Math.max(0, net - discount);
+    const tax = isBusiness && vatOk ? 0 : taxable * 0.19;
+    const total = taxable + tax;
+
+    $("vatCard").hidden = !isBusiness;
+    $("privateConsent").hidden = isBusiness;
+    $("businessHint").hidden = !isBusiness;
+    $("reverseRow").hidden = !(isBusiness && vatOk);
+    $("taxRow").hidden = isBusiness && vatOk;
+    $("discountRow").hidden = !discountOk;
+
+    $("discountAmount").textContent = "-" + eur(discount);
+    $("taxAmount").textContent = eur(tax);
+    $("totalAmount").textContent = eur(total);
+    $("recurringAmount").textContent = eur(total) + " monatlich ab 02.07.2026";
+
+    const bits = [];
+    if (discountOk) bits.push(discountCode);
+    if (isBusiness && vatOk) bits.push($("vatId").value.trim());
+    $("syncState").textContent = bits.length ? bits.join(" + ") + " synchronisiert" : "Checkout ohne Zusatzdaten";
+    $("paddlePrint").textContent =
+      "Paddle berechnet " + eur(total) + " heute und " + eur(total) +
+      " monatlich. " + (bits.length ? "Zusatzdaten wurden bereits uebernommen." : "Keine Zusatzdaten angewendet.");
+  }
+
+  function setCardState(card, stateEl, mode, text) {
+    card.classList.remove("is-good", "is-error");
+    stateEl.className = "state";
+    if (mode === "good") {
+      card.classList.add("is-good");
+      stateEl.classList.add("good");
+    }
+    if (mode === "error") {
+      card.classList.add("is-error");
+      stateEl.classList.add("error");
+    }
+    stateEl.textContent = text;
+  }
+
+  document.querySelectorAll("input[name='buyerType']").forEach((radio) => {
+    radio.addEventListener("change", () => {
+      buyerType = radio.value;
+      render();
+    });
+  });
+
+  $("applyDiscount").addEventListener("click", () => {
+    const value = $("discountCode").value.trim().toUpperCase();
+    discountCode = value;
+    if (!value) {
+      discountOk = false;
+      setCardState($("discountCard"), $("discountState"), "neutral", "optional");
+    } else if (value === "DAO20") {
+      discountOk = true;
+      setCardState($("discountCard"), $("discountState"), "good", "Code angewendet");
+    } else {
+      discountOk = false;
+      setCardState($("discountCard"), $("discountState"), "error", "Code ungueltig");
+    }
+    render();
+  });
+
+  $("applyVat").addEventListener("click", () => {
+    const value = $("vatId").value.trim().toUpperCase();
+    vatOk = /^DE[0-9]{9}$/.test(value);
+    setCardState(
+      $("vatCard"),
+      $("vatState"),
+      vatOk ? "good" : "error",
+      vatOk ? "Reverse-Charge bereit" : "USt-IdNr. ungueltig"
+    );
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>

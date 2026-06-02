@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYP / MOCKUP v3 — nicht fuer Live.
+
+  Architektur-Pivot: LifeFlow360 ist ein B2B-only-Shop.
+  Keine USt-IdNr-Erfassung (Paddle handhabt Kleinbetragsrechnung <250 EUR
+  selbst), kein B2B/B2C-Toggle, kein Widerrufsverzicht.
+  Stattdessen: Pflicht-Bestaetigungs-Checkbox zur Unternehmer-Eigenschaft
+  (§14 BGB) + konsistente B2B-Auszeichnung der Webseite.
+
+  Aenderungen gegenueber v2:
+  - Mode-Toggle entfernt (immer B2B)
+  - USt-IdNr-Block entfernt
+  - Widerrufsverzicht-Block entfernt
+  - Hero immer Netto + "zzgl. USt." mit Brutto-Sub
+  - Pflicht-Bestaetigung "Ich bin Unternehmer" als Pflicht-Checkbox in Step 1
+  - Header-Banner mit B2B-Hinweis
+  - Sync-Banner nur fuer Rabattcode
+  - B2B-Notice ersetzt durch Confirmation-Checkbox
+  - Pricing-Hinweis-Block "Die Preise verstehen sich netto..."
+
+  Wording der Bestaetigungs-Checkbox + Hinweise: aus Legal-Skill-Review
+  vom 2026-06-02. Anwaltliche Freigabe noch ausstehend.
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeFlow360 · Checkout (B2B-only) v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lp-primary:       #006F44;
+    --lp-primary-dark:  #00553A;
+    --lp-cta:           #EA7600;
+    --lp-cta-dark:      #C45F00;
+    --lp-surface:       #EEF3EF;
+
+    --ink:        #0F1B17;
+    --ink-2:      #2C4138;
+    --ink-3:      #4A5C53;
+    --ink-4:      #7A8983;
+    --line:       #E1E5E2;
+    --line-soft:  #EEF1EF;
+    --paper:      #FAFBF9;
+
+    --err:        #C2364B;
+    --err-bg:     #FDF3F4;
+    --warn:       #B57700;
+    --warn-bg:    #FFF8EE;
+
+    --ok:         #2C7A4D;
+    --ok-bg:      #ECF6EF;
+    --ok-border:  #B6DCC1;
+
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(900px 420px at 100% 0%, #E6F2EA, transparent 60%),
+      radial-gradient(720px 360px at 0% 100%, #DCEEDE, transparent 60%),
+      var(--paper);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 30px 20px;
+  }
+
+  /* B2B-Header-Banner — ueber dem Shell, zur Webseiten-Konsistenz */
+  .b2b-banner {
+    width: 100%; max-width: 1000px;
+    margin-bottom: 16px;
+    padding: 10px 16px;
+    background: var(--lp-surface);
+    border: 1px solid color-mix(in srgb, var(--lp-primary) 22%, transparent);
+    border-radius: 10px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; color: var(--ink-2);
+  }
+  .b2b-banner svg { color: var(--lp-primary); flex-shrink: 0; }
+  .b2b-banner strong { color: var(--lp-primary); font-weight: 600; }
+
+  /* ============== SHELL ============== */
+  .shell {
+    width: 100%; max-width: 1000px;
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(15,27,23,0.30);
+  }
+  @media (max-width: 860px) { .shell { grid-template-columns: 1fr; } }
+
+  /* ============== LEFT: ORDER SUMMARY ============== */
+  .summary {
+    background: linear-gradient(180deg, #fff 0%, var(--lp-surface) 100%);
+    border-right: 1px solid var(--line);
+    padding: 28px 28px;
+    display: flex; flex-direction: column;
+  }
+  @media (max-width: 860px) {
+    .summary { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+
+  .sum-h {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 14px;
+  }
+
+  /* Rabattcode-Block (immer sichtbar) */
+  .inline-field {
+    margin: 4px 0 14px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color .15s, background .15s;
+  }
+  .inline-field.applied {
+    border-color: var(--ok-border);
+    background: var(--ok-bg);
+  }
+  .inline-field.invalid {
+    border-color: var(--err);
+    background: var(--err-bg);
+  }
+  .inline-field-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 7px; min-height: 18px;
+  }
+  .inline-field-label {
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+  }
+  .status-pill {
+    display: none; align-items: center; gap: 5px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600;
+    background: var(--ok); color: #fff;
+  }
+  .inline-field.applied .status-pill { display: inline-flex; }
+  .status-pill svg { flex-shrink: 0; }
+
+  .inline-field-row { display: flex; gap: 8px; }
+  .inline-field input {
+    flex: 1; padding: 9px 11px;
+    font-family: inherit; font-size: 13.5px;
+    background: #fff; border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .inline-field input:focus {
+    outline: none; border-color: var(--lp-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-primary) 14%, transparent);
+  }
+  .inline-field.applied input { border-color: var(--ok-border); }
+  .inline-field-btn {
+    padding: 9px 14px;
+    background: var(--lp-primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background .12s, opacity .12s;
+    white-space: nowrap;
+  }
+  .inline-field-btn:hover { background: var(--lp-primary-dark); }
+  .inline-field-btn.remove {
+    background: transparent; color: var(--ink-3);
+    border: 1px solid var(--line);
+  }
+  .inline-field-btn.remove:hover {
+    background: var(--err-bg); color: var(--err); border-color: var(--err);
+  }
+  .inline-field-hint {
+    margin-top: 7px; font-size: 11.5px; line-height: 1.45;
+    color: var(--ink-4); font-style: italic;
+  }
+  .inline-field-feedback {
+    margin-top: 7px; font-size: 11.5px; line-height: 1.45;
+    color: var(--err); display: none;
+    align-items: flex-start; gap: 6px;
+  }
+  .inline-field-feedback.show { display: flex; }
+  .inline-field-feedback svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* ===== Hero-Preis (immer Netto + zzgl. USt.) ===== */
+  .price-hero { margin-top: 4px; }
+  .price-hero .amount-row {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .price-hero .amount-main {
+    font-size: 32px; font-weight: 700;
+    color: var(--lp-primary);
+    letter-spacing: -0.4px;
+  }
+  .price-hero .amount-tax-label {
+    font-size: 13px; color: var(--ink-3); font-weight: 500;
+  }
+  .price-hero .recurring {
+    font-size: 12.5px; color: var(--ink-4);
+    margin-top: 4px;
+  }
+  .price-hero .gross-hint {
+    font-size: 11.5px; color: var(--ink-4);
+    margin-top: 3px; font-style: italic;
+  }
+
+  /* Produktkarte */
+  .product {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin: 16px 0 14px;
+  }
+  .product-icon {
+    width: 42px; height: 42px; flex-shrink: 0;
+    border-radius: 9px;
+    background: var(--lp-surface);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: var(--lp-primary);
+  }
+  .product-info { flex: 1; min-width: 0; }
+  .product-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .product-plan { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; }
+  .product-qty {
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-4);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  /* Rechnungs-Zeilen */
+  .lines { margin-bottom: 4px; }
+  .line {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 7px 0;
+    font-size: 13.5px;
+  }
+  .line .label { color: var(--ink-3); }
+  .line .value { color: var(--ink); font-weight: 500; }
+  .line.discount-line .label { color: var(--ok); }
+  .line.discount-line .value { color: var(--ok); font-weight: 600; }
+  .line.tax-line .label-soft { color: var(--ink-4); font-size: 11.5px; }
+
+  .divider { height: 1px; background: var(--line); margin: 6px 0; }
+
+  .totals { margin-top: 4px; }
+  .total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 0;
+    font-size: 14px; font-weight: 700;
+  }
+  .total .value {
+    font-size: 20px; font-weight: 700;
+    color: var(--lp-primary);
+  }
+  .future {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0 2px;
+    font-size: 12px; color: var(--ink-4);
+  }
+
+  .trust {
+    margin-top: auto; padding-top: 18px;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11.5px; color: var(--ink-4);
+  }
+  .trust svg { color: var(--lp-primary); flex-shrink: 0; }
+
+  /* ============== RIGHT COLUMN — beide Steps stacked (Demo) ============== */
+  .right { display: flex; flex-direction: column; }
+  .step-panel {
+    padding: 28px 28px;
+    display: flex; flex-direction: column;
+  }
+  .step-panel + .step-panel { border-top: 1px solid var(--line); }
+  .panel-h {
+    font-size: 20px; font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .panel-sub {
+    font-size: 13px; color: var(--ink-3);
+    margin-bottom: 18px;
+  }
+
+  /* Stepper */
+  .stepper { display: flex; align-items: center; gap: 0; margin: 2px 0 4px; }
+  .step-dot {
+    flex-shrink: 0; width: 26px; height: 26px;
+    border-radius: 50%; background: #fff;
+    border: 1.5px solid #D5D8D6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 600; color: var(--ink-4);
+  }
+  .step-dot.active { background: var(--lp-primary); border-color: var(--lp-primary); color: #fff; }
+  .step-dot.done { background: var(--lp-primary); border-color: var(--lp-primary); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: var(--line); margin: 0 4px; border-radius: 1px; }
+  .step-line.done { background: var(--lp-primary); }
+  .step-labels { display: flex; justify-content: space-between; margin: 5px 0 18px; padding: 0 2px; }
+  .step-label {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--ink-4); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .step-label.active { color: var(--lp-primary); font-weight: 600; }
+
+  .field-block { margin-bottom: 14px; }
+  .field-block label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .field-block input {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: inherit; font-size: 13.5px;
+    background: #fff; border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  .field-block input:focus {
+    outline: none; border-color: var(--lp-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-primary) 14%, transparent);
+  }
+  .field-hint { margin-top: 5px; font-size: 11px; color: var(--ink-4); }
+
+  .sec-label {
+    font-family: var(--mono);
+    font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500;
+    margin: 8px 0 6px;
+  }
+
+  /* Checkboxes */
+  .checks { margin-bottom: 6px; }
+  .check {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .check:last-child { border-bottom: none; }
+  .check input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .check .cbox {
+    flex-shrink: 0; width: 17px; height: 17px; margin-top: 1px;
+    border: 1.5px solid #B4CDB9; border-radius: 5px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .12s, border-color .12s;
+  }
+  .check.checked .cbox { background: var(--lp-primary); border-color: var(--lp-primary); }
+  .cbox svg { opacity: 0; transition: opacity .1s; }
+  .check.checked .cbox svg { opacity: 1; }
+  .check .label { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+  .check .label .req { color: var(--err); font-weight: 700; margin-left: 1px; }
+  .check .label .opt { color: var(--ink-4); font-size: 11.5px; margin-left: 4px; font-style: italic; }
+  .check .label a { color: var(--lp-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .check .label .hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11.5px; color: var(--ink-4);
+    font-style: italic;
+  }
+
+  /* Unternehmer-Bestaetigung visuell etwas hervorgehoben */
+  .check--b2b {
+    background: var(--lp-surface);
+    border: 1px solid color-mix(in srgb, var(--lp-primary) 22%, transparent);
+    border-radius: 10px;
+    padding: 11px 13px;
+    margin: 6px 0;
+  }
+  .check--b2b.checked {
+    background: color-mix(in srgb, var(--lp-primary) 8%, white);
+  }
+
+  .check-footnote {
+    font-size: 11px; color: var(--ink-4);
+    margin: 4px 0 12px 27px;
+  }
+  .check-footnote .req { color: var(--err); font-weight: 700; }
+
+  .cta {
+    width: 100%; padding: 13px;
+    font-family: inherit; font-size: 14.5px; font-weight: 700;
+    color: #fff; background: var(--lp-cta);
+    border: none; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--lp-cta) 40%, transparent);
+    transition: background .12s;
+    margin-top: 4px;
+  }
+  .cta:hover { background: var(--lp-cta-dark); }
+
+  /* Konto-readonly */
+  .konto-readonly {
+    padding: 11px 13px;
+    background: var(--lp-surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .konto-readonly .konto-label {
+    font-family: var(--mono);
+    font-size: 10px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .konto-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .konto-email {
+    font-weight: 600; color: var(--ink); font-size: 13.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .link-btn {
+    background: none; border: none; padding: 0;
+    color: var(--lp-primary);
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .link-btn:hover { color: var(--lp-primary-dark); text-decoration: underline; }
+
+  /* Sync-Banner (nur Rabattcode) */
+  .sync-banner {
+    display: none;
+    padding: 11px 14px;
+    background: var(--ok-bg);
+    border: 1px solid var(--ok-border);
+    border-radius: 10px;
+    color: var(--ok);
+    font-size: 12.5px; line-height: 1.45;
+    align-items: flex-start; gap: 9px;
+    margin-bottom: 12px;
+  }
+  .sync-banner.show { display: flex; }
+  .sync-banner svg { flex-shrink: 0; margin-top: 1px; }
+  .sync-banner strong { font-weight: 700; }
+  .sync-banner .sync-sub {
+    color: var(--ink-3); font-weight: 400;
+    margin-top: 2px; font-size: 11.5px;
+  }
+
+  /* Paddle-Iframe-Platzhalter */
+  .paddle-wrap {
+    border-radius: 10px;
+    border: 1px dashed var(--line);
+    background: var(--paper);
+    padding: 22px 16px;
+    text-align: center;
+    color: var(--ink-4);
+    font-family: var(--mono);
+    font-size: 11.5px; line-height: 1.6;
+    min-height: 200px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .paddle-wrap-inner { max-width: 320px; }
+  .paddle-wrap em {
+    font-style: normal; color: var(--lp-primary); font-weight: 600;
+    display: block; margin-bottom: 6px;
+  }
+
+  .legal {
+    margin-top: 12px;
+    font-size: 11px; line-height: 1.55;
+    color: var(--ink-4); text-align: center;
+  }
+  .legal a { color: var(--ink-3); }
+
+  .spinner-mini {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border: 2px solid color-mix(in srgb, #fff 35%, transparent);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: -1px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+  <!-- B2B-Header-Banner ueber dem Shell -->
+  <div class="b2b-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    </svg>
+    <span><strong>B2B-Angebot:</strong> LifeFlow360 richtet sich ausschliesslich an Unternehmer und Selbststaendige im Sinne §14 BGB.</span>
+  </div>
+
+  <div class="shell">
+
+    <!-- ============== LEFT: ORDER SUMMARY ============== -->
+    <aside class="summary">
+      <div class="sum-h">Bestelluebersicht</div>
+
+      <!-- Rabattcode -->
+      <div class="inline-field" id="discountField">
+        <div class="inline-field-header">
+          <span class="inline-field-label">Rabattcode</span>
+          <span class="status-pill" id="discountPill">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Code angewendet
+          </span>
+        </div>
+        <div class="inline-field-row">
+          <input type="text" id="discountInput" placeholder="z.B. DAO20" autocomplete="off" spellcheck="false" maxlength="40">
+          <button class="inline-field-btn" id="discountApplyBtn">Anwenden</button>
+        </div>
+        <p class="inline-field-hint">Hast du einen Sponsor- oder Aktionscode?</p>
+        <p class="inline-field-feedback" id="discountFeedback"></p>
+      </div>
+
+      <!-- Hero-Preis (immer Netto) -->
+      <div class="price-hero">
+        <div class="amount-row">
+          <span class="amount-main" id="heroAmount">14,95 EUR</span>
+          <span class="amount-tax-label">zzgl. USt.</span>
+        </div>
+        <div class="recurring">dann <span id="periodRecurring">14,95 EUR</span> netto pro Monat</div>
+        <div class="gross-hint" id="grossHint">17,79 EUR brutto inkl. 19% USt. (DE)</div>
+      </div>
+
+      <!-- Produkt-Karte -->
+      <div class="product">
+        <div class="product-icon">LF</div>
+        <div class="product-info">
+          <div class="product-name">LifeFlow360 Pro</div>
+          <div class="product-plan">Monatlich · automatische Verlaengerung</div>
+          <div class="product-qty">Menge: 1</div>
+        </div>
+      </div>
+
+      <!-- Rechnungs-Zeilen -->
+      <div class="lines">
+        <div class="line">
+          <span class="label">Zwischensumme (netto)</span>
+          <span class="value" id="lineNet">14,95 EUR</span>
+        </div>
+        <div class="line discount-line" id="lineDiscount" style="display:none">
+          <span class="label">Rabatt <span id="lineDiscountLabel"></span></span>
+          <span class="value" id="lineDiscountValue">-0,00 EUR</span>
+        </div>
+        <div class="line tax-line" id="lineTax">
+          <span class="label">USt. <span class="label-soft" id="lineTaxRate">(19%)</span></span>
+          <span class="value" id="lineTaxValue">2,84 EUR</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="totals">
+        <div class="total">
+          <span>Heute faellig</span>
+          <span class="value" id="totalToday">17,79 EUR</span>
+        </div>
+        <div class="future">
+          <span>Faellig am <span id="renewalDate">02.07.2026</span></span>
+          <span id="totalFuture">17,79 EUR</span>
+        </div>
+      </div>
+
+      <div class="trust">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+        </svg>
+        Zahlung &amp; Rechnung ueber Paddle als Merchant of Record
+      </div>
+    </aside>
+
+    <!-- ============== RIGHT: TWO STEPS STACKED (Demo) ============== -->
+    <div class="right">
+
+      <!-- ===== STEP 1: Daten ===== -->
+      <section class="step-panel">
+        <h2 class="panel-h">Bezahlung abschliessen</h2>
+
+        <div class="stepper">
+          <div class="step-dot active"><span>1</span></div>
+          <div class="step-line"></div>
+          <div class="step-dot"><span>2</span></div>
+        </div>
+        <div class="step-labels">
+          <span class="step-label active">Daten</span>
+          <span class="step-label">Zahlung</span>
+        </div>
+
+        <p class="panel-sub">
+          Pruefe deine E-Mail-Adresse und bestaetige die Pflicht-Zustimmungen.
+        </p>
+
+        <div class="field-block">
+          <label for="checkoutEmail">E-Mail-Adresse</label>
+          <input id="checkoutEmail" type="email" value="user1@lifeflow360.app" placeholder="name@beispiel.de">
+          <p class="field-hint">Wird fuer Rechnung, Zugang und Login verwendet.</p>
+        </div>
+
+        <div class="sec-label">Zustimmungen</div>
+        <div class="checks">
+          <!-- AGB -->
+          <label class="check">
+            <input type="checkbox">
+            <span class="cbox"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span class="label">Ich akzeptiere die <a href="#">AGB</a><span class="req">*</span></span>
+          </label>
+          <!-- Datenschutz -->
+          <label class="check">
+            <input type="checkbox">
+            <span class="cbox"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span class="label">Ich habe die <a href="#">Datenschutzerklaerung</a> gelesen<span class="req">*</span></span>
+          </label>
+
+          <!-- Pflicht-Bestaetigung Unternehmer-Eigenschaft -->
+          <label class="check check--b2b">
+            <input type="checkbox">
+            <span class="cbox"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span class="label">
+              Ich bestaetige, dass ich diesen Vertrag in Ausuebung meiner gewerblichen
+              oder selbststaendigen beruflichen Taetigkeit (§14 BGB) abschliesse und
+              nicht als Verbraucher. Mir ist bewusst, dass hierdurch
+              <strong>kein Widerrufsrecht</strong> nach §312g BGB besteht.<span class="req">*</span>
+              <span class="hint">LifeFlow360 ist ein Angebot ausschliesslich fuer gewerbliche und selbststaendige Nutzer.</span>
+            </span>
+          </label>
+
+          <!-- Newsletter (optional) -->
+          <label class="check">
+            <input type="checkbox">
+            <span class="cbox"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span class="label">Newsletter mit Produkt-Updates erhalten<span class="opt">(optional)</span></span>
+          </label>
+        </div>
+        <p class="check-footnote"><span class="req">*</span> Pflichtfeld</p>
+
+        <button class="cta">
+          <span>Weiter zur Zahlung</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </section>
+
+      <!-- ===== STEP 2: Zahlung ===== -->
+      <section class="step-panel">
+        <h2 class="panel-h">Bezahlung abschliessen</h2>
+
+        <div class="stepper">
+          <div class="step-dot done"><span>&check;</span></div>
+          <div class="step-line done"></div>
+          <div class="step-dot active"><span>2</span></div>
+        </div>
+        <div class="step-labels">
+          <span class="step-label">Daten</span>
+          <span class="step-label active">Zahlung</span>
+        </div>
+
+        <p class="panel-sub">Gib deine Zahlungsdaten ein und schliesse den Kauf ab.</p>
+
+        <div class="konto-readonly">
+          <div class="konto-label">Konto</div>
+          <div class="konto-row">
+            <span class="konto-email">user1@lifeflow360.app</span>
+            <button type="button" class="link-btn">&larr; Daten aendern</button>
+          </div>
+        </div>
+
+        <!-- SYNC-BANNER (nur Rabattcode) -->
+        <div class="sync-banner" id="syncBanner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M21 12a9 9 0 1 1-3.5-7.1" stroke-linecap="round"/>
+            <polyline points="21 4 21 10 15 10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong id="syncBannerTitle">Synchronisiert mit Paddle</strong>
+            <div class="sync-sub" id="syncBannerSub"></div>
+          </div>
+        </div>
+
+        <div class="sec-label">Zahlungsfeld</div>
+        <div class="paddle-wrap">
+          <div class="paddle-wrap-inner">
+            <em>Paddle-Inline-Iframe</em>
+            Karte, SEPA, PayPal — Rabatt ist hier bereits gesetzt ueber
+            <code>Paddle.Checkout.updateCheckout()</code>.
+          </div>
+        </div>
+
+        <p class="legal">
+          Abwicklung &amp; Rechnungsstellung durch <a href="#">Paddle.com</a>.
+          Automatische Verlaengerung, jederzeit im Customer-Portal kuendbar.
+        </p>
+      </section>
+    </div>
+
+  </div>
+
+<script>
+  // ====================================================================
+  // MOCKUP-LOGIK — vereinfacht (kein Mode, kein VAT)
+  // ====================================================================
+
+  const PRICE = {
+    netPerMonth: 14.95,
+    vatRate: 0.19,        // DE-USt fuer Brutto-Hinweis
+  };
+
+  const DISCOUNTS = {
+    'DAO20':     { type: 'percent', value: 20, label: '-20%' },
+    'LAUNCH50':  { type: 'percent', value: 50, label: '-50%' },
+    'PARTNER10': { type: 'amount',  value: 5,  label: '-5,00 EUR' },
+  };
+
+  const state = { discount: null };
+
+  function eur(v) { return v.toFixed(2).replace('.', ',') + ' EUR'; }
+  function $(id) { return document.getElementById(id); }
+  function setText(id, t) { const el = $(id); if (el) el.textContent = t; }
+  function setDisplay(id, d) { const el = $(id); if (el) el.style.display = d; }
+
+  function render() {
+    const net = PRICE.netPerMonth;
+    let discountAmount = 0;
+    if (state.discount) {
+      discountAmount = state.discount.type === 'percent'
+        ? net * (state.discount.value / 100)
+        : Math.min(state.discount.value, net);
+    }
+    const netAfterDiscount = Math.max(net - discountAmount, 0);
+    const vat = netAfterDiscount * PRICE.vatRate;
+    const gross = netAfterDiscount + vat;
+
+    setText('heroAmount', eur(netAfterDiscount));
+    setText('periodRecurring', eur(netAfterDiscount));
+    setText('grossHint', eur(gross) + ' brutto inkl. 19% USt. (DE)');
+
+    setText('lineNet', eur(net));
+    if (state.discount) {
+      setDisplay('lineDiscount', 'flex');
+      setText('lineDiscountLabel', '(' + state.discount.code + ')');
+      setText('lineDiscountValue', '-' + eur(discountAmount));
+    } else {
+      setDisplay('lineDiscount', 'none');
+    }
+    setText('lineTaxValue', eur(vat));
+    setText('totalToday', eur(gross));
+    setText('totalFuture', eur(gross));
+
+    // Sync-Banner
+    const banner = $('syncBanner');
+    if (state.discount) {
+      banner.classList.add('show');
+      setText('syncBannerTitle', state.discount.code + ' synchronisiert');
+      setText('syncBannerSub', 'Der Rabattcode wurde an das Paddle-Zahlungsfeld uebergeben.');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  // Rabattcode
+  const discountBtn = $('discountApplyBtn');
+  const discountInput = $('discountInput');
+  const discountField = $('discountField');
+  const discountFeedback = $('discountFeedback');
+
+  function setFeedback(el, text) {
+    el.classList.add('show');
+    el.innerHTML =
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>' +
+      '<span>' + text + '</span>';
+  }
+
+  discountBtn.addEventListener('click', () => {
+    if (state.discount) {
+      state.discount = null;
+      discountField.classList.remove('applied', 'invalid');
+      discountInput.value = ''; discountInput.disabled = false;
+      discountFeedback.classList.remove('show');
+      discountBtn.textContent = 'Anwenden';
+      discountBtn.classList.remove('remove');
+      render();
+      return;
+    }
+    const code = discountInput.value.trim().toUpperCase();
+    if (!code) {
+      discountField.classList.add('invalid');
+      setFeedback(discountFeedback, 'Bitte einen Code eingeben.');
+      return;
+    }
+    discountBtn.disabled = true;
+    discountBtn.innerHTML = '<span class="spinner-mini"></span>';
+    setTimeout(() => {
+      discountBtn.disabled = false;
+      discountBtn.textContent = 'Anwenden';
+      const hit = DISCOUNTS[code];
+      if (!hit) {
+        discountField.classList.remove('applied');
+        discountField.classList.add('invalid');
+        setFeedback(discountFeedback,
+          'Dieser Rabattcode ist Paddle nicht bekannt. Bitte Schreibweise pruefen.');
+        return;
+      }
+      state.discount = { code, ...hit };
+      discountField.classList.remove('invalid');
+      discountField.classList.add('applied');
+      discountInput.value = code; discountInput.disabled = true;
+      discountBtn.textContent = 'Entfernen';
+      discountBtn.classList.add('remove');
+      discountFeedback.classList.remove('show');
+      render();
+    }, 500);
+  });
+  discountInput.addEventListener('input', () => {
+    if (discountField.classList.contains('invalid')) {
+      discountField.classList.remove('invalid');
+      discountFeedback.classList.remove('show');
+    }
+  });
+
+  document.querySelectorAll('.check').forEach(label => {
+    const cb = label.querySelector('input[type="checkbox"]');
+    cb.addEventListener('change', () => label.classList.toggle('checked', cb.checked));
+  });
+
+  render();
+</script>
+</body>
+</html>

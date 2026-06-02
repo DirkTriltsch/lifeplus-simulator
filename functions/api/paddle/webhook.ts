@@ -6,6 +6,7 @@ import {
   getCheckoutIntentById,
   insertConsentLog,
   markCheckoutIntentConsumed,
+  setCheckoutIntentConsumedTransactionBySubscription,
   upsertUserByEmail,
 } from '../../_lib/db';
 import { verifyPaddleSignature } from '../../_lib/paddle-sig';
@@ -47,7 +48,12 @@ interface PaddleCustomerResponse {
 // customData-Schema, das wir aus dem Frontend reinreichen (siehe
 // checkoutInline.ts):
 //   brand_id, session_user_id?, checkout_email,
-//   consent: { agb, privacy, newsletter, withdrawal_waiver, version, timestamp }
+//   consent: { agb, privacy, newsletter, withdrawal_waiver, version, timestamp,
+//              b2b_confirmation, b2b_confirmation_version, displayed_hints_hash }
+//
+// Hinweis: agb/privacy lesen wir aus customData (Client-Wahrheit zum Klick-
+// zeitpunkt). B2B-Bestaetigung + IP + UA werden bevorzugt aus dem Server-
+// Intent gelesen — dort sind sie serverseitig erzwungen worden.
 interface CheckoutConsent {
   agb?: boolean;
   privacy?: boolean;
@@ -55,6 +61,9 @@ interface CheckoutConsent {
   withdrawal_waiver?: boolean;
   version?: string;
   timestamp?: string;
+  b2b_confirmation?: boolean;
+  b2b_confirmation_version?: string;
+  displayed_hints_hash?: string;
 }
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
@@ -260,6 +269,7 @@ async function upsertSubscription(
       sessionUserId:        identity.intent
         ? identity.intent.user_id
         : customDataSessionUserId(data.custom_data),
+      intent:               identity.intent,
     });
   }
 }
@@ -277,8 +287,11 @@ async function storeTransactionForSubscription(env: Env, data: PaddleEventData):
   }
 
   const subscriptionId = data.subscription_id;
-  const transactionId = data.id ?? data.transaction_id ?? data.transaction?.id ?? null;
+  const transactionId = eventTransactionId(data);
   if (!subscriptionId || !transactionId) return;
+
+  const identity = await resolveSubscriberIdentity(env, data, { requireTransactionMatch: true });
+  if (!identity.email) return;
 
   await env.DB.prepare(
     `UPDATE subscriptions
@@ -297,6 +310,12 @@ async function storeTransactionForSubscription(env: Env, data: PaddleEventData):
   )
     .bind(transactionId, subscriptionId)
     .run();
+
+  if (identity.intent) {
+    await markCheckoutIntentConsumed(env, identity.intent.id, nowMs(), subscriptionId, transactionId);
+  } else {
+    await setCheckoutIntentConsumedTransactionBySubscription(env, subscriptionId, transactionId);
+  }
 }
 
 async function fetchPaddleCustomerEmail(
@@ -341,7 +360,7 @@ async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<vo
     return;
   }
 
-  const identity = await resolveSubscriberIdentity(env, data);
+  const identity = await resolveSubscriberIdentity(env, data, { requireTransactionMatch: true });
   if (!identity.email) return;
 
   const checkoutEmail = identity.email;
@@ -354,7 +373,7 @@ async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<vo
   // Lifetime-style: valid_until=null = "forever".
   await writeEntitlement(env, user.id, 'lifetime', null, 'one_shot_purchase');
 
-  const transactionId = data.id ?? data.transaction_id ?? data.transaction?.id ?? null;
+  const transactionId = eventTransactionId(data);
 
   if (identity.intent) {
     await markCheckoutIntentConsumed(env, identity.intent.id, now, null, transactionId);
@@ -369,6 +388,7 @@ async function applyOneShotPurchase(env: Env, data: PaddleEventData): Promise<vo
       sessionUserId:  identity.intent
         ? identity.intent.user_id
         : customDataSessionUserId(data.custom_data),
+      intent:         identity.intent,
     });
   }
 }
@@ -443,6 +463,12 @@ function customDataIntentId(
   return typeof id === 'string' && id.length > 0 ? id : null;
 }
 
+function eventTransactionId(data: PaddleEventData): string | null {
+  if (data.transaction_id) return data.transaction_id;
+  if (data.transaction?.id) return data.transaction.id;
+  return data.id?.startsWith('txn_') ? data.id : null;
+}
+
 // Identitaetsregel (verstaerkt): Server-Intent ueber intent_id ist
 // authoritative. Wenn der Intent valide ist, gewinnt sein user_id +
 // checkout_email — selbst wenn customData.checkout_email manipuliert wurde.
@@ -453,6 +479,7 @@ function customDataIntentId(
 async function resolveSubscriberIdentity(
   env: Env,
   data: PaddleEventData,
+  options: { requireTransactionMatch?: boolean } = {},
 ): Promise<{
   email: string | null;
   userId: string | null;
@@ -462,6 +489,24 @@ async function resolveSubscriberIdentity(
   if (intentId) {
     const intent = await getCheckoutIntentById(env, intentId);
     if (intent && intent.brand_id === env.BRAND_ID) {
+      const transactionId = eventTransactionId(data);
+      if (intent.paddle_transaction_id) {
+        if (transactionId && transactionId !== intent.paddle_transaction_id) {
+          console.warn('webhook_intent_transaction_mismatch', {
+            intentId,
+            intentTransactionId: intent.paddle_transaction_id,
+            eventTransactionId:  transactionId,
+          });
+          return { email: null, userId: null, intent: null };
+        }
+      } else if (options.requireTransactionMatch) {
+        console.warn('webhook_intent_missing_transaction_id', { intentId, transactionId });
+        return { email: null, userId: null, intent: null };
+      }
+      if (options.requireTransactionMatch && !transactionId) {
+        console.warn('webhook_event_missing_transaction_id', { intentId });
+        return { email: null, userId: null, intent: null };
+      }
       // Falls customData.checkout_email mitgesendet wurde, MUSS sie zum
       // Server-Intent passen — sonst ist es ein Manipulationsversuch.
       const customDataEmail = customDataCheckoutEmail(data.custom_data);
@@ -520,6 +565,40 @@ interface MaybeInsertParams {
   checkoutEmail: string;
   customData: Record<string, unknown> | null | undefined;
   sessionUserId: string | null;
+  intent: CheckoutIntentRow | null;
+}
+
+// Liest B2B-Confirmation, IP und User-Agent bevorzugt aus dem Server-Intent
+// (dort serverseitig erzwungen) und faellt nur auf customData zurueck, wenn
+// kein Intent vorhanden ist (Legacy-Bestandsdaten).
+function resolveConsentAuditFields(
+  intent: CheckoutIntentRow | null,
+  consent: CheckoutConsent,
+): {
+  b2bConfirmation: boolean;
+  b2bConfirmationVersion: string | null;
+  displayedHintsHash: string | null;
+  requestIp: string | null;
+  userAgent: string | null;
+} {
+  if (intent) {
+    return {
+      // Wenn ein Intent vorliegt, hat der Server beim Anlegen sichergestellt,
+      // dass b2b_confirmation == true gewesen sein muss.
+      b2bConfirmation:        true,
+      b2bConfirmationVersion: intent.b2b_confirmation_version,
+      displayedHintsHash:     intent.displayed_hints_hash,
+      requestIp:              intent.ip_address,
+      userAgent:              intent.user_agent,
+    };
+  }
+  return {
+    b2bConfirmation:        consent.b2b_confirmation === true,
+    b2bConfirmationVersion: consent.b2b_confirmation_version ?? null,
+    displayedHintsHash:     consent.displayed_hints_hash ?? null,
+    requestIp:              null,
+    userAgent:              null,
+  };
 }
 
 async function maybeInsertConsentLogForSubscription(
@@ -532,6 +611,14 @@ async function maybeInsertConsentLogForSubscription(
     console.warn('webhook_consent_missing_or_invalid', {
       subscriptionId: params.subscriptionId,
       hasConsent:     consent !== null,
+    });
+    return;
+  }
+  const audit = resolveConsentAuditFields(params.intent, consent);
+  if (!audit.b2bConfirmation) {
+    console.warn('webhook_b2b_confirmation_missing', {
+      subscriptionId: params.subscriptionId,
+      hasIntent:      params.intent !== null,
     });
     return;
   }
@@ -550,8 +637,11 @@ async function maybeInsertConsentLogForSubscription(
     clientTimestampIso:       consent.timestamp ?? null,
     paddleSubscriptionId:     params.subscriptionId,
     paddleTransactionId:      null,
-    requestIp:                null,
-    userAgent:                null,
+    requestIp:                audit.requestIp,
+    userAgent:                audit.userAgent,
+    b2bConfirmation:          audit.b2bConfirmation,
+    b2bConfirmationVersion:   audit.b2bConfirmationVersion,
+    displayedHintsHash:       audit.displayedHintsHash,
   });
 }
 
@@ -565,6 +655,14 @@ async function maybeInsertConsentLogForTransaction(
     console.warn('webhook_oneshot_consent_missing', {
       transactionId: params.transactionId,
       hasConsent:    consent !== null,
+    });
+    return;
+  }
+  const audit = resolveConsentAuditFields(params.intent, consent);
+  if (!audit.b2bConfirmation) {
+    console.warn('webhook_b2b_confirmation_missing_oneshot', {
+      transactionId: params.transactionId,
+      hasIntent:     params.intent !== null,
     });
     return;
   }
@@ -583,8 +681,11 @@ async function maybeInsertConsentLogForTransaction(
     clientTimestampIso:       consent.timestamp ?? null,
     paddleSubscriptionId:     null,
     paddleTransactionId:      params.transactionId,
-    requestIp:                null,
-    userAgent:                null,
+    requestIp:                audit.requestIp,
+    userAgent:                audit.userAgent,
+    b2bConfirmation:          audit.b2bConfirmation,
+    b2bConfirmationVersion:   audit.b2bConfirmationVersion,
+    displayedHintsHash:       audit.displayedHintsHash,
   });
 }
 

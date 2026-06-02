@@ -25,3 +25,21 @@ LEFT JOIN entitlements e ON e.user_id = u.id
 LEFT JOIN subscriptions s ON s.user_id = u.id
 WHERE u.deleted_at IS NULL
 ORDER BY u.created_at DESC;
+
+
+-- B2B-Audit (Pro-Käufer mit B2B-Bestätigung + Rechnungsdaten)
+SELECT
+  u.email,
+  ci.company_name,
+  ci.country_code,
+  ci.vat_id,
+  ci.discount_code,
+  ci.b2b_confirmation_version,
+  datetime(cl.created_at / 1000, 'unixepoch') AS confirmed_at,
+  cl.paddle_transaction_id
+FROM users u
+JOIN checkout_intents ci ON ci.user_id = u.id
+LEFT JOIN consent_log cl
+  ON cl.checkout_user_id = u.id AND cl.b2b_confirmation = 1
+WHERE ci.paddle_transaction_id IS NOT NULL
+ORDER BY ci.created_at DESC;

@@ -19,7 +19,7 @@ pages_build_output_dir = "public"
 [vars]
 BRAND_ID = "lifeplus"
 APP_URL = "https://www.lifeflow360.app/app/"
-ALLOWED_ORIGINS = "https://www.lifeflow360.app"
+ALLOWED_ORIGINS = "https://www.lifeflow360.app,https://lifeflow360.app"
 COOKIE_DOMAIN = ".lifeflow360.app"
 PADDLE_ENV = "sandbox"
 # PADDLE_PRICE_MONTHLY, PADDLE_PRICE_HALFYEAR, PADDLE_PRICE_YEARLY:

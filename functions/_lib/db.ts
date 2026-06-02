@@ -189,7 +189,10 @@ export async function grantProEntitlementIfMissing(
 }
 
 // Phase 2-Review Fix — Server-seitige Checkout-Intents.
-// Lifecycle siehe migrations/0005_checkout_intents.sql.
+// Lifecycle siehe migrations/0005_checkout_intents.sql. B2B-Spalten
+// (company_name, street, postal_code, city, country_code, discount_code,
+// vat_id, b2b_confirmation_*, ip_address, user_agent, paddle_transaction_id)
+// kommen aus migrations/0007_checkout_intents_b2b.sql.
 export interface CheckoutIntentRow {
   id: string;
   user_id: string;
@@ -202,6 +205,18 @@ export interface CheckoutIntentRow {
   consumed_at: number | null;
   consumed_paddle_subscription_id: string | null;
   consumed_paddle_transaction_id: string | null;
+  company_name: string | null;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country_code: string | null;
+  discount_code: string | null;
+  vat_id: string | null;
+  b2b_confirmation_version: string | null;
+  displayed_hints_hash: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  paddle_transaction_id: string | null;
 }
 
 export async function createCheckoutIntent(
@@ -213,14 +228,30 @@ export async function createCheckoutIntent(
     plan: string;
     priceId: string;
     checkoutEmail: string;
+    companyName: string;
+    street: string;
+    postalCode: string;
+    city: string;
+    countryCode: string;
+    discountCode: string | null;
+    vatId: string | null;
+    b2bConfirmationVersion: string;
+    displayedHintsHash: string;
+    ipAddress: string | null;
+    userAgent: string | null;
     now: number;
     ttlMs: number;
   },
 ): Promise<void> {
   await env.DB.prepare(
     `INSERT INTO checkout_intents
-       (id, user_id, brand_id, plan, price_id, checkout_email, created_at, expires_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, user_id, brand_id, plan, price_id, checkout_email,
+        created_at, expires_at,
+        company_name, street, postal_code, city, country_code,
+        discount_code, vat_id,
+        b2b_confirmation_version, displayed_hints_hash,
+        ip_address, user_agent)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       params.id,
@@ -231,7 +262,32 @@ export async function createCheckoutIntent(
       params.checkoutEmail,
       params.now,
       params.now + params.ttlMs,
+      params.companyName,
+      params.street,
+      params.postalCode,
+      params.city,
+      params.countryCode,
+      params.discountCode,
+      params.vatId,
+      params.b2bConfirmationVersion,
+      params.displayedHintsHash,
+      params.ipAddress,
+      params.userAgent,
     )
+    .run();
+}
+
+// Setzt die Paddle-Transaction-ID auf einem bestehenden Intent (nachdem die
+// Paddle-API erfolgreich eine Transaction erzeugt hat).
+export async function setCheckoutIntentPaddleTransaction(
+  env: Env,
+  intentId: string,
+  paddleTransactionId: string,
+): Promise<void> {
+  await env.DB.prepare(
+    'UPDATE checkout_intents SET paddle_transaction_id = ? WHERE id = ?',
+  )
+    .bind(paddleTransactionId, intentId)
     .run();
 }
 
@@ -256,12 +312,26 @@ export async function markCheckoutIntentConsumed(
 ): Promise<void> {
   await env.DB.prepare(
     `UPDATE checkout_intents
-       SET consumed_at = ?,
+       SET consumed_at = COALESCE(consumed_at, ?),
            consumed_paddle_subscription_id = COALESCE(consumed_paddle_subscription_id, ?),
            consumed_paddle_transaction_id  = COALESCE(consumed_paddle_transaction_id, ?)
-     WHERE id = ? AND consumed_at IS NULL`,
+     WHERE id = ?`,
   )
     .bind(now, paddleSubscriptionId, paddleTransactionId, intentId)
+    .run();
+}
+
+export async function setCheckoutIntentConsumedTransactionBySubscription(
+  env: Env,
+  paddleSubscriptionId: string,
+  paddleTransactionId: string,
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE checkout_intents
+       SET consumed_paddle_transaction_id = COALESCE(consumed_paddle_transaction_id, ?)
+     WHERE consumed_paddle_subscription_id = ?`,
+  )
+    .bind(paddleTransactionId, paddleSubscriptionId)
     .run();
 }
 
@@ -366,6 +436,11 @@ export interface ConsentLogParams {
   paddleSubscriptionId?: string | null;
   requestIp?: string | null;
   userAgent?: string | null;
+  // B2B-Bestaetigungs-Audit (migrations/0008_consent_log_b2b.sql).
+  // Beim pro_checkout zwingend, beim free_signup darf b2bConfirmation false sein.
+  b2bConfirmation?: boolean;
+  b2bConfirmationVersion?: string | null;
+  displayedHintsHash?: string | null;
 }
 
 export async function insertConsentLog(
@@ -381,8 +456,10 @@ export async function insertConsentLog(
        accepted_withdrawal_waiver, newsletter_opt_in, document_version,
        client_timestamp_iso,
        paddle_transaction_id, paddle_subscription_id,
-       request_ip, user_agent, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       request_ip, user_agent,
+       b2b_confirmation, b2b_confirmation_version, displayed_hints_hash,
+       created_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       id(),
@@ -402,6 +479,9 @@ export async function insertConsentLog(
       params.paddleSubscriptionId ?? null,
       params.requestIp ?? null,
       params.userAgent ?? null,
+      params.b2bConfirmation ? 1 : 0,
+      params.b2bConfirmationVersion ?? null,
+      params.displayedHintsHash ?? null,
       now,
     )
     .run();

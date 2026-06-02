@@ -99,6 +99,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                   ? brand.appUrl
                   : tier.cta.url}
               class="price-cta"
+              data-free-signup={tier.id === 'free' ? 'true' : undefined}
             >
               {tier.cta.label}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -263,9 +264,23 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   // wenn der User nicht eingeloggt ist. Spart den Roundtrip ueber /checkout
   // mit anschliessendem login_required-Redirect.
   (async () => {
+    const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    const url = new URL(window.location.href);
+    const urlEmail = url.searchParams.get('email')?.trim().toLowerCase() ?? '';
+    const email = EMAIL_RX.test(urlEmail) && urlEmail.length <= 254 ? urlEmail : '';
+
+    function signupHref(params: Record<string, string>): string {
+      const qs = new URLSearchParams(params);
+      return `/signup.html?${qs.toString()}`;
+    }
+
     const root = document.querySelector<HTMLElement>('.ph');
     const apiBase = (root?.dataset.apiBase ?? '').replace(/\/$/, '');
     const apiUrl = (path: string): string => (apiBase ? apiBase + path : path);
+
+    document.querySelectorAll<HTMLAnchorElement>('a.price-cta[data-free-signup="true"]').forEach((link) => {
+      if (email) link.href = signupHref({ email });
+    });
 
     let authenticated = false;
     try {
@@ -283,7 +298,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       const plan = link.dataset.plan;
       if (!plan) return;
       const next = `/checkout/${plan}.html`;
-      link.href = `/signup.html?next=${encodeURIComponent(next)}`;
+      link.href = signupHref(email ? { next, email } : { next });
     });
   })();
 </script>
