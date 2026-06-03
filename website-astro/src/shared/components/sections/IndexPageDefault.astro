@@ -1,5 +1,6 @@
 ---
 import type { Brand } from '@shared/content-schemas/config';
+import B2BHeaderBanner from '@shared/components/checkout/B2BHeaderBanner.astro';
 
 interface Props { brand: Brand; source?: string; }
 const { brand, source } = Astro.props;
@@ -301,6 +302,7 @@ const ac = brand.accentColor;
   data-source={source}
 >
   <div class="wrap">
+    <B2BHeaderBanner siteName={brand.siteName} />
     <div class="pricing-grid">
       <div class="pricing-intro">
         <div class="sec-eyebrow">Preise</div>

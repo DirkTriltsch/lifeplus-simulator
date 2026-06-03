@@ -7,6 +7,7 @@
 // Phase 3.6: client-side /api/me-Check biegt anonyme Pro-Klicks auf
 // /signup?next=/checkout/{plan}.html um — spart einen Roundtrip.
 import type { Brand, PricingPage } from '@shared/content-schemas/config';
+import B2BHeaderBanner from '@shared/components/checkout/B2BHeaderBanner.astro';
 
 interface Props {
   brand: Brand;
@@ -22,6 +23,8 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   ? envApiBase
   : (brand.apiBaseUrl ?? '');
 ---
+
+<B2BHeaderBanner siteName={brand.siteName} />
 
 <!-- ===== Page hero ===== -->
 <section
