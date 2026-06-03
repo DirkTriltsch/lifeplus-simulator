@@ -62,9 +62,8 @@ export function initializePwaUpdates(): void {
 function isCriticalReturnFlowActive(): boolean {
   const url = new URL(window.location.href);
   const hasMagicLinkToken = url.searchParams.has('token');
-  const isCheckoutReturn = url.searchParams.get('checkout') === 'success';
 
-  if (!hasMagicLinkToken && !isCheckoutReturn) return false;
+  if (!hasMagicLinkToken) return false;
 
   const storageKey = 'pwa-critical-flow:first-seen';
   const now = Date.now();

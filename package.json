@@ -19,15 +19,19 @@
     "build:site:fitline": "npm --prefix website-astro run build:fitline",
     "build:site:eqology": "npm --prefix website-astro run build:eqology",
     "build:sites": "npm --prefix website-astro run build:all",
-    "build:webroot:lifeplus": "npm run build:site:lifeplus && npm run build:lifeplus && node scripts/build-webroot.mjs lifeplus",
+    "check:functions": "tsc -p functions/tsconfig.json",
+    "build:webroot:lifeplus": "npm run check:functions && npm run build:site:lifeplus && npm run build:lifeplus && node scripts/build-webroot.mjs lifeplus",
     "build:webroot:fitline": "npm run build:site:fitline && npm run build:fitline && node scripts/build-webroot.mjs fitline",
     "build:webroot:eqology": "npm run build:site:eqology && npm run build:eqology && node scripts/build-webroot.mjs eqology",
     "build:all": "npm run build:webroot:lifeplus && npm run build:webroot:fitline && npm run build:webroot:eqology",
-    "build": "npm run build:lifeplus",
+    "build": "npm run check:functions && npm run build:lifeplus",
+    "test:checkout-api": "playwright test -c playwright.api.config.ts",
+    "test:checkout-api:report": "playwright show-report playwright-report",
     "test": "vitest run"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260520.1",
+    "@playwright/test": "^1.60.0",
     "@types/d3-hierarchy": "^3.1.7",
     "@types/node": "^22.15.21",
     "@types/react": "^18.3.28",
@@ -39,6 +43,7 @@
     "typescript": "^5.9.3",
     "vite": "^5.4.21",
     "vite-plugin-pwa": "^0.20.5",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "wrangler": "^4.97.0"
   }
 }

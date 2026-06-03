@@ -189,13 +189,12 @@ export async function grantProEntitlementIfMissing(
 }
 
 // Phase 2-Review Fix — Server-seitige Checkout-Intents.
-// Lifecycle siehe migrations/0005_checkout_intents.sql. B2B-Spalten
-// (company_name, street, postal_code, city, country_code, discount_code,
-// vat_id, b2b_confirmation_*, ip_address, user_agent, paddle_transaction_id)
-// kommen aus migrations/0007_checkout_intents_b2b.sql.
+// Lifecycle siehe migrations/0005_checkout_intents.sql. B2B-Spalten kommen
+// aus 0007_checkout_intents_b2b.sql. v6.1 Gast-Checkout (user_id nullable)
+// kommt aus 0009_checkout_intents_guest.sql.
 export interface CheckoutIntentRow {
   id: string;
-  user_id: string;
+  user_id: string | null;                              // null bei Gast-Checkout
   brand_id: string;
   plan: string;
   price_id: string;
@@ -223,7 +222,7 @@ export async function createCheckoutIntent(
   env: Env,
   params: {
     id: string;
-    userId: string;
+    userId: string | null;                             // null bei Gast-Checkout
     brandId: string;
     plan: string;
     priceId: string;
@@ -274,6 +273,21 @@ export async function createCheckoutIntent(
       params.ipAddress,
       params.userAgent,
     )
+    .run();
+}
+
+// v6.1 Gast-Checkout: nach erfolgreichem Auto-Login im post-checkout setzen
+// wir die user_id auf dem Intent nach. Idempotent — ueberschreibt nur, wenn
+// noch NULL ist (verhindert Race mit Webhook).
+export async function setCheckoutIntentUserId(
+  env: Env,
+  intentId: string,
+  userId: string,
+): Promise<void> {
+  await env.DB.prepare(
+    'UPDATE checkout_intents SET user_id = ? WHERE id = ? AND user_id IS NULL',
+  )
+    .bind(userId, intentId)
     .run();
 }
 

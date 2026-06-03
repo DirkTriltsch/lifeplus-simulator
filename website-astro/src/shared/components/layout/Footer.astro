@@ -13,18 +13,26 @@ interface FooterLink {
 interface Props { brand: Brand; page?: FooterPage; }
 const { brand } = Astro.props;
 const year = new Date().getFullYear();
-const inferredPage = (Astro.url.pathname.split('/').pop() || 'index.html').replace('.html', '') as FooterPage;
-const page = Astro.props.page ?? (inferredPage || 'index');
+// inferredPage faellt fuer Sub-Verzeichnisse (z.B. /checkout/halfyear.html)
+// auf 'index' zurueck, weil 'halfyear' kein bekannter FooterPage-Key ist.
+const knownPages = new Set<FooterPage>([
+  'index','features','pricing','mein-konto','impressum','datenschutz','agb','widerruf',
+]);
+const inferredRaw = (Astro.url.pathname.split('/').pop() || 'index.html').replace('.html', '');
+const inferredPage: FooterPage = knownPages.has(inferredRaw as FooterPage)
+  ? (inferredRaw as FooterPage)
+  : 'index';
+const page = Astro.props.page ?? inferredPage;
 const baseLinks: Record<string, FooterLink> = {
-  home: { href: 'index.html', label: 'Startseite' },
-  account: { href: 'mein-konto.html', label: 'Mein Konto', account: true },
-  features: { href: 'features.html', label: 'Funktionen' },
-  pricing: { href: 'pricing.html', label: 'Preise' },
-  agb: { href: 'agb.html', label: 'AGB' },
-  widerruf: { href: 'widerruf.html', label: 'Widerruf' },
-  widerrufsbelehrung: { href: 'widerruf.html', label: 'Widerrufsbelehrung' },
-  impressum: { href: 'impressum.html', label: 'Impressum' },
-  datenschutz: { href: 'datenschutz.html', label: 'Datenschutz' },
+  home: { href: '/index.html', label: 'Startseite' },
+  account: { href: '/mein-konto.html', label: 'Mein Konto', account: true },
+  features: { href: '/features.html', label: 'Funktionen' },
+  pricing: { href: '/pricing.html', label: 'Preise' },
+  agb: { href: '/agb.html', label: 'AGB' },
+  widerruf: { href: '/widerruf.html', label: 'Widerruf' },
+  widerrufsbelehrung: { href: '/widerruf.html', label: 'Widerrufsbelehrung' },
+  impressum: { href: '/impressum.html', label: 'Impressum' },
+  datenschutz: { href: '/datenschutz.html', label: 'Datenschutz' },
   contact: { href: `mailto:${contact.email}`, label: 'Kontakt' },
 };
 const linksByPage: Record<FooterPage, FooterLink[]> = {

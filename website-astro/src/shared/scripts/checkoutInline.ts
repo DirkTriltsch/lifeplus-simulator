@@ -60,8 +60,20 @@ interface PaddleTotals {
   currency_code?: string;
 }
 
+interface ApiErrorResponse {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
+
 const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const VAT_RX = /^[A-Z]{2}[A-Z0-9]{8,12}$/;
+const EU_REVERSE_CHARGE_COUNTRIES = new Set([
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR',
+  'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE',
+  'SI', 'SK',
+]);
 const COMPANY_MIN = 2;
 
 // Field-IDs, die der Backend-Mapper kennt — wir hovern an die echten DOM-IDs.
@@ -178,6 +190,7 @@ export function setupCheckoutInline(): void {
   // Server validiert beim Erstellen der Paddle-Transaktion.
   let pendingDiscountCode: string | null = null;
   let pendingVatId: string | null = null;
+  let latestPreviewTotals: PaddleTotals | null = null;
 
   // Snapshot der Rechnungsdaten zum Zeitpunkt von "Weiter zur Zahlung",
   // damit Step 2 read-only die richtigen Werte zeigt.
@@ -210,13 +223,23 @@ export function setupCheckoutInline(): void {
   function hideBanner(): void {
     if (intentBanner) intentBanner.className = 'intent-banner';
   }
+  function apiErrorMessage(data: ApiErrorResponse | null, fallback: string): string {
+    const code = data?.error?.code ?? '';
+    if (code === 'transaction_not_paid') {
+      return 'Paddle hat die Zahlung noch nicht bestaetigt. Bitte warte einen Moment und versuche es erneut.';
+    }
+    if (code === 'paddle_unreachable') {
+      return 'Paddle konnte gerade nicht verifiziert werden. Bitte pruefe deine Zahlung in wenigen Sekunden erneut.';
+    }
+    if (code === 'missing_intent_or_transaction' || code === 'transaction_mismatch' || code === 'intent_not_found') {
+      return 'Die Checkout-Bestaetigung passt nicht zur aktuellen Zahlung. Bitte lade die Seite neu oder starte den Checkout erneut.';
+    }
+    return data?.error?.message ?? fallback;
+  }
   function placeholderInPaddleWrap(msg: string, kind: 'info' | 'warn' | 'error' = 'info'): void {
     paddleWrap!.innerHTML =
       '<div class="paddle-placeholder paddle-placeholder--' + kind + '">' +
       escapeHtml(msg) + '</div>';
-  }
-  function isLocalDevHost(): boolean {
-    return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
   }
   function selectedCountryLabel(): string {
     const opt = countrySelect!.options[countrySelect!.selectedIndex];
@@ -229,13 +252,21 @@ export function setupCheckoutInline(): void {
   function eur(value: number): string {
     return value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }).replace('€', 'EUR');
   }
+  function isReverseChargePreview(): boolean {
+    if (!pendingVatId) return false;
+    const country = currentCountryCode();
+    const vatCountry = pendingVatId.slice(0, 2);
+    return country === vatCountry && EU_REVERSE_CHARGE_COUNTRIES.has(country);
+  }
   function renderPaddleTotals(totals: PaddleTotals | null | undefined, code: string | null | undefined): void {
     if (!totals) return;
+    latestPreviewTotals = totals;
     const subtotal = minorToNumber(totals.subtotal);
     const discount = minorToNumber(totals.discount) ?? 0;
-    const tax      = minorToNumber(totals.tax);
-    const total    = minorToNumber(totals.total);
     const netAfterDiscount = subtotal !== null ? Math.max(0, subtotal - discount) : null;
+    const reverseCharge = isReverseChargePreview() && netAfterDiscount !== null;
+    const tax      = reverseCharge ? 0 : minorToNumber(totals.tax);
+    const total    = reverseCharge ? netAfterDiscount : minorToNumber(totals.total);
 
     if (lineNet && subtotal !== null) lineNet.textContent = eur(subtotal);
     if (lineDiscount && lineDiscountValue) {
@@ -245,14 +276,20 @@ export function setupCheckoutInline(): void {
       if (lineDiscountLabel) lineDiscountLabel.textContent = code ? '(' + code + ')' : '';
     }
     if (lineTaxValue && tax !== null) lineTaxValue.textContent = eur(tax);
-    if (lineTaxRate) lineTaxRate.textContent = tax === 0 ? '(Paddle: 0%)' : '(Paddle)';
+    if (lineTaxRate) {
+      lineTaxRate.textContent = reverseCharge
+        ? '(Reverse-Charge)'
+        : tax === 0 ? '(Paddle: 0%)' : '(Paddle)';
+    }
     if (totalToday && total !== null) totalToday.textContent = eur(total);
     if (totalFuture && total !== null) totalFuture.textContent = eur(total);
     if (heroAmount && netAfterDiscount !== null) heroAmount.textContent = eur(netAfterDiscount);
     if (periodRecurring && netAfterDiscount !== null) periodRecurring.textContent = eur(netAfterDiscount);
     if (heroTaxLabel) heroTaxLabel.textContent = tax === 0 ? 'netto' : 'zzgl. USt.';
     if (grossHint) grossHint.textContent = total !== null
-      ? 'Finaler Paddle-Betrag: ' + eur(total)
+      ? reverseCharge
+        ? 'Vorschau mit Reverse-Charge: ' + eur(total)
+        : 'Finaler Paddle-Betrag: ' + eur(total)
       : 'Finale Berechnung von Paddle synchronisiert.';
     if (previewHint) {
       previewHint.textContent = 'Finale Berechnung aus der Paddle-Transaktion. Zahlung und Rechnung laufen ueber Paddle.';
@@ -350,27 +387,59 @@ export function setupCheckoutInline(): void {
     placeholderInPaddleWrap('Paddle-Zahlungsfeld wird geladen ...');
   }
 
-  // ── checkout.completed → post-checkout ───────────────────────
+  // ── checkout.completed → post-checkout → Auto-Redirect zur App ───
+  // v6.1: post-checkout validiert die Zahlung server-seitig bei Paddle,
+  // legt User + Session an und gibt eine redirectUrl zurueck. Wir leiten
+  // den Browser direkt dorthin um — kein Magic-Link-Klick noetig.
   async function handleCheckoutCompleted(): Promise<void> {
     const email = activeIntentEmail || currentEmail();
+    let redirectUrl: string | null = null;
     let mailMessage = '';
+    let failureMessage: string | null = null;
     try {
       const res = await fetch(apiUrl('/api/billing/post-checkout'), {
         method:      'POST',
         credentials: 'include',
         headers:     { 'content-type': 'application/json' },
-        body:        JSON.stringify({ checkoutEmail: email }),
+        body:        JSON.stringify({
+          checkoutEmail: email,
+          intentId:      activeIntentId,
+          transactionId: activeTransactionId,
+        }),
       });
       if (res.ok) {
-        const data = (await res.json().catch(() => null)) as { message?: string } | null;
+        const data = (await res.json().catch(() => null)) as
+          | { message?: string; redirectUrl?: string } | null;
         mailMessage = data?.message ?? '';
+        redirectUrl = data?.redirectUrl ?? null;
+      } else {
+        console.warn('[checkout] post-checkout failed', res.status);
+        const data = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+        failureMessage = apiErrorMessage(
+          data,
+          'Die Zahlung wurde abgeschlossen, aber der Login konnte nicht automatisch eingerichtet werden. Bitte versuche es erneut oder nutze den Login-Link.',
+        );
       }
     } catch (err) {
       console.warn('[checkout] post-checkout unreachable:', err);
+      failureMessage =
+        'Die Zahlung wurde abgeschlossen, aber der Server ist gerade nicht erreichbar. Bitte pruefe deine Verbindung und versuche es erneut.';
+    }
+
+    // Erfolg: direkt zur App weiterleiten. Fallback: Success-View, damit der
+    // User wenigstens den Status sieht und auf Login-Link warten kann.
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+      return;
+    }
+    if (failureMessage) {
+      showBanner(failureMessage, 'error');
+      placeholderInPaddleWrap(failureMessage, 'error');
+      return;
     }
     if (successEmail) successEmail.textContent = email;
     if (successMail) {
-      successMail.textContent = 'Dein Pro-Zugang wird nach der Paddle-Bestaetigung aktiviert.';
+      successMail.textContent = 'Dein Pro-Zugang wird verarbeitet.';
       if (mailMessage) successMail.textContent += ' ' + mailMessage;
     }
     step1!.hidden = true;
@@ -441,7 +510,87 @@ export function setupCheckoutInline(): void {
   }
   function clearDiscountFb(): void { discountFeedback!.classList.remove('show'); }
 
-  function applyDiscount(): void {
+  // Live-Preview vom Server. Wird bei Discount-Anwenden und Land-Wechsel
+  // gefeuert, damit die linke Summary die echten Paddle-Totals zeigt.
+  async function fetchPricingPreview(opts: {
+    countryCode: string;
+    discountCode: string | null;
+  }): Promise<{
+    totals: PaddleTotals | null;
+    discountApplied: boolean;
+    discountError: string | null;
+    requestError: string | null;
+  }> {
+    try {
+      const res = await fetch(apiUrl('/api/billing/preview-pricing'), {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'content-type': 'application/json' },
+        body:        JSON.stringify({
+          plan,
+          countryCode:  opts.countryCode,
+          discountCode: opts.discountCode,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+        return {
+          totals: null,
+          discountApplied: false,
+          discountError: null,
+          requestError: apiErrorMessage(
+            data,
+            'Die Paddle-Preisvorschau ist gerade nicht erreichbar.',
+          ),
+        };
+      }
+      const data = (await res.json()) as {
+        totals?: PaddleTotals;
+        discountApplied?: boolean;
+        discountError?: string | null;
+      };
+      return {
+        totals:          data.totals ?? null,
+        discountApplied: data.discountApplied === true,
+        discountError:   data.discountError ?? null,
+        requestError:    null,
+      };
+    } catch (err) {
+      console.warn('[checkout] preview-pricing unreachable:', err);
+      return {
+        totals: null,
+        discountApplied: false,
+        discountError: null,
+        requestError: 'Die Paddle-Preisvorschau ist gerade nicht erreichbar.',
+      };
+    }
+  }
+
+  async function refreshPreviewFromServer(): Promise<boolean> {
+    const result = await fetchPricingPreview({
+      countryCode:  currentCountryCode(),
+      discountCode: pendingDiscountCode,
+    });
+    if (result.requestError) return false;
+    // Wenn Discount serverseitig nicht gefunden: Status zurueck auf "invalid"
+    if (pendingDiscountCode && result.discountError && !result.discountApplied) {
+      pendingDiscountCode = null;
+      discountField!.classList.remove('applied');
+      discountField!.classList.add('invalid');
+      discountInput!.disabled = false;
+      discountBtn!.textContent = 'Anwenden';
+      discountBtn!.classList.remove('remove');
+      setDiscountErr(result.discountError);
+    }
+    renderPaddleTotals(result.totals, pendingDiscountCode);
+    return true;
+  }
+
+  function currentCountryCode(): string {
+    return (countrySelect!.value || 'DE').toUpperCase();
+  }
+
+  async function applyDiscount(): Promise<void> {
     if (pendingDiscountCode) {
       pendingDiscountCode = null;
       discountField!.classList.remove('applied', 'invalid');
@@ -449,6 +598,7 @@ export function setupCheckoutInline(): void {
       clearDiscountFb();
       discountBtn!.textContent = 'Anwenden';
       discountBtn!.classList.remove('remove');
+      await refreshPreviewFromServer();
       return;
     }
     const code = discountInput!.value.trim().toUpperCase();
@@ -457,13 +607,37 @@ export function setupCheckoutInline(): void {
       setDiscountErr('Bitte einen Code eingeben.');
       return;
     }
+    // Optimistisch setzen, dann server-validieren. Wenn Paddle ablehnt,
+    // setzt refreshPreviewFromServer den Status zurueck und zeigt den
+    // Paddle-Fehler an.
     pendingDiscountCode = code;
+    discountInput!.value = code; discountInput!.disabled = true;
     discountField!.classList.remove('invalid');
     discountField!.classList.add('applied');
-    discountInput!.value = code; discountInput!.disabled = true;
-    discountBtn!.textContent = 'Entfernen';
-    discountBtn!.classList.add('remove');
+    discountBtn!.disabled = true;
+    discountBtn!.textContent = 'pruefe ...';
     clearDiscountFb();
+    const previewOk = await refreshPreviewFromServer();
+    discountBtn!.disabled = false;
+    if (!previewOk && pendingDiscountCode === code) {
+      pendingDiscountCode = null;
+      discountField!.classList.remove('applied');
+      discountField!.classList.add('invalid');
+      discountInput!.disabled = false;
+      discountBtn!.textContent = 'Anwenden';
+      discountBtn!.classList.remove('remove');
+      setDiscountErr('Rabattcode konnte gerade nicht bei Paddle geprueft werden. Bitte erneut versuchen.');
+      return;
+    }
+    // Wenn refreshPreviewFromServer den Discount zurueckgewiesen hat, sind
+    // wir wieder im invalid-State; sonst applied + "Entfernen".
+    if (discountField!.classList.contains('applied')) {
+      discountBtn!.textContent = 'Entfernen';
+      discountBtn!.classList.add('remove');
+    } else {
+      discountBtn!.textContent = 'Anwenden';
+      discountBtn!.classList.remove('remove');
+    }
   }
 
   // ── USt-IdNr (rechts) — nur Format-Check ────────────────────
@@ -488,17 +662,34 @@ export function setupCheckoutInline(): void {
       pendingVatId = null;
       vatInput!.classList.remove('invalid');
       setVatFeedback('hide');
+      renderPaddleTotals(latestPreviewTotals, pendingDiscountCode);
       return;
     }
     if (!VAT_RX.test(cleaned)) {
       pendingVatId = null;
       vatInput!.classList.add('invalid');
       setVatFeedback('error', 'Format ungueltig. Beispiel: AT123456789');
+      renderPaddleTotals(latestPreviewTotals, pendingDiscountCode);
       return;
     }
     pendingVatId = cleaned;
     vatInput!.classList.remove('invalid');
-    setVatFeedback('ok', 'Format OK. Paddle prueft VIES bei "Weiter zur Zahlung".');
+    const country = currentCountryCode();
+    const vatCountry = cleaned.slice(0, 2);
+    if (vatCountry !== 'DE' && country !== 'DE' && country === vatCountry) {
+      setVatFeedback('ok',
+        'Format OK. Linke Vorschau zeigt Reverse-Charge; Paddle prueft VIES endgueltig im Zahlungsfeld.');
+    } else if (vatCountry === 'DE' && country === 'DE') {
+      setVatFeedback('ok',
+        'Format OK. DE-Inland: USt wird regulaer berechnet.');
+    } else if (vatCountry !== country) {
+      setVatFeedback('ok',
+        'Format OK. Hinweis: USt-IdNr-Land ('+ vatCountry +') und Rechnungsland ('+ country +') stimmen nicht ueberein — Paddle kann VIES dann ablehnen.');
+    } else {
+      setVatFeedback('ok',
+        'Format OK. VIES-Pruefung und Steuer-Anwendung erfolgen erst im Zahlungsfeld.');
+    }
+    renderPaddleTotals(latestPreviewTotals, pendingDiscountCode);
   }
 
   // ── Intent erstellen ─────────────────────────────────────────
@@ -616,19 +807,6 @@ export function setupCheckoutInline(): void {
         nextBtn!.disabled = false;
         break;
       }
-      case 'login_required': {
-        if (isLocalDevHost()) {
-          showBanner(
-            'Keine lokale Session gefunden. Fuehre in der Browser-Konsole await fetch("/api/auth/dev-login", { method:"POST", credentials:"include", headers:{ "content-type":"application/json" }, body: JSON.stringify({ email: "' + currentEmail() + '" }) }).then(r => r.json()) aus, lade die Seite neu und versuche es erneut.',
-            'warn',
-          );
-          nextBtn!.disabled = false;
-          break;
-        }
-        const nextPath = '/checkout/' + plan + '.html';
-        window.location.href = '/signup.html?next=' + encodeURIComponent(nextPath);
-        break;
-      }
       case 'email_mismatch':
         showBanner('Diese E-Mail gehoert nicht zu deiner aktuellen Sitzung. Bitte verwende deine Konto-Email.', 'warn');
         nextBtn!.disabled = false;
@@ -657,12 +835,18 @@ export function setupCheckoutInline(): void {
   [companyInput, streetInput, zipInput, cityInput].forEach((el) =>
     el!.addEventListener('input', refreshGating),
   );
-  countrySelect.addEventListener('change', refreshGating);
+  countrySelect.addEventListener('change', () => {
+    refreshGating();
+    // Land beeinflusst sowohl Preview-Totals (Tax) als auch den
+    // Reverse-Charge-Hinweis am VAT-Feld.
+    if (pendingVatId) updateVatFromInput();
+    void refreshPreviewFromServer();
+  });
   vatInput.addEventListener('input', updateVatFromInput);
   [chkAgb, chkDse, chkB2B, chkNl].forEach((cb) =>
     cb!.addEventListener('change', refreshGating),
   );
-  discountBtn.addEventListener('click', applyDiscount);
+  discountBtn.addEventListener('click', () => void applyDiscount());
   discountInput.addEventListener('input', () => {
     if (discountField!.classList.contains('invalid')) {
       discountField!.classList.remove('invalid');
@@ -698,5 +882,8 @@ export function setupCheckoutInline(): void {
     if (initial) emailInput.value = initial;
     refreshEmailHint();
     refreshGating();
+    // Initialer Paddle-Preview, damit die Bestelluebersicht ab Sekunde 0 die
+    // echten Paddle-Werte fuer das Default-Land zeigt.
+    void refreshPreviewFromServer();
   })();
 }

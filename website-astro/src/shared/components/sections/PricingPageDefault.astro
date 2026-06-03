@@ -260,45 +260,30 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     });
   });
 
-  // Phase 3.6: Pro-CTAs (data-plan) gehen direkt auf /signup?next=...
-  // wenn der User nicht eingeloggt ist. Spart den Roundtrip ueber /checkout
-  // mit anschliessendem login_required-Redirect.
-  (async () => {
+  // Pro-CTAs gehen direkt auf /checkout/{plan}.html — kein Magic-Link-Detour
+  // mehr fuer zahlende Kunden (v6.1 Gast-Checkout). Pflicht-Email +
+  // Rechnungsdaten werden im Checkout selbst eingegeben; Account-Anlage
+  // erfolgt im post-checkout nach Paddle-Verifikation.
+  //
+  // Free-Signup-CTAs ([data-free-signup]) bekommen optional ?email=... aus
+  // der URL vorbefuellt — der Free-Plan-Flow bleibt unveraendert.
+  (() => {
     const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
     const url = new URL(window.location.href);
     const urlEmail = url.searchParams.get('email')?.trim().toLowerCase() ?? '';
     const email = EMAIL_RX.test(urlEmail) && urlEmail.length <= 254 ? urlEmail : '';
-
-    function signupHref(params: Record<string, string>): string {
-      const qs = new URLSearchParams(params);
-      return `/signup.html?${qs.toString()}`;
-    }
-
-    const root = document.querySelector<HTMLElement>('.ph');
-    const apiBase = (root?.dataset.apiBase ?? '').replace(/\/$/, '');
-    const apiUrl = (path: string): string => (apiBase ? apiBase + path : path);
+    if (!email) return;
 
     document.querySelectorAll<HTMLAnchorElement>('a.price-cta[data-free-signup="true"]').forEach((link) => {
-      if (email) link.href = signupHref({ email });
+      const qs = new URLSearchParams({ email });
+      link.href = `/signup.html?${qs.toString()}`;
     });
-
-    let authenticated = false;
-    try {
-      const res = await fetch(apiUrl('/api/me'), { credentials: 'include' });
-      if (res.ok) {
-        const me = (await res.json()) as { authenticated?: boolean };
-        authenticated = me.authenticated === true;
-      }
-    } catch {
-      /* ignore: bei API-down bleibt default → /checkout-Roundtrip */
-    }
-    if (authenticated) return;
 
     document.querySelectorAll<HTMLAnchorElement>('a.price-cta[data-plan]').forEach((link) => {
       const plan = link.dataset.plan;
       if (!plan) return;
-      const next = `/checkout/${plan}.html`;
-      link.href = signupHref(email ? { next, email } : { next });
+      const qs = new URLSearchParams({ email });
+      link.href = `/checkout/${plan}.html?${qs.toString()}`;
     });
   })();
 </script>

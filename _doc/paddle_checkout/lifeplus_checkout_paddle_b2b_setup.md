@@ -23,7 +23,8 @@ Bestaetigung + sauberes Audit-Logging.
 | v3 | B2B-only-Pivot (kein USt-IdNr, kein Toggle) | abgeloest |
 | v4 | + Firmenname + USt-IdNr fuer Reverse-Charge | abgeloest |
 | v5 | + Land-Dropdown + Wizard + Step-2-Lock | abgeloest |
-| **v6** | **+ Vollstaendige Adresse + Server-side Paddle-Transaction** | **aktiv & implementiert** |
+| v6 | + Vollstaendige Adresse + Server-side Paddle-Transaction | abgeloest |
+| **v6.1** | **+ Gast-Checkout: kein Magic-Link-Detour vor Kauf, Auto-Login nach Paddle-Verify** | **aktiv** |
 
 ### Schluessel-Entscheidungen
 - **B2B-only-Shop**, soft-Approach "informieren, nicht ausschliessen".
@@ -35,6 +36,13 @@ Bestaetigung + sauberes Audit-Logging.
   Customer + Address + Business + Transaction, gibt `transactionId` an
   Client. Client oeffnet `Paddle.Checkout.open({ transactionId })`.
 - **Echter Wizard mit Step-2-Lock**.
+- **v6.1 — Gast-Checkout**: Pricing-CTA geht **direkt** auf `/checkout/{plan}.html`,
+  kein Magic-Link-Detour vor dem Kauf. `checkout-intent` akzeptiert anonyme
+  POSTs; `checkout_intents.user_id` ist nullable. Nach Paddle-Bezahlung
+  validiert `post-checkout` die Transaktion via Paddle-API (paranoid +
+  korrekt), legt User + Session an und liefert eine `redirectUrl` zurueck —
+  Client springt sofort in die App. Magic-Link wird parallel als Mail
+  versendet (Cross-Device-Comfort), ist aber kein Pflicht-Schritt mehr.
 
 ## 3. Implementierungs-Status
 
@@ -71,21 +79,59 @@ Bestaetigung + sauberes Audit-Logging.
   empfaengt `transactionId`, oeffnet `Paddle.Checkout.open({ transactionId })`.
   Bei Paddle-Fehlern: Banner mit Detail + Fokus auf das richtige Feld.
 
+### v6.1 (Gast-Checkout) — Aenderungen
+- [x] `migrations/0009_checkout_intents_guest.sql` — user_id nullable
+- [x] `functions/_lib/db.ts` — `CheckoutIntentRow.user_id`, `createCheckoutIntent` userId nullable + neue Helper `setCheckoutIntentUserId`
+- [x] `functions/_lib/paddle.ts` — `paddleGetTransaction` fuer Post-Checkout-Verifizierung
+- [x] `functions/api/billing/checkout-intent.ts` — Session optional, Gast-Checkout, kein `login_required` mehr
+- [x] `functions/api/billing/post-checkout.ts` — komplett umgebaut:
+  validiert Intent + Transaction-Match, ruft Paddle-API zur Status-Pruefung,
+  legt User + Session an, liefert `redirectUrl`. Magic-Link wird parallel
+  als Cross-Device-Mail verschickt.
+- [x] `website-astro/src/shared/components/sections/PricingPageDefault.astro`
+  — JS-CTA-Rewrite raus, Pro-Plan-Links bleiben direkt auf `/checkout/{plan}.html`
+- [x] `website-astro/src/shared/scripts/checkoutInline.ts` —
+  `handleCheckoutCompleted` redirected zu `redirectUrl`; `login_required`-Case raus
+
+### v6.1 — Live-Preview-Fix (Bug 1+2)
+- [x] `functions/_lib/paddle.ts` — `paddlePricePreview` Helper fuer
+  serverseitigen `POST /pricing-preview`-Call. Plus erweitertes Error-Reporting:
+  `PaddleApiError` traegt jetzt `path` + `rawBody`, `paddleRequest` loggt
+  jeden Fehler mit `console.warn('paddle_request_failed', ...)`.
+- [x] `functions/api/billing/preview-pricing.ts` (neu) — endpoint, ruft
+  `paddlePricePreview` mit `priceId + countryCode + discountId`. Bei
+  unbekanntem Discount: liefert Preview ohne Discount zurueck + spezifische
+  Fehlermeldung.
+- [x] `functions/api/billing/checkout-intent.ts` — bessere Paddle-Error-
+  Anzeige: User sieht jetzt `${err.detail} (Paddle ${status} auf ${path})`,
+  damit Debugging ohne Cloudflare-Logs moeglich ist.
+- [x] `website-astro/src/shared/scripts/checkoutInline.ts` —
+  `fetchPricingPreview` + `refreshPreviewFromServer` rufen den Endpoint bei
+  Discount-Apply, Land-Wechsel und Page-Load. `renderPaddleTotals`
+  rendert die Live-Werte links. VAT-Hinweis zeigt je nach Land den
+  Reverse-Charge-Ausblick.
+
+Limitation Live-Preview: Reverse-Charge ist im Pricing-Preview von Paddle
+nicht abbildbar (kein inline business). Der echte Reverse-Charge-Effekt wird
+erst im Step 2 nach Transaction-Create sichtbar. Frontend zeigt das ehrlich
+als Hinweistext am VAT-Feld.
+
 ### Noch offen
-- [ ] Migrations lokal anwenden (`wrangler d1 execute`)
-- [ ] PADDLE_API_KEY als Cloudflare-Secret setzen (Permission
-  `transactions:write`, `customers:write`, `discounts:read`)
-- [ ] Sandbox-Test: 5 Szenarien (siehe Abschnitt 7)
+- [ ] Migrations lokal anwenden (`wrangler d1 execute`) — 0007, 0008, 0009
+- [ ] Sandbox-Test: alle Szenarien plus Gast-Checkout-Path
+- [ ] Optional: kleines „Schon ein Konto? Einloggen"-Link unter Email-Feld
 - [ ] Pricing-Page Refactor auf Netto-Preise + B2B-Hinweise
 - [ ] Header/Footer-B2B-Hinweise ueber alle Brand-Pages
 - [ ] AGB-B2B-Refactor (extern, Anwalt)
 - [ ] Brand-Rollout (FitFlow360 / EqoFlow360)
 
-## 4. Architektur — Datenfluss
+## 4. Architektur — Datenfluss (v6.1 Gast-Checkout)
 
 ```
-User auf Step 1
-  ├─ Email/Firma/Strasse/PLZ/Ort/Land/(VAT) eingeben
+Pricing-CTA "6 Monate starten"
+  └─ direkt nach /checkout/halfyear.html, kein Magic-Link-Detour
+
+User auf Step 1 (kann eingeloggt oder Gast sein)
   ├─ Rabattcode "Anwenden" → speichern (Format-Check), keine Server-Call
   ├─ USt-IdNr input → Format-Check, speichern
   └─ "Weiter zur Zahlung":
@@ -114,14 +160,36 @@ Client (Step 2)
   ├─ Paddle.Checkout.open({ transactionId: 'txn_...' })
   └─ User zahlt im Iframe
 
-Webhook (checkout.completed)
+Client (Paddle iframe → checkout.completed)
+  ├─ POST /api/billing/post-checkout {checkoutEmail, intentId, transactionId}
+  ├─ Server validiert intent + Transaction-Match
+  ├─ Paddle GET /transactions/{id} → status muss 'paid'/'completed'/'billed' sein
+  ├─ upsertUserByEmail → User (neu oder bestehend)
+  ├─ setCheckoutIntentUserId → Intent.user_id wird gesetzt (idempotent)
+  ├─ createSessionForNewDevice + Set-Cookie
+  ├─ Magic-Link-Mail parallel (Best-Effort, Cross-Device)
+  └─ Response {ok, redirectUrl: '/app/?checkout=success'}
+       └─ Client: window.location.href = redirectUrl  →  App ist offen
+
+Webhook (subscription.created / transaction.paid, asynchron)
   ├─ resolveSubscriberIdentity → Intent gefunden via custom_data.intent_id
+  ├─ TX-ID-Match-Check gegen intent.paddle_transaction_id
+  ├─ User per intent.user_id ODER fallback upsertUserByEmail
   ├─ markCheckoutIntentConsumed
   ├─ maybeInsertConsentLogForSubscription:
   │   - liest b2b_confirmation_version, displayed_hints_hash, IP, UA aus Intent
   │   - persistiert ins consent_log mit b2b_confirmation = true
   └─ recomputeEntitlement → Pro freischalten
 ```
+
+### Race-Conditions zwischen post-checkout und Webhook
+- post-checkout legt User + Session sofort an (synchron).
+- Webhook kommt asynchron, kann vor oder nach post-checkout eintreffen.
+- Beide Pfade nutzen `upsertUserByEmail` → derselbe User wird gefunden.
+- `setCheckoutIntentUserId` hat `WHERE user_id IS NULL` → idempotent.
+- `markCheckoutIntentConsumed` nutzt `COALESCE(consumed_at, ?)` → idempotent.
+- Folge: User sieht App sofort, Pro-Entitlement greift ein paar Sekunden
+  spaeter (App muss `/api/me` pollen bis access_level === 'pro').
 
 ## 5. Paddle-API — Details
 

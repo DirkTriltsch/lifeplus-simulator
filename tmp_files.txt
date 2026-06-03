@@ -1,0 +1,38 @@
+commit 1400421857b061188d85ccb34330919091c461fb
+Author: DirkTriltsch <mail@triltsch-online.de>
+Date:   Tue Jun 2 23:52:30 2026 +0200
+
+    rebuild of checkout flow and content
+
+M	Cloudflare-Datenbank-Abfragen.md
+A	_doc/paddle_checkout/lifeplus_checkout_legal_review_B2B_only.md
+A	_doc/paddle_checkout/lifeplus_checkout_option_a_mockup.html
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_setup.md
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_v1.html
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_v2.html
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_v3.html
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_v4.html
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_v5.html
+A	_doc/paddle_checkout/lifeplus_checkout_paddle_b2b_v6.html
+A	_doc/sketches/Checkout business.png
+A	_doc/sketches/Checkout private.png
+A	_doc/sketches/Checkout_Bereich.pptx
+A	backup-pre-0007.sql
+M	functions/_lib/db.ts
+A	functions/_lib/paddle.ts
+M	functions/_middleware.ts
+A	functions/api/billing/cancel-checkout-intent.ts
+M	functions/api/billing/checkout-intent.ts
+M	functions/api/paddle/webhook.ts
+A	migrations/0007_checkout_intents_b2b.sql
+A	migrations/0008_consent_log_b2b.sql
+M	scripts/delete-dao-user.ps1
+R068	simulator-app/public/.htaccess	website-astro/src/brands/eqology/public/.htaccess
+A	website-astro/src/brands/fitline/public/.htaccess
+A	website-astro/src/brands/lifeplus/public/.htaccess
+A	website-astro/src/shared/components/checkout/B2BHeaderBanner.astro
+M	website-astro/src/shared/components/sections/CheckoutPage.astro
+M	website-astro/src/shared/components/sections/PricingPageDefault.astro
+M	website-astro/src/shared/scripts/checkoutInline.ts
+M	website-astro/src/shared/scripts/loginInline.ts
+M	wrangler.toml

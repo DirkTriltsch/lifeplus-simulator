@@ -69,7 +69,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       <p class="sent-hint">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>
       <button class="resend-btn" id="loginResendBtn">Erneut senden</button>
       <p class="resend-status" id="loginResendStatus" aria-live="polite"></p>
-      <a href="pricing.html" class="sent-plan-link">Noch keinen Zugang? Jetzt Plan auswaehlen</a>
+      <a href="/pricing.html" class="sent-plan-link">Noch keinen Zugang? Jetzt Plan auswaehlen</a>
     </div>
 
     <div class="sent" id="loginNotFoundView" hidden>
@@ -81,7 +81,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       </div>
       <h2>Kein Account gefunden</h2>
       <p>Fuer diese E-Mail-Adresse gibt es noch keinen aktiven Account.</p>
-      <a href="pricing.html" class="cta-link">Jetzt Plan auswaehlen</a>
+      <a href="/pricing.html" class="cta-link">Jetzt Plan auswaehlen</a>
       <button class="link-btn" id="loginTryAgainBtn" type="button">Andere E-Mail verwenden</button>
     </div>
   </div>

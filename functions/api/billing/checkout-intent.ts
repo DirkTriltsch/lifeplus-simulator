@@ -173,65 +173,69 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return error(400, 'missing_required_consent');
   }
 
-  // 6. Session zwingend
+  // 6. Session optional (v6.1 Gast-Checkout). Wenn Session da ist, nutzen
+  //    wir die userId fuer Vor-Verknuepfung und pruefen aktive Abos. Wenn
+  //    nicht, laeuft der Intent als Gast → userId bleibt NULL und der
+  //    Auto-Login im post-checkout legt Konto + Session an.
   const cookies = parseCookies(request.headers.get('cookie'));
   const token = cookies[SESSION_COOKIE];
-  if (!token) {
-    return json({ action: 'login_required', checkoutEmail, brandId: env.BRAND_ID });
-  }
-  const ctx = await loadSessionFromToken(env, token);
-  if (!ctx) {
-    return json({ action: 'login_required', checkoutEmail, brandId: env.BRAND_ID });
+  const ctx = token ? await loadSessionFromToken(env, token) : null;
+
+  let sessionUserId: string | null = null;
+  if (ctx) {
+    sessionUserId = ctx.user.id;
+
+    // Wenn eingeloggter User die fremde Email kauft → blockieren (Anti-Misuse
+    // fuer eingeloggte Kunden). Gast-Checkouter koennen jede Email tippen
+    // — das ist ihr eigenes Risiko.
+    const sessionEmail = ctx.user.email.toLowerCase();
+    if (sessionEmail !== checkoutEmail) {
+      return json({
+        action: 'email_mismatch',
+        checkoutEmail,
+        sessionUserId,
+        brandId: env.BRAND_ID,
+      });
+    }
+
+    // Aktive bezahlte Sub → Portal-Redirect
+    const hasOpenSub = await env.DB.prepare(
+      `SELECT id, status FROM subscriptions
+         WHERE user_id = ? AND status IN ('active', 'trialing', 'past_due')
+         LIMIT 1`,
+    )
+      .bind(ctx.user.id)
+      .first<{ id: string; status: string }>();
+    if (hasOpenSub) {
+      return json({
+        action: 'manage_subscription',
+        priceId, checkoutEmail, sessionUserId, brandId: env.BRAND_ID,
+      });
+    }
+
+    // Aktives One-Shot → already_paid
+    const entitlement = await getEntitlementForBrand(env, ctx.user.id, env.BRAND_ID);
+    if (
+      entitlement &&
+      isEntitlementActive(entitlement, nowMs()) &&
+      entitlement.source === 'one_shot_purchase'
+    ) {
+      return json({
+        action: 'already_paid',
+        priceId, checkoutEmail, sessionUserId, brandId: env.BRAND_ID,
+      });
+    }
   }
 
-  // 7. Email-Match Pflicht
-  const sessionEmail = ctx.user.email.toLowerCase();
-  if (sessionEmail !== checkoutEmail) {
-    return json({
-      action: 'email_mismatch',
-      checkoutEmail,
-      sessionUserId: ctx.user.id,
-      brandId: env.BRAND_ID,
-    });
-  }
-
-  // 8. Aktive bezahlte Sub → Portal
-  const hasOpenSub = await env.DB.prepare(
-    `SELECT id, status FROM subscriptions
-       WHERE user_id = ? AND status IN ('active', 'trialing', 'past_due')
-       LIMIT 1`,
-  )
-    .bind(ctx.user.id)
-    .first<{ id: string; status: string }>();
-  if (hasOpenSub) {
-    return json({
-      action: 'manage_subscription',
-      priceId, checkoutEmail, sessionUserId: ctx.user.id, brandId: env.BRAND_ID,
-    });
-  }
-
-  // 9. Aktives One-Shot → already_paid
-  const entitlement = await getEntitlementForBrand(env, ctx.user.id, env.BRAND_ID);
-  if (
-    entitlement &&
-    isEntitlementActive(entitlement, nowMs()) &&
-    entitlement.source === 'one_shot_purchase'
-  ) {
-    return json({
-      action: 'already_paid',
-      priceId, checkoutEmail, sessionUserId: ctx.user.id, brandId: env.BRAND_ID,
-    });
-  }
-
-  // 10. Intent anlegen — VOR Paddle-API, damit wir die intent_id schon haben
-  //     fuer customData (Webhook-Verifizierung).
+  // 7. Intent anlegen — VOR Paddle-API, damit wir die intent_id schon haben
+  //    fuer customData (Webhook-Verifizierung).
   const intentId = randomId();
   const now = nowMs();
   const ipAddress = clientIp(request);
   const userAgent = request.headers.get('user-agent');
   await createCheckoutIntent(env, {
     id:                       intentId,
-    userId:                   ctx.user.id,
+    userId:                   sessionUserId,
     brandId:                  env.BRAND_ID,
     plan,
     priceId,
@@ -292,15 +296,27 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     if (err instanceof PaddleApiError) {
       const mapped = mapPaddleErrorToField(err);
       console.warn('paddle_transaction_create_failed', {
-        intentId, code: err.code, detail: err.detail, status: err.status,
+        intentId,
+        path:       err.path,
+        status:     err.status,
+        code:       err.code,
+        detail:     err.detail,
+        fieldErrors: err.fieldErrors,
+        body:       err.rawBody,
       });
+      const userDetail = err.fieldErrors.length > 0
+        ? mapped.message
+        : `${err.detail} (Paddle ${err.status} auf ${err.path})` +
+          (err.rawBody ? ` — ${err.rawBody}` : '');
       return json({
         action:      'paddle_error',
         errorCode:   err.code,
-        errorDetail: mapped.message,
+        errorDetail: userDetail,
         errorField:  mapped.field,
+        errorPath:   err.path,
+        errorBody:   err.rawBody,
         brandId:     env.BRAND_ID,
-      }, 200);
+      });
     }
     console.error('paddle_transaction_create_unexpected', err);
     return json({
@@ -309,7 +325,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       errorDetail: 'Unerwarteter Fehler bei der Paddle-Anbindung. Bitte erneut versuchen.',
       errorField:  null,
       brandId:     env.BRAND_ID,
-    }, 200);
+    });
   }
 
   return json({
@@ -320,7 +336,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     intentId,
     priceId,
     checkoutEmail,
-    sessionUserId: ctx.user.id,
+    sessionUserId,
     brandId:       env.BRAND_ID,
   });
 };

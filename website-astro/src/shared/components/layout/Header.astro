@@ -9,8 +9,8 @@ const { brand, active } = Astro.props;
 const { lockup } = brand;
 const cls = (k: Props['active']) => (active === k ? 'active' : undefined);
 const isHome = active === 'home';
-const conceptHref = isHome ? '#kernbotschaft' : 'index.html#kernbotschaft';
-const faqHref = isHome ? '#faq' : 'index.html#faq';
+const conceptHref = isHome ? '#kernbotschaft' : '/index.html#kernbotschaft';
+const faqHref = isHome ? '#faq' : '/index.html#faq';
 ---
 <header
   class="site-header site-header--dark"
@@ -19,7 +19,7 @@ const faqHref = isHome ? '#faq' : 'index.html#faq';
   data-source={`brands/${brand.id}/brand.yaml`}
 >
   <div class="container">
-    <a class="lockup lockup--header" href="index.html" aria-label={brand.siteName}>
+    <a class="lockup lockup--header" href="/index.html" aria-label={brand.siteName}>
       <span class="lockup-mark">
         <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect width="256" height="256" rx="28" fill={lockup.markFill} />
@@ -61,11 +61,11 @@ const faqHref = isHome ? '#faq' : 'index.html#faq';
     </a>
     <nav class="site-nav-links">
       <a href={conceptHref} class={cls('home')}>Konzept</a>
-      <a href="features.html" class={cls('features')}>Funktionen</a>
-      <a href="pricing.html" class={cls('pricing')}>Preise</a>
+      <a href="/features.html" class={cls('features')}>Funktionen</a>
+      <a href="/pricing.html" class={cls('pricing')}>Preise</a>
       <a href={faqHref} class={cls('faq')}>FAQ</a>
       <a
-        href="mein-konto.html"
+        href="/mein-konto.html"
         class={`site-account js-account-link ${cls('account') ?? ''}`.trim()}
         aria-label="Mein Konto"
         title="Mein Konto"

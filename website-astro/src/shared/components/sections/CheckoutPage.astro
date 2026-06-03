@@ -311,7 +311,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                    stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
             </span>
             <span class="label">
-              Ich akzeptiere die <a href="agb.html" target="_blank">AGB</a><span class="req">*</span>
+              Ich akzeptiere die <a href="/agb.html" target="_blank">AGB</a><span class="req">*</span>
             </span>
           </label>
 
@@ -322,7 +322,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                    stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
             </span>
             <span class="label">
-              Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklaerung</a> gelesen<span class="req">*</span>
+              Ich habe die <a href="/datenschutz.html" target="_blank">Datenschutzerklaerung</a> gelesen<span class="req">*</span>
             </span>
           </label>
 
@@ -448,6 +448,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         Konto-E-Mail: <strong id="successEmail"></strong><br/>
         <span id="successMail" class="success-mail-status"></span>
       </p>
+      <a href={brand.appUrl} class="success-app-link">Jetzt App oeffnen</a>
       <p class="success-hint">Du kannst diese Seite geoeffnet lassen oder spaeter in die App wechseln.</p>
     </section>
   </div>
@@ -994,6 +995,28 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     border: 1.5px solid var(--brand);
   }
   .success-mail-status { font-size: 13px; color: #4A5C53; }
+  .success-app-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    border-radius: 10px;
+    background: var(--cta);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--cta) 40%, transparent);
+    transition: background .12s, transform .08s, box-shadow .12s;
+  }
+  .success-app-link:hover {
+    background: var(--cta-dark);
+    text-decoration: none;
+  }
+  .success-app-link:active { transform: translateY(1px); }
   .success-hint { font-size: 12px; color: #7A8983; margin-top: 18px; }
 
   .legal {
