@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { QuarterResult } from '@mlm/simulator-core';
+import type {
+  PersonTreeSnapshot,
+  QuarterResult,
+  TreeCompensationResult,
+} from '@mlm/simulator-core';
 import {
   buildLegsFromPersons,
   buildSunburstTree,
@@ -92,6 +96,61 @@ describe('sunburst-node', () => {
     expect(findLeg(tree, 1)?.id).toBe('m-1');
     expect(findNodeById(tree, 'm-2')?.parentId).toBe('m-1');
   });
+
+  it('weist Root-eigene Shopper als virtuellen Eintrag aus', () => {
+    const snapshot = createRootShopperSnapshot();
+    const compensation = createRootShopperCompensation();
+
+    const legs = buildLegsFromPersons({
+      snapshot,
+      compensation,
+      memberMonthlyVolume: 100,
+      shopperMonthlyVolume: 100,
+    });
+    const tree = buildSunburstTreeFromPersons({
+      snapshot,
+      compensation,
+      memberMonthlyVolume: 100,
+      shopperMonthlyVolume: 100,
+    });
+
+    const ownShoppers = legs.find((leg) => leg.isOwnShoppers);
+    expect(ownShoppers?.nodeId).toBe('own-shoppers');
+    expect(ownShoppers?.label).toBe('Eigene Shopper');
+    expect(ownShoppers?.eur).toBe(50);
+    expect(ownShoppers?.qgv).toBe(200);
+    expect(legs.reduce((sum, leg) => sum + leg.eur, 0)).toBe(80);
+
+    const ownShopperNode = findNodeById(tree, 'own-shoppers');
+    expect(ownShopperNode?.provisionEUR).toBe(50);
+    expect(tree.provisionEUR).toBe(80);
+  });
+
+  it('haelt inaktive direkte Root-Beine sichtbar, wenn darunter aktive Struktur liegt', () => {
+    const snapshot = createInactiveDirectLegSnapshot();
+    const compensation = createInactiveDirectLegCompensation();
+
+    const legs = buildLegsFromPersons({
+      snapshot,
+      compensation,
+      memberMonthlyVolume: 100,
+      shopperMonthlyVolume: 100,
+    });
+    const tree = buildSunburstTreeFromPersons({
+      snapshot,
+      compensation,
+      memberMonthlyVolume: 100,
+      shopperMonthlyVolume: 100,
+    });
+
+    expect(legs).toHaveLength(1);
+    expect(legs[0].nodeId).toBe('m-old');
+    expect(legs[0].status).toBe('inactive');
+    expect(legs[0].members).toBe(1);
+    expect(legs[0].eur).toBe(42);
+    expect(findLeg(tree, 1)?.id).toBe('m-old');
+    expect(findNodeById(tree, 'm-live')?.parentId).toBe('m-old');
+  });
 });
 
 function createSnapshot(overrides: Partial<QuarterResult>): QuarterResult {
@@ -124,7 +183,7 @@ function createSnapshot(overrides: Partial<QuarterResult>): QuarterResult {
   };
 }
 
-function createPersonSnapshot() {
+function createPersonSnapshot(): PersonTreeSnapshot {
   return {
     monthIndex: 11,
     year: 1,
@@ -176,5 +235,203 @@ function createPersonSnapshot() {
     memberAttrition: 0,
     shopperGrowth: 0,
     shopperAttrition: 0,
+  };
+}
+
+function createRootShopperSnapshot(): PersonTreeSnapshot {
+  return {
+    monthIndex: 11,
+    year: 1,
+    monthInYear: 12,
+    rootId: 'root',
+    persons: [
+      {
+        id: 'root',
+        kind: 'root',
+        joinedMonth: 0,
+        active: true,
+        weight: 1,
+        personalMonthlyVolume: 100,
+        shopperCount: 2,
+        shopperMonthlyVolume: 100,
+        childrenIds: ['m-1'],
+      },
+      {
+        id: 'm-1',
+        sponsorId: 'root',
+        kind: 'member',
+        joinedMonth: 0,
+        active: true,
+        weight: 1,
+        personalMonthlyVolume: 100,
+        childrenIds: [],
+      },
+    ],
+    orders: [],
+    memberGrowth: 0,
+    memberAttrition: 0,
+    shopperGrowth: 0,
+    shopperAttrition: 0,
+  };
+}
+
+function createRootShopperCompensation(): TreeCompensationResult {
+  return createCompensation({
+    totalUnits: 80,
+    phase1Units: 80,
+    rankName: 'Member',
+    av: 100,
+    qgv: 300,
+    networkSize: 3,
+    directLegs: 1,
+    members: 1,
+    shoppers: 2,
+    payouts: [
+      createPayout({
+        orderId: 'o-root-shopper',
+        orderPersonId: 'root',
+        amount: 50,
+      }),
+      createPayout({
+        orderId: 'o-m-1',
+        orderPersonId: 'm-1',
+        amount: 30,
+      }),
+    ],
+    rankStates: [
+      createRankState({ personId: 'root', rankName: 'Member', qgv: 300 }),
+      createRankState({ personId: 'm-1', rankName: 'Member', qgv: 100 }),
+    ],
+  });
+}
+
+function createInactiveDirectLegSnapshot(): PersonTreeSnapshot {
+  return {
+    monthIndex: 11,
+    year: 1,
+    monthInYear: 12,
+    rootId: 'root',
+    persons: [
+      {
+        id: 'root',
+        kind: 'root',
+        joinedMonth: 0,
+        active: true,
+        weight: 1,
+        personalMonthlyVolume: 100,
+        childrenIds: ['m-old'],
+      },
+      {
+        id: 'm-old',
+        sponsorId: 'root',
+        kind: 'member',
+        joinedMonth: 0,
+        active: false,
+        weight: 0,
+        personalMonthlyVolume: 100,
+        childrenIds: ['m-live'],
+      },
+      {
+        id: 'm-live',
+        sponsorId: 'm-old',
+        kind: 'member',
+        joinedMonth: 12,
+        active: true,
+        weight: 1,
+        personalMonthlyVolume: 100,
+        childrenIds: [],
+      },
+    ],
+    orders: [],
+    memberGrowth: 0,
+    memberAttrition: 0,
+    shopperGrowth: 0,
+    shopperAttrition: 0,
+  };
+}
+
+function createInactiveDirectLegCompensation(): TreeCompensationResult {
+  return createCompensation({
+    totalUnits: 42,
+    phase1Units: 42,
+    rankName: 'Member',
+    av: 100,
+    qgv: 100,
+    networkSize: 1,
+    directLegs: 1,
+    members: 1,
+    shoppers: 0,
+    payouts: [
+      createPayout({
+        orderId: 'o-m-live',
+        orderPersonId: 'm-live',
+        amount: 42,
+      }),
+    ],
+    rankStates: [
+      createRankState({ personId: 'root', rankName: 'Member', qgv: 100 }),
+      createRankState({ personId: 'm-live', rankName: 'Member', qgv: 100 }),
+    ],
+  });
+}
+
+function createCompensation(
+  overrides: Partial<TreeCompensationResult>,
+): TreeCompensationResult {
+  return {
+    totalUnits: 0,
+    phase1Units: 0,
+    phase2Units: 0,
+    phase3Units: 0,
+    rankName: 'Member',
+    av: 100,
+    qgv: 0,
+    networkSize: 0,
+    directLegs: 0,
+    members: 0,
+    shoppers: 0,
+    payouts: [],
+    rankStates: [],
+    ...overrides,
+  };
+}
+
+function createPayout(
+  overrides: Partial<TreeCompensationResult['payouts'][number]>,
+): TreeCompensationResult['payouts'][number] {
+  return {
+    orderId: 'o-1',
+    orderPersonId: 'm-1',
+    receiverId: 'root',
+    phase: 1,
+    levelFromOrder: 1,
+    slot: 'test',
+    rate: 0,
+    baseVolume: 0,
+    amount: 0,
+    reason: 'test',
+    ...overrides,
+  };
+}
+
+function createRankState({
+  personId,
+  rankName,
+  av = 100,
+  qgv,
+}: {
+  personId: string;
+  rankName: string;
+  av?: number;
+  qgv: number;
+}): TreeCompensationResult['rankStates'][number] {
+  return {
+    personId,
+    rank: { name: rankName },
+    av,
+    qgv,
+    qualifiedLegs: 0,
+    bronzeLegs: 0,
+    diamondLegs: 0,
   };
 }

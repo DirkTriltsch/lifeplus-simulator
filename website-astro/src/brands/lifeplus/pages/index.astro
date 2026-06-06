@@ -6,11 +6,11 @@ import IndexPageDefault from '@shared/components/sections/IndexPageDefault.astro
 import { getBrand } from '@shared/lib/brand';
 
 const brand = await getBrand('lifeplus');
-const description = `Simuliere realistisch, was dein ${brand.productName}-Netzwerk über zehn Jahre einspielen kann.`;
+const description = `Berechne und simuliere, wie sich der Vergütungsplan von ${brand.productName} über zehn Jahre verhält.`;
 ---
 <BrandLayout
   brand={brand}
-  title={`${brand.siteName} – Vergütungs-Simulator für ${brand.productName}`}
+  title={`${brand.siteName} – Simulator für ${brand.productName} Vergütungsplan`}
   description={description}
 >
   <Header brand={brand} active="home" />

@@ -31,7 +31,7 @@ export interface LegData {
   /** Optional: Status des Bein-Roots (nur bei Personenbaum bekannt). */
   status?: SunburstStatus;
   /**
-   * True fuer den virtuellen Eintrag "Eigene Shopper" — das ist kein echtes Bein,
+   * True fuer den virtuellen Eintrag "Eigene Shopper" - das ist kein echtes Bein,
    * sondern die Phase-1-Provision, die Root auf seine direkten Shopper kassiert
    * (Sponsor-L1-Anteil aus Shopper-Aggregat-Orders). Damit gilt
    * Hero == Sum(legs.eur), inklusive dieses Eintrags.
@@ -369,10 +369,12 @@ export function buildSunburstTreeFromPersons({
     rankByPersonId,
   );
 
-  // Direkte Member-Kinder = Beine. Shopper-Kinder werden im Sunburst (vorerst) nicht als eigene Wedges gerendert.
+  // Direkte Member-Kinder = Beine. Inaktive direkte Kinder bleiben sichtbar,
+  // wenn darunter noch aktive Struktur liegt, damit Root-Provision nicht in
+  // unsichtbaren Pfaden verschwindet.
   const legPersons = rootPerson.childrenIds
     .map((id) => personsById.get(id))
-    .filter((c): c is SimPerson => !!c && c.kind === 'member' && c.active);
+    .filter((c): c is SimPerson => isDisplayableRootLeg(c, personsById));
 
   const rootPayouts = rootPayoutFromSubtree(
     rootPerson,
@@ -416,6 +418,34 @@ export function buildSunburstTreeFromPersons({
       ),
     );
   });
+
+  const ownShopperCount = rootPerson.shopperCount ?? 0;
+  const ownShopperPayouts = rootPayoutsByOrderPerson.get(rootPerson.id);
+  if (ownShopperCount > 0 || (ownShopperPayouts?.total ?? 0) > 0) {
+    const ownShopperVolume =
+      ownShopperCount *
+      (rootPerson.shopperMonthlyVolume ?? shopperMonthlyVolume);
+    const legId = root.children.length + 1;
+    root.children.push({
+      id: 'own-shoppers',
+      parentId: root.id,
+      label: 'Eigene Shopper',
+      kind: 'leg',
+      legId,
+      depth: 1,
+      rankName: '-',
+      members: 0,
+      shoppers: ownShopperCount,
+      qgv: ownShopperVolume,
+      provisionEUR: ownShopperPayouts?.total ?? 0,
+      phase1EUR: ownShopperPayouts?.phase1 ?? 0,
+      phase2EUR: ownShopperPayouts?.phase2 ?? 0,
+      phase3EUR: ownShopperPayouts?.phase3 ?? 0,
+      status: 'active',
+      color: '#0ea5e9',
+      children: [],
+    });
+  }
 
   return root;
 }
@@ -521,7 +551,7 @@ export function buildLegsFromPersons({
 
   const legPersons = rootPerson.childrenIds
     .map((id) => personsById.get(id))
-    .filter((c): c is SimPerson => !!c && c.kind === 'member' && c.active);
+    .filter((c): c is SimPerson => isDisplayableRootLeg(c, personsById));
 
   // Robuste Bein-Zuordnung: pro Person den root-direkten Vorfahren ermitteln.
   // Damit lassen sich ALLE Payouts an Root exakt einem Bein zuordnen, auch
@@ -532,7 +562,7 @@ export function buildLegsFromPersons({
   // Payouts mit orderPersonId=root entstehen aus Root's direkten
   // Shopper-Aggregaten: getShopperAggregateUplinePath stellt den Sponsor an L1,
   // d.h. Root kassiert 25 % L1 auf seine eigenen Shopper. Diese Provision
-  // gehoert keinem Bein, sondern Root selbst — wird als virtueller Eintrag
+  // gehoert keinem Bein, sondern Root selbst - wird als virtueller Eintrag
   // "Eigene Shopper" ausgewiesen, damit Hero == Sum(legs.eur) bleibt.
   let ownShopperPayouts: PayoutTotals = { total: 0, phase1: 0, phase2: 0, phase3: 0 };
   for (const [orderPersonId, totals] of rootPayoutsByOrderPerson) {
@@ -633,12 +663,12 @@ export function buildLegsFromPersons({
     legs.push({
       id: legs.length + 1,
       label: 'Eigene Shopper',
-      rank: '—',
+      rank: '-',
       nodes: ownShopperCount,
       members: 0,
       shoppers: ownShopperCount,
       qgv: ownShopperVolume,
-      nodeId: rootPerson.id,
+      nodeId: 'own-shoppers',
       eur: ownShopperPayouts.total,
       activity: Math.max(8, Math.min(100, (ownShopperVolume / Math.max(1, totalLegQgv)) * averageShare * 82)),
       status: 'active',
@@ -812,7 +842,7 @@ function buildLegAncestorMap(
 
   for (const childId of rootPerson.childrenIds) {
     const child = personsById.get(childId);
-    if (!child || child.kind !== 'member') continue;
+    if (!isDisplayableRootLeg(child, personsById)) continue;
     const legId = child.id;
 
     const visit = (p: SimPerson) => {
@@ -827,4 +857,31 @@ function buildLegAncestorMap(
   }
 
   return map;
+}
+
+function isDisplayableRootLeg(
+  person: SimPerson | undefined,
+  personsById: Map<string, SimPerson>,
+): person is SimPerson {
+  if (!person || person.kind !== 'member') return false;
+  if (person.active) return true;
+  return hasActiveDescendant(person, personsById, new Set());
+}
+
+function hasActiveDescendant(
+  person: SimPerson,
+  personsById: Map<string, SimPerson>,
+  visited: Set<string>,
+): boolean {
+  if (visited.has(person.id)) return false;
+  visited.add(person.id);
+
+  for (const childId of person.childrenIds) {
+    const child = personsById.get(childId);
+    if (!child) continue;
+    if (child.active) return true;
+    if (hasActiveDescendant(child, personsById, visited)) return true;
+  }
+
+  return false;
 }

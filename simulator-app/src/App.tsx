@@ -244,9 +244,11 @@ export default function App() {
       }),
     [product, inputs],
   );
-  const [detailResult, setDetailResult] = useState<SimulationResult>(fastResult);
+  const [detailResult, setDetailResult] = useState<SimulationResult | undefined>(
+    undefined,
+  );
   const [detailResultKey, setDetailResultKey] = useState('');
-  const [detailStatus, setDetailStatus] = useState<DetailStatus>('ready');
+  const [detailStatus, setDetailStatus] = useState<DetailStatus>('loading');
   const detailRequestKey = useMemo(
     () =>
       JSON.stringify({
@@ -275,15 +277,16 @@ export default function App() {
   }, [detailRequestKey, inputs, product, simulationMode, treeGrowthStrategy]);
 
   const detailedResult =
-    detailStatus === 'ready' && detailResultKey === detailRequestKey
+    detailResult !== undefined &&
+    detailStatus === 'ready' &&
+    detailResultKey === detailRequestKey
       ? detailResult
       : undefined;
   const result = detailedResult ?? fastResult;
   const resultIsDetailed = detailedResult !== undefined;
   const visualizationResult = detailedResult ?? fastResult;
 
-  const statusValue =
-    detailResult.finalQuarter.rankName ?? fastResult.finalQuarter.rankName;
+  const statusValue = detailResult?.finalQuarter.rankName ?? 'wird berechnet';
 
   const statusHint =
     !detailedResult
@@ -291,7 +294,7 @@ export default function App() {
       : 'Exakt aktualisiert';
 
   const showDetailedTable = detailedResult !== undefined;
-  const tableYears = showDetailedTable ? detailResult.yearSummaries : [];
+  const tableYears = detailedResult?.yearSummaries ?? [];
 
   const detailCaption =
     !detailedResult
@@ -307,13 +310,15 @@ export default function App() {
   // auf dem letzten EXAKT berechneten Stand stehen, statt bei jeder
   // Slider-Bewegung auf die Aggregat-Approximation umzuspringen. Chart und
   // Tabelle laufen weiter wie bisher (result-basiert).
-  const heroQuarter = detailResult.finalQuarter;
-  const heroNetworkSize = Math.round(heroQuarter.networkSize);
+  const heroQuarter = detailResult?.finalQuarter;
+  const heroNetworkSize = Math.round(heroQuarter?.networkSize ?? 0);
   const formattedHeroNetworkSize =
-    heroNetworkSize >= 1000
+    heroQuarter === undefined
+      ? 'wird berechnet'
+      : heroNetworkSize >= 1000
       ? heroNetworkSize.toLocaleString('de-DE')
       : heroNetworkSize.toString();
-  const heroIsStale = !detailedResult;
+  const heroIsStale = detailResult !== undefined && !detailedResult;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -520,7 +525,11 @@ export default function App() {
               </ControlGroup>
             </div>
             <div className={`transition-opacity ${heroIsStale ? 'opacity-60' : 'opacity-100'}`}>
-              <HeroNumber monthlyEUR={heroQuarter.totalEUR} year={heroQuarter.year} />
+              {heroQuarter ? (
+                <HeroNumber monthlyEUR={heroQuarter.totalEUR} year={heroQuarter.year} />
+              ) : (
+                <HeroSkeleton />
+              )}
               <div className="grid grid-cols-2 gap-2.5 mt-4 mb-4">
                 <StatCard label="Netzwerk-Groesse" value={formattedHeroNetworkSize} />
                 <StatCard
@@ -578,7 +587,7 @@ export default function App() {
           />
         )}
         <p className="text-xs text-gray-500 text-center mt-4 px-4">
-          Schaetzung auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
+          Berechnungen auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
         </p>
       </main>
       <footer className="max-w-4xl mx-auto px-4 sm:px-6 pb-8 pt-2">
@@ -707,6 +716,18 @@ function ExactDataPlaceholder() {
         Die schnelle Umsatzkurve und Zielmarker sind bereits aktualisiert. Status,
         Beine und Provisionen werden nachgeliefert, sobald die Eingabe kurz ruht.
       </p>
+    </div>
+  );
+}
+
+function HeroSkeleton() {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-5 text-center">
+      <p className="text-xs uppercase tracking-wider text-gray-500">
+        Provision in Jahr 10
+      </p>
+      <div className="mx-auto mt-3 h-8 w-44 animate-pulse rounded bg-gray-200" />
+      <div className="mx-auto mt-2 h-4 w-32 animate-pulse rounded bg-gray-100" />
     </div>
   );
 }
