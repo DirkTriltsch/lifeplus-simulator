@@ -30,6 +30,13 @@ export interface LegData {
   levels: LegLevelBreakdown[];
   /** Optional: Status des Bein-Roots (nur bei Personenbaum bekannt). */
   status?: SunburstStatus;
+  /**
+   * True fuer den virtuellen Eintrag "Eigene Shopper" — das ist kein echtes Bein,
+   * sondern die Phase-1-Provision, die Root auf seine direkten Shopper kassiert
+   * (Sponsor-L1-Anteil aus Shopper-Aggregat-Orders). Damit gilt
+   * Hero == Sum(legs.eur), inklusive dieses Eintrags.
+   */
+  isOwnShoppers?: boolean;
 }
 
 export type SunburstNodeKind = 'root' | 'leg' | 'level' | 'aggregate' | 'person';
@@ -331,8 +338,8 @@ export function buildSunburstTreeFromPersons({
 }: BuildFromPersonsInput): SunburstNode {
   const personsById = new Map(snapshot.persons.map((p) => [p.id, p]));
   const rootPerson = personsById.get(snapshot.rootId);
-  const payoutByReceiverId = compensation
-    ? buildPayoutMap(compensation, unitToCurrency)
+  const rootPayoutsByOrderPerson = compensation && rootPerson
+    ? buildPayoutsByOrderPersonFor(compensation, unitToCurrency, rootPerson.id)
     : new Map<string, PayoutTotals>();
   const rankByPersonId = new Map(
     compensation?.rankStates.map((state) => [state.personId, state]) ?? [],
@@ -367,6 +374,11 @@ export function buildSunburstTreeFromPersons({
     .map((id) => personsById.get(id))
     .filter((c): c is SimPerson => !!c && c.kind === 'member' && c.active);
 
+  const rootPayouts = rootPayoutFromSubtree(
+    rootPerson,
+    personsById,
+    rootPayoutsByOrderPerson,
+  );
   const root: SunburstNode = {
     id: 'root',
     parentId: null,
@@ -377,10 +389,10 @@ export function buildSunburstTreeFromPersons({
     members: rootStats.members,
     shoppers: rootStats.shoppers,
     qgv: compensation?.qgv ?? Math.max(0, rootStats.qgv - rootPerson.personalMonthlyVolume * rootPerson.weight),
-    provisionEUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).total,
-    phase1EUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).phase1,
-    phase2EUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).phase2,
-    phase3EUR: subtreePayout(rootPerson, personsById, payoutByReceiverId).phase3,
+    provisionEUR: rootPayouts.total,
+    phase1EUR: rootPayouts.phase1,
+    phase2EUR: rootPayouts.phase2,
+    phase3EUR: rootPayouts.phase3,
     rankName: rankByPersonId.get(rootPerson.id)?.rank.name,
     children: [],
   };
@@ -399,7 +411,7 @@ export function buildSunburstTreeFromPersons({
         memberMonthlyVolume,
         shopperMonthlyVolume,
         'root',
-        payoutByReceiverId,
+        rootPayoutsByOrderPerson,
         rankByPersonId,
       ),
     );
@@ -418,7 +430,7 @@ function buildPersonSubtree(
   memberVolume: number,
   shopperVolume: number,
   parentId: string,
-  payoutByReceiverId: Map<string, PayoutTotals>,
+  rootPayoutsByOrderPerson: Map<string, PayoutTotals>,
   rankByPersonId: Map<string, { rank: { name: string }; av: number }>,
 ): SunburstNode {
   const stats = subtreeStats(
@@ -428,7 +440,9 @@ function buildPersonSubtree(
     shopperVolume,
     rankByPersonId,
   );
-  const payouts = subtreePayout(person, personsById, payoutByReceiverId);
+  // provisionEUR pro Knoten = Anteil dieses Subtrees an Root's Gesamt-Provision.
+  // Summe ueber alle direkten Beine == Root-Provision (Hero-Zahl).
+  const payouts = rootPayoutFromSubtree(person, personsById, rootPayoutsByOrderPerson);
   const rankState = rankByPersonId.get(person.id);
   const qualifiedLegs = person.childrenIds
     .map((id) => personsById.get(id))
@@ -477,7 +491,7 @@ function buildPersonSubtree(
           memberVolume,
           shopperVolume,
           person.id,
-          payoutByReceiverId,
+          rootPayoutsByOrderPerson,
           rankByPersonId,
         ),
       );
@@ -498,8 +512,8 @@ export function buildLegsFromPersons({
   const personsById = new Map(snapshot.persons.map((p) => [p.id, p]));
   const rootPerson = personsById.get(snapshot.rootId);
   if (!rootPerson) return [];
-  const payoutByReceiverId = compensation
-    ? buildPayoutMap(compensation, unitToCurrency)
+  const rootPayoutsByOrderPerson = compensation
+    ? buildPayoutsByOrderPersonFor(compensation, unitToCurrency, rootPerson.id)
     : new Map<string, PayoutTotals>();
   const rankByPersonId = new Map(
     compensation?.rankStates.map((state) => [state.personId, state]) ?? [],
@@ -508,6 +522,43 @@ export function buildLegsFromPersons({
   const legPersons = rootPerson.childrenIds
     .map((id) => personsById.get(id))
     .filter((c): c is SimPerson => !!c && c.kind === 'member' && c.active);
+
+  // Robuste Bein-Zuordnung: pro Person den root-direkten Vorfahren ermitteln.
+  // Damit lassen sich ALLE Payouts an Root exakt einem Bein zuordnen, auch
+  // wenn die Subtree-Traversierung von einem Bein aus Knoten verfehlen wuerde
+  // (z.B. wegen inaktiver Zwischenknoten oder Reattachment-Eigenheiten).
+  const legAncestor = buildLegAncestorMap(personsById, rootPerson);
+  const payoutsByLegId = new Map<string, PayoutTotals>();
+  // Payouts mit orderPersonId=root entstehen aus Root's direkten
+  // Shopper-Aggregaten: getShopperAggregateUplinePath stellt den Sponsor an L1,
+  // d.h. Root kassiert 25 % L1 auf seine eigenen Shopper. Diese Provision
+  // gehoert keinem Bein, sondern Root selbst — wird als virtueller Eintrag
+  // "Eigene Shopper" ausgewiesen, damit Hero == Sum(legs.eur) bleibt.
+  let ownShopperPayouts: PayoutTotals = { total: 0, phase1: 0, phase2: 0, phase3: 0 };
+  for (const [orderPersonId, totals] of rootPayoutsByOrderPerson) {
+    if (orderPersonId === rootPerson.id) {
+      ownShopperPayouts = {
+        total: ownShopperPayouts.total + totals.total,
+        phase1: ownShopperPayouts.phase1 + totals.phase1,
+        phase2: ownShopperPayouts.phase2 + totals.phase2,
+        phase3: ownShopperPayouts.phase3 + totals.phase3,
+      };
+      continue;
+    }
+    const legId = legAncestor.get(orderPersonId);
+    if (!legId) continue;
+    const current = payoutsByLegId.get(legId) ?? {
+      total: 0,
+      phase1: 0,
+      phase2: 0,
+      phase3: 0,
+    };
+    current.total += totals.total;
+    current.phase1 += totals.phase1;
+    current.phase2 += totals.phase2;
+    current.phase3 += totals.phase3;
+    payoutsByLegId.set(legId, current);
+  }
 
   // Gesamt-QGV der Beine fuer eur-Verteilung.
   const legStats = legPersons.map((p) =>
@@ -525,15 +576,20 @@ export function buildLegsFromPersons({
   );
   const averageShare = 1 / Math.max(1, legPersons.length);
 
-  return legPersons.map((legPerson, index) => {
+  const legs: LegData[] = legPersons.map((legPerson, index) => {
     const stats = legStats[index];
-    const payouts = subtreePayout(legPerson, personsById, payoutByReceiverId);
+    const payouts = payoutsByLegId.get(legPerson.id) ?? {
+      total: 0,
+      phase1: 0,
+      phase2: 0,
+      phase3: 0,
+    };
     const levels = levelsByDepth(
       legPerson,
       personsById,
       memberMonthlyVolume,
       shopperMonthlyVolume,
-      payoutByReceiverId,
+      rootPayoutsByOrderPerson,
       rankByPersonId,
     );
     const qualifiedDirect = legPerson.childrenIds
@@ -567,6 +623,40 @@ export function buildLegsFromPersons({
       levels,
     };
   });
+
+  // Virtueller Eintrag fuer Root's eigene Shopper-Provision (Sponsor-L1
+  // auf Root's direkte Shopper-Aggregate). Wird als "kurzes Bein" mit nur
+  // einer Ebene (E1) gerendert, damit es visuell zu den echten Beinen passt.
+  const ownShopperCount = rootPerson.shopperCount ?? 0;
+  const ownShopperVolume = ownShopperCount * (rootPerson.shopperMonthlyVolume ?? shopperMonthlyVolume);
+  if (ownShopperPayouts.total > 0.5) {
+    legs.push({
+      id: legs.length + 1,
+      label: 'Eigene Shopper',
+      rank: '—',
+      nodes: ownShopperCount,
+      members: 0,
+      shoppers: ownShopperCount,
+      qgv: ownShopperVolume,
+      nodeId: rootPerson.id,
+      eur: ownShopperPayouts.total,
+      activity: Math.max(8, Math.min(100, (ownShopperVolume / Math.max(1, totalLegQgv)) * averageShare * 82)),
+      status: 'active',
+      color: '#0ea5e9',
+      levels: [
+        {
+          members: 0,
+          shoppers: ownShopperCount,
+          total: ownShopperCount,
+          qgv: ownShopperVolume,
+          provisionEUR: ownShopperPayouts.total,
+        },
+      ],
+      isOwnShoppers: true,
+    });
+  }
+
+  return legs;
 }
 
 function levelsByDepth(
@@ -574,7 +664,7 @@ function levelsByDepth(
   personsById: Map<string, SimPerson>,
   memberVolume: number,
   shopperVolume: number,
-  payoutByReceiverId: Map<string, PayoutTotals> = new Map(),
+  rootPayoutsByOrderPerson: Map<string, PayoutTotals> = new Map(),
   rankByPersonId: Map<string, { av: number }> = new Map(),
 ): LegLevelBreakdown[] {
   const levels: LegLevelBreakdown[] = [];
@@ -588,7 +678,8 @@ function levelsByDepth(
   const visit = (p: SimPerson, depth: number) => {
     if (p.active && depth >= 0) {
       ensure(depth);
-      const payouts = payoutByReceiverId.get(p.id);
+      // Root-Anteil aus den Orders genau dieser Person (= dieser Ebene des Beins).
+      const payouts = rootPayoutsByOrderPerson.get(p.id);
       if (p.kind === 'member') {
         levels[depth].members += p.weight;
         levels[depth].qgv += p.weight * (rankByPersonId.get(p.id)?.av ?? memberVolume);
@@ -631,14 +722,21 @@ interface PayoutTotals {
   phase3: number;
 }
 
-function buildPayoutMap(
+/**
+ * Gruppiert die Payouts nach Order-Person, gefiltert auf Auszahlungen an den
+ * angegebenen Empfaenger (i.d.R. Root). Damit laesst sich pro Subtree
+ * fragen: "Wie viel zahlt das Volumen aus diesem Subtree an Root aus?"
+ */
+function buildPayoutsByOrderPersonFor(
   compensation: TreeCompensationResult,
   unitToCurrency: number,
+  receiverId: string,
 ): Map<string, PayoutTotals> {
   const payouts = new Map<string, PayoutTotals>();
 
   for (const payout of compensation.payouts) {
-    const current = payouts.get(payout.receiverId) ?? {
+    if (payout.receiverId !== receiverId) continue;
+    const current = payouts.get(payout.orderPersonId) ?? {
       total: 0,
       phase1: 0,
       phase2: 0,
@@ -649,34 +747,84 @@ function buildPayoutMap(
     if (payout.phase === 1) current.phase1 += amount;
     if (payout.phase === 2) current.phase2 += amount;
     if (payout.phase === 3) current.phase3 += amount;
-    payouts.set(payout.receiverId, current);
+    payouts.set(payout.orderPersonId, current);
   }
 
   return payouts;
 }
 
-function subtreePayout(
+/**
+ * Summiert alle Auszahlungen an Root, deren Order-Verursacher im Subtree
+ * der gegebenen Person liegt. Bedeutung: "Anteil dieses Subtrees an
+ * Root's Provision".
+ *
+ * Traversiert auch durch inaktive Knoten — children koennten aktiv sein
+ * (z.B. wenn Reattachment unvollstaendig war oder ein Snapshot vor dem
+ * Reattachment-Aufraeumen liegt). Inaktive Knoten tragen selbst keine
+ * payouts bei (keine Orders), schliessen aber den Pfad nicht ab.
+ *
+ * Ein `visited`-Set schuetzt vor doppelter Buchung, falls Reattachment
+ * dieselbe Person mehrfach in childrenIds eingetragen hat.
+ */
+function rootPayoutFromSubtree(
   person: SimPerson,
   personsById: Map<string, SimPerson>,
-  payoutByReceiverId: Map<string, PayoutTotals>,
+  rootPayoutsByOrderPerson: Map<string, PayoutTotals>,
 ): PayoutTotals {
-  const own = payoutByReceiverId.get(person.id) ?? {
-    total: 0,
-    phase1: 0,
-    phase2: 0,
-    phase3: 0,
-  };
-  const totals = { ...own };
+  const totals: PayoutTotals = { total: 0, phase1: 0, phase2: 0, phase3: 0 };
+  const visited = new Set<string>();
 
-  for (const childId of person.childrenIds) {
+  const visit = (p: SimPerson) => {
+    if (visited.has(p.id)) return;
+    visited.add(p.id);
+    if (p.active) {
+      const own = rootPayoutsByOrderPerson.get(p.id);
+      if (own) {
+        totals.total += own.total;
+        totals.phase1 += own.phase1;
+        totals.phase2 += own.phase2;
+        totals.phase3 += own.phase3;
+      }
+    }
+    for (const childId of p.childrenIds) {
+      const child = personsById.get(childId);
+      if (child) visit(child);
+    }
+  };
+
+  visit(person);
+  return totals;
+}
+
+/**
+ * Liefert fuer jede Person im Snapshot die ID ihres root-direkten Member-
+ * Vorfahren (Bein-Wurzel). Personen, deren Pfad nicht zu einem root-direkten
+ * Member fuehrt (z.B. Root selbst, Root-direkte Shopper-Aggregate), bekommen
+ * keinen Eintrag. Mit dieser Map laesst sich Root's Provision exakt auf die
+ * Beine verteilen: Summe ueber alle Beine == compensation.totalEUR
+ * minus Root-eigene Beitraege (die per Konstruktion keine Payouts erzeugen).
+ */
+function buildLegAncestorMap(
+  personsById: Map<string, SimPerson>,
+  rootPerson: SimPerson,
+): Map<string, string> {
+  const map = new Map<string, string>();
+
+  for (const childId of rootPerson.childrenIds) {
     const child = personsById.get(childId);
-    if (!child || !child.active) continue;
-    const childTotals = subtreePayout(child, personsById, payoutByReceiverId);
-    totals.total += childTotals.total;
-    totals.phase1 += childTotals.phase1;
-    totals.phase2 += childTotals.phase2;
-    totals.phase3 += childTotals.phase3;
+    if (!child || child.kind !== 'member') continue;
+    const legId = child.id;
+
+    const visit = (p: SimPerson) => {
+      if (map.has(p.id)) return;
+      map.set(p.id, legId);
+      for (const ccId of p.childrenIds) {
+        const cc = personsById.get(ccId);
+        if (cc) visit(cc);
+      }
+    };
+    visit(child);
   }
 
-  return totals;
+  return map;
 }

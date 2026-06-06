@@ -204,8 +204,10 @@ export function NetworkVisualizations({
             value={year}
             onChange={(event) => {
               setYear(Number(event.target.value));
-              setSelectedLegId(1);
-              setFocusedNodeId('root');
+              // Auswahl (selectedLegId, focusedNodeId) bewusst NICHT zuruecksetzen.
+              // Render-Fallbacks (legs.find ?? legs[0], findNodeById ?? tree)
+              // greifen, falls der gewaehlte Knoten im neuen Jahr nicht existiert;
+              // beim Zurueckscrollen kommt die Auswahl von selbst wieder.
             }}
           />
           <span className="text-xs font-medium text-gray-500">10</span>
@@ -362,6 +364,9 @@ function Sunburst({
           <LegLegend
             legs={scopedLegs}
             title={isFocusedRoot ? 'Beine' : `Unter-Beine von ${focusedNode.label}`}
+            // Root-Sicht: zeige Root-Anteil pro Bein (= Summe == Hero).
+            // Sub-Bein-Sicht: zeige Team-QGV, weil Root-Anteil tief im Baum oft 0 € ist.
+            valueMode={isFocusedRoot ? 'provision' : 'qgv'}
             selectedLegId={legendSelectedLegId}
             onSelectLeg={(legId) => {
               const leg = scopedLegs.find((item) => item.id === legId);
@@ -698,16 +703,22 @@ function LegLegend({
   title = 'Beine',
   selectedLegId,
   onSelectLeg,
+  valueMode = 'provision',
 }: {
   legs: LegData[];
   title?: string;
   selectedLegId: number | null;
   onSelectLeg: (legId: number | null) => void;
+  /**
+   * 'provision' zeigt EUR (Root-Anteil pro Bein) und passt zur Hero-Zahl.
+   * 'qgv' zeigt Team-Volumen in IP und ist konsistenter fuer Sub-Beine, bei
+   * denen Root-Provision haeufig 0 € ist (Phase 1 reicht nur 3 Levels).
+   */
+  valueMode?: 'provision' | 'qgv';
 }) {
-  const hasProvisionValues = legs.some((leg) => leg.eur > 0);
   const sortedLegs = [...legs].sort(
     (a, b) =>
-      legLegendValue(b, hasProvisionValues) - legLegendValue(a, hasProvisionValues),
+      legLegendValue(b, valueMode) - legLegendValue(a, valueMode),
   );
 
   return (
@@ -735,7 +746,7 @@ function LegLegend({
                 {leg.label}
               </span>
               <span className="font-medium text-gray-900">
-                {hasProvisionValues
+                {valueMode === 'provision'
                   ? formatCurrency(leg.eur)
                   : `${formatNumber(leg.qgv)} IP`}
               </span>
@@ -747,8 +758,8 @@ function LegLegend({
   );
 }
 
-function legLegendValue(leg: LegData, useProvision: boolean): number {
-  return useProvision ? leg.eur : leg.qgv;
+function legLegendValue(leg: LegData, valueMode: 'provision' | 'qgv'): number {
+  return valueMode === 'provision' ? leg.eur : leg.qgv;
 }
 
 function ModeToolbar({

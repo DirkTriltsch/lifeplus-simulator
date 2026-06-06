@@ -283,13 +283,11 @@ export default function App() {
   const visualizationResult = detailedResult ?? fastResult;
 
   const statusValue =
-    !detailedResult
-      ? 'wird berechnet'
-      : detailedResult?.finalQuarter.rankName ?? fastResult.finalQuarter.rankName;
+    detailResult.finalQuarter.rankName ?? fastResult.finalQuarter.rankName;
 
   const statusHint =
     !detailedResult
-      ? 'LifePlus-Status wird nachgeliefert'
+      ? 'Neuberechnung laeuft — Hero zeigt letzten exakten Stand'
       : 'Exakt aktualisiert';
 
   const showDetailedTable = detailedResult !== undefined;
@@ -297,7 +295,7 @@ export default function App() {
 
   const detailCaption =
     !detailedResult
-      ? 'Schnelle Aggregatansicht: Umsatzkurve und Ziele folgen live. Exakte Werte werden nach kurzer Pause berechnet.'
+      ? 'Chart und Ziele folgen live. Hero/Netzwerk/Rang bleiben auf dem letzten exakten Stand, bis die Detail-Berechnung fertig ist.'
       : 'Hero, Ziele, Chart, Status, Beine und Tabelle sind mit echten Detaildaten aktualisiert.';
 
   const goalProgress = useMemo(
@@ -305,12 +303,17 @@ export default function App() {
     [result, goals, inputs],
   );
 
-  const finalQuarter = result.finalQuarter;
-  const networkSize = Math.round(finalQuarter.networkSize);
-  const formattedNetworkSize =
-    networkSize >= 1000
-      ? networkSize.toLocaleString('de-DE')
-      : networkSize.toString();
+  // Hero-Block (Provision, Netzwerk, Rang) zieht aus detailResult — bleibt
+  // auf dem letzten EXAKT berechneten Stand stehen, statt bei jeder
+  // Slider-Bewegung auf die Aggregat-Approximation umzuspringen. Chart und
+  // Tabelle laufen weiter wie bisher (result-basiert).
+  const heroQuarter = detailResult.finalQuarter;
+  const heroNetworkSize = Math.round(heroQuarter.networkSize);
+  const formattedHeroNetworkSize =
+    heroNetworkSize >= 1000
+      ? heroNetworkSize.toLocaleString('de-DE')
+      : heroNetworkSize.toString();
+  const heroIsStale = !detailedResult;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -516,13 +519,15 @@ export default function App() {
                 )}
               </ControlGroup>
             </div>
-            <HeroNumber monthlyEUR={finalQuarter.totalEUR} year={finalQuarter.year} />
-            <div className="grid grid-cols-2 gap-2.5 mt-4 mb-4">
-              <StatCard label="Netzwerk-Groesse" value={formattedNetworkSize} />
-              <StatCard
-                label={`Aktueller ${product.terminology.rankLabel}`}
-                value={statusValue}
-              />
+            <div className={`transition-opacity ${heroIsStale ? 'opacity-60' : 'opacity-100'}`}>
+              <HeroNumber monthlyEUR={heroQuarter.totalEUR} year={heroQuarter.year} />
+              <div className="grid grid-cols-2 gap-2.5 mt-4 mb-4">
+                <StatCard label="Netzwerk-Groesse" value={formattedHeroNetworkSize} />
+                <StatCard
+                  label={`Aktueller ${product.terminology.rankLabel}`}
+                  value={statusValue}
+                />
+              </div>
             </div>
             <p className="mb-4 text-xs text-gray-500">
               {statusHint}: {detailCaption}
