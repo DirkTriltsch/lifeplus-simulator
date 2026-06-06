@@ -8,6 +8,6 @@ describe('fitline product pack', () => {
     expect(fitlineProduct.simulator.defaultInputs.membersPerYear).toBe(3);
 
     const result = runSimulation(fitlineProduct, fitlineProduct.simulator.defaultInputs, 12);
-    expect(result.finalMonth.networkSize).toBeGreaterThan(0);
+    expect(result.finalQuarter.networkSize).toBeGreaterThan(0);
   });
 });

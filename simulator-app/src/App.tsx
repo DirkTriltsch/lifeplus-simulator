@@ -3,6 +3,8 @@ import { getProduct } from '@mlm/product-registry';
 import {
   runSimulation,
   type ProductId,
+  type SimulationResult,
+  type SimulationMode,
 } from '@mlm/simulator-core';
 import { createTreeGrowthStrategy } from '@mlm/simulator-realistic-growth';
 import { evaluateGoals } from '@mlm/simulator-goals';
@@ -48,7 +50,7 @@ interface PersistedAppState {
   attrition?: number;
   ipToEur?: number;
   maxDirectMembersPerMember?: number;
-  realityStrategy?: RealityStrategy;
+  realityStrategy?: RealityStrategy | 'dirichlet' | 'momentum' | 'lifecycle';
   goals?: GoalUI[];
   monthlyProductCostEUR?: number;
   inputMode?: InputMode;
@@ -56,6 +58,8 @@ interface PersistedAppState {
 
 const STORAGE_VERSION = 1;
 type ExpandedSection = 'goals' | 'advanced' | null;
+type DetailStatus = 'ready' | 'loading';
+const DETAIL_CALCULATION_DEBOUNCE_MS = 800;
 
 export default function App() {
   const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
@@ -209,28 +213,100 @@ export default function App() {
 
   const treeGrowthStrategy = useMemo(
     () => {
-      if (realityStrategy === 'standard') return undefined;
+      if (realityStrategy === 'person-tree-random') {
+        return createTreeGrowthStrategy({
+          strategy: 'dirichlet',
+          seed: 42,
+        });
+      }
 
-      return createTreeGrowthStrategy({
-        strategy: realityStrategy,
-        seed: 42,
-      });
+      if (realityStrategy === 'person-tree-momentum') {
+        return createTreeGrowthStrategy({
+          strategy: 'momentum',
+          seed: 42,
+        });
+      }
+
+      return undefined;
     },
     [realityStrategy],
   );
 
-  const result = useMemo(
-    () => runSimulation(product, inputs, undefined, { treeGrowthStrategy }),
-    [product, inputs, treeGrowthStrategy],
+  const simulationMode = useMemo<SimulationMode>(
+    () => realityStrategy,
+    [realityStrategy],
   );
+
+  const fastResult = useMemo(
+    () =>
+      runSimulation(product, inputs, undefined, {
+        simulationMode: 'standard',
+      }),
+    [product, inputs],
+  );
+  const [detailResult, setDetailResult] = useState<SimulationResult>(fastResult);
+  const [detailResultKey, setDetailResultKey] = useState('');
+  const [detailStatus, setDetailStatus] = useState<DetailStatus>('ready');
+  const detailRequestKey = useMemo(
+    () =>
+      JSON.stringify({
+        product: product.id,
+        inputs,
+        realityStrategy,
+      }),
+    [inputs, product.id, realityStrategy],
+  );
+
+  useEffect(() => {
+    setDetailStatus('loading');
+    const handle = window.setTimeout(() => {
+      const detailSimulationMode: SimulationMode =
+        simulationMode === 'standard' ? 'person-tree' : simulationMode;
+      const nextDetail = runSimulation(product, inputs, undefined, {
+        simulationMode: detailSimulationMode,
+        treeGrowthStrategy,
+      });
+      setDetailResult(nextDetail);
+      setDetailResultKey(detailRequestKey);
+      setDetailStatus('ready');
+    }, DETAIL_CALCULATION_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(handle);
+  }, [detailRequestKey, inputs, product, simulationMode, treeGrowthStrategy]);
+
+  const detailedResult =
+    detailStatus === 'ready' && detailResultKey === detailRequestKey
+      ? detailResult
+      : undefined;
+  const result = detailedResult ?? fastResult;
+  const resultIsDetailed = detailedResult !== undefined;
+  const visualizationResult = detailedResult ?? fastResult;
+
+  const statusValue =
+    !detailedResult
+      ? 'wird berechnet'
+      : detailedResult?.finalQuarter.rankName ?? fastResult.finalQuarter.rankName;
+
+  const statusHint =
+    !detailedResult
+      ? 'LifePlus-Status wird nachgeliefert'
+      : 'Exakt aktualisiert';
+
+  const showDetailedTable = detailedResult !== undefined;
+  const tableYears = showDetailedTable ? detailResult.yearSummaries : [];
+
+  const detailCaption =
+    !detailedResult
+      ? 'Schnelle Aggregatansicht: Umsatzkurve und Ziele folgen live. Exakte Werte werden nach kurzer Pause berechnet.'
+      : 'Hero, Ziele, Chart, Status, Beine und Tabelle sind mit echten Detaildaten aktualisiert.';
 
   const goalProgress = useMemo(
     () => evaluateGoals(result, activeGoals(goals), inputs),
     [result, goals, inputs],
   );
 
-  const finalMonth = result.finalMonth;
-  const networkSize = Math.round(finalMonth.networkSize);
+  const finalQuarter = result.finalQuarter;
+  const networkSize = Math.round(finalQuarter.networkSize);
   const formattedNetworkSize =
     networkSize >= 1000
       ? networkSize.toLocaleString('de-DE')
@@ -440,38 +516,56 @@ export default function App() {
                 )}
               </ControlGroup>
             </div>
-            <HeroNumber monthlyEUR={finalMonth.totalEUR} year={finalMonth.year} />
+            <HeroNumber monthlyEUR={finalQuarter.totalEUR} year={finalQuarter.year} />
             <div className="grid grid-cols-2 gap-2.5 mt-4 mb-4">
               <StatCard label="Netzwerk-Groesse" value={formattedNetworkSize} />
-              <StatCard label={`Aktueller ${product.terminology.rankLabel}`} value={finalMonth.rankName} />
-            </div>
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Provisionsverlauf - 10 Jahre</p>
-              <ProvisionChart
-                yearEnds={result.yearEnds}
-                goalProgress={goalProgress}
-                goals={goals}
+              <StatCard
+                label={`Aktueller ${product.terminology.rankLabel}`}
+                value={statusValue}
               />
             </div>
-            <YearlySummaryTable years={result.yearSummaries} />
+            <p className="mb-4 text-xs text-gray-500">
+              {statusHint}: {detailCaption}
+            </p>
+            <div className="mt-4">
+              <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Provisionsverlauf - 10 Jahre</p>
+              <div className="relative">
+                <ProvisionChart
+                  yearEnds={result.yearEnds}
+                  goalProgress={goalProgress}
+                  goals={goals}
+                  mode={resultIsDetailed ? 'detail' : 'aggregate'}
+                />
+                {!resultIsDetailed && <OrangeHourglassSpinner />}
+              </div>
+            </div>
+            {showDetailedTable ? (
+              <YearlySummaryTable
+                years={tableYears}
+                personYearEnds={detailedResult?.personYearEnds}
+                treeCompensationYearEnds={detailedResult?.treeCompensationYearEnds}
+              />
+            ) : (
+              <ExactDataPlaceholder />
+            )}
             </div>
           </>
         ) : page === 'network' ? (
           <NetworkVisualizations
-            yearEnds={result.yearEnds}
+            yearEnds={visualizationResult.yearEnds}
             selectedView={networkView}
             memberMonthlyVolume={inputs.memberMonthlyVolume}
             shopperMonthlyVolume={inputs.shopperMonthlyVolume}
-            personYearEnds={result.personYearEnds}
-            treeCompensationYearEnds={result.treeCompensationYearEnds}
+            personYearEnds={visualizationResult.personYearEnds}
+            treeCompensationYearEnds={visualizationResult.treeCompensationYearEnds}
             unitToCurrency={inputs.unitToCurrency ?? 1}
           />
         ) : page === 'lineage' ? (
           <LineageView />
         ) : (
           <PersonTreeVisualizations
-            personYearEnds={result.personYearEnds ?? []}
-            treeCompensationYearEnds={result.treeCompensationYearEnds}
+            personYearEnds={visualizationResult.personYearEnds ?? []}
+            treeCompensationYearEnds={visualizationResult.treeCompensationYearEnds}
             memberMonthlyVolume={inputs.memberMonthlyVolume}
             shopperMonthlyVolume={inputs.shopperMonthlyVolume}
             unitToCurrency={inputs.unitToCurrency ?? 1}
@@ -595,6 +689,43 @@ function ControlGroup({
   );
 }
 
+function ExactDataPlaceholder() {
+  return (
+    <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5">
+      <div className="mb-3 flex items-center gap-3">
+        <InlineOrangeSpinner />
+        <p className="text-sm font-medium text-gray-800">
+          Exakte LifePlus-Tabelle wird berechnet
+        </p>
+      </div>
+      <p className="mt-1 text-xs text-gray-500">
+        Die schnelle Umsatzkurve und Zielmarker sind bereits aktualisiert. Status,
+        Beine und Provisionen werden nachgeliefert, sobald die Eingabe kurz ruht.
+      </p>
+    </div>
+  );
+}
+
+function OrangeHourglassSpinner() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      aria-hidden="true"
+    >
+      <div className="h-16 w-16 animate-spin rounded-full border-[7px] border-orange-500 border-l-transparent border-r-transparent opacity-95" />
+    </div>
+  );
+}
+
+function InlineOrangeSpinner() {
+  return (
+    <span
+      className="inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-[3px] border-orange-500 border-l-transparent border-r-transparent"
+      aria-hidden="true"
+    />
+  );
+}
+
 function storageKey(productId: ProductId): string {
   return `mlm-simulator:${productId}:v${STORAGE_VERSION}`;
 }
@@ -637,8 +768,20 @@ function clearPersistedState(productId: ProductId): void {
   }
 }
 
-function normalizeRealityStrategy(strategy: RealityStrategy | undefined): RealityStrategy {
-  if (strategy === 'dirichlet' || strategy === 'momentum') return strategy;
+function normalizeRealityStrategy(
+  strategy: PersistedAppState['realityStrategy'] | undefined,
+): RealityStrategy {
+  if (
+    strategy === 'standard' ||
+    strategy === 'person-tree' ||
+    strategy === 'person-tree-random' ||
+    strategy === 'person-tree-momentum'
+  ) {
+    return strategy;
+  }
+  if (strategy === 'dirichlet') return 'person-tree-random';
+  if (strategy === 'momentum') return 'person-tree-momentum';
+  if (strategy === 'lifecycle') return 'person-tree';
   return 'standard';
 }
 

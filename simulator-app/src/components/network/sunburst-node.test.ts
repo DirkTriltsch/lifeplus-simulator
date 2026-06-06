@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { MonthResult } from '@mlm/simulator-core';
+import type { QuarterResult } from '@mlm/simulator-core';
 import {
   buildLegsFromPersons,
   buildSunburstTree,
@@ -94,11 +94,12 @@ describe('sunburst-node', () => {
   });
 });
 
-function createSnapshot(overrides: Partial<MonthResult>): MonthResult {
+function createSnapshot(overrides: Partial<QuarterResult>): QuarterResult {
   return {
-    monthIndex: 119,
+    quarterIndex: 39,
     year: 10,
-    monthInYear: 12,
+    quarterInYear: 4,
+    periodMonths: 3,
     membersByLevel: [1],
     shoppersByLevel: [0],
     legs: [],

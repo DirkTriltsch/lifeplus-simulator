@@ -12,6 +12,7 @@ const { brand, contact, source } = Astro.props;
 >
   <p class="legal-meta-top">Rechtliche Informationen</p>
   <h1>Datenschutzerklärung</h1>
+  <p class="legal-meta">Stand: Juni 2026.</p>
 
   <h2>1. Datenschutz auf einen Blick</h2>
   <p>
@@ -32,9 +33,13 @@ const { brand, contact, source } = Astro.props;
     Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs.
   </p>
   <p>
-    Die Eingaben im Simulator werden im Browser berechnet und nicht an unseren Server übertragen.
-    Davon zu unterscheiden sind Account-bezogene Daten (E-Mail, Plan-Status, Geräteanzahl), die im
-    Zuge der Authentifizierung und Abrechnung serverseitig verarbeitet werden — Details siehe
+    Die Berechnung der Simulator-Ergebnisse erfolgt clientseitig in Ihrem Browser; die
+    von Ihnen eingegebenen Slider-Werte und Annahmen werden nicht standardmäßig an
+    unseren Server übertragen. Eine serverseitige Speicherung erfolgt nur, wenn Sie
+    ein Szenario aktiv über die Sharing-Funktion teilen oder im Pro-Tarif zur
+    Synchronisation zwischen Geräten freigeben. Davon zu unterscheiden sind
+    Account-bezogene Daten (E-Mail, Plan-Status, Geräteanzahl), die im Zuge der
+    Authentifizierung und Abrechnung serverseitig verarbeitet werden — Details siehe
     Abschnitt 3 (Verantwortlicher) und Abschnitt 6 (Tools und Dienste).
   </p>
 
@@ -146,15 +151,41 @@ const { brand, contact, source } = Astro.props;
       Ablauf des Tokens.
     </li>
     <li>
-      <strong>Zahlungsabwicklung Paddle:</strong> Beim Aufruf der Pricing- bzw. Checkout-Seite werden
-      Daten an die Paddle.com Market Limited (London) übertragen. Paddle setzt eigene Cookies und kann
-      Daten in Drittländer (z.B. USA) übermitteln. Details siehe
+      <strong>Zahlungsabwicklung Paddle:</strong> Beim Aufruf der Checkout-Seite werden
+      Daten an die Paddle.com Market Limited (Judd House, 18-29 Mora Street, London EC1V 8BT,
+      Vereinigtes Königreich) übertragen. Paddle setzt eigene Cookies und kann Daten in
+      Drittländer (z.B. USA) übermitteln. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO
+      (Vertragsanbahnung und -durchführung). Für die Drittlandsübermittlung stützt sich
+      Paddle auf die EU-Standardvertragsklauseln. Details siehe
       <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener">paddle.com/legal/privacy</a>.
-      Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
     </li>
     <li>
-      <strong>Schriftarten:</strong> Die Web-App lädt Schriftarten aus dem eigenen Webspace.
-      Es findet keine Übertragung an Drittanbieter wie Google statt.
+      <strong>E-Mail-Versand (Resend):</strong> Magic-Link-, Login- und Transaktions-E-Mails
+      werden über die Resend, Inc. (2261 Market Street, San Francisco, CA 94114, USA) versendet.
+      Verarbeitet wird die angegebene E-Mail-Adresse zum Zweck der Authentifizierung und
+      Vertragsdurchführung. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Drittland-Übermittlung
+      USA auf Grundlage der EU-Standardvertragsklauseln. Details siehe
+      <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">resend.com/legal/privacy-policy</a>.
+    </li>
+    <li>
+      <strong>Hosting (IONOS):</strong> Die Marketing- und Account-Webseite wird bei der
+      IONOS SE (Elgendorfer Str. 57, 56410 Montabaur) gehostet. Beim Aufruf werden technische
+      Zugriffsdaten (IP-Adresse, Datum/Uhrzeit, User-Agent, angeforderte Datei) verarbeitet.
+      Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (sichere, fehlerfreie Bereitstellung).
+      Speicherdauer der Server-Logs: regelmäßig 7 Tage.
+    </li>
+    <li>
+      <strong>API / Edge-Network (Cloudflare):</strong> Die API-Funktionen (Login,
+      Account-Verwaltung) werden über die Cloudflare Inc. (101 Townsend Street, San Francisco,
+      CA 94107, USA) ausgeliefert. Verarbeitet werden technische Zugriffsdaten zur sicheren
+      Auslieferung und DDoS-Abwehr. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.
+      Drittland-Übermittlung USA auf Grundlage der EU-Standardvertragsklauseln. Details siehe
+      <a href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/de-de/privacypolicy</a>.
+    </li>
+    <li>
+      <strong>Schriftarten:</strong> Die Web-App lädt Schriftarten aus dem eigenen Webspace
+      (lokales Self-Hosting via @fontsource). Es findet keine Übertragung an Drittanbieter
+      wie Google Fonts statt.
     </li>
     <li>
       <strong>Service-Worker / installierbare Web-App:</strong> Auf geeigneten Geräten speichert die
@@ -163,6 +194,29 @@ const { brand, contact, source } = Astro.props;
       und erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO.
     </li>
   </ul>
+
+  <h2>7. Newsletter</h2>
+  <p>
+    Wenn Sie im Free-Signup- oder Checkout-Formular die optionale Newsletter-Checkbox
+    aktivieren, verarbeiten wir Ihre E-Mail-Adresse zum Versand von Produkt-Updates und
+    Informationen rund um {brand.siteName}. Rechtsgrundlage ist Ihre Einwilligung nach
+    Art. 6 Abs. 1 lit. a DSGVO in Verbindung mit § 7 Abs. 2 Nr. 3 UWG.
+  </p>
+  <p>
+    Der Newsletter erscheint anlassbezogen, in der Regel nicht häufiger als einmal
+    pro Monat. Inhaltlich informieren wir über neue Funktionen, Produktverbesserungen
+    und gelegentlich über Preis- oder Tarifänderungen. Wir versenden keine Werbung
+    von Dritten und geben Ihre E-Mail-Adresse zu Werbezwecken nicht an Dritte weiter.
+  </p>
+  <p>
+    Die Anmeldung erfolgt im Double-Opt-In-Verfahren: Nach der Anmeldung erhalten Sie eine
+    Bestätigungsmail; erst nach deren Bestätigung nehmen wir Sie in den Verteiler auf. Sie
+    können den Newsletter jederzeit mit Wirkung für die Zukunft abbestellen — entweder über
+    den Abmeldelink in jeder Newsletter-Mail oder per Nachricht an
+    <a href={`mailto:${contact.email}`}>{contact.email}</a>. Der Widerruf der Einwilligung
+    berührt die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung nicht. Der Versand
+    erfolgt über Resend (siehe Abschnitt 6).
+  </p>
 
   <p class="legal-meta">Grundlage: angepasst aus dem bestehenden eRecht24-Text.</p>
 </div>

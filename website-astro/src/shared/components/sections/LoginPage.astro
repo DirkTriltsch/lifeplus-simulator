@@ -27,13 +27,13 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       <div class="checking-mark">
         <span class="checking-spinner"></span>
       </div>
-      <h1>Anmeldung wird geprueft</h1>
+      <h1>Anmeldung wird geprüft</h1>
       <p class="lead">Einen Moment bitte.</p>
     </div>
 
     <div id="loginFormView" hidden>
       <p class="eyebrow">Anmelden</p>
-      <h1>Willkommen zurueck</h1>
+      <h1>Willkommen zurück</h1>
       <p class="lead">Gib deine E-Mail-Adresse ein. Wir schicken dir einen einmaligen Login-Link.</p>
 
       <div class="email-block">
@@ -65,11 +65,11 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
       </div>
       <h2>Schau in dein Postfach</h2>
       <p>Falls ein Konto zu <span class="target" id="loginSentEmail">name@beispiel.de</span> existiert, haben wir dir einen Login-Link gesendet.</p>
-      <p>Klicke auf den Link in der Mail, um dich anzumelden. Der Link ist 15 Minuten gueltig.</p>
+      <p>Klicke auf den Link in der Mail, um dich anzumelden. Der Link ist 15 Minuten gültig.</p>
       <p class="sent-hint">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>
       <button class="resend-btn" id="loginResendBtn">Erneut senden</button>
       <p class="resend-status" id="loginResendStatus" aria-live="polite"></p>
-      <a href="/pricing.html" class="sent-plan-link">Noch keinen Zugang? Jetzt Plan auswaehlen</a>
+      <a href="/pricing.html" class="sent-plan-link">Noch keinen Zugang? Jetzt Plan auswählen</a>
     </div>
 
     <div class="sent" id="loginNotFoundView" hidden>
@@ -80,8 +80,8 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </svg>
       </div>
       <h2>Kein Account gefunden</h2>
-      <p>Fuer diese E-Mail-Adresse gibt es noch keinen aktiven Account.</p>
-      <a href="/pricing.html" class="cta-link">Jetzt Plan auswaehlen</a>
+      <p>Für diese E-Mail-Adresse gibt es noch keinen aktiven Account.</p>
+      <a href="/pricing.html" class="cta-link">Jetzt Plan auswählen</a>
       <button class="link-btn" id="loginTryAgainBtn" type="button">Andere E-Mail verwenden</button>
     </div>
   </div>

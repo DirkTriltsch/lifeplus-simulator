@@ -3,6 +3,25 @@ import '@shared/styles/tokens.css';
 import '@shared/styles/globals.css';
 import '@shared/styles/site.css';
 import '@shared/styles/debug.css';
+
+// Lokale Schriftarten via @fontsource — kein Drittanbieter-Request
+// an Google Fonts (DSGVO/TTDSG). Datenschutzerklaerung Abschnitt 6
+// dokumentiert das Self-Hosting der Schriftarten.
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/inter/800.css';
+import '@fontsource/fraunces/300.css';
+import '@fontsource/fraunces/400.css';
+import '@fontsource/fraunces/500.css';
+import '@fontsource/fraunces/600.css';
+import '@fontsource/fraunces/400-italic.css';
+import '@fontsource/fraunces/500-italic.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+
 import type { Brand } from '@shared/content-schemas/config';
 
 interface Props {
@@ -26,13 +45,6 @@ const debugRoot = process.cwd().replace(/\\/g, '/');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
 
     <script is:inline define:vars={{ apiBase, debugRoot }}>
       window.LFL_API_BASE = apiBase;

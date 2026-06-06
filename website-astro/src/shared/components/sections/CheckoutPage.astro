@@ -80,10 +80,10 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        <span>Daten gesperrt. Aenderungen ueber <strong>"Daten aendern"</strong> rechts.</span>
+        <span>Daten gesperrt. Änderungen über <strong>"Daten ändern"</strong> rechts.</span>
       </div>
 
-      <div class="sum-h">Bestelluebersicht</div>
+      <div class="sum-h">Bestellübersicht</div>
 
       <!-- Rabattcode (einziger Input in der linken Spalte) -->
       <div class="inline-field" id="discountField">
@@ -133,7 +133,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </div>
         <div class="product-info">
           <div class="product-name">{brand.siteName} Pro</div>
-          <div class="product-plan">{tier.name} · automatische Verlaengerung</div>
+          <div class="product-plan">{tier.name} · automatische Verlängerung</div>
           <div class="product-qty">Menge: 1</div>
         </div>
       </div>
@@ -160,17 +160,17 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
 
       <div class="totals">
         <div class="total">
-          <span>Heute faellig</span>
+          <span>Heute fällig</span>
           <span class="value" id="totalToday">{eur(gross)}</span>
         </div>
         <div class="future">
-          <span>Faellig am {renewalLabel}</span>
+          <span>Fällig am {renewalLabel}</span>
           <span id="totalFuture">{eur(gross)}</span>
         </div>
       </div>
 
       <p class="preview-hint" id="previewHint">
-        Vorlaeufige Berechnung. Endgueltige Steuer richtet sich nach Land + USt-IdNr (Paddle).
+        Vorläufige Berechnung. Endgültige Steuer richtet sich nach Land + USt-IdNr (Paddle).
       </p>
 
       <div class="trust">
@@ -178,7 +178,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
              stroke="currentColor" stroke-width="2">
           <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
         </svg>
-        Zahlung &amp; Rechnung ueber Paddle als Merchant of Record
+        Zahlung &amp; Rechnung über Paddle als Merchant of Record
       </div>
     </aside>
 
@@ -187,7 +187,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
 
       <!-- ===== STEP 1: Rechnungsdaten ===== -->
       <section class="step-panel" id="step1">
-        <h1 class="panel-h">Bezahlung abschliessen</h1>
+        <h1 class="panel-h">Bezahlung abschließen</h1>
 
         <div class="stepper">
           <div class="step-dot active" id="dot1"><span>1</span></div>
@@ -208,19 +208,19 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </div>
 
         <p class="panel-sub">
-          Gib deine vollstaendigen Rechnungsdaten ein. Diese erscheinen auf
+          Gib deine vollständigen Rechnungsdaten ein. Diese erscheinen auf
           deiner Paddle-Rechnung.
         </p>
 
         <div class="invoice-block">
-          <div class="invoice-block-h">Rechnungsempfaenger</div>
+          <div class="invoice-block-h">Rechnungsempfänger</div>
 
           <div class="field-block">
             <label for="checkoutEmail">E-Mail-Adresse <span class="req">*</span></label>
             <input id="checkoutEmail" type="email" autocomplete="email"
                    inputmode="email" spellcheck="false" required
                    placeholder="name@beispiel.de" />
-            <p class="field-hint" id="emailHint">Fuer Rechnung, Zugang und Login.</p>
+            <p class="field-hint" id="emailHint">Für Rechnung, Zugang und Login.</p>
           </div>
 
           <div class="field-block">
@@ -232,10 +232,10 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           </div>
 
           <div class="field-block">
-            <label for="checkoutStreet">Strasse und Hausnummer <span class="req">*</span></label>
+            <label for="checkoutStreet">Straße und Hausnummer <span class="req">*</span></label>
             <input id="checkoutStreet" type="text" autocomplete="street-address"
                    maxlength="100" required
-                   placeholder="z.B. Musterstrasse 12" />
+                   placeholder="z.B. Musterstraße 12" />
           </div>
 
           <div class="field-row">
@@ -256,7 +256,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
             <select id="checkoutCountry" required>
               <optgroup label="DACH">
                 <option value="DE" selected>Deutschland</option>
-                <option value="AT">Oesterreich</option>
+                <option value="AT">Österreich</option>
                 <option value="CH">Schweiz</option>
               </optgroup>
               <optgroup label="EU (weitere)">
@@ -264,7 +264,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                 <option value="BG">Bulgarien</option>
                 <option value="CY">Zypern</option>
                 <option value="CZ">Tschechien</option>
-                <option value="DK">Daenemark</option>
+                <option value="DK">Dänemark</option>
                 <option value="EE">Estland</option>
                 <option value="ES">Spanien</option>
                 <option value="FI">Finnland</option>
@@ -281,7 +281,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                 <option value="NL">Niederlande</option>
                 <option value="PL">Polen</option>
                 <option value="PT">Portugal</option>
-                <option value="RO">Rumaenien</option>
+                <option value="RO">Rumänien</option>
                 <option value="SE">Schweden</option>
                 <option value="SI">Slowenien</option>
                 <option value="SK">Slowakei</option>
@@ -295,8 +295,8 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                    spellcheck="false" maxlength="20"
                    placeholder="z.B. AT123456789" />
             <p class="field-hint">
-              Bei EU-USt-IdNr ausserhalb DE entfaellt die deutsche USt (Reverse-Charge).
-              Paddle prueft via VIES.
+              Bei EU-USt-IdNr außerhalb DE entfällt die deutsche USt (Reverse-Charge).
+              Paddle prüft via VIES.
             </p>
             <p class="vat-field-feedback" id="vatFeedback"></p>
           </div>
@@ -322,7 +322,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                    stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
             </span>
             <span class="label">
-              Ich habe die <a href="/datenschutz.html" target="_blank">Datenschutzerklaerung</a> gelesen<span class="req">*</span>
+              Ich habe die <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a> gelesen<span class="req">*</span>
             </span>
           </label>
 
@@ -333,11 +333,11 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
                    stroke="#fff" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
             </span>
             <span class="label">
-              Ich bestaetige, dass ich diesen Vertrag in Ausuebung meiner gewerblichen
-              oder selbststaendigen beruflichen Taetigkeit (§14 BGB) abschliesse und
+              Ich bestätige, dass ich diesen Vertrag in Ausübung meiner gewerblichen
+              oder selbständigen beruflichen Tätigkeit (§14 BGB) abschließe und
               nicht als Verbraucher. Mir ist bewusst, dass hierdurch
               <strong>kein Widerrufsrecht</strong> nach §312g BGB besteht.<span class="req">*</span>
-              <span class="hint">{brand.siteName} ist ein Angebot ausschliesslich fuer gewerbliche und selbststaendige Nutzer.</span>
+              <span class="hint">{brand.siteName} ist ein Angebot ausschließlich für gewerbliche und selbständige Nutzer.</span>
             </span>
           </label>
 
@@ -367,7 +367,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
 
       <!-- ===== STEP 2: Zahlung ===== -->
       <section class="step-panel" id="step2" hidden>
-        <h1 class="panel-h">Bezahlung abschliessen</h1>
+        <h1 class="panel-h">Bezahlung abschließen</h1>
 
         <div class="stepper">
           <div class="step-dot done"><span>&check;</span></div>
@@ -379,12 +379,12 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           <span class="step-label active">Zahlung</span>
         </div>
 
-        <p class="panel-sub">Schliesse die Zahlung im sicheren Paddle-Feld ab.</p>
+        <p class="panel-sub">Schließe die Zahlung im sicheren Paddle-Feld ab.</p>
 
         <div class="konto-readonly">
           <div class="konto-label">
-            <span>Rechnungsempfaenger</span>
-            <button type="button" class="link-btn" id="backBtn">&larr; Daten aendern</button>
+            <span>Rechnungsempfänger</span>
+            <button type="button" class="link-btn" id="backBtn">&larr; Daten ändern</button>
           </div>
           <div class="konto-data">
             <div class="konto-row">
@@ -415,12 +415,12 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           <div>
             <strong id="syncBannerTitle">Paddle-Transaktion erstellt</strong>
             <div class="sync-sub" id="syncBannerSub">
-              Rechnungsdaten und ggf. Rabatt + USt-IdNr wurden serverseitig an Paddle uebermittelt.
+              Rechnungsdaten und ggf. Rabatt + USt-IdNr wurden serverseitig an Paddle übermittelt.
             </div>
           </div>
         </div>
 
-        <p class="err-msg" id="errMsg">Bitte spaeter erneut versuchen.</p>
+        <p class="err-msg" id="errMsg">Bitte später erneut versuchen.</p>
 
         <div class="sec-label">Zahlungsfeld</div>
         <div class="paddle-wrap" id="paddleWrap">
@@ -429,7 +429,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
 
         <p class="legal">
           Abwicklung &amp; Rechnungsstellung durch <a href="https://paddle.com" target="_blank">Paddle.com</a>.
-          Automatische Verlaengerung, jederzeit im Customer-Portal kuendbar.
+          Automatische Verlängerung um die gewählte Laufzeit zum jeweils gültigen Rabattpreis dieses Tarifs; Preisanpassungen werden rechtzeitig mitgeteilt, im Fall einer Erhöhung mit Sonderkündigungsrecht. Ab der ersten Verlängerung monatlich zum Monatsende kündbar; nicht genutzte volle Restmonate erstatten wir anteilig zurück.
         </p>
       </section>
     </div>
@@ -442,14 +442,14 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <h2>Vielen Dank fuer deinen Kauf</h2>
-      <p>Wir haben die Zahlungsbestaetigung von Paddle erhalten und verarbeiten deinen Zugang.</p>
+      <h2>Vielen Dank für deinen Kauf</h2>
+      <p>Wir haben die Zahlungsbestätigung von Paddle erhalten und verarbeiten deinen Zugang.</p>
       <p>
         Konto-E-Mail: <strong id="successEmail"></strong><br/>
         <span id="successMail" class="success-mail-status"></span>
       </p>
-      <a href={brand.appUrl} class="success-app-link">Jetzt App oeffnen</a>
-      <p class="success-hint">Du kannst diese Seite geoeffnet lassen oder spaeter in die App wechseln.</p>
+      <a href={brand.appUrl} class="success-app-link">Jetzt App öffnen</a>
+      <p class="success-hint">Du kannst diese Seite geöffnet lassen oder später in die App wechseln.</p>
     </section>
   </div>
 </section>

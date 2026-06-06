@@ -1,5 +1,5 @@
 import type {
-  MonthResult,
+  QuarterResult,
   PersonTreeSnapshot,
   SimPerson,
   TreeCompensationResult,
@@ -64,7 +64,7 @@ export interface SunburstNode {
 }
 
 export interface BuildSunburstTreeInput {
-  snapshot: MonthResult;
+  snapshot: QuarterResult;
   memberMonthlyVolume: number;
   shopperMonthlyVolume: number;
 }
@@ -241,7 +241,7 @@ export function getPath(root: SunburstNode, id: string): SunburstNode[] {
 }
 
 function sumLeg(
-  leg: MonthResult['legs'][number],
+  leg: QuarterResult['legs'][number],
   memberVolume: number,
   shopperVolume: number,
 ): number {
@@ -302,6 +302,10 @@ function subtreeStats(
       if (p.kind === 'member') {
         members += p.weight;
         qgv += p.weight * (rankByPersonId.get(p.id)?.av ?? memberVolume);
+        shoppers += p.shopperCount ?? 0;
+        qgv +=
+          (p.shopperCount ?? 0) *
+          (p.shopperMonthlyVolume ?? shopperVolume);
       } else if (p.kind === 'shopper') {
         shoppers += p.weight;
         qgv += p.weight * shopperVolume;
@@ -588,6 +592,15 @@ function levelsByDepth(
       if (p.kind === 'member') {
         levels[depth].members += p.weight;
         levels[depth].qgv += p.weight * (rankByPersonId.get(p.id)?.av ?? memberVolume);
+        const shopperCount = p.shopperCount ?? 0;
+        if (shopperCount > 0) {
+          ensure(depth + 1);
+          levels[depth + 1].shoppers += shopperCount;
+          levels[depth + 1].qgv +=
+            shopperCount * (p.shopperMonthlyVolume ?? shopperVolume);
+          levels[depth + 1].total =
+            levels[depth + 1].members + levels[depth + 1].shoppers;
+        }
       } else if (p.kind === 'shopper') {
         levels[depth].shoppers += p.weight;
         levels[depth].qgv += p.weight * shopperVolume;

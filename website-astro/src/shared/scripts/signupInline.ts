@@ -78,7 +78,7 @@ export function setupSignupInline(): void {
     emailInput!.classList.toggle('invalid', email.length > 0 && !valid);
     if (!emailHint) return;
     if (email.length > 0 && !valid) {
-      emailHint.textContent = 'Bitte eine gueltige E-Mail-Adresse eingeben.';
+      emailHint.textContent = 'Bitte eine gültige E-Mail-Adresse eingeben.';
       emailHint.classList.add('error');
     } else {
       emailHint.textContent =
@@ -171,7 +171,7 @@ export function setupSignupInline(): void {
       if (resendStatus) resendStatus.textContent = `Login-Link wurde erneut an ${lastSubmittedEmail} gesendet.`;
       startResendCooldown();
     } else {
-      if (resendStatus) resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte spaeter erneut versuchen.';
+      if (resendStatus) resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte später erneut versuchen.';
     }
   }
 

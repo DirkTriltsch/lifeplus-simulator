@@ -12,8 +12,8 @@ describe('product packs', () => {
     for (const product of products) {
       const result = runSimulation(product, product.simulator.defaultInputs, 12);
 
-      expect(result.months).toHaveLength(12);
-      expect(result.finalMonth.rankName).toBeTruthy();
+      expect(result.quarters).toHaveLength(4);
+      expect(result.finalQuarter.rankName).toBeTruthy();
       expect(product.brand.name).toContain(product.brand.shortName);
       expect(product.legal.contactEmail).toMatch(/^info@/);
     }

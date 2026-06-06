@@ -53,7 +53,7 @@ export function setupLoginInline(): void {
     refreshPlanLinks(valid ? email : lastSubmittedEmail);
     if (!emailHint) return;
     if (email.length > 0 && !valid) {
-      emailHint.textContent = 'Bitte eine gueltige E-Mail-Adresse eingeben.';
+      emailHint.textContent = 'Bitte eine gültige E-Mail-Adresse eingeben.';
       emailHint.classList.add('error');
     } else {
       emailHint.textContent = 'Wir senden dir einen einmaligen Login-Link.';
@@ -191,7 +191,7 @@ export function setupLoginInline(): void {
       if (resendStatus) resendStatus.textContent = 'Falls ein Konto existiert, wurde erneut ein Login-Link gesendet.';
       startResendCooldown();
     } else if (resendStatus) {
-      resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte spaeter erneut versuchen.';
+      resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte später erneut versuchen.';
     }
   }
 

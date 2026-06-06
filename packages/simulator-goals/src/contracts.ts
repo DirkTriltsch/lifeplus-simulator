@@ -16,9 +16,11 @@ export interface Goal {
 export interface GoalProgress {
   goal: Goal;
   achieved: boolean;
-  achievedInMonth?: number;
+  achievedInQuarterIndex?: number;
+  achievedInQuarter?: number;
   achievedInYear?: number;
-  /** Aktueller Wert der Ziel-Vergleichsgroesse im letzten Monat. */
+  achievedAfterYears?: number;
+  /** Aktueller Wert der Ziel-Vergleichsgroesse im letzten Quartal. */
   currentValueEUR: number;
   /** 0..1+ (ungebremst fuer Fortschrittsanzeigen). */
   percentage: number;

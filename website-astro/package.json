@@ -17,6 +17,9 @@
     "build:all": "npm run build:lifeplus && npm run build:fitline && npm run build:eqology"
   },
   "dependencies": {
+    "@fontsource/fraunces": "^5.0.0",
+    "@fontsource/inter": "^5.0.0",
+    "@fontsource/jetbrains-mono": "^5.0.0",
     "astro": "^5.0.0",
     "js-yaml": "^4.1.0",
     "zod": "^3.23.0"

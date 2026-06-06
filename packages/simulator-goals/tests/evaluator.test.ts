@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type {
-  MonthResult,
+  QuarterResult,
   SimulationResult,
   SimulatorInputs,
 } from '@mlm/simulator-core';
 import { evaluateGoals, type Goal } from '../src';
 
-function makeMonth(monthIndex: number, totalEUR: number): MonthResult {
+function makeQuarter(quarterIndex: number, totalEUR: number): QuarterResult {
   return {
-    monthIndex,
-    year: Math.floor(monthIndex / 12) + 1,
-    monthInYear: (monthIndex % 12) + 1,
+    quarterIndex,
+    year: Math.floor(quarterIndex / 4) + 1,
+    quarterInYear: (quarterIndex % 4) + 1,
+    periodMonths: 3,
     membersByLevel: [],
     shoppersByLevel: [],
     legs: [],
@@ -34,12 +35,18 @@ function makeMonth(monthIndex: number, totalEUR: number): MonthResult {
   };
 }
 
-function makeResult(monthlyEUR: (month: number) => number, totalMonths = 120): SimulationResult {
-  const months = Array.from({ length: totalMonths }, (_, i) => makeMonth(i, monthlyEUR(i)));
-  const yearEnds = months.filter((m) => m.monthInYear === 12);
+function makeResult(
+  quarterlyEUR: (quarter: number) => number,
+  totalQuarters = 40,
+): SimulationResult {
+  const quarters = Array.from(
+    { length: totalQuarters },
+    (_, i) => makeQuarter(i, quarterlyEUR(i)),
+  );
+  const yearEnds = quarters.filter((q) => q.quarterInYear === 4);
   return {
-    months,
-    finalMonth: months[months.length - 1],
+    quarters,
+    finalQuarter: quarters[quarters.length - 1],
     yearEnds,
     yearSummaries: yearEnds.map((m) => ({
       year: m.year,
@@ -84,7 +91,8 @@ describe('evaluateGoals', () => {
     const [progress] = evaluateGoals(result, [goal], baseInputs);
 
     expect(progress.achieved).toBe(true);
-    expect(progress.achievedInMonth).toBe(5);
+    expect(progress.achievedInQuarterIndex).toBe(5);
+    expect(progress.achievedAfterYears).toBe(1.5);
   });
 
   it('monthlyIncome misst Brutto-Provision', () => {
@@ -99,7 +107,7 @@ describe('evaluateGoals', () => {
     const [progress] = evaluateGoals(result, [goal], baseInputs);
 
     expect(progress.achieved).toBe(true);
-    expect(progress.achievedInMonth).toBe(30);
+    expect(progress.achievedInQuarterIndex).toBe(30);
     expect(progress.currentValueEUR).toBe(1500);
   });
 
@@ -116,7 +124,7 @@ describe('evaluateGoals', () => {
     const [progress] = evaluateGoals(result, [goal], baseInputs);
 
     expect(progress.achieved).toBe(true);
-    expect(progress.achievedInMonth).toBe(24);
+    expect(progress.achievedInQuarterIndex).toBe(24);
   });
 
   it('yearlySurplus summiert ueber das Jahr', () => {
@@ -126,7 +134,7 @@ describe('evaluateGoals', () => {
       kind: 'yearlySurplus',
       amountEUR: 2000,
     };
-    // Surplus 250 pro Monat -> 3000 EUR/Jahr, ab Jahr 1 erreicht
+    // Surplus 250 pro Monat, vier Quartale zu je drei Monaten -> 3000 EUR/Jahr.
     const result = makeResult(() => 350);
 
     const [progress] = evaluateGoals(result, [goal], baseInputs);
@@ -135,7 +143,30 @@ describe('evaluateGoals', () => {
     expect(progress.achievedInYear).toBe(1);
   });
 
-  it('requiresRefinanced verzoegert achievedInMonth, bis auch Refinanzierung erreicht ist', () => {
+  it('yearlySurplus gewichtet Quartalsperioden mit drei Monaten', () => {
+    const goal: Goal = {
+      id: 'yq',
+      label: 'Urlaub',
+      kind: 'yearlySurplus',
+      amountEUR: 2000,
+    };
+    const quarters = [0, 1, 2, 3].map((quarterIndex) => makeQuarter(quarterIndex, 350));
+    const result: SimulationResult = {
+      quarters,
+      finalQuarter: quarters[quarters.length - 1],
+      yearEnds: [quarters[quarters.length - 1]],
+      yearSummaries: [],
+    };
+
+    const [progress] = evaluateGoals(result, [goal], baseInputs);
+
+    expect(progress.achieved).toBe(true);
+    expect(progress.achievedInQuarterIndex).toBe(3);
+    expect(progress.achievedAfterYears).toBe(1);
+    expect(progress.currentValueEUR).toBe(3000);
+  });
+
+  it('requiresRefinanced verzoegert das Ziel, bis auch Refinanzierung erreicht ist', () => {
     const goal: Goal = {
       id: 's',
       label: 'Surplus',
@@ -143,9 +174,9 @@ describe('evaluateGoals', () => {
       amountEUR: 50, // sehr niedrig
       requiresRefinanced: true,
     };
-    // totalEUR steigt von 60 (surplus -40) auf 200 (surplus 100) in Monat 20.
-    // Refinanzierung (totalEUR >= 100) auch ab Monat 20.
-    // Surplus-Bedingung (surplus >= 50, also totalEUR >= 150) ab Monat 30.
+    // totalEUR steigt von 60 (surplus -40) auf 200 (surplus 100) in Quartal 20.
+    // Refinanzierung (totalEUR >= 100) auch ab Quartal 20.
+    // Surplus-Bedingung (surplus >= 50, also totalEUR >= 150) ab Quartal 30.
     const result = makeResult((m) => {
       if (m >= 30) return 200;
       if (m >= 20) return 120;
@@ -155,7 +186,7 @@ describe('evaluateGoals', () => {
     const [progress] = evaluateGoals(result, [goal], baseInputs);
 
     expect(progress.achieved).toBe(true);
-    expect(progress.achievedInMonth).toBe(30);
+    expect(progress.achievedInQuarterIndex).toBe(30);
   });
 
   it('blockedByRefinanced wird gesetzt, wenn das Ziel selbst erreicht waere, aber Refinanzierung nicht', () => {

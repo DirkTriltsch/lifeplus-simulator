@@ -1,14 +1,14 @@
 export type RealityStrategy =
   | 'standard'
-  | 'dirichlet'
-  | 'momentum'
-  | 'lifecycle';
+  | 'person-tree'
+  | 'person-tree-random'
+  | 'person-tree-momentum';
 
 const STRATEGY_OPTIONS: { value: RealityStrategy; label: string }[] = [
   { value: 'standard', label: 'Standard' },
-  { value: 'dirichlet', label: 'Zufallsverteilung' },
-  { value: 'momentum', label: 'Momentum' },
-  { value: 'lifecycle', label: 'Persoenlichkeitsprofile (bald)' },
+  { value: 'person-tree', label: 'Personenbaum' },
+  { value: 'person-tree-random', label: 'Personenbaum (Zufall)' },
+  { value: 'person-tree-momentum', label: 'Personenbaum (Momentum)' },
 ];
 
 interface AdvancedSettingsPanelProps {
@@ -114,14 +114,13 @@ export function AdvancedSettingsPanel({
                   <option
                     key={opt.value}
                     value={opt.value}
-                    disabled={opt.value === 'lifecycle'}
                   >
                     {opt.label}
                   </option>
                 ))}
               </select>
               <p className="text-[11px] text-gray-500 mt-1 leading-snug">
-                Verteilung des Wachstums auf die Beine.
+                Berechnungsmodus fuer Standardmodell oder Personenbaum.
               </p>
             </div>
           </div>

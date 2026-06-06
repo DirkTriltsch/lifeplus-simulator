@@ -85,7 +85,10 @@ function calculateOrderPayouts(
     order.kind === 'member_order'
       ? { ...order, volume: rankByPersonId.get(order.personId)?.av ?? order.volume }
       : order;
-  const upline = getUplinePath(personsById, order.personId);
+  const upline =
+    order.kind === 'shopper_order'
+      ? getShopperAggregateUplinePath(personsById, order.personId)
+      : getUplinePath(personsById, order.personId);
   const weightedVolume = effectiveOrder.volume * effectiveOrder.weight;
 
   return [
@@ -93,6 +96,14 @@ function calculateOrderPayouts(
     ...calculateOrderPhase2(effectiveOrder, upline, rankByPersonId, weightedVolume),
     ...calculateOrderPhase3(effectiveOrder, upline, rankByPersonId, weightedVolume),
   ];
+}
+
+function getShopperAggregateUplinePath(
+  personsById: Map<string, SimPerson>,
+  sponsorId: string,
+): SimPerson[] {
+  const sponsor = personsById.get(sponsorId);
+  return sponsor ? [sponsor, ...getUplinePath(personsById, sponsorId)] : [];
 }
 
 function getUplinePath(
@@ -266,7 +277,10 @@ function calculateRankStates(snapshot: PersonTreeSnapshot): PersonRankState[] {
       .map((childId) => personsById.get(childId))
       .filter((child): child is SimPerson => child !== undefined && child.active)
       .reduce((total, child) => total + rankPerson(child).subtree.shoppers, 0);
-    const qgv = childSubtreeQgv;
+    const ownShopperQgv =
+      (person.shopperCount ?? 0) *
+      (person.shopperMonthlyVolume ?? person.personalMonthlyVolume);
+    const qgv = childSubtreeQgv + ownShopperQgv;
     const qualifiedLegs = directMemberChildren.reduce(
       (total, child) => total + child.weight,
       0,
@@ -301,7 +315,7 @@ function calculateRankStates(snapshot: PersonTreeSnapshot): PersonRankState[] {
     const subtree = {
       qgv: qgv + ownVolume,
       members: (person.kind === 'member' ? person.weight : 0) + childMembers,
-      shoppers: childShoppers,
+      shoppers: (person.shopperCount ?? 0) + childShoppers,
     };
     const state: PersonRankState = {
       personId: person.id,
@@ -339,7 +353,12 @@ function calculateShopperSubtreeStats(
 ): SubtreeStats {
   let members = person.kind === 'member' && person.active ? person.weight : 0;
   let shoppers = person.kind === 'shopper' && person.active ? person.weight : 0;
+  shoppers += person.active ? person.shopperCount ?? 0 : 0;
   let qgv = person.active ? person.personalMonthlyVolume * person.weight : 0;
+  qgv += person.active
+    ? (person.shopperCount ?? 0) *
+      (person.shopperMonthlyVolume ?? person.personalMonthlyVolume)
+    : 0;
 
   for (const childId of person.childrenIds) {
     const child = personsById.get(childId);

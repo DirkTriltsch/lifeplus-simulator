@@ -28,6 +28,45 @@ const { brand, contact, source } = Astro.props;
     E-Mail: <a href={`mailto:${contact.email}`}>{contact.email}</a>
   </p>
 
+  {(contact.registerCourt || contact.registerNumber) && (
+    <Fragment>
+      <h2>Registereintrag</h2>
+      <p>
+        {contact.registerCourt && <>Registergericht: {contact.registerCourt}<br /></>}
+        {contact.registerNumber && <>Registernummer: {contact.registerNumber}</>}
+      </p>
+    </Fragment>
+  )}
+
+  {contact.vatId && (
+    <Fragment>
+      <h2>Umsatzsteuer-Identifikationsnummer</h2>
+      <p>
+        USt-IdNr. nach §27a Umsatzsteuergesetz: {contact.vatId}
+      </p>
+    </Fragment>
+  )}
+
+  {contact.smallBusinessNote && (
+    <Fragment>
+      <h2>Hinweis zur Umsatzsteuer</h2>
+      <p>{contact.smallBusinessNote}</p>
+    </Fragment>
+  )}
+
+  {contact.responsibleForContent && (
+    <Fragment>
+      <h2>Inhaltlich verantwortlich</h2>
+      <p>
+        Verantwortlich für den Inhalt nach §18 Abs. 2 MStV:<br />
+        {contact.responsibleForContent}<br />
+        {contact.addressLine1}<br />
+        {contact.addressLine2}<br />
+        {contact.addressLine3}
+      </p>
+    </Fragment>
+  )}
+
   <h2>Online-Streitbeilegung</h2>
   <p>
     Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit:

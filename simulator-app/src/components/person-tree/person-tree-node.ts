@@ -139,18 +139,22 @@ function memberOwnIP(person: SimPerson, context: PersonContext): number {
 function buildShopperAggregate(
   parentId: string,
   depth: number,
+  parent: SimPerson,
   shoppers: SimPerson[],
   context: PersonContext,
 ): ShopperAggregateNode | null {
-  if (shoppers.length === 0) return null;
-
-  let shopperCount = 0;
-  let totalQGV = 0;
+  let shopperCount = parent.active ? parent.shopperCount ?? 0 : 0;
+  let totalQGV =
+    shopperCount *
+    (parent.shopperMonthlyVolume ??
+      context.shopperMonthlyVolume);
 
   for (const shopper of shoppers) {
     shopperCount += shopper.weight;
     totalQGV += shopperQGV(shopper, context);
   }
+
+  if (shopperCount <= 0) return null;
 
   return {
     kind: 'shopper-aggregate',
@@ -190,6 +194,7 @@ function buildMemberNode(
   const shopperAggregate = buildShopperAggregate(
     person.id,
     depth + 1,
+    person,
     shoppers,
     context,
   );

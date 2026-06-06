@@ -201,7 +201,7 @@ function NodeMark({ node, hovered, onHover, onToggleCollapse }: NodeMarkProps) {
   const isShopperAggregate = data.kind === 'shopper-aggregate';
   const radius = isShopperAggregate
     ? Math.min(18, 4 + Math.sqrt(data.shopperCount) * 2)
-    : MEMBER_RADIUS;
+    : memberRadius(data);
   const fill = isShopperAggregate
     ? SHOPPER_AGGREGATE_COLOR
     : STATUS_COLORS[data.status];
@@ -269,14 +269,15 @@ function NodeLabel({ node, hovered }: { node: LayoutNode; hovered: boolean }) {
 
   const hidden = node.isCollapsed ? hiddenSubtreeStats(data) : null;
   const primary = data.kind === 'root' ? 'Du' : shortId(data.personId);
-  const rankLine = data.rankName ? data.rankName : 'Member';
+  const rankLine = memberRankLine(data);
+  const radius = memberRadius(data);
 
   return (
-    <text x={MEMBER_RADIUS + 6} y={4} fontSize={11} fill="#1f2937">
+    <text x={radius + 6} y={4} fontSize={11} fill="#1f2937">
       <tspan fontWeight={data.kind === 'root' ? 700 : 500}>{primary}</tspan>
       <tspan dx={6} fill="#64748b">{rankLine}</tspan>
       {hidden && (
-        <tspan x={MEMBER_RADIUS + 6} dy={14} fill="#64748b">
+        <tspan x={radius + 6} dy={14} fill="#64748b">
           +{formatCount(hidden.hiddenMemberCount)} Personen
           {hidden.hiddenShopperCount > 0
             ? `, +${formatCount(hidden.hiddenShopperCount)} Shopper`
@@ -288,12 +289,24 @@ function NodeLabel({ node, hovered }: { node: LayoutNode; hovered: boolean }) {
         </tspan>
       )}
       {hovered && !hidden && (
-        <tspan x={MEMBER_RADIUS + 6} dy={14} fill="#64748b">
+        <tspan x={radius + 6} dy={14} fill="#64748b">
           {formatNumber(data.subtreeQGV)} IP &middot; {formatCurrency(data.subtreeProvisionEUR)}
         </tspan>
       )}
     </text>
   );
+}
+
+function memberRadius(data: PersonTreeNode): number {
+  if (data.kind === 'shopper-aggregate' || data.kind === 'root') return MEMBER_RADIUS;
+  return Math.min(14, MEMBER_RADIUS + Math.sqrt(Math.max(0, data.ownMemberCount - 1)) * 2);
+}
+
+function memberRankLine(data: PersonNode): string {
+  if (data.kind === 'root') return data.rankName ?? 'Member';
+  const memberLabel = formatMemberCount(data.ownMemberCount);
+  if (!data.rankName || data.rankName === 'Member') return memberLabel;
+  return `${memberLabel} · ${data.rankName}`;
 }
 
 function Legend() {
@@ -326,6 +339,15 @@ function shortId(id: string): string {
 
 function formatCount(n: number): string {
   return Math.round(n).toLocaleString('de-DE');
+}
+
+function formatMemberCount(n: number): string {
+  const rounded = Math.round(n * 10) / 10;
+  if (rounded === 1) return 'Member';
+  const count = Number.isInteger(rounded)
+    ? rounded.toLocaleString('de-DE')
+    : rounded.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  return `${count} Member`;
 }
 
 function formatNumber(n: number): string {

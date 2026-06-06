@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type {
-  MonthResult,
+  QuarterResult,
   PersonTreeSnapshot,
   TreeCompensationResult,
 } from '@mlm/simulator-core';
@@ -22,7 +22,7 @@ import {
 export type NetworkView = 'sunburst' | 'legs' | 'hybrid';
 
 interface NetworkVisualizationsProps {
-  yearEnds: MonthResult[];
+  yearEnds: QuarterResult[];
   selectedView: NetworkView;
   memberMonthlyVolume: number;
   shopperMonthlyVolume: number;
@@ -1112,7 +1112,7 @@ function HybridTree({
   selectedLeg,
   onSelectLeg,
 }: {
-  snapshot: MonthResult;
+  snapshot: QuarterResult;
   legs: LegData[];
   selectedLeg: LegData;
   onSelectLeg: (id: number) => void;
@@ -1258,7 +1258,7 @@ function TreeNode({
 }
 
 function buildLegs(
-  snapshot: MonthResult,
+  snapshot: QuarterResult,
   memberMonthlyVolume: number,
   shopperMonthlyVolume: number,
 ): LegData[] {
@@ -1302,7 +1302,7 @@ function buildLegs(
   return buildSymmetricLegData(snapshot);
 }
 
-function buildLevelTotals(snapshot: MonthResult): number[] {
+function buildLevelTotals(snapshot: QuarterResult): number[] {
   const max = Math.max(snapshot.membersByLevel.length, snapshot.shoppersByLevel.length, 1);
   return Array.from({ length: Math.min(10, max) }, (_, index) => {
     return (snapshot.membersByLevel[index] ?? 0) + (snapshot.shoppersByLevel[index] ?? 0);
@@ -1310,7 +1310,7 @@ function buildLevelTotals(snapshot: MonthResult): number[] {
 }
 
 function buildLegLevelBreakdowns(
-  leg: MonthResult['legs'][number],
+  leg: QuarterResult['legs'][number],
   memberMonthlyVolume: number,
   shopperMonthlyVolume: number,
 ): LevelBreakdown[] {
@@ -1328,7 +1328,7 @@ function buildLegLevelBreakdowns(
 }
 
 function calculateLegQgv(
-  leg: MonthResult['legs'][number],
+  leg: QuarterResult['legs'][number],
   memberMonthlyVolume: number,
   shopperMonthlyVolume: number,
 ): number {
@@ -1338,7 +1338,7 @@ function calculateLegQgv(
   );
 }
 
-function buildSymmetricLegData(snapshot: MonthResult): LegData[] {
+function buildSymmetricLegData(snapshot: QuarterResult): LegData[] {
   const legCount = Math.max(1, Math.round(snapshot.directLegs || 1));
   const share = 1 / legCount;
   const levelTotals = buildLevelTotals(snapshot);

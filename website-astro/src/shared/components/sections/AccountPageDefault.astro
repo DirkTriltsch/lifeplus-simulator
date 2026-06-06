@@ -24,7 +24,7 @@ const accountConfig = {
     <div class="account-card">
       <!-- Loading state -->
       <div id="state-loading">
-        <p style="text-align:center; color:#7A8983; font-size:14px; margin:24px 0;">Lade Konto…</p>
+        <p style="text-align:center; color:#7A8983; font-size:14px; margin:24px 0;">Lade Konto …</p>
       </div>
 
       <!-- Anonymous: login form -->
@@ -49,8 +49,8 @@ const accountConfig = {
         </form>
         <p class="account-privacy-note">
           Mit Klick auf "Login-Link senden" verarbeiten wir deine E-Mail-Adresse zur Authentifizierung
-          und Vertragsdurchfuehrung (Art. 6 Abs. 1 lit. b DSGVO). Details siehe
-          <a href="/datenschutz.html">Datenschutzerklaerung</a>.
+          und Vertragsdurchführung (Art. 6 Abs. 1 lit. b DSGVO). Details siehe
+          <a href="/datenschutz.html">Datenschutzerklärung</a>.
         </p>
         <p id="login-msg" class="account-msg hidden"></p>
       </div>
@@ -59,14 +59,14 @@ const accountConfig = {
       <div id="state-sent" class="hidden">
         <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Link gesendet</h2>
         <p style="font-size:14px; color:#4A5C53;">
-          Falls die E-Mail-Adresse bei uns bekannt ist, hast du in den naechsten Minuten einen Login-Link im Postfach.
+          Falls die E-Mail-Adresse bei uns bekannt ist, hast du in den nächsten Minuten einen Login-Link im Postfach.
           Du kannst dieses Fenster offen lassen und auf den Link in der Mail klicken.
         </p>
       </div>
 
       <!-- Verifying -->
       <div id="state-verifying" class="hidden">
-        <p style="text-align:center; color:#4A5C53;">Login wird geprueft…</p>
+        <p style="text-align:center; color:#4A5C53;">Login wird geprüft …</p>
       </div>
 
       <!-- Logged in -->
@@ -84,28 +84,101 @@ const accountConfig = {
           <span class="value" id="account-plan">—</span>
         </div>
         <div class="account-row" id="account-row-until">
-          <span class="label" id="account-until-label">Gueltig bis</span>
+          <span class="label" id="account-until-label">Gültig bis</span>
           <span class="value" id="account-until">—</span>
         </div>
         <div class="account-row">
-          <span class="label">Geraete</span>
+          <span class="label">Geräte</span>
           <span class="value" id="account-devices">—</span>
+        </div>
+
+        <!-- Geplante Kuendigung — sichtbar wenn scheduled_change.action === 'cancel' -->
+        <div id="scheduled-cancel-banner" class="account-banner-cancel hidden">
+          <p class="account-banner-text">
+            <strong>Kündigung geplant.</strong> Dein Zugang endet am
+            <span id="scheduled-cancel-date">—</span>. Bis dahin bleibt alles aktiv.
+          </p>
+          <button type="button" id="undo-cancel-btn" class="account-btn-secondary">
+            Kündigung rückgängig machen
+          </button>
         </div>
 
         <div class="account-actions">
           <a href={brand.appUrl} class="account-btn-primary">App öffnen</a>
-          <button type="button" id="portal-btn" class="account-btn-secondary">Abo bei Paddle verwalten</button>
-          <a href="/pricing.html" class="account-btn-secondary">Plan wechseln</a>
-          <button type="button" id="logout-btn" class="account-btn-link">Abmelden</button>
+        </div>
+
+        <!-- Zahlung & Abrechnung — nur sichtbar bei aktiver Sub -->
+        <section id="billing-section" class="account-section hidden">
+          <h3 class="account-section-title">Zahlung &amp; Abrechnung</h3>
+          <div class="account-row">
+            <span class="label">Zahlungsmethode</span>
+            <span class="value" id="billing-method">—</span>
+          </div>
+          <div class="account-row">
+            <span class="label">Nächste Zahlung</span>
+            <span class="value" id="billing-next">—</span>
+          </div>
+          <div class="account-section-actions">
+            <a href="/pricing.html" class="account-btn-secondary">Plan wechseln</a>
+            <button type="button" id="change-payment-btn" class="account-btn-secondary">
+              Karte / SEPA ändern <span class="account-btn-ext" aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Rechnungen — nur sichtbar wenn Transactions vorhanden -->
+        <section id="payments-section" class="account-section hidden">
+          <h3 class="account-section-title">Rechnungen</h3>
+          <ul id="payments-list" class="payments-list"></ul>
+          <p id="payments-empty" class="account-section-empty hidden">
+            Noch keine Rechnungen vorhanden.
+          </p>
+          <button type="button" id="portal-overview-btn" class="account-btn-link account-btn-link-inline">
+            Alle Rechnungen bei Paddle ansehen <span class="account-btn-ext" aria-hidden="true">↗</span>
+          </button>
+        </section>
+
+        <!-- Abmelden als Haupt-Abschluss-Aktion -->
+        <div class="account-actions account-actions-secondary">
+          <button type="button" id="logout-btn" class="account-btn-primary">Abmelden</button>
         </div>
         <p id="account-msg" class="account-msg hidden"></p>
+
+        <!-- Abo kuendigen — dezente Aktion, abgesetzt am unteren Rand -->
+        <div class="account-cancel-footer">
+          <button type="button" id="cancel-sub-btn" class="account-btn-cancel-link hidden">
+            Abo kündigen
+          </button>
+        </div>
       </div>
     </div>
 
     <p style="text-align:center; font-size:12px; color:#7A8983; margin-top:24px; max-width:540px; margin-left:auto; margin-right:auto;">
-      Zahlung, Rechnung und Kuendigung laufen ueber Paddle als Verkaufsabwickler (Merchant of Record).
-      Aktualisiere Karte / SEPA und lade Rechnungen herunter ueber "Abo bei Paddle verwalten".
+      Zahlung, Rechnung und Kündigung laufen über Paddle als Verkaufsabwickler (Merchant of Record).
+      Karte / SEPA aktualisieren und Rechnungen herunterladen über "Zahlung &amp; Rechnungen verwalten".
     </p>
+
+    <!-- Confirm-Modal: Abo kuendigen -->
+    <div id="cancel-modal" class="account-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
+      <div class="account-modal">
+        <h3 id="cancel-modal-title" class="account-modal-title">Abo wirklich kündigen?</h3>
+        <p class="account-modal-body">
+          Dein Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv
+          (<span id="cancel-modal-until">—</span>). Danach wird der Plan automatisch beendet,
+          es wird nichts mehr abgebucht.
+        </p>
+        <p class="account-modal-note">
+          Du kannst die Kündigung jederzeit wieder rückgängig machen, solange dein Zugang noch aktiv ist.
+        </p>
+        <div class="account-modal-actions">
+          <button type="button" id="cancel-modal-abort" class="account-btn-secondary">Zurück</button>
+          <button type="button" id="cancel-modal-confirm" class="account-btn-danger-solid">
+            Jetzt kündigen
+          </button>
+        </div>
+        <p id="cancel-modal-msg" class="account-msg hidden"></p>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -140,7 +213,8 @@ const accountConfig = {
   .account-status-active { color: #1D9E75; font-weight: 600; }
   .account-status-inactive { color: #B45309; font-weight: 600; }
   .account-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
-  .account-btn-primary, .account-btn-secondary, .account-btn-link {
+  .account-btn-primary, .account-btn-secondary, .account-btn-link,
+  .account-btn-danger, .account-btn-danger-solid {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     padding: 12px 18px; border-radius: 100px; font-size: 14px;
     font-weight: 500; font-family: inherit; cursor: pointer;
@@ -152,8 +226,18 @@ const accountConfig = {
   .account-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
   .account-btn-secondary { background: #fff; color: #0F1B17; border-color: #E1E5E2; }
   .account-btn-secondary:hover { border-color: var(--brand); color: var(--brand); }
+  .account-btn-danger {
+    background: #fff; color: #B91C1C; border-color: #FECACA;
+  }
+  .account-btn-danger:hover { background: #FEE2E2; border-color: #FCA5A5; }
+  .account-btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+  .account-btn-danger-solid {
+    background: #B91C1C; color: #fff; border-color: #B91C1C;
+  }
+  .account-btn-danger-solid:hover { background: #991B1B; border-color: #991B1B; }
   .account-btn-link { background: none; border: none; color: #7A8983; padding: 8px; }
   .account-btn-link:hover { color: #2C4138; }
+  .account-btn-ext { font-size: 11px; opacity: 0.7; }
   .account-input {
     width: 100%; padding: 12px 16px; border-radius: 12px;
     border: 1px solid #E1E5E2; font-size: 15px; font-family: inherit;
@@ -170,6 +254,113 @@ const accountConfig = {
     margin: 14px 0 0;
   }
   .account-privacy-note a { color: #2C4138; text-decoration: underline; text-underline-offset: 2px; }
+  .account-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 27, 23, 0.45);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; z-index: 1000;
+  }
+  .account-modal {
+    background: #fff; border-radius: 16px; padding: 28px;
+    max-width: 460px; width: 100%;
+    box-shadow: 0 20px 50px rgba(15,27,23,0.25);
+  }
+  .account-modal-title {
+    font-family: var(--serif, 'Fraunces', Georgia, serif);
+    font-weight: 400; font-size: 22px; margin: 0 0 12px;
+    color: #0F1B17;
+  }
+  .account-modal-body { font-size: 14px; color: #2C4138; margin: 0 0 12px; line-height: 1.55; }
+  .account-modal-note { font-size: 13px; color: #66766f; margin: 0 0 20px; line-height: 1.5; }
+  .account-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+  @media (min-width: 480px) {
+    .account-modal-actions { flex-direction: row-reverse; justify-content: flex-start; }
+    .account-modal-actions > * { flex: 1; }
+  }
+  .account-section {
+    margin-top: 28px; padding-top: 22px;
+    border-top: 0.5px solid #E1E5E2;
+  }
+  .account-section-title {
+    font-family: var(--serif, 'Fraunces', Georgia, serif);
+    font-weight: 400; font-size: 18px; margin: 0 0 14px;
+    color: #0F1B17; letter-spacing: -0.005em;
+  }
+  .account-section-actions {
+    display: flex; flex-direction: column; gap: 10px; margin-top: 16px;
+  }
+  @media (min-width: 480px) {
+    .account-section-actions { flex-direction: row; }
+    .account-section-actions > * { flex: 1; }
+  }
+  .account-section-empty { color: #7A8983; font-size: 13px; margin: 0; }
+  .payments-list { list-style: none; padding: 0; margin: 0 0 14px; }
+  .payment-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid #EEF1EF;
+    font-size: 14px;
+  }
+  .payment-row:last-child { border-bottom: none; }
+  .payment-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .payment-date { color: #0F1B17; font-weight: 500; }
+  .payment-desc { color: #7A8983; font-size: 12px; }
+  .payment-amount { color: #0F1B17; font-weight: 500; white-space: nowrap; }
+  .payment-pdf {
+    color: var(--brand);
+    font-size: 13px;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #E1E5E2;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .payment-pdf:hover { background: #f6f6f2; border-color: var(--brand); }
+  .payment-status-refunded {
+    color: #B45309; font-size: 12px;
+  }
+  .account-actions-secondary { margin-top: 22px; }
+  .account-cancel-footer {
+    margin-top: 48px;
+    padding-top: 18px;
+    border-top: 0.5px solid #EEF1EF;
+    text-align: center;
+  }
+  .account-btn-cancel-link {
+    background: none;
+    border: none;
+    color: #EA7600;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .account-btn-cancel-link:hover { color: #C45F00; }
+  .account-btn-cancel-link:disabled { opacity: 0.6; cursor: not-allowed; }
+  .account-btn-link-inline {
+    align-self: flex-start; padding: 0; font-size: 13px;
+  }
+  .account-banner-cancel {
+    margin-top: 22px;
+    padding: 14px 16px;
+    background: #FFF7ED;
+    border: 1px solid #FED7AA;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .account-banner-text {
+    margin: 0; font-size: 14px; color: #7C2D12; line-height: 1.5;
+  }
+  .account-banner-text strong { color: #9A3412; }
   .account-page { padding: 60px 0 120px; min-height: 60vh; }
   .account-page h1 { font-family: 'Fraunces', Georgia, serif; font-size: clamp(32px, 4vw, 44px); font-weight: 400; text-align: center; letter-spacing: -0.02em; margin: 0 0 12px; }
   .account-page h1 em { font-style: italic; color: var(--brand); }

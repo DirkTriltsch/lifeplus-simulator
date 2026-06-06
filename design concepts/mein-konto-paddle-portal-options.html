@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mein Konto · Paddle-Portal Integrationsoptionen</title>
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-dark: #157a5b;
+    --green-bg: #f0f9f4;
+    --orange: #EA7600;
+    --orange-dark: #C45F00;
+    --ink: #0E1F1A;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #fafaf7;
+    --card: #ffffff;
+    --danger: #b91c1c;
+    --danger-soft: #fee2e2;
+    --warn-bg: #fff7ed;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header.intro {
+    margin-bottom: 32px;
+  }
+  header.intro h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  header.intro p {
+    margin: 0;
+    color: var(--muted);
+    max-width: 740px;
+    font-size: 15px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .option {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .option-head {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #fcfcfa 0%, #ffffff 100%);
+  }
+  .option-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green-dark);
+    background: var(--green-bg);
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .option-tag.recommended {
+    color: #fff;
+    background: var(--green);
+  }
+  .option-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .option-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* Mockup "Mein Konto" panel */
+  .mockup-wrap {
+    padding: 18px 20px;
+    background: #f6f6f2;
+    border-bottom: 1px solid var(--line);
+  }
+  .mockup-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .konto {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .konto-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+  .konto-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  .konto-row .k { color: var(--muted); }
+  .konto-row .v { color: var(--ink); font-weight: 500; }
+  .konto-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 10px -16px 12px;
+  }
+  .konto-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 120ms, border-color 120ms;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--orange-dark); }
+  .btn-secondary {
+    background: #fff;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .btn-secondary:hover { border-color: #cbd5d3; background: #fafaf7; }
+  .btn-danger {
+    background: #fff;
+    color: var(--danger);
+    border-color: #fecaca;
+  }
+  .btn-danger:hover { background: var(--danger-soft); }
+  .btn-link {
+    background: transparent;
+    color: var(--muted);
+    padding: 6px 0;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .btn .ext {
+    font-size: 10px;
+    opacity: 0.7;
+  }
+
+  /* Flow visualization */
+  .flow {
+    padding: 16px 20px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .flow-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  .flow-step + .flow-step { border-top: 1px dashed var(--line); }
+  .flow-step .num {
+    flex: 0 0 18px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--green-bg);
+    color: var(--green-dark);
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .flow-step .where {
+    flex: 0 0 auto;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .flow-step .where.paddle {
+    background: #eef2ff;
+    color: #4338ca;
+  }
+  .flow-step .where.lifeflow {
+    background: var(--green-bg);
+    color: var(--green-dark);
+  }
+
+  /* Pro/Contra */
+  .judge {
+    padding: 16px 20px 20px;
+  }
+  .judge h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  .judge ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px;
+    font-size: 12.5px;
+  }
+  .judge li {
+    padding-left: 18px;
+    position: relative;
+    margin-bottom: 3px;
+    color: var(--ink);
+  }
+  .judge li::before {
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+  }
+  .judge .pro li::before { content: "+"; color: var(--green); }
+  .judge .con li::before { content: "−"; color: var(--danger); }
+
+  /* Footer note */
+  .footnote {
+    margin-top: 36px;
+    padding: 18px 20px;
+    background: var(--warn-bg);
+    border: 1px solid #fed7aa;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #7c2d12;
+    max-width: 1000px;
+  }
+  .footnote strong { color: #9a3412; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    margin: 14px 0 4px;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend i {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .legend i.l { background: #e0f0e8; }
+  .legend i.p { background: #e0e7ff; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="intro">
+    <h1>Mein Konto · Paddle-Portal anbinden</h1>
+    <p>Drei Integrationsoptionen im direkten Vergleich. Jede Karte zeigt links, was der Nutzer auf <em>Mein Konto</em> sieht, in der Mitte was technisch beim Klick passiert und unten Pro/Contra.</p>
+    <div class="legend">
+      <span><i class="l"></i> Aktion auf unserer Seite</span>
+      <span><i class="p"></i> Aktion auf Paddle-Portal</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============== OPTION A ============== -->
+    <section class="option">
+      <div class="option-head">
+        <span class="option-tag">Option A · Einfach</span>
+        <h2 class="option-title">Statischer Portal-Link</h2>
+        <p class="option-sub">Paddle vergibt eine permanente <code>customer_portal_url</code> pro Kunde. Wir speichern sie und linken direkt.</p>
+      </div>
+
+      <div class="mockup-wrap">
+        <div class="mockup-label">So sieht „Mein Konto" aus</div>
+        <div class="konto">
+          <h3 class="konto-title">Mein Konto</h3>
+          <div class="konto-row"><span class="k">E-Mail</span><span class="v">max@example.de</span></div>
+          <div class="konto-row"><span class="k">Plan</span><span class="v">Pro · 6 Monate</span></div>
+          <div class="konto-row"><span class="k">Nächste Zahlung</span><span class="v">15.12.2026</span></div>
+          <div class="konto-divider"></div>
+          <div class="konto-actions">
+            <a class="btn btn-primary" href="#">App öffnen</a>
+            <a class="btn btn-secondary" href="#">Konto bei Paddle verwalten <span class="ext">↗</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-label">Was beim Klick passiert</div>
+        <div class="flow-step">
+          <span class="num">1</span>
+          <span>Nutzer klickt „Konto bei Paddle verwalten"</span>
+          <span class="where lifeflow">lifeflow</span>
+        </div>
+        <div class="flow-step">
+          <span class="num">2</span>
+          <span>Direkter Redirect zur gespeicherten URL</span>
+          <span class="where lifeflow">lifeflow</span>
+        </div>
+        <div class="flow-step">
+          <span class="num">3</span>
+          <span>Paddle-Übersicht öffnet sich, Nutzer navigiert selbst zu „Kündigen", „Karte ändern" etc.</span>
+          <span class="where paddle">paddle</span>
+        </div>
+      </div>
+
+      <div class="judge">
+        <h4>Pro</h4>
+        <ul class="pro">
+          <li>Kein Backend-Call beim Klick — nur Link</li>
+          <li>Implementierung: ein Tag Arbeit</li>
+          <li>Kein zusätzlicher Failure-Mode</li>
+        </ul>
+        <h4>Contra</h4>
+        <ul class="con">
+          <li>Keine Deep-Links — Nutzer muss in Paddle selbst suchen</li>
+          <li>URL ist dauerhaft gültig; wer sie kennt, kommt rein</li>
+          <li>Kein „Abo kündigen"-Button auf unserer Seite möglich</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============== OPTION B ============== -->
+    <section class="option" style="border-color: var(--green); box-shadow: 0 4px 16px rgba(29,158,117,0.12);">
+      <div class="option-head" style="background: linear-gradient(180deg, #f0f9f4 0%, #ffffff 100%);">
+        <span class="option-tag recommended">Option B · Empfehlung</span>
+        <h2 class="option-title">Portal Session API</h2>
+        <p class="option-sub">Backend erzeugt pro Klick eine kurzlebige Portal-Session mit Deep-Link zur konkreten Aktion.</p>
+      </div>
+
+      <div class="mockup-wrap">
+        <div class="mockup-label">So sieht „Mein Konto" aus</div>
+        <div class="konto">
+          <h3 class="konto-title">Mein Konto</h3>
+          <div class="konto-row"><span class="k">E-Mail</span><span class="v">max@example.de</span></div>
+          <div class="konto-row"><span class="k">Plan</span><span class="v">Pro · 6 Monate</span></div>
+          <div class="konto-row"><span class="k">Nächste Zahlung</span><span class="v">15.12.2026</span></div>
+          <div class="konto-divider"></div>
+          <div class="konto-actions">
+            <a class="btn btn-primary" href="#">App öffnen</a>
+            <a class="btn btn-secondary" href="#">Zahlung &amp; Rechnungen verwalten <span class="ext">↗</span></a>
+            <a class="btn btn-secondary" href="#">Plan wechseln <span class="ext">↗</span></a>
+            <a class="btn btn-danger" href="#">Abo kündigen <span class="ext">↗</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-label">Was beim Klick passiert (Bsp. „Abo kündigen")</div>
+        <div class="flow-step">
+          <span class="num">1</span>
+          <span>Nutzer klickt „Abo kündigen", kleines Bestätigungs-Modal: „Zugang bleibt bis 15.12.2026"</span>
+          <span class="where lifeflow">lifeflow</span>
+        </div>
+        <div class="flow-step">
+          <span class="num">2</span>
+          <span>POST <code>/api/account/portal-session</code> mit <code>action=cancel</code></span>
+          <span class="where lifeflow">lifeflow</span>
+        </div>
+        <div class="flow-step">
+          <span class="num">3</span>
+          <span>Server ruft Paddle <code>/customer-portal-sessions</code>, bekommt kurzlebige URL</span>
+          <span class="where lifeflow">lifeflow</span>
+        </div>
+        <div class="flow-step">
+          <span class="num">4</span>
+          <span>Redirect direkt auf den Kündigen-Screen — kein Suchen nötig</span>
+          <span class="where paddle">paddle</span>
+        </div>
+      </div>
+
+      <div class="judge">
+        <h4>Pro</h4>
+        <ul class="pro">
+          <li>Echte Deep-Links pro Aktion — UX deutlich klarer</li>
+          <li>Sessions sind kurzlebig und an User gebunden</li>
+          <li>Sauberes Tracking: wer hat wann Kündigen geklickt</li>
+          <li>Rechtlich klar: Button auf eigener Seite + sichere Weiterleitung</li>
+        </ul>
+        <h4>Contra</h4>
+        <ul class="con">
+          <li>Ein Paddle-API-Call pro Klick</li>
+          <li>Eigener Endpoint inkl. Auth + Error-Handling nötig</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============== OPTION C ============== -->
+    <section class="option">
+      <div class="option-head">
+        <span class="option-tag">Option C · Hybrid</span>
+        <h2 class="option-title">Statischer Link + Cancel-Deep-Link</h2>
+        <p class="option-sub">Übersicht per permanentem Link, nur das Kündigen läuft über die Portal Session API.</p>
+      </div>
+
+      <div class="mockup-wrap">
+        <div class="mockup-label">So sieht „Mein Konto" aus</div>
+        <div class="konto">
+          <h3 class="konto-title">Mein Konto</h3>
+          <div class="konto-row"><span class="k">E-Mail</span><span class="v">max@example.de</span></div>
+          <div class="konto-row"><span class="k">Plan</span><span class="v">Pro · 6 Monate</span></div>
+          <div class="konto-row"><span class="k">Nächste Zahlung</span><span class="v">15.12.2026</span></div>
+          <div class="konto-divider"></div>
+          <div class="konto-actions">
+            <a class="btn btn-primary" href="#">App öffnen</a>
+            <a class="btn btn-secondary" href="#">Zahlung &amp; Rechnungen verwalten <span class="ext">↗</span></a>
+            <a class="btn btn-danger" href="#">Abo kündigen <span class="ext">↗</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-label">Zwei Mechanismen parallel</div>
+        <div class="flow-step">
+          <span class="num">A</span>
+          <span>„Zahlung verwalten" → direkter Redirect zur permanenten Portal-URL</span>
+          <span class="where paddle">paddle</span>
+        </div>
+        <div class="flow-step">
+          <span class="num">B</span>
+          <span>„Abo kündigen" → Bestätigungs-Modal, dann Portal Session API mit <code>cancel</code>-Deep-Link</span>
+          <span class="where paddle">paddle</span>
+        </div>
+      </div>
+
+      <div class="judge">
+        <h4>Pro</h4>
+        <ul class="pro">
+          <li>Spart API-Calls für den häufigen Fall (Rechnung ansehen)</li>
+          <li>Kündigen bleibt explizit getrackt + Deep-Link</li>
+        </ul>
+        <h4>Contra</h4>
+        <ul class="con">
+          <li>Zwei Mechanismen zu pflegen — mehr Code, mehr Test-Aufwand</li>
+          <li>Permanente URL muss trotzdem sicher gespeichert werden</li>
+          <li>Inkonsistente Sicherheits-Posture (mal Session, mal statisch)</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="footnote">
+    <strong>Hinweis zu iframe-Embedding:</strong> Paddle setzt <code>X-Frame-Options: DENY</code> — das Portal kann nicht in unsere Seite eingebettet werden. Es bleibt in allen drei Optionen Redirect oder neuer Tab. Empfehlung: <strong>neuer Tab</strong>, damit „Mein Konto" beim Zurückkommen ohne Reload sichtbar ist.
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -24,9 +24,14 @@ describe('LifePlus Personenbaum-Simulation', () => {
     const y2 = snapshots[23];
     const network = personTreeToNetworkSnapshot(y2);
 
-    expect(y2.persons.filter((person) => person.kind === 'member')).toHaveLength(6);
-    expect(y2.persons.filter((person) => person.kind === 'shopper')).toHaveLength(4);
-    expect(y2.orders.length).toBe(10);
+    // F1a fuer Member: alle Member sind ganz (weight=1).
+    // Shopper sind bewusst keine Personen mehr, sondern Float-Aggregate am Sponsor.
+    expect(y2.persons.filter((person) => person.kind === 'member')).toHaveLength(8);
+    expect(y2.persons.filter((person) => person.kind === 'shopper')).toHaveLength(0);
+    expect(
+      y2.persons.reduce((total, person) => total + (person.shopperCount ?? 0), 0),
+    ).toBe(12);
+    expect(y2.orders.length).toBe(11);
     expect(network.membersByLevel).toEqual([4, 4]);
     expect(network.shoppersByLevel).toEqual([6, 6]);
   });
@@ -199,10 +204,10 @@ describe('LifePlus Personenbaum-Simulation', () => {
       24,
     );
 
-    expect(result.months).toHaveLength(24);
+    expect(result.quarters).toHaveLength(8);
     expect(result.yearEnds).toHaveLength(2);
-    expect(result.finalMonth.networkSize).toBeGreaterThan(0);
-    expect(result.finalMonth.totalEUR).toBeGreaterThan(0);
+    expect(result.finalQuarter.networkSize).toBeGreaterThan(0);
+    expect(result.finalQuarter.totalEUR).toBeGreaterThan(0);
   });
 });
 

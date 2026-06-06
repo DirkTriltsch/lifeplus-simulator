@@ -114,6 +114,11 @@ const ac = brand.accentColor;
           <div class="pf-annotation a1">Live · ändert sich mit jedem Slider</div>
           <div class="pf-annotation a2">5 Slider · Teil vieler Modell-Annahmen</div>
         </div>
+        <p class="example-disclaimer">
+          Beispielwerte aus einer Modellrechnung. Tatsächliche Ergebnisse hängen von
+          individuellem Einsatz, Markt und vielen weiteren Faktoren ab und können erheblich
+          abweichen. Kein Versprechen typischer Erträge.
+        </p>
       </div>
     </div>
   </div>
@@ -308,7 +313,7 @@ const ac = brand.accentColor;
         <div class="sec-eyebrow">Preise</div>
         <h2 class="sec-h">Ein Werkzeug, <em>drei Wege rein.</em></h2>
         <p class="sec-sub">
-          Frei starten oder Pro mit 1, 6 oder 12 Monaten — du wählst die passende Laufzeit. Auch der günstigere Jahresplan bleibt monatlich kündbar.
+          Frei starten oder Pro mit 1, 6 oder 12 Monaten — du wählst die passende Laufzeit. Rabatt bleibt bei Verlängerung erhalten, ab der ersten Verlängerung monatlich kündbar.
         </p>
         <a href="pricing.html" class="btn-secondary">
           Alle Preise &amp; Details ansehen
@@ -370,7 +375,8 @@ const ac = brand.accentColor;
           <ul class="pc-features">
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Alles aus 1 Monat</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>2 Monate gratis</strong> gegenüber monatlich</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Monatlich kündbar, Restmonate zurück</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Rabatt bleibt bei Verlängerung erhalten</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>Ab Verlängerung monatlich kündbar, Restmonate zurück</li>
           </ul>
         </div>
       </div>
@@ -378,7 +384,7 @@ const ac = brand.accentColor;
 
     <div class="pricing-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-      <span><strong>Monatlich kündbar:</strong> Auch 6- und 12-Monats-Pläne sind monatlich kündbar. Nicht genutzte volle Restmonate erstatten wir anteilig. Du erhältst eine ordnungsgemäße Rechnung für deine Unterlagen.</span>
+      <span><strong>Treue belohnt:</strong> Dein 6- oder 12-Monats-Plan verlängert sich automatisch um die gleiche Laufzeit zum jeweils gültigen Rabattpreis dieses Tarifs; bei Preisanpassungen informieren wir dich rechtzeitig vor Wirksamwerden, im Fall einer Erhöhung mit Sonderkündigungsrecht. Ab der ersten Verlängerung kannst du monatlich zum Monatsende kündigen; nicht genutzte volle Restmonate erstatten wir anteilig zurück. Du erhältst zu jeder Abrechnung eine ordnungsgemäße Rechnung für deine Unterlagen.</span>
     </div>
   </div>
 </section>
@@ -454,7 +460,7 @@ const ac = brand.accentColor;
         <div class="faq-a">
           <div class="faq-a-inner">
             <p>Du kannst kostenlos starten: 14 Tage Pro testen, danach Free weiternutzen. Pro gibt es mit drei fairen Laufzeiten: <strong>€14,95/Monat</strong>, <strong>€82,23/6 Monate</strong> oder <strong>€149,50/Jahr</strong>, jeweils netto zzgl. USt.</p>
-            <p>Alle Pro-Laufzeiten haben den vollen Funktionsumfang. Auch 6- und 12-Monats-Pläne sind monatlich kündbar; nicht genutzte volle Restmonate erstatten wir anteilig. Details findest du auf der <a href="/pricing.html">Preisseite</a>.</p>
+            <p>Alle Pro-Laufzeiten haben den vollen Funktionsumfang. Im 1-Monats-Plan kündigst du jederzeit zum Monatsende. Im 6- und 12-Monats-Plan bindest du dich für die gewählte Erstlaufzeit; danach verlängert sich dein Plan automatisch um die gleiche Laufzeit — zum gleichen Rabattpreis. Ab der ersten Verlängerung ist der Plan monatlich kündbar, nicht genutzte volle Restmonate erstatten wir anteilig zurück. Details findest du auf der <a href="/pricing.html">Preisseite</a>.</p>
           </div>
         </div>
       </div>
@@ -596,6 +602,18 @@ const ac = brand.accentColor;
   .pf-annotation.a2 { bottom: 18%; left: -22px; background: var(--cta); }
   .pf-annotation.a2::after { right: -6px; top: 50%; transform: translateY(-50%); border-width: 5px 0 5px 6px; border-color: transparent transparent transparent var(--cta); }
   @media (max-width: 540px) { .pf-annotation.a1, .pf-annotation.a2 { display: none; } }
+
+  .example-disclaimer {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: var(--paper-2);
+    border-left: 3px solid var(--ink-4);
+    border-radius: 0 6px 6px 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--ink-3);
+    font-style: italic;
+  }
 
   .trust-strip { border-top: 0.5px solid var(--line); border-bottom: 0.5px solid var(--line); background: #fff; padding: 28px 0; }
   .trust-inner { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }

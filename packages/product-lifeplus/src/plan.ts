@@ -36,4 +36,24 @@ export const lifeplusPlan: CompensationPlan = {
         inputs.personalMonthlyVolume ?? inputs.memberMonthlyVolume,
     });
   },
+  selectTreeMemberChurnCandidates(snapshot, inputs) {
+    const churnableRanks = new Set(['Member', 'Believer', 'Builder', 'Bronze']);
+    const activeMemberIds = new Set(
+      snapshot.persons
+        .filter((person) => person.active && person.kind === 'member')
+        .map((person) => person.id),
+    );
+    const comp = calculateTreeCompensation(snapshot, {
+      rootPersonalMonthlyVolume:
+        inputs.personalMonthlyVolume ?? inputs.memberMonthlyVolume,
+    });
+
+    return comp.rankStates
+      .filter(
+        (state) =>
+          activeMemberIds.has(state.personId) &&
+          churnableRanks.has(state.rank.name),
+      )
+      .map((state) => state.personId);
+  },
 };

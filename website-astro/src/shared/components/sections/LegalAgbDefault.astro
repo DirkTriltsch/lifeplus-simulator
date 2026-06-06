@@ -12,7 +12,7 @@ const { brand, contact, source } = Astro.props;
 >
   <p class="legal-meta-top">Rechtliche Informationen</p>
   <h1>Allgemeine Geschäftsbedingungen</h1>
-  <p class="legal-meta">Stand: Mai 2026</p>
+  <p class="legal-meta">Stand: Juni 2026</p>
 
   <h2>1. Geltungsbereich</h2>
   <p>
@@ -27,9 +27,17 @@ const { brand, contact, source } = Astro.props;
     der Anbieter stimmt ihrer Geltung ausdrücklich schriftlich zu.
   </p>
   <p>
-    Diese AGB richten sich gleichermaßen an Verbraucher (§ 13 BGB) und
-    Unternehmer (§ 14 BGB). Soweit einzelne Regelungen nur für eine der beiden
-    Gruppen gelten, ist dies kenntlich gemacht.
+    Der entgeltliche <strong>Pro-Tarif</strong> richtet sich ausschließlich
+    an Unternehmer im Sinne des § 14 BGB. Verbraucher (§ 13 BGB) sind vom
+    Erwerb des Pro-Tarifs ausgeschlossen; die Unternehmer-Eigenschaft wird
+    im Checkout ausdrücklich bestätigt.
+  </p>
+  <p>
+    Der kostenfreie <strong>Free-Tarif</strong> sowie die zeitlich
+    begrenzte Probephase stehen Unternehmern und Verbrauchern offen.
+    Soweit einzelne Regelungen dieser AGB nur für eine der beiden Gruppen
+    gelten, ist dies kenntlich gemacht. Verbraucherschutzregelungen
+    (insbesondere § 312g BGB) bleiben unberührt.
   </p>
 
   <h2>2. Vertragspartner und Zahlungsabwicklung</h2>
@@ -47,9 +55,11 @@ const { brand, contact, source } = Astro.props;
 
   <h2>3. Vertragsgegenstand</h2>
   <p>
-    Der Anbieter stellt dem Nutzer den Dienst gegen Entgelt im Rahmen eines
-    Software-as-a-Service-Abonnements (SaaS) zur Nutzung über das Internet
-    zur Verfügung. Der genaue Funktionsumfang ergibt sich aus der
+    Der Anbieter stellt dem Nutzer den Dienst im Rahmen eines
+    Software-as-a-Service-Modells (SaaS) zur Nutzung über das Internet zur
+    Verfügung. Der Free-Tarif wird unentgeltlich bereitgestellt; der
+    Pro-Tarif wird gegen das in den Preisangaben ausgewiesene Entgelt
+    bereitgestellt. Der genaue Funktionsumfang ergibt sich aus der
     Produktbeschreibung auf der Webseite des Anbieters zum Zeitpunkt des
     Vertragsschlusses.
   </p>
@@ -70,17 +80,37 @@ const { brand, contact, source } = Astro.props;
 
   <h2>5. Laufzeit und Kündigung</h2>
   <p>
-    Die Vertragslaufzeit richtet sich nach dem gewählten Tarif (z.B.
-    monatlich oder jährlich). Der Vertrag verlängert sich automatisch um
-    die jeweils gewählte Laufzeit, wenn er nicht vor Ablauf der laufenden
-    Periode gekündigt wird.
+    Die anfängliche Vertragslaufzeit richtet sich nach dem gewählten Tarif
+    (1, 6 oder 12 Monate). Der Vertrag verlängert sich nach Ablauf der
+    anfänglichen Laufzeit automatisch um jeweils die gleiche Laufzeit,
+    sofern er nicht zum Ende der laufenden Periode gekündigt wird.
   </p>
   <p>
-    Die Kündigung kann jederzeit ohne Angabe von Gründen erfolgen, im
-    Monatsabo zum Ende des laufenden Monats, im Jahresabo zum Ende des
-    laufenden Vertragsjahres. Die Kündigung kann über das Paddle-
+    Der für den jeweiligen Tarif vereinbarte Rabatt gegenüber dem
+    1-Monats-Tarif bleibt für die Verlängerungsperioden zum jeweils
+    gültigen Listenpreis des gewählten Tarifs erhalten. Preisanpassungen
+    werden dem Nutzer mit angemessener Frist vor Wirksamwerden mitgeteilt;
+    im Falle einer Erhöhung steht dem Nutzer ein Sonderkündigungsrecht zu.
+  </p>
+  <p>
+    Im 1-Monats-Tarif ist eine Kündigung jederzeit zum Ende des laufenden
+    Monats möglich. Im 6- bzw. 12-Monats-Tarif ist eine ordentliche
+    Kündigung erstmals zum Ablauf der anfänglichen Laufzeit möglich.
+  </p>
+  <p>
+    Ab dem Beginn der ersten automatischen Verlängerung kann der Vertrag
+    jeweils monatlich zum Ende des laufenden Abrechnungsmonats gekündigt
+    werden. Vorausbezahlte Beträge, die durch eine Kündigung innerhalb
+    einer Verlängerungsperiode nicht vollständig verbraucht werden,
+    erstattet der Anbieter anteilig für nicht genutzte volle Restmonate
+    zurück.
+  </p>
+  <p>
+    Die Kündigung kann ohne Angabe von Gründen über das Paddle-
     Kundenportal oder per E-Mail an
     <a href={`mailto:${contact.email}`}>{contact.email}</a> erklärt werden.
+    Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt
+    unberührt.
   </p>
 
   <h2>6. Preise und Zahlung</h2>

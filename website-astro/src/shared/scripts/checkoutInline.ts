@@ -226,10 +226,10 @@ export function setupCheckoutInline(): void {
   function apiErrorMessage(data: ApiErrorResponse | null, fallback: string): string {
     const code = data?.error?.code ?? '';
     if (code === 'transaction_not_paid') {
-      return 'Paddle hat die Zahlung noch nicht bestaetigt. Bitte warte einen Moment und versuche es erneut.';
+      return 'Paddle hat die Zahlung noch nicht bestätigt. Bitte warte einen Moment und versuche es erneut.';
     }
     if (code === 'paddle_unreachable') {
-      return 'Paddle konnte gerade nicht verifiziert werden. Bitte pruefe deine Zahlung in wenigen Sekunden erneut.';
+      return 'Paddle konnte gerade nicht verifiziert werden. Bitte prüfe deine Zahlung in wenigen Sekunden erneut.';
     }
     if (code === 'missing_intent_or_transaction' || code === 'transaction_mismatch' || code === 'intent_not_found') {
       return 'Die Checkout-Bestaetigung passt nicht zur aktuellen Zahlung. Bitte lade die Seite neu oder starte den Checkout erneut.';
@@ -461,7 +461,7 @@ export function setupCheckoutInline(): void {
     const missing: string[] = [];
     if (!isEmailValid(currentEmail())) missing.push('E-Mail');
     if (companyInput!.value.trim().length < COMPANY_MIN) missing.push('Firma/Name');
-    if (streetInput!.value.trim().length < 3) missing.push('Strasse');
+    if (streetInput!.value.trim().length < 3) missing.push('Straße');
     if (zipInput!.value.trim().length < 3) missing.push('PLZ');
     if (cityInput!.value.trim().length < 2) missing.push('Ort');
     if (!countrySelect!.value) missing.push('Land');
@@ -489,7 +489,7 @@ export function setupCheckoutInline(): void {
     emailInput!.classList.toggle('invalid', email.length > 0 && !valid);
     if (!emailHint) return;
     if (email.length > 0 && !valid) {
-      emailHint.textContent = 'Bitte eine gueltige E-Mail-Adresse eingeben.';
+      emailHint.textContent = 'Bitte eine gültige E-Mail-Adresse eingeben.';
       emailHint.classList.add('error');
     } else if (sessionEmail && email !== sessionEmail) {
       emailHint.textContent = 'Diese E-Mail gehoert nicht zu deiner Sitzung. Bitte verwende deine Konto-Email.';
@@ -668,7 +668,7 @@ export function setupCheckoutInline(): void {
     if (!VAT_RX.test(cleaned)) {
       pendingVatId = null;
       vatInput!.classList.add('invalid');
-      setVatFeedback('error', 'Format ungueltig. Beispiel: AT123456789');
+      setVatFeedback('error', 'Format ungültig. Beispiel: AT123456789');
       renderPaddleTotals(latestPreviewTotals, pendingDiscountCode);
       return;
     }
@@ -678,7 +678,7 @@ export function setupCheckoutInline(): void {
     const vatCountry = cleaned.slice(0, 2);
     if (vatCountry !== 'DE' && country !== 'DE' && country === vatCountry) {
       setVatFeedback('ok',
-        'Format OK. Linke Vorschau zeigt Reverse-Charge; Paddle prueft VIES endgueltig im Zahlungsfeld.');
+        'Format OK. Linke Vorschau zeigt Reverse-Charge; Paddle prüft VIES endgültig im Zahlungsfeld.');
     } else if (vatCountry === 'DE' && country === 'DE') {
       setVatFeedback('ok',
         'Format OK. DE-Inland: USt wird regulaer berechnet.');
@@ -764,7 +764,7 @@ export function setupCheckoutInline(): void {
     nextBtn!.classList.remove('loading');
 
     if (!intent) {
-      showBanner('Verbindung zur Checkout-API ist fehlgeschlagen. Bitte spaeter erneut versuchen.', 'error');
+      showBanner('Verbindung zur Checkout-API ist fehlgeschlagen. Bitte später erneut versuchen.', 'error');
       nextBtn!.disabled = false;
       return;
     }

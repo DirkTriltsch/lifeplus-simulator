@@ -1,11 +1,11 @@
 seo:
   title: "Preise"
-  description: "FitFlow360 · Frei starten oder Pro mit 1, 6 oder 12 Monaten Laufzeit nutzen. Alle Pro-Pläne mit vollem Funktionsumfang, als Betriebsausgabe absetzbar."
+  description: "FitFlow360 · Frei starten oder Pro mit 1, 6 oder 12 Monaten Laufzeit nutzen. Alle Pro-Pläne mit vollem Funktionsumfang. Bei gewerblicher Nutzung in der Regel als Betriebsausgabe behandelbar — bitte mit dem Steuerberater abstimmen."
 
 hero:
   eyebrow: "Preise & Konditionen"
   h1Html: "Ein Werkzeug.<br><em>Vier klare Optionen.</em>"
-  subHtml: "Frei starten, flexibel monatlich nutzen oder mit 6 bzw. 12 Monaten vorausplanen — du wählst die passende Form. Die Bezahlpläne sind als <strong>Betriebsausgabe</strong> absetzbar."
+  subHtml: "Frei starten, flexibel monatlich nutzen oder mit 6 bzw. 12 Monaten vorausplanen — du wählst die passende Form. Bei gewerblicher Nutzung in der Regel als <strong>Betriebsausgabe</strong> behandelbar (Details mit deinem Steuerberater)."
 
 vatBanner:
   title: "Alle Preise verstehen sich netto, zzgl. gesetzlicher USt."
@@ -61,7 +61,8 @@ tiers:
       - strong: "Alles aus 1 Monat"
         text: ""
       - text: "Eine Rechnung pro Halbjahr"
-      - text: "Monatlich kündbar, Restmonate zurück"
+      - text: "Verlängert sich um 6 Monate · Rabatt bleibt erhalten"
+      - text: "Ab Verlängerung monatlich kündbar, Restmonate zurück"
     cta:
       kind: "paddle"
       label: "Plan jetzt starten"
@@ -82,7 +83,8 @@ tiers:
       - strong: "Alles aus 1 Monat"
         text: ""
       - text: "Eine Rechnung pro Jahr"
-      - text: "Monatlich kündbar, Restmonate zurück"
+      - text: "Verlängert sich um 12 Monate · Rabatt bleibt erhalten"
+      - text: "Ab Verlängerung monatlich kündbar, Restmonate zurück"
     cta:
       kind: "paddle"
       label: "Plan jetzt starten"
@@ -91,11 +93,11 @@ tiers:
 
 notes:
   - icon: "info"
-    title: "Jahresrabatt ohne Jahresfalle."
-    body: "Automatisch verlängert? Kein Problem. Wir sind von unserem Nutzen überzeugt — und du hoffentlich auch. Wenn du aber nicht weitermachen möchtest, kündigst du einfach monatlich. Was du an vollen Restmonaten schon bezahlt hast, bekommst du anteilig zurück."
+    title: "Treue belohnt: Dein Rabatt bleibt — und ab der Verlängerung wirst du flexibel."
+    body: "Im 1-Monats-Plan kündigst du jederzeit zum Ende des laufenden Monats. Im 6- und 12-Monats-Plan zahlst du den Rabattpreis für die gewählte Laufzeit; dein Plan verlängert sich automatisch um die gleiche Laufzeit zum jeweils gültigen Rabattpreis dieses Tarifs. Bei Preisanpassungen informieren wir dich rechtzeitig vor Wirksamwerden; im Fall einer Erhöhung steht dir ein Sonderkündigungsrecht zu. Ab der ersten Verlängerung kannst du monatlich zum Monatsende kündigen — nicht genutzte volle Restmonate erstatten wir anteilig zurück."
   - icon: "doc"
     title: "Saubere Rechnung für deine Unterlagen."
-    body: "Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du LifeFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater."
+    body: "Du erhältst eine ordnungsgemäße Rechnung mit den relevanten Angaben. Wenn du FitFlow360 für deine Sponsoring-Tätigkeit nutzt, kannst du die Kosten in der Regel als Betriebsausgabe geltend machen. Bitte kläre die konkrete steuerliche Behandlung im Zweifel mit deinem Steuerberater."
 
 compare:
   headlineHtml: "Was ist <em>jeweils</em> enthalten?"
@@ -127,16 +129,28 @@ compare:
       cells: ["Magic-Link", "check", "check", "check"]
     - feature: "Abrechnung"
       cells: ["kostenlos", "monatlich", "halbjährlich", "jährlich"]
-    - feature: "Kündigungsfrist"
-      cells: ["-", "monatlich", "monatlich", "monatlich"]
+    - feature: "Bindung / Kündigung"
+      cells: ["-", "monatlich kündbar", "6 Mon. fest, dann monatlich", "12 Mon. fest, dann monatlich"]
+    - feature: "Verlängerung"
+      cells: ["-", "monatlich", "um 6 Monate", "um 12 Monate"]
+    - feature: "Rabatt in der Verlängerung"
+      cells: ["-", "—", "bleibt erhalten", "bleibt erhalten"]
+    - feature: "Anteilige Erstattung bei Kündigung"
+      cells: ["-", "—", "ab 1. Verlängerung", "ab 1. Verlängerung"]
 
 faq:
   headlineHtml: "Fragen zur <em>Abrechnung.</em>"
   items:
     - q: "Wie kann ich kündigen?"
       a:
-        - "Im <strong>1-Monats-Abo</strong> kündigst du monatlich — ein Klick im Account-Bereich genügt, keine Begründung nötig."
-        - "Bei <strong>6 oder 12 Monaten</strong> kündigst du ebenfalls monatlich. Dein Zugang läuft bis zum Ende des laufenden Monats; nicht genutzte volle Restmonate erstatten wir anteilig."
+        - "Im <strong>1-Monats-Plan</strong> kündigst du jederzeit zum Ende des laufenden Monats — ein Klick im Account-Bereich genügt, keine Begründung nötig."
+        - "Im <strong>6- oder 12-Monats-Plan</strong> bindest du dich für die gewählte Erstlaufzeit. Ab der ersten Verlängerung kannst du dann monatlich kündigen — nicht genutzte volle Restmonate erstatten wir dir anteilig zurück."
+        - "Die Kündigung erfolgt im Account-Bereich oder über das Paddle-Kundenportal."
+    - q: "Wie verlängert sich mein Plan — und bleibt mein Rabatt erhalten?"
+      a:
+        - "Dein Plan verlängert sich automatisch um die <strong>gleiche Laufzeit</strong>: ein 6-Monats-Plan um weitere 6 Monate, ein 12-Monats-Plan um weitere 12 Monate."
+        - "Der Rabattpreis für deine gewählte Laufzeit bleibt dabei erhalten und gilt auch in der Verlängerung. Treue wird also belohnt."
+        - "Ab der ersten Verlängerung kannst du deinen Plan jederzeit monatlich zum Monatsende kündigen. Nicht genutzte volle Restmonate erstatten wir anteilig zurück."
     - q: "Kann ich vom Monats- aufs Jahresabo wechseln (oder umgekehrt)?"
       a:
         - "Ja. Du kannst zwischen 1, 6 und 12 Monaten wechseln. Nicht verbrauchte Restzeit wird dabei angerechnet oder anteilig erstattet."

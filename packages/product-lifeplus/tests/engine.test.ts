@@ -243,7 +243,7 @@ describe('Netzwerk-Wachstum', () => {
     }
   });
 
-  it('reicht asymmetrische Beine durch runSimulation an MonthResult.legs durch (Default-Strategie)', () => {
+  it('reicht asymmetrische Beine durch runSimulation an QuarterResult.legs durch (Personenbaum)', () => {
     const result = runSimulation(
       lifeplusProduct,
       {
@@ -254,6 +254,7 @@ describe('Netzwerk-Wachstum', () => {
         attritionRate: 0,
       },
       24,
+      { simulationMode: 'person-tree' },
     );
 
     const y2 = result.yearEnds[1];
@@ -310,6 +311,45 @@ describe('Netzwerk-Wachstum', () => {
     expect(totalNetworkSize(withAttrition[119])).toBeLessThan(
       totalNetworkSize(noAttrition[119]),
     );
+  });
+
+  it('bewertet direkte Downliner unter Fluktuation als zeitversetzte Sponsoren', () => {
+    const result = runSimulation(
+      lifeplusProduct,
+      {
+        ...lifeplusProduct.simulator.defaultInputs,
+        membersPerYear: 2,
+        shoppersPerYear: 2,
+        duplicationRate: 1,
+        attritionRate: 0.5,
+        memberMonthlyVolume: 50,
+        shopperMonthlyVolume: 50,
+        unitToCurrency: 1,
+        maxDirectMembersPerMember: 29,
+      },
+      120,
+      { simulationMode: 'person-tree' },
+    );
+    const year5 = result.personYearEnds?.[4];
+    const year6 = result.personYearEnds?.[5];
+    const year5Comp = result.treeCompensationYearEnds?.[4];
+    const year6Comp = result.treeCompensationYearEnds?.[5];
+    const firstDownliner = year6?.persons.find(
+      (person) =>
+        person.sponsorId === year6.rootId &&
+        person.active &&
+        person.kind === 'member',
+    );
+
+    const rootYear5 = year5Comp?.rankStates.find(
+      (state) => state.personId === year5?.rootId,
+    );
+    const downlinerYear6 = year6Comp?.rankStates.find(
+      (state) => state.personId === firstDownliner?.id,
+    );
+
+    expect(rootYear5?.rank.name).toBe('Bronze');
+    expect(downlinerYear6?.rank.name).toBe('Bronze');
   });
 
   it('wendet Shopper-Fluktuation auf bestehende Shopper an', () => {
@@ -383,7 +423,7 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
     expect(snapshots[23].membersByLevel[1]).toBeCloseTo(100, 1);
   });
 
-  it('laesst Compression durch Fluktuation nicht ueber den Cap springen', () => {
+  it('laesst Compression durch Fluktuation aktive Subtrees an den Parent haengen', () => {
     const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 10,
@@ -397,7 +437,9 @@ describe('Cap auf direkte Members (maxDirectMembersPerMember)', () => {
 
     expect(snapshots[11].directLegs).toBeLessThanOrEqual(5);
     expect(snapshots[23].directLegs).toBeLessThanOrEqual(5);
-    expect(snapshots[35].directLegs).toBeLessThanOrEqual(5);
+    // Der Cap begrenzt neue Rekrutierung. Wenn ein direkter Member churnt,
+    // werden seine aktiven Kinder komprimiert und bleiben fuer QGV sichtbar.
+    expect(snapshots[35].directLegs).toBeGreaterThan(5);
   });
 
   it('normalisiert nicht-positive Caps auf mindestens einen direkten Member', () => {
@@ -493,7 +535,8 @@ describe('Beine im NetworkSnapshot', () => {
     });
   });
 
-  it('bildet auch fractional Members/Jahr als Teil-Bein ab', () => {
+  it('akkumuliert F1a Carry-over bei fractional Members/Jahr (Member entsteht erst bei Punkten >= 1)', () => {
+    // 0,25 Punkte pro Jahr: erster Member entsteht erst am Ende von Jahr 4.
     const snapshots = simulatePersonNetworkSnapshots(
       {
         membersPerYear: 0.25,
@@ -501,14 +544,49 @@ describe('Beine im NetworkSnapshot', () => {
         duplicationRate: 0,
         attritionRate: 0,
       },
-      12,
+      48,
     );
 
-    expect(snapshots[11].directLegs).toBeCloseTo(0.25, 5);
-    expect(snapshots[11].membersByLevel[0]).toBeCloseTo(0.25, 5);
-    expect(snapshots[11].legs[0].membersByLevel[0]).toBeCloseTo(0.25, 5);
-    expect(snapshots[11].legs[0].shoppersByLevel[0] ?? 0).toBeCloseTo(0, 5);
+    // Jahr 1: 0,25 gesammelt, 0 Members, 0 Beine.
+    expect(snapshots[11].directLegs).toBe(0);
+    expect(snapshots[11].membersByLevel[0] ?? 0).toBe(0);
+    expect(snapshots[11].legs).toEqual([]);
+    // Shopper sind ganz und entstehen sofort.
     expect(snapshots[11].shoppersByLevel[0]).toBeCloseTo(1, 5);
+
+    // Jahr 3 (Ende): 0,75 gesammelt, weiterhin 0 Members.
+    expect(snapshots[35].directLegs).toBe(0);
+    expect(snapshots[35].membersByLevel[0] ?? 0).toBe(0);
+
+    // Jahr 4 (Ende): 1,0 erreicht → erster ganzer Member sichtbar.
+    expect(snapshots[47].directLegs).toBe(1);
+    expect(snapshots[47].membersByLevel[0]).toBe(1);
+    expect(snapshots[47].legs[0].membersByLevel[0]).toBe(1);
+  });
+
+  it('materialisiert 2,5 Member/Jahr als ganze Personen mit Carry statt sichtbaren Teil-Membern', () => {
+    const snapshots = simulatePersonTree(
+      {
+        membersPerYear: 2.5,
+        shoppersPerYear: 0,
+        duplicationRate: 1,
+        attritionRate: 0,
+        memberMonthlyVolume: 150,
+        shopperMonthlyVolume: 150,
+      },
+      24,
+    );
+    const y1 = snapshots[11];
+    const y2 = snapshots[23];
+    const y2Network = personTreeToNetworkSnapshot(y2);
+    const y2Members = y2.persons.filter((person) => person.kind === 'member');
+
+    expect(personTreeToNetworkSnapshot(y1).membersByLevel[0]).toBe(2);
+    expect(y2Network.membersByLevel).toEqual([5, 4]);
+    expect(y2Members.every((person) => person.weight === 1)).toBe(true);
+    expect(y2Members.some((person) => person.weight < 1)).toBe(false);
+    expect(y2Network.legs[0].membersByLevel).toEqual([1, 2]);
+    expect(y2Network.legs[1].membersByLevel).toEqual([1, 2]);
   });
 
   it('liefert leere legs-Liste bei membersPerYear = 0', () => {
@@ -810,7 +888,7 @@ describe('Leadership-Kuchenstuecke', () => {
 });
 
 describe('Vollstaendige Simulation', () => {
-  it('liefert 120 Monate und 10 Jahreszusammenfassungen', () => {
+  it('liefert 40 Quartale und 10 Jahreszusammenfassungen', () => {
     const result = runSimulation(lifeplusProduct, {
       membersPerYear: 2,
       shoppersPerYear: 3,
@@ -820,7 +898,7 @@ describe('Vollstaendige Simulation', () => {
       shopperMonthlyVolume: 200,
     });
 
-    expect(result.months.length).toBe(120);
+    expect(result.quarters.length).toBe(40);
     expect(result.yearEnds.length).toBe(10);
     expect(result.yearSummaries.length).toBe(10);
   });
@@ -850,7 +928,7 @@ describe('Vollstaendige Simulation', () => {
       shopperMonthlyVolume: 200,
     });
 
-    expect(result.finalMonth.totalEUR).toBe(0);
+    expect(result.finalQuarter.totalEUR).toBe(0);
   });
 
   it('berechnet Shopper-only Umsatz ohne Member-Beine', () => {
@@ -863,10 +941,10 @@ describe('Vollstaendige Simulation', () => {
       shopperMonthlyVolume: 150,
     });
 
-    expect(result.finalMonth.members).toBe(0);
-    expect(result.finalMonth.shoppers).toBeCloseTo(30, 5);
-    expect(result.finalMonth.rankName).toBe('Member');
-    expect(result.finalMonth.totalEUR).toBeCloseTo(1125, 2);
+    expect(result.finalQuarter.members).toBe(0);
+    expect(result.finalQuarter.shoppers).toBeCloseTo(30, 5);
+    expect(result.finalQuarter.rankName).toBe('Member');
+    expect(result.finalQuarter.totalEUR).toBeCloseTo(1125, 2);
   });
 
   it('rechnet IP in EUR um', () => {
@@ -889,7 +967,7 @@ describe('Vollstaendige Simulation', () => {
       unitToCurrency: 0.5,
     });
 
-    expect(r2.finalMonth.totalEUR).toBeCloseTo(r1.finalMonth.totalEUR / 2, 2);
+    expect(r2.finalQuarter.totalEUR).toBeCloseTo(r1.finalQuarter.totalEUR / 2, 2);
   });
 });
 

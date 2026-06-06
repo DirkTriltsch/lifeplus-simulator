@@ -11,7 +11,20 @@ export interface SimPerson {
   active: boolean;
   weight: number;
   personalMonthlyVolume: number;
+  shopperMonthlyVolume?: number;
+  shopperCount?: number;
   childrenIds: string[];
+  /**
+   * F1a Carry-over: ungenutzte Wachstums-Punkte fuer die Erzeugung neuer member-children.
+   * Akkumuliert ueber Jahre; bei >= 1 entsteht ein ganzer Member, Rest bleibt liegen.
+   */
+  memberCarry?: number;
+  /** Analog memberCarry, fuer shopper-children. */
+  shopperCarry?: number;
+  /** F1a Carry-over fuer Attrition der direkten member-children. */
+  memberAttritionCarry?: number;
+  /** Analog, fuer Attrition der direkten shopper-children. */
+  shopperAttritionCarry?: number;
 }
 
 export interface SimOrder {
@@ -70,6 +83,7 @@ export function personTreeToNetworkSnapshot(
   }
 
   // Direct shoppers of root are visible at level 0 but do not form legs.
+  addAtLevel(shoppersByLevel, 0, root.shopperCount ?? 0);
   for (const childId of root.childrenIds) {
     const child = personsById.get(childId);
     if (!child || child.kind !== 'shopper' || !child.active) continue;
@@ -117,6 +131,7 @@ function collectLevels(
 
   if (person.kind === 'member') {
     addAtLevel(membersByLevel, level, person.weight);
+    addAtLevel(shoppersByLevel, level + 1, person.shopperCount ?? 0);
   } else if (person.kind === 'shopper') {
     addAtLevel(shoppersByLevel, level, person.weight);
   }

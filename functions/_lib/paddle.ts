@@ -433,6 +433,282 @@ export async function paddleGetTransaction(
   };
 }
 
+// ── Subscription Management (Mein-Konto Hybrid-Variante 2) ───
+// Wird auf der "Mein Konto"-Seite verwendet, um Zahlungsdaten und
+// Rechnungen direkt auf unserer Domain anzuzeigen (statt komplett auf
+// das Paddle-Portal umzuleiten). Karten-Wechsel bleibt aus PCI-Gruenden
+// im Paddle-Portal (Deep-Link); alles andere laeuft direkt ueber unsere
+// API. Siehe design concepts/mein-konto-paddle-portal-options.html.
+
+export interface PaddleSubscriptionDetails {
+  id: string;
+  status: string;
+  nextBilledAt: string | null;
+  scheduledChange: {
+    action: string;
+    effectiveAt: string;
+  } | null;
+  nextTransaction: {
+    total: string | null;        // in Minor Units ("12000" = 120,00)
+    currencyCode: string | null;
+    formattedTotal: string | null; // z.B. "$120.00" / "120,00 €"
+  } | null;
+  paymentMethod: {
+    type: string;                // 'card' | 'paypal' | 'apple_pay' | ...
+    cardBrand: string | null;    // 'visa' | 'mastercard' | ...
+    last4: string | null;
+  } | null;
+}
+
+interface PaddleSubscriptionRaw {
+  id: string;
+  status: string;
+  next_billed_at: string | null;
+  scheduled_change: {
+    action?: string;
+    effective_at?: string;
+  } | null;
+  next_transaction?: {
+    details?: {
+      totals?: {
+        total?: string;
+        currency_code?: string;
+        grand_total?: string;
+      };
+    };
+  } | null;
+}
+
+interface PaddleTransactionRaw {
+  id: string;
+  status: string;
+  billed_at: string | null;
+  invoice_number: string | null;
+  customer_id: string | null;
+  subscription_id: string | null;
+  origin: string | null;
+  details?: {
+    totals?: {
+      total?: string;
+      currency_code?: string;
+      grand_total?: string;
+    };
+  };
+  payments?: Array<{
+    status?: string;
+    method_details?: {
+      type?: string;
+      card?: {
+        type?: string;
+        last4?: string;
+      };
+    };
+  }>;
+}
+
+// Liefert Subscription-Details inkl. naechstem Zahlungsbetrag. Wir holen
+// uns die Zahlungsmethode aus der letzten Captured-Payment-Transaction
+// (Paddle gibt sie nicht direkt auf /subscriptions/{id} zurueck — sie
+// liegt am letzten transaction.payments[].method_details).
+export async function paddleGetSubscriptionDetails(
+  env: Env,
+  subscriptionId: string,
+): Promise<PaddleSubscriptionDetails> {
+  const sub = await paddleRequest<PaddleSubscriptionRaw>(
+    env,
+    'GET',
+    `/subscriptions/${encodeURIComponent(subscriptionId)}?include=next_transaction`,
+  );
+
+  const totals = sub.next_transaction?.details?.totals ?? {};
+  const nextTransaction = (totals.total || totals.grand_total)
+    ? {
+        total:          totals.total ?? totals.grand_total ?? null,
+        currencyCode:   totals.currency_code ?? null,
+        formattedTotal: formatMinorAmount(
+          totals.total ?? totals.grand_total ?? null,
+          totals.currency_code ?? null,
+        ),
+      }
+    : null;
+
+  // Zahlungsmethode aus juengster captured Transaction lesen. Wenn keine
+  // existiert (z.B. ganz frische Sub), liefern wir null.
+  let paymentMethod: PaddleSubscriptionDetails['paymentMethod'] = null;
+  try {
+    const txns = await paddleRequest<PaddleTransactionRaw[]>(
+      env,
+      'GET',
+      `/transactions?subscription_id=${encodeURIComponent(subscriptionId)}` +
+        `&status=billed,paid,completed&per_page=1&order_by=billed_at[DESC]`,
+    );
+    const last = Array.isArray(txns) ? txns[0] : null;
+    const payment = last?.payments?.find((p) => (p.status ?? '') === 'captured') ?? last?.payments?.[0];
+    if (payment?.method_details) {
+      paymentMethod = {
+        type:       payment.method_details.type ?? 'unknown',
+        cardBrand:  payment.method_details.card?.type ?? null,
+        last4:      payment.method_details.card?.last4 ?? null,
+      };
+    }
+  } catch (err) {
+    // Wenn der Payment-Methods-Lookup scheitert (z.B. Paddle-API-Glitch),
+    // brechen wir das Details-Endpoint nicht ab — wir zeigen einfach
+    // "Nicht hinterlegt" im Frontend.
+    console.warn('paddle_payment_method_lookup_failed', err);
+  }
+
+  return {
+    id:             sub.id,
+    status:         sub.status,
+    nextBilledAt:   sub.next_billed_at,
+    scheduledChange: sub.scheduled_change?.action && sub.scheduled_change?.effective_at
+      ? {
+          action:      sub.scheduled_change.action,
+          effectiveAt: sub.scheduled_change.effective_at,
+        }
+      : null,
+    nextTransaction,
+    paymentMethod,
+  };
+}
+
+export interface PaddleTransactionListItem {
+  id: string;
+  status: string;
+  billedAt: string | null;
+  invoiceNumber: string | null;
+  total: string | null;
+  currencyCode: string | null;
+  formattedTotal: string | null;
+  origin: string | null;
+}
+
+export async function paddleListSubscriptionTransactions(
+  env: Env,
+  subscriptionId: string,
+  limit: number,
+): Promise<PaddleTransactionListItem[]> {
+  const safeLimit = Math.min(Math.max(Math.floor(limit), 1), 50);
+  const list = await paddleRequest<PaddleTransactionRaw[]>(
+    env,
+    'GET',
+    `/transactions?subscription_id=${encodeURIComponent(subscriptionId)}` +
+      `&per_page=${safeLimit}&order_by=billed_at[DESC]`,
+  );
+  if (!Array.isArray(list)) return [];
+  return list.map((t) => {
+    const totals = t.details?.totals ?? {};
+    const total = totals.total ?? totals.grand_total ?? null;
+    return {
+      id:             t.id,
+      status:         t.status,
+      billedAt:       t.billed_at,
+      invoiceNumber:  t.invoice_number,
+      total,
+      currencyCode:   totals.currency_code ?? null,
+      formattedTotal: formatMinorAmount(total, totals.currency_code ?? null),
+      origin:         t.origin,
+    };
+  });
+}
+
+// Liefert den signierten Invoice-PDF-Link einer Transaction. Paddle's
+// URL ist ~24h gueltig und enthaelt ein eigenes Token — wir muessen sie
+// nicht selbst aendern. Aufrufer ist fuer den Ownership-Check zustaendig.
+export async function paddleGetTransactionInvoiceUrl(
+  env: Env,
+  transactionId: string,
+): Promise<string | null> {
+  const data = await paddleRequest<{ url?: string }>(
+    env,
+    'GET',
+    `/transactions/${encodeURIComponent(transactionId)}/invoice`,
+  );
+  return data?.url ?? null;
+}
+
+// Holt eine einzelne Transaction. Wir nutzen das im invoice-Endpoint, um
+// vor dem Redirect zu pruefen, dass die Transaction wirklich dem
+// angemeldeten User gehoert (customer_id-Match).
+export async function paddleGetTransactionRaw(
+  env: Env,
+  transactionId: string,
+): Promise<{ customerId: string | null; subscriptionId: string | null } | null> {
+  try {
+    const tx = await paddleRequest<PaddleTransactionRaw>(
+      env,
+      'GET',
+      `/transactions/${encodeURIComponent(transactionId)}`,
+    );
+    return {
+      customerId:     tx.customer_id ?? null,
+      subscriptionId: tx.subscription_id ?? null,
+    };
+  } catch (err) {
+    if (err instanceof PaddleApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export interface PaddleScheduledChange {
+  action: string;
+  effectiveAt: string;
+}
+
+// Plant Subscription-Kuendigung. effectiveFrom='next_billing_period' = zum
+// Ende der bezahlten Laufzeit (B2B-Standard, kein Refund). 'immediately'
+// waere sofort + anteilige Erstattung — wir bieten das im UI nicht an.
+export async function paddleCancelSubscription(
+  env: Env,
+  subscriptionId: string,
+  effectiveFrom: 'next_billing_period' | 'immediately' = 'next_billing_period',
+): Promise<PaddleScheduledChange | null> {
+  const data = await paddleRequest<PaddleSubscriptionRaw>(
+    env,
+    'POST',
+    `/subscriptions/${encodeURIComponent(subscriptionId)}/cancel`,
+    { effective_from: effectiveFrom },
+  );
+  if (data.scheduled_change?.action && data.scheduled_change?.effective_at) {
+    return {
+      action:      data.scheduled_change.action,
+      effectiveAt: data.scheduled_change.effective_at,
+    };
+  }
+  return null;
+}
+
+// Macht eine geplante Kuendigung rueckgaengig (scheduled_change=null).
+export async function paddleResumeSubscription(
+  env: Env,
+  subscriptionId: string,
+): Promise<void> {
+  await paddleRequest<PaddleSubscriptionRaw>(
+    env,
+    'PATCH',
+    `/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    { scheduled_change: null },
+  );
+}
+
+// Formatiert "12000" + "EUR" → "120,00 €". Wir bauen das selbst, weil
+// Paddle's formatted_totals nicht auf jedem Endpoint zurueckkommt und
+// das Locale (de-DE vs. en-US) unklar ist. Fallback: "12000 EUR".
+function formatMinorAmount(minor: string | null, currency: string | null): string | null {
+  if (!minor || !currency) return null;
+  const cents = parseInt(minor, 10);
+  if (!Number.isFinite(cents)) return null;
+  try {
+    return new Intl.NumberFormat('de-DE', {
+      style:    'currency',
+      currency: currency,
+    }).format(cents / 100);
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${currency}`;
+  }
+}
+
 // ── Orchestrator ─────────────────────────────────────────────
 
 export interface CreateB2BTransactionInput {

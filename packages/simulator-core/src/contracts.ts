@@ -105,6 +105,10 @@ export interface CompensationPlan {
     snapshot: PersonTreeSnapshot,
     inputs: SimulatorInputs,
   ): TreeCompensationResult;
+  selectTreeMemberChurnCandidates?(
+    snapshot: PersonTreeSnapshot,
+    inputs: SimulatorInputs,
+  ): string[];
 }
 
 export interface ProductDefinition {

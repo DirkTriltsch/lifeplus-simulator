@@ -9,15 +9,16 @@ import {
   AreaChart,
   ReferenceDot,
 } from 'recharts';
-import type { MonthResult } from '@mlm/simulator-core';
+import type { QuarterResult } from '@mlm/simulator-core';
 import type { GoalProgress } from '@mlm/simulator-goals';
 import { GoalIconPaths } from './GoalIcon';
 import type { GoalUI } from './GoalsEditorDialog';
 
 interface ProvisionChartProps {
-  yearEnds: MonthResult[];
+  yearEnds: QuarterResult[];
   goalProgress?: GoalProgress[];
   goals?: GoalUI[];
+  mode?: 'aggregate' | 'detail';
 }
 
 function formatEUR(n: number): string {
@@ -30,7 +31,10 @@ export function ProvisionChart({
   yearEnds,
   goalProgress,
   goals,
+  mode = 'detail',
 }: ProvisionChartProps) {
+  const strokeColor = mode === 'detail' ? '#0F7A5B' : '#9CA3AF';
+  const fillOpacity = mode === 'detail' ? 0.28 : 0.16;
   const data = yearEnds.map((m) => ({
     year: `J${m.year}`,
     eur: Math.round(m.totalEUR),
@@ -66,8 +70,8 @@ export function ProvisionChart({
         >
           <defs>
             <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1D9E75" stopOpacity={0.25} />
-              <stop offset="100%" stopColor="#1D9E75" stopOpacity={0} />
+              <stop offset="0%" stopColor={strokeColor} stopOpacity={fillOpacity} />
+              <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="#f0f0f0" vertical={false} />
@@ -93,7 +97,7 @@ export function ProvisionChart({
               return (
                 <div className="bg-white border border-gray-200 rounded-md px-3 py-2 text-xs shadow-sm">
                   <div className="font-medium text-gray-900">{d.year}</div>
-                  <div className="text-brand-400 font-medium">
+                  <div className="font-medium" style={{ color: strokeColor }}>
                     {formatEUR(d.eur)} / Monat
                   </div>
                   <div className="text-gray-500">{d.rank}</div>
@@ -104,16 +108,16 @@ export function ProvisionChart({
           <Area
             type="monotone"
             dataKey="eur"
-            stroke="#1D9E75"
+            stroke={strokeColor}
             strokeWidth={2}
             fill="url(#grad)"
           />
           <Line
             type="monotone"
             dataKey="eur"
-            stroke="#1D9E75"
+            stroke={strokeColor}
             strokeWidth={2}
-            dot={{ fill: '#1D9E75', r: 3 }}
+            dot={{ fill: strokeColor, r: 3 }}
           />
           {markers.map((m) => (
             <ReferenceDot
@@ -131,6 +135,7 @@ export function ProvisionChart({
                   label={m.label}
                   stackIndex={m.stackIndex}
                   stackSize={m.stackSize}
+                  color={strokeColor}
                 />
               )}
             />
@@ -148,6 +153,7 @@ function GoalMarker({
   label,
   stackIndex,
   stackSize,
+  color,
 }: {
   cx: number;
   cy: number;
@@ -155,6 +161,7 @@ function GoalMarker({
   label: string;
   stackIndex: number;
   stackSize: number;
+  color: string;
 }) {
   const spread = 18;
   const offsetX = (stackIndex - (stackSize - 1) / 2) * spread;
@@ -167,7 +174,7 @@ function GoalMarker({
         y1={cy}
         x2={markerX}
         y2={cy - offsetY + 8}
-        stroke="#1D9E75"
+        stroke={color}
         strokeWidth={1}
         strokeDasharray="2 2"
       />
@@ -176,7 +183,7 @@ function GoalMarker({
         cy={cy - offsetY}
         r={11}
         fill="white"
-        stroke="#1D9E75"
+        stroke={color}
         strokeWidth={1.5}
       />
       {icon && (
@@ -187,7 +194,7 @@ function GoalMarker({
           height={14}
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#1D9E75"
+          stroke={color}
           strokeWidth={1.8}
           strokeLinecap="round"
           strokeLinejoin="round"

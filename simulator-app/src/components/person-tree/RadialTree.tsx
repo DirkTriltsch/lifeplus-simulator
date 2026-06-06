@@ -243,7 +243,7 @@ function RadialNodeMark({ node, hovered, onHover, onToggleCollapse }: RadialNode
   const isShopperAggregate = data.kind === 'shopper-aggregate';
   const radius = isShopperAggregate
     ? Math.min(14, 3 + Math.sqrt(data.shopperCount) * 1.6)
-    : MEMBER_RADIUS;
+    : memberRadius(data);
   const fill = isShopperAggregate ? SHOPPER_AGGREGATE_COLOR : STATUS_COLORS[data.status];
   const stroke = node.isCollapsed ? '#1f2937' : 'white';
   const strokeDasharray = node.isCollapsed ? '3 2' : undefined;
@@ -342,6 +342,7 @@ function RadialLabel({
 
   const hidden = node.isCollapsed ? hiddenSubtreeStats(data) : null;
   const primary = shortId(data.personId);
+  const memberLine = memberLabel(data);
 
   return (
     <g transform={`rotate(${rotation})`}>
@@ -353,6 +354,7 @@ function RadialLabel({
         textAnchor={textAnchor}
       >
         <tspan>{primary}</tspan>
+        <tspan dx={5} fill="#64748b">{memberLine}</tspan>
         {hidden && (
           <tspan x={xOffset} dy={12} fill="#64748b">
             +{formatCount(hidden.hiddenMemberCount)}P
@@ -369,6 +371,17 @@ function RadialLabel({
       </text>
     </g>
   );
+}
+
+function memberRadius(data: PersonTreeNode): number {
+  if (data.kind === 'shopper-aggregate' || data.kind === 'root') return MEMBER_RADIUS;
+  return Math.min(12, MEMBER_RADIUS + Math.sqrt(Math.max(0, data.ownMemberCount - 1)) * 1.6);
+}
+
+function memberLabel(data: PersonNode): string {
+  const memberText = formatMemberCount(data.ownMemberCount);
+  if (!data.rankName || data.rankName === 'Member') return memberText;
+  return `${memberText} · ${data.rankName}`;
 }
 
 function Legend() {
@@ -418,4 +431,13 @@ function formatCount(n: number): string {
 
 function formatNumber(n: number): string {
   return Math.round(n).toLocaleString('de-DE');
+}
+
+function formatMemberCount(n: number): string {
+  const rounded = Math.round(n * 10) / 10;
+  if (rounded === 1) return 'Member';
+  const count = Number.isInteger(rounded)
+    ? rounded.toLocaleString('de-DE')
+    : rounded.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  return `${count} Member`;
 }
