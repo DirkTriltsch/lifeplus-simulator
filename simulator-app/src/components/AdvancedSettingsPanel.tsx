@@ -1,11 +1,9 @@
 export type RealityStrategy =
-  | 'standard'
   | 'person-tree'
   | 'person-tree-random'
   | 'person-tree-momentum';
 
 const STRATEGY_OPTIONS: { value: RealityStrategy; label: string }[] = [
-  { value: 'standard', label: 'Standard' },
   { value: 'person-tree', label: 'Personenbaum' },
   { value: 'person-tree-random', label: 'Personenbaum (Zufall)' },
   { value: 'person-tree-momentum', label: 'Personenbaum (Momentum)' },
@@ -120,7 +118,7 @@ export function AdvancedSettingsPanel({
                 ))}
               </select>
               <p className="text-[11px] text-gray-500 mt-1 leading-snug">
-                Berechnungsmodus fuer Standardmodell oder Personenbaum.
+                Berechnungsmodus fuer die Personenbaum-Detailrechnung.
               </p>
             </div>
           </div>

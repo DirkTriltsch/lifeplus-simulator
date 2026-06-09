@@ -896,6 +896,8 @@ describe('Vollstaendige Simulation', () => {
       attritionRate: 0,
       memberMonthlyVolume: 200,
       shopperMonthlyVolume: 200,
+    }, undefined, {
+      simulationMode: 'person-tree',
     });
 
     expect(result.quarters.length).toBe(40);
@@ -911,6 +913,8 @@ describe('Vollstaendige Simulation', () => {
       attritionRate: 0,
       memberMonthlyVolume: 200,
       shopperMonthlyVolume: 200,
+    }, undefined, {
+      simulationMode: 'person-tree',
     });
 
     expect(result.yearEnds[9].totalEUR).toBeGreaterThan(
@@ -926,6 +930,8 @@ describe('Vollstaendige Simulation', () => {
       attritionRate: 0,
       memberMonthlyVolume: 200,
       shopperMonthlyVolume: 200,
+    }, undefined, {
+      simulationMode: 'person-tree',
     });
 
     expect(result.finalQuarter.totalEUR).toBe(0);
@@ -939,6 +945,8 @@ describe('Vollstaendige Simulation', () => {
       attritionRate: 0,
       memberMonthlyVolume: 150,
       shopperMonthlyVolume: 150,
+    }, undefined, {
+      simulationMode: 'person-tree',
     });
 
     expect(result.finalQuarter.members).toBe(0);
@@ -956,6 +964,8 @@ describe('Vollstaendige Simulation', () => {
       memberMonthlyVolume: 200,
       shopperMonthlyVolume: 200,
       unitToCurrency: 1,
+    }, undefined, {
+      simulationMode: 'person-tree',
     });
     const r2 = runSimulation(lifeplusProduct, {
       membersPerYear: 2,
@@ -965,6 +975,8 @@ describe('Vollstaendige Simulation', () => {
       memberMonthlyVolume: 200,
       shopperMonthlyVolume: 200,
       unitToCurrency: 0.5,
+    }, undefined, {
+      simulationMode: 'person-tree',
     });
 
     expect(r2.finalQuarter.totalEUR).toBeCloseTo(r1.finalQuarter.totalEUR / 2, 2);

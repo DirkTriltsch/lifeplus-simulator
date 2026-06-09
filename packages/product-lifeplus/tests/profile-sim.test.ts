@@ -16,7 +16,7 @@ import { calculateTreeCompensation, lifeplusProduct } from '../src';
  *
  * Lauf:
  *   npm test -- --run packages/product-lifeplus/tests/profile-sim.test.ts
- *   (vorher describe.skip -> describe.only setzen)
+ *   (vorher describe.skip gezielt auf describe umstellen)
  *
  * Mit Heap-Messung (forciertes GC, stabilere Werte):
  *   node --expose-gc node_modules/vitest/vitest.mjs run \
@@ -133,7 +133,9 @@ describe.skip('BENCHMARK: Engine bei steigender Knotenzahl', () => {
       let lastResult: ReturnType<typeof runSimulation> | undefined;
       for (let i = 0; i < ITERATIONS; i++) {
         const t0 = performance.now();
-        lastResult = runSimulation(lifeplusProduct, inputs, TOTAL_MONTHS);
+        lastResult = runSimulation(lifeplusProduct, inputs, TOTAL_MONTHS, {
+          simulationMode: 'person-tree',
+        });
         const t1 = performance.now();
         totals.push(t1 - t0);
       }

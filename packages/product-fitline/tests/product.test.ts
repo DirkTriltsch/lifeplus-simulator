@@ -7,7 +7,9 @@ describe('fitline product pack', () => {
     expect(fitlineProduct.brand.shortName).toBe('FitFlow360');
     expect(fitlineProduct.simulator.defaultInputs.membersPerYear).toBe(3);
 
-    const result = runSimulation(fitlineProduct, fitlineProduct.simulator.defaultInputs, 12);
+    const result = runSimulation(fitlineProduct, fitlineProduct.simulator.defaultInputs, 12, {
+      simulationMode: 'person-tree',
+    });
     expect(result.finalQuarter.networkSize).toBeGreaterThan(0);
   });
 });

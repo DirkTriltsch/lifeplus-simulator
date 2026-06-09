@@ -70,7 +70,7 @@ describe('Reality-Strategien auf dem Personenbaum', () => {
     // die ueber 10 Jahre staerker compound-wachsen als gleichmaessig
     // verteiltes Wachstum. Wir pruefen daher nur, dass beide Strategien
     // ein nicht-triviales Endergebnis liefern.
-    const standard = runSimulation(product, inputs, 120, {
+    const baseline = runSimulation(product, inputs, 120, {
       simulationMode: 'person-tree',
     });
     const momentum = runSimulation(product, inputs, 120, {
@@ -81,9 +81,9 @@ describe('Reality-Strategien auf dem Personenbaum', () => {
       }),
     });
 
-    expect(standard.finalQuarter.members).toBeGreaterThan(0);
+    expect(baseline.finalQuarter.members).toBeGreaterThan(0);
     expect(momentum.finalQuarter.members).toBeGreaterThan(0);
-    expect(standard.finalQuarter.qgv).toBeGreaterThan(0);
+    expect(baseline.finalQuarter.qgv).toBeGreaterThan(0);
     expect(momentum.finalQuarter.qgv).toBeGreaterThan(0);
   });
 });

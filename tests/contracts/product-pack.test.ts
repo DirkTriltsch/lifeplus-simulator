@@ -10,7 +10,9 @@ describe('product packs', () => {
 
   it('can all execute the shared simulation contract', () => {
     for (const product of products) {
-      const result = runSimulation(product, product.simulator.defaultInputs, 12);
+      const result = runSimulation(product, product.simulator.defaultInputs, 12, {
+        simulationMode: 'person-tree',
+      });
 
       expect(result.quarters).toHaveLength(4);
       expect(result.finalQuarter.rankName).toBeTruthy();

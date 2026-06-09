@@ -201,7 +201,7 @@ export function estimateRankDistribution(
   const personalMonthlyVolume = inputs.personalMonthlyVolume ?? inputs.memberMonthlyVolume;
   const memberMonthlyVolume = inputs.memberMonthlyVolume;
   const shopperMonthlyVolume = inputs.shopperMonthlyVolume;
-  const spread = strategy === 'standard' ? 0 : strategy === 'dirichlet' ? 0.18 : 0.28;
+  const spread = strategy === 'baseline' ? 0 : strategy === 'dirichlet' ? 0.18 : 0.28;
 
   return network.map((snapshot, yearIndex) => {
     const level = levels[yearIndex];

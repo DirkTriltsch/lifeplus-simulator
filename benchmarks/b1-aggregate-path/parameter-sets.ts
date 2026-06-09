@@ -1,6 +1,6 @@
 import type { SimulatorInputs } from '@mlm/simulator-core';
 
-export type GrowthStrategyName = 'standard' | 'dirichlet' | 'momentum';
+export type GrowthStrategyName = 'baseline' | 'dirichlet' | 'momentum';
 
 export interface BenchmarkParameterSet {
   id: string;
@@ -96,7 +96,7 @@ export const B1_PARAMETER_SETS: BenchmarkParameterSet[] = [
 ];
 
 export const B1_STRATEGIES: GrowthStrategyName[] = [
-  'standard',
+  'baseline',
   'dirichlet',
   'momentum',
 ];

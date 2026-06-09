@@ -50,7 +50,7 @@ interface PersistedAppState {
   attrition?: number;
   ipToEur?: number;
   maxDirectMembersPerMember?: number;
-  realityStrategy?: RealityStrategy | 'dirichlet' | 'momentum' | 'lifecycle';
+  realityStrategy?: RealityStrategy | 'standard' | 'dirichlet' | 'momentum' | 'lifecycle';
   goals?: GoalUI[];
   monthlyProductCostEUR?: number;
   inputMode?: InputMode;
@@ -182,7 +182,7 @@ export default function App() {
     setAttrition(defaults.attritionRate * 100);
     setIpToEur(defaults.unitToCurrency ?? 1);
     setMaxDirectMembersPerMember(defaults.maxDirectMembersPerMember ?? 29);
-    setRealityStrategy('standard');
+    setRealityStrategy('person-tree');
     setGoals(cloneGoals(DEFAULT_GOALS));
     setMonthlyProductCostEUR(defaults.monthlyProductCostEUR ?? 100);
   };
@@ -262,10 +262,8 @@ export default function App() {
   useEffect(() => {
     setDetailStatus('loading');
     const handle = window.setTimeout(() => {
-      const detailSimulationMode: SimulationMode =
-        simulationMode === 'standard' ? 'person-tree' : simulationMode;
       const nextDetail = runSimulation(product, inputs, undefined, {
-        simulationMode: detailSimulationMode,
+        simulationMode,
         treeGrowthStrategy,
       });
       setDetailResult(nextDetail);
@@ -798,17 +796,17 @@ function normalizeRealityStrategy(
   strategy: PersistedAppState['realityStrategy'] | undefined,
 ): RealityStrategy {
   if (
-    strategy === 'standard' ||
     strategy === 'person-tree' ||
     strategy === 'person-tree-random' ||
     strategy === 'person-tree-momentum'
   ) {
     return strategy;
   }
+  if (strategy === 'standard') return 'person-tree';
   if (strategy === 'dirichlet') return 'person-tree-random';
   if (strategy === 'momentum') return 'person-tree-momentum';
   if (strategy === 'lifecycle') return 'person-tree';
-  return 'standard';
+  return 'person-tree';
 }
 
 function cloneGoals(goals: GoalUI[]): GoalUI[] {

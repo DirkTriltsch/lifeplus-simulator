@@ -7,7 +7,9 @@ describe('eqology product pack', () => {
     expect(eqologyProduct.brand.shortName).toBe('EqoFlow360');
     expect(eqologyProduct.simulator.defaultInputs.shoppersPerYear).toBe(2);
 
-    const result = runSimulation(eqologyProduct, eqologyProduct.simulator.defaultInputs, 12);
+    const result = runSimulation(eqologyProduct, eqologyProduct.simulator.defaultInputs, 12, {
+      simulationMode: 'person-tree',
+    });
     expect(result.finalQuarter.networkSize).toBeGreaterThan(0);
   });
 });

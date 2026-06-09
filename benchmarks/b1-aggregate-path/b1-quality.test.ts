@@ -18,8 +18,8 @@ import {
 /**
  * Aenderungen gegenueber Codex-Erstversion:
  *
- * 1. Multi-Strategy: B1-Q laeuft jetzt mit standard, dirichlet, momentum
- *    - standard: 1 Run, deterministisch
+ * 1. Multi-Strategy: B1-Q laeuft jetzt mit baseline, dirichlet, momentum
+ *    - baseline: 1 Run, deterministisch
  *    - dirichlet/momentum: 10 Tree-Samples mit unterschiedlichen Seeds, gemittelt
  *
  * 2. Getrennte Drift- und Capped-Klassifikation:
@@ -153,14 +153,14 @@ interface TreeReference {
 }
 
 /**
- * Fuer 'standard' wird genau ein Tree-Run gemacht (deterministisch).
+ * Fuer 'baseline' wird genau ein Tree-Run gemacht (deterministisch).
  * Fuer 'dirichlet'/'momentum' werden 10 Runs gemittelt.
  */
 function collectTreeReference(
   inputs: (typeof B1_PARAMETER_SETS)[number]['inputs'],
   strategy: GrowthStrategyName,
 ): TreeReference {
-  const seeds = strategy === 'standard' ? [42] : STOCHASTIC_SAMPLE_SEEDS;
+  const seeds = strategy === 'baseline' ? [42] : STOCHASTIC_SAMPLE_SEEDS;
   const sampleCount = seeds.length;
 
   const accumulator: TreeYearAggregate[] = [];
@@ -173,7 +173,7 @@ function collectTreeReference(
       {
         simulationMode: 'person-tree' satisfies SimulationMode,
         treeGrowthStrategy:
-          strategy === 'standard'
+          strategy === 'baseline'
             ? undefined
             : createTreeGrowthStrategy({ strategy, seed }),
       },
@@ -209,7 +209,7 @@ function collectTreeReference(
       accumulator[yearIndex].monthlyPhase2 += phase2 / 12;
       accumulator[yearIndex].monthlyPhase3 += phase3 / 12;
       accumulator[yearIndex].rootMonthlyProvision += rootProvision / 12;
-      // Rang: vom ersten Sample uebernehmen (deterministisch fuer standard,
+      // Rang: vom ersten Sample uebernehmen (deterministisch fuer baseline,
       //       fuer stochastische Strategien ist der haeufigste Rang nuetzlicher,
       //       das uebersteigt aber die Zielsetzung dieses Benchmarks)
       if (seed === seeds[0]) {
@@ -299,7 +299,7 @@ function computeQualityRow(params: QualityRowParams): QualityRow {
     benchmark_id: benchmarkId,
     parameter_set: parameterSet.id,
     strategy,
-    seed: strategy === 'standard' ? 'none' : 'avg(42..51)',
+    seed: strategy === 'baseline' ? 'none' : 'avg(42..51)',
     sample_count: sampleCount,
     year: aggregatePoint.year,
     aggregate_members: round(aggregatePoint.members),
