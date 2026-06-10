@@ -1,13 +1,14 @@
 # Setup Paddle: Products, Prices, Discount-Codes
 
+**Stand:** 2026-05-31 (Datei-Mtime); inhaltlicher Setup-Stand 2026-05-22. Paddle **Billing v2** (Paddle Classic ist hier nicht beschrieben).
+**Status:** fuehrendes Paddle-Setup-Runbook; SKU-Konvention §4 ist Single Source of Truth fuer Multi-Brand-Produkte.
+**Scope:** Paddle-Sandbox-/-Live-Konto mit Produkten, Preisen, Discount-Codes und Webhook-Integration.
+
 Generischer Leitfaden fuer das Aufsetzen eines Paddle-Sandbox-/-Live-Kontos
 mit Produkten, Preisen, Discount-Codes und Webhook-Integration. Konkretes
 Beispiel: `LifeFlow360`-Brand. Werte und IDs sind aus einem real
 durchgespielten Setup uebernommen — fuer eigene Projekte einfach den
 Brand-Namen und die SKUs ersetzen.
-
-Stand: 2026-05-22. Paddle **Billing v2** (Paddle Classic ist hier nicht
-beschrieben).
 
 ---
 
@@ -1443,16 +1444,14 @@ Bevor Sandbox auf Live umgestellt wird:
 
 ### Verwandte Dokumente in diesem Repo
 
-- `_doc/Produkt-Namenskonvention.md` — Quelle der SKU-Konvention,
-  hier in [Abschnitt 4](#4-namens--und-sku-konvention) konsolidiert
-- `_doc/Product, Pricing and Discount-Codes in Paddle.md` —
-  projekt-spezifischer Walkthrough mit `LifeFlow360`-Werten, hier
-  generisch aufbereitet
-- `_doc/Setup Infrastruktur Cloudflare, Resend und IONOS.md` —
-  Infrastruktur-Seite (Hosting, Email, DNS), das Komplementaer-Stueck
-  zu diesem Paddle-Doc
-- `_doc/Cloudflare, Resend und IONOS - Setup.md` —
-  projekt-spezifischer Cloudflare-Walkthrough
+- [Setup Infrastruktur Cloudflare, Resend und IONOS](./Setup%20Infrastruktur%20Cloudflare%2C%20Resend%20und%20IONOS.md) — Infrastruktur-Seite (Hosting, Email, DNS), das Komplementaer-Stueck zu diesem Paddle-Doc.
+- [paddle_checkout/checkout-billing-runbook-b2b-v6-1.md](./paddle_checkout/checkout-billing-runbook-b2b-v6-1.md) — fuehrendes Runbook fuer den aktiven B2B-v6.1-Gast-Checkout.
+
+Frueher hier verlinkte Dokumente sind nicht mehr Teil des Workspace:
+
+- `_doc/Produkt-Namenskonvention.md` — SKU-Konvention konsolidiert in [Abschnitt 4](#4-namens--und-sku-konvention).
+- `_doc/Product, Pricing and Discount-Codes in Paddle.md` — projekt-spezifischer Walkthrough, ersetzt durch dieses generische Setup.
+- `_doc/Cloudflare, Resend und IONOS - Setup.md` — projekt-spezifischer Cloudflare-Walkthrough, ersetzt durch die Setup-Infrastruktur-Datei oben.
 
 ---
 

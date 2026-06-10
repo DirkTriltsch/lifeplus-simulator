@@ -1,6 +1,8 @@
 # Legal Review: LifeFlow360 → B2B-only-Shop
 
-**Datum:** 2026-06-02
+**Stand:** 2026-06-10 (Datei-Mtime); inhaltlicher Review-Stand 2026-06-02
+**Status:** Legal-Review-Snapshot; Befunde aktiv abzuarbeiten in [`../go-live/go-live-content-legal-checklist.md`](../go-live/go-live-content-legal-checklist.md)
+**Scope:** Rechtliche Bewertung des Architektur-Pivots Pro-Checkout → B2B-only-Shop (Schwerpunkt DACH/DE).
 **Skill:** `lifeflow360-legal-review`
 **Anlass:** Architektur-Pivot des Pro-Checkouts. LifeFlow360-Shop wird als
 B2B-only-Angebot positioniert. User-Vorgabe: "wir schliessen nicht aus, wir

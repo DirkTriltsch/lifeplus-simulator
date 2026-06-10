@@ -1,5 +1,9 @@
 # Eqology Verguetungsplan - kanonische Simulator-Spezifikation
 
+**Stand:** 2026-05-19 (Datei-Mtime)
+**Status:** fachliche Vorlage / noch nicht in `product-eqology` produktiv umgesetzt. Aktiver Plan-Code teilt sich vorerst die LifePlus-Implementierung; echte Eqology-Logik (zwei Baeume, QV/BV) folgt mit eigenem Adapter.
+**Scope:** Fachliches Verguetungsmodell Eqology; Vorlage fuer den spaeteren `product-eqology`-Plan-Adapter.
+
 Dieses Dokument beschreibt die Logik fuer eine Eqology-Simulation: Wachstumsmodell, Datenmodell, Volumenberechnung, Rang-System, Bonusarten und Umsetzung in Code. Es ist als Single Source of Truth gedacht: erst verstaendlich fuer Interessenten, dann praezise genug fuer Entwickler.
 
 Die Bedienlogik kann weitgehend wie bei LifePlus bleiben: Partner pro Jahr, Kunden pro Jahr, Duplikationsrate, Fluktuation, Monatsvolumen und Goals. Intern muss Eqology aber anders rechnen, weil Eqology zwei Baeume verwendet und QV/BV trennt.

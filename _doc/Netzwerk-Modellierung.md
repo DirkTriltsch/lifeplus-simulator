@@ -1,6 +1,8 @@
 # Netzwerk-Modellierung
 
-Stand: 2026-05-27
+**Stand:** 2026-05-28 (Datei-Mtime; vor der Personenbaum-Konsolidierung in `_doc/growth_models/`)
+**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F05). Aktueller Master fuer das Wachstumsmodell ist [`growth_models/01-Zielarchitektur.md`](./growth_models/01-Zielarchitektur.md).
+**Scope:** Hintergrund zur Modellwahl Aggregat vs. Personenbaum; aktuelle Umsetzung liegt im growth_models-Master.
 
 Dieses Dokument beschreibt die Modellierungsentscheidung fuer konkrete LifePlus-Beispielrechnungen und die spaetere Option, das gesamte Netzwerkmodell auf echte Personenbaeume umzustellen.
 

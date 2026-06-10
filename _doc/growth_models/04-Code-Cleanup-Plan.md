@@ -80,5 +80,5 @@ R5 wurde mit Option B entschieden: Shopper werden komplett auf `shopperCount` ko
 
 ## 8. B2 entfernt 2026-06-10
 
-R6 wurde mit Option A entschieden: B2 ist durch die `shopperCount`-Konsolidierung fachlich ueberfluessig. Das bisher geskippt gefuehrte Benchmark-/Testgeruest `benchmarks/b2-shopper-aggregation/` wurde entfernt. Ein separater `simulationMode: 'shopper-aggregate'` wird nicht eingefuehrt.
+R6 wurde mit Option A entschieden: B2 ist durch die `shopperCount`-Konsolidierung fachlich ueberfluessig. Das bisher geskippt gefuehrte Benchmark-/Testgeruest `benchmarks/b2-shopper-aggregation/` wurde am 2026-06-10 zusammen mit dem `benchmarks/`-Ordner entfernt. Ein separater `simulationMode: 'shopper-aggregate'` wird nicht eingefuehrt.
 4. `npm test` und relevanten App-Build nach jeder weiteren Code-Aenderung ausfuehren.

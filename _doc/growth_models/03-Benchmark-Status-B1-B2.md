@@ -21,7 +21,7 @@ Konsequenz:
 
 - Die produktive Runtime nutzt den Personenbaum als einzige Berechnungsquelle.
 - `standard`, `fastResult`, der Aggregatpfad in `runSimulation()` und der `ProvisionChart`-Aggregate-Modus wurden am 2026-06-10 entfernt.
-- Der Ordner `benchmarks/b1-aggregate-path/` ist nur noch historisches Benchmark-Material, kein Zielarchitektur-Benchmark.
+- Der frueher unter `benchmarks/b1-aggregate-path/` gefuehrte Benchmark wurde am 2026-06-10 zusammen mit dem `benchmarks/`-Ordner entfernt; er war zuletzt nur noch historisches Material und kein Zielarchitektur-Benchmark mehr.
 
 ## 2. B2 - Shopper-Aggregation
 
@@ -37,7 +37,7 @@ Diese Frage ist durch R5 entschieden und umgesetzt:
 - Shopper-Umsatz zaehlt zu QGV, aber nicht zu AV.
 - UI-`shopper-aggregate`-Knoten sind nur Darstellung dieses Counts, keine Simulationspersonen.
 
-Damit ist ein separater `simulationMode: 'shopper-aggregate'` ueberfluessig. Der alte B2-Benchmark-/Skip-Test-Ordner `benchmarks/b2-shopper-aggregation/` wurde am 2026-06-10 entfernt.
+Damit ist ein separater `simulationMode: 'shopper-aggregate'` ueberfluessig. Der alte B2-Benchmark-/Skip-Test-Ordner `benchmarks/b2-shopper-aggregation/` wurde am 2026-06-10 zusammen mit dem `benchmarks/`-Ordner entfernt.
 
 ## 3. Verbleibender Benchmark-Umgang
 

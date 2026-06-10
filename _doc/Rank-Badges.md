@@ -1,5 +1,9 @@
 # Rank-Badges
 
+**Stand:** 2026-05-29 (Datei-Mtime, Inhalt nicht erneut gegen Code abgeglichen)
+**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F07)
+**Scope:** Visueller Master fuer Rang-Badges in `simulator-app/`.
+
 Diese Datei definiert den visuellen Master fuer Rang-Badges im Simulator.
 
 ## Quelle im Code

@@ -1,5 +1,9 @@
 # Setup Infrastruktur: Cloudflare, Resend und IONOS
 
+**Stand:** 2026-05-31 (Datei-Mtime); inhaltlicher Setup-Stand 2026-05-22
+**Status:** fuehrendes Infrastruktur-Runbook fuer LifeFlow360; analog anwendbar fuer FitFlow360/EqoFlow360, sobald deren Setups angelegt werden
+**Scope:** Hybrid-Infrastruktur (IONOS Webhosting + Cloudflare Pages Functions + Resend Email) fuer das SaaS-Backend.
+
 Generischer Leitfaden zum Aufsetzen einer Hybrid-Infrastruktur fuer ein
 SaaS-Backend mit klassischem Webhosting (IONOS), serverloser API
 (Cloudflare Pages Functions) und HTTPS-Email-Versand (Resend).
@@ -8,8 +12,6 @@ Der Leitfaden ist mit den konkreten Werten eines Beispiel-Setups
 (`LifeFlow360`) versehen, damit Schritte und Konsistenz nachvollziehbar
 bleiben. Fuer ein eigenes Projekt einfach `lifeflow360` durch den eigenen
 Projekt-Namen ersetzen und Domains anpassen.
-
-Stand: 2026-05-22.
 
 ---
 
@@ -1032,13 +1034,15 @@ curl.exe -i https://api.fitflow360.de/api/me
 
 ### Verwandte Dokumente in diesem Repo
 
-- `_doc/Cloudflare, Resend und IONOS - Setup.md` — projekt-spezifischer,
-  umfassender Walkthrough mit allen Zwischenschritten
-- `_doc/cloudflare-setup.md` — frueher Setup-Stand, hier vollstaendig
-  konsolidiert
-- `_doc/Product, Pricing and Discount-Codes in Paddle.md` — Paddle-Side
-  Setup (Produkte, Preise, Discount-Codes, Test-Karten)
-- `_doc/Produkt-Namenskonvention.md` — SKU-Schema fuer Multi-Brand-Produkte
+- [Setup Paddle Products, Prices, Discount-Codes](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md) — Paddle-Seite (Produkte, Preise, Discount-Codes, Test-Karten); enthaelt in §4 das SKU-Schema fuer Multi-Brand-Produkte.
+- [paddle_checkout/checkout-billing-runbook-b2b-v6-1.md](./paddle_checkout/checkout-billing-runbook-b2b-v6-1.md) — fuehrendes Runbook fuer den aktiven B2B-v6.1-Gast-Checkout.
+
+Frueher hier verlinkte Dokumente sind nicht mehr Teil des Workspace:
+
+- `_doc/Cloudflare, Resend und IONOS - Setup.md` — projekt-spezifischer Walkthrough, ersetzt durch dieses generische Setup.
+- `_doc/cloudflare-setup.md` — frueher Setup-Stand, hier vollstaendig konsolidiert.
+- `_doc/Product, Pricing and Discount-Codes in Paddle.md` — Walkthrough mit `LifeFlow360`-Werten, ersetzt durch die Setup-Paddle-Datei oben.
+- `_doc/Produkt-Namenskonvention.md` — SKU-Schema, jetzt fuehrend in der Setup-Paddle-Datei §4.
 
 ---
 

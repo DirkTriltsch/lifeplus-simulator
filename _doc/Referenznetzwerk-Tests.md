@@ -1,6 +1,8 @@
 # Referenznetzwerk-Tests fuer Verguetungsplaene
 
-Stand: 2026-05-28
+**Stand:** 2026-05-28 (Datei-Mtime; Inhalt seitdem nicht mit `packages/*/tests` und `tests/integration` abgeglichen)
+**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F06)
+**Scope:** Test-Konvention fuer Verguetungsplaene aller Brands (LifePlus, FitLine, Eqology).
 
 Dieses Dokument schreibt vor, wie Verguetungsplaene jedes Brands getestet werden. Es ist verbindlich fuer neue Produkte (z. B. `product-fitline`, `product-eqology`), nicht nur fuer LifePlus.
 

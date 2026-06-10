@@ -1,19 +1,18 @@
 # Kritisches Doku-Review nach Cleanup
 
-**Stand:** 2026-06-10
-**Status:** Befundsammlung, noch keine Loesch-/Aenderungsfreigabe
+**Stand:** 2026-06-10 (Runde 2; K1-K6 und H2/H4 umgesetzt)
+**Status:** Teil-umgesetzt — Linkreparatur, ADR/Checkliste-Nachzug und Statusbloecke sind erledigt. F-03/F-12 (Inhaltliche Ueberarbeitung der "fuehrenden" Altdokumente) und F-05/F-06/F-08/F-09/F-10/F-11/F-14 stehen offen.
 **Scope:** `README.md`, `AGENTS.md`, `CLAUDE.md`, `docs/`, `_doc/`, `_debug/`. Geprueft gegen [`../documentation-policy.md`](../documentation-policy.md) und [`../adr-2026-06-10-dokumentationsstruktur-und-altlasten.md`](../adr-2026-06-10-dokumentationsstruktur-und-altlasten.md).
 **Basis:** aktueller Workspace (`rg`/Verzeichnis-Listings 2026-06-10), nicht Erinnerung.
+**Folge-Arbeitsstrang:** Phase 7 / "Update Leading Documents" in [`2026-06-09-doku-cleanup-todo-checkliste.md`](2026-06-09-doku-cleanup-todo-checkliste.md).
 
 ## 1. Zusammenfassung
 
 - **Gut:** Struktur-ADR und Doku-Policy sind verabschiedet; `_doc/growth_models/`, `_doc/paddle_checkout/checkout-billing-runbook-b2b-v6-1.md` und `_doc/go-live/` sind erkennbar fuehrend und am Code ausgerichtet. README ist gepflegt.
-- **Kritisch:** Mehrere fuehrende Dokumente (inkl. ADR, README, Runbook, Checkliste) zeigen auf Dateien/Ordner, die im Cleanup geloescht wurden. Das widerspricht dem Cleanup-Ziel direkt: ein neuer Leser folgt einem toten Link und liest dann gar nichts, statt eine fuehrende Quelle.
-- **Kritisch ergaenzt:** Die bisherige F-01-Liste war nicht vollstaendig: `_doc/Webcontent & Value Proposition.md` enthaelt noch viele Links auf das entfernte `website/`-/Legacy-Template-Modell. Das ist ein zweiter, eigener Drift-Cluster und muss separat bereinigt werden.
-- **Hoch:** Die in [`2026-06-10-loeschkandidaten-r12.md`](2026-06-10-loeschkandidaten-r12.md) als "behalten und fuehrend ueberarbeiten" markierten Dateien F01-F09 sind **nicht** fuehrend ueberarbeitet — sie tragen nur einen "Hinweis"-Banner ueber unveraendertem Altinhalt. Aktuell sind sie damit Halb-Status: weder klar historisch noch klar fuehrend.
-- **Hoch:** ADR und aktive Cleanup-Checkliste beschreiben teils noch einen Zukunfts-/Vorher-Zustand, obwohl Loeschungen bereits ausgefuehrt wurden. Damit ist der Lebenszyklus der Steuerdokumente selbst nicht sauber nachgezogen.
-- **Mittel:** Statusblock-Pflicht aus `documentation-policy.md` §3 ist in ca. der Haelfte der `_doc/`-Root-Dokumente nicht erfuellt. Zwei parallele Doku-Roots (`docs/` vs. `_doc/`) sind nirgends explizit voneinander abgegrenzt. Es fehlt zudem ein einfacher automatisierbarer Markdown-Linkcheck, weshalb tote Links nur per Stichprobe auffallen.
-- **Niedrig:** Kosmetik in R12 (verwaiste F10-F16-Erwaehnungen), Doppelung `CLAUDE.md`/`AGENTS.md`, fehlender Cross-Link von Root-Dateien auf `docs/ai/`.
+- **Erledigt 2026-06-10 (Runde 2):** Tote Links in fuehrenden Dokumenten (F-01, F-02) repariert; ADR und aktive Checkliste auf den ausgefuehrten Cleanup-Stand nachgezogen (F-13); Statusbloecke nach Policy §3 in 15+ Dateien eingezogen (F-04). Aenderungen sind in den jeweiligen Dateien dokumentiert und in der Checkliste als Phase 7/8 referenziert.
+- **Offen / Hoch:** Die in [`2026-06-10-loeschkandidaten-r12.md`](2026-06-10-loeschkandidaten-r12.md) als "behalten und fuehrend ueberarbeiten" markierten Dateien F01-F09 sind weiterhin **nicht** inhaltlich ueberarbeitet (F-03). Zusaetzlich verweist `_doc/Webcontent & Value Proposition.md` noch auf das entfernte `website/`-/Legacy-Template-Modell (F-12). Beide laufen in den separaten Arbeitsstrang **"Update Leading Documents"** = Phase 7 der Checkliste.
+- **Offen / Mittel:** Zwei parallele Doku-Roots (`docs/` vs. `_doc/`) — bewusst beibehalten (F-05, geschlossen-im-Beschluss). R12-Schluss-Tabelle mit verwaisten F10-F16 (F-06). Es fehlt zudem ein einfacher automatisierbarer Markdown-Linkcheck, weshalb tote Links nur per Stichprobe auffallen (F-14).
+- **Offen / Niedrig:** Doppelung `CLAUDE.md`/`AGENTS.md` und fehlender Cross-Link von Root-Dateien auf `docs/ai/` (F-08); `docs/cross-model/` als Geist-Ordner (F-09); `_debug/` ohne README (F-10); Klartext-E-Mails im `_debug/` (F-11).
 
 ## 2. Findings
 
@@ -22,7 +21,9 @@ Kritisch = irrefuehrend / Datenverlust-Risiko, Hoch = klare Drift mit Folgekoste
 
 ### F-01 [Kritisch] — Tote Links auf geloeschte Vorgaengerdokumente
 
-**Beobachtung:** Mehrere fuehrende Dokumente verlinken Dateien, die in der Cleanup-Welle entfernt wurden:
+**Status:** **erledigt 2026-06-10.** Alle in der Tabelle gelisteten Links wurden entfernt, durch Hinweise auf Nachfolger ersetzt oder als historische Erwaehnung umformuliert. Verifikation per `rg`-Suche auf die geloeschten Dateinamen; verbleibende Treffer liegen ausschliesslich in Review-/R12-Dateien, die das Cleanup selbst dokumentieren.
+
+**Beobachtung (urspruenglich):** Mehrere fuehrende Dokumente verlinken Dateien, die in der Cleanup-Welle entfernt wurden:
 
 | Quelle | Zeile | Toter Link |
 |---|---|---|
@@ -52,9 +53,11 @@ Konkret: `cleanup-ist-analyse-...` → in ADR/Checkliste durch *"Status-/Begruen
 
 ### F-02 [Kritisch] — `README.md` beschreibt `website-legacy/` als Bestandteil, Ordner ist weg
 
+**Status:** **erledigt 2026-06-10.** Zeile aus README-Struktur-Block entfernt.
+
 **Datei:** `README.md:17`
 
-**Beobachtung:** Struktur-Block listet `website-legacy/` als "Archiv der alten statischen Template-Website". `ls website-legacy` schlaegt fehl ("No such file or directory"). Der Ordner wurde gemaess ADR §7 und R12-Aufraeumliste entfernt.
+**Beobachtung (urspruenglich):** Struktur-Block listet `website-legacy/` als "Archiv der alten statischen Template-Website". `ls website-legacy` schlaegt fehl ("No such file or directory"). Der Ordner wurde gemaess ADR §7 und R12-Aufraeumliste entfernt.
 
 **Auswirkung:** README ist *die* Einstiegsdoku — eine falsche Struktur-Karte wirkt staerker als ein falscher Konzeptverweis. Onboarding-Leser glauben, der Ordner existiere.
 
@@ -63,6 +66,8 @@ Konkret: `cleanup-ist-analyse-...` → in ADR/Checkliste durch *"Status-/Begruen
 ---
 
 ### F-03 [Hoch] — R12-"behalten und fuehrend ueberarbeiten" ist nicht ausgefuehrt
+
+**Status:** **offen, in eigenen Arbeitsstrang ausgelagert.** Inhaltliche Ueberarbeitung laeuft als Phase 7 der aktiven Checkliste ("Update Leading Documents"). Alle neun Dateien tragen seit 2026-06-10 einen Statusblock mit `Status: in Ueberarbeitung — Phase 7 Update Leading Documents (Fxx)` (siehe F-04).
 
 **Quellen:** [`2026-06-10-loeschkandidaten-r12.md`](2026-06-10-loeschkandidaten-r12.md) Abschnitt "Umschreiben statt loeschen" — Eintraege F01-F09.
 
@@ -106,6 +111,8 @@ Empfehlung pro F-ID (kein Beschluss, Vorschlag):
 
 ### F-04 [Hoch] — Fehlende oder unvollstaendige Statusbloecke
 
+**Status:** **erledigt 2026-06-10.** Statusbloecke wurden in alle aufgelisteten Dateien plus die F-03-Dateien eingezogen. `Stand` ist das jeweilige Datei-Mtime (oder ein bewusst gesetztes Datum), `Status` markiert `fuehrend`, `historisch`, `in Ueberarbeitung — Phase 7 ...` oder `Konzept-Master / ...`. Folgepruefung in Phase 8 der Checkliste (T8.2 nach Abschluss Phase 7).
+
 **Verstoss gegen:** [`../documentation-policy.md`](../documentation-policy.md) §3 ("Stand, Status, Scope, ggf. Ersetzt/Ersetzt durch/Nicht verifiziert").
 
 **Beobachtung:** Diese Dokumente haben keinen oder nur einen unvollstaendigen Statusblock:
@@ -142,7 +149,9 @@ Bei `Setup ...`-Dateien plausibel **fuehrend** (sind operative Runbooks). Busine
 
 ### F-05 [Mittel] — Zwei parallele Doku-Roots `docs/` vs. `_doc/`
 
-**Beobachtung:** Das Repo hat zwei nicht-deckungsgleiche Doku-Wurzeln:
+**Status:** **als Beschluss geschlossen 2026-06-10.** User-Entscheidung: aehnliche Namen, aber bewusst verschiedener Einsatz. `docs/` = Agenten-/Workflow-Konventionen und Cross-Model-Plaene; `_doc/` = Projekt-/Produkt-Doku. Bleibt so. Keine Migration, keine Policy-Aenderung noetig. M1 entfaellt.
+
+**Beobachtung (zur Dokumentation des Beschlusses):** Das Repo hat zwei nicht-deckungsgleiche Doku-Wurzeln:
 
 ```text
 docs/
@@ -228,7 +237,9 @@ _doc/
 
 ---
 
-### F-12 [Kritisch] — `Webcontent & Value Proposition.md` referenziert geloeschte Website-/Template-Pfade
+### F-12 [Kritisch, jetzt Hoch+offen] — `Webcontent & Value Proposition.md` referenziert geloeschte Website-/Template-Pfade
+
+**Status:** **offen, in eigenen Arbeitsstrang ausgelagert.** Datei traegt seit 2026-06-10 einen Statusblock mit Verweis auf Phase 7 (F09, F12). Inhaltliche Ueberarbeitung der `website/templates/*`- und `website/brands.json`-Links erfolgt in Phase 7 "Update Leading Documents" gemeinsam mit den F01-F09-Dateien.
 
 **Datei:** `_doc/Webcontent & Value Proposition.md`
 
@@ -255,6 +266,10 @@ Alle Links auf `website/templates/*` entweder entfernen, auf Git-Historie umform
 ---
 
 ### F-13 [Hoch] — ADR und aktive Checkliste sind nach ausgefuehrten Loeschungen nicht nachgefuehrt
+
+**Status:** **erledigt 2026-06-10.**
+- ADR: Bezug entlinkt, §7/`_doc/_old`/`website-legacy` auf Vergangenheit umgestellt, §9-Schritte als "erledigt" markiert, neuer §12 "Umsetzungsstand 2026-06-10" eingezogen.
+- Checkliste: Header von "Umsetzbare Punkte erledigt" auf "Loesch-/Aufraeumphase ausgefuehrt; offene Nacharbeiten siehe Phase 7/8" umgestellt; T0.1/T0.2 von `cleanup-ist-analyse-...` entlinkt; T1.5 um Loesch-Hinweis ergaenzt; **Phase 7 — Update Leading Documents (F01-F09, F12)** und **Phase 8 — Statusblock-Nachzug** neu aufgenommen.
 
 **Dateien:** `_doc/adr-2026-06-10-dokumentationsstruktur-und-altlasten.md`, `_doc/reviews/2026-06-09-doku-cleanup-todo-checkliste.md`
 
@@ -301,28 +316,28 @@ Das ist kein Ersatz fuer Inhaltsreview, aber ein guenstiger Guardrail gegen tote
 
 ## 4. Empfohlene naechste Schritte als Todo-Liste
 
-Sortiert nach Schweregrad, jeder Eintrag actionable und auf eine konkrete Datei bezogen.
+Sortiert nach Schweregrad, jeder Eintrag actionable und auf eine konkrete Datei bezogen. Stand 2026-06-10 nach Runde 2 (K1-K6, H2, H3, H4 umgesetzt).
 
 ### Sofort (Kritisch)
 
-- [ ] **K1** Tote Links aus F-01 reparieren oder entfernen. Konkret 11 Treffer (siehe Tabelle in F-01).
-- [ ] **K2** `README.md:17` — `website-legacy/`-Zeile aus Struktur-Block entfernen.
-- [ ] **K3** `_doc/Freemium-Modell.md:5` — Bezug auf `Konzepte und Umsetzung realistischer Wachstums-Modelle .md` durch Verweis auf `_doc/growth_models/01-Zielarchitektur.md` ersetzen.
-- [ ] **K4** `_doc/paddle_checkout/checkout-billing-runbook-b2b-v6-1.md:5, 119` — Verweise auf geloeschtes `Umsetzungsplan.md` streichen; Abschnitt "Historische Dokumente" anpassen.
-- [ ] **K5** `_doc/growth_models/README.md:23` — Zeile fuer `Basic_model_descriptions.xlsx` entfernen.
-- [ ] **K6** `_doc/growth_models/03-Benchmark-Status-B1-B2.md:24, 40` und `04-Code-Cleanup-Plan.md:83` — `benchmarks/...`-Pfade als historisch markieren oder Aussage in Vergangenheitsform mit Hinweis "Ordner am 2026-06-10 entfernt".
-- [ ] **K7** `_doc/Webcontent & Value Proposition.md` — Links auf `website/templates/*` und `website/brands.json` entfernen, historisch markieren oder auf aktuelle `website-astro/`-Quellen mappen (F-12).
+- [x] **K1** Tote Links aus F-01 reparieren oder entfernen. **erledigt 2026-06-10.**
+- [x] **K2** `README.md:17` — `website-legacy/`-Zeile aus Struktur-Block entfernen. **erledigt 2026-06-10.**
+- [x] **K3** `_doc/Freemium-Modell.md:5` — Bezug auf `Konzepte und Umsetzung realistischer Wachstums-Modelle .md` durch Verweis auf `_doc/growth_models/01-Zielarchitektur.md` ersetzen. **erledigt 2026-06-10.**
+- [x] **K4** `_doc/paddle_checkout/checkout-billing-runbook-b2b-v6-1.md:5, 119` — Verweise auf geloeschtes `Umsetzungsplan.md` streichen; Abschnitt "Historische Dokumente" anpassen. **erledigt 2026-06-10.**
+- [x] **K5** `_doc/growth_models/README.md:23` — Zeile fuer `Basic_model_descriptions.xlsx` entfernen. **erledigt 2026-06-10** (Begleitmaterial-Block ersatzlos gestrichen).
+- [x] **K6** `_doc/growth_models/03-Benchmark-Status-B1-B2.md:24, 40` und `04-Code-Cleanup-Plan.md:83` — `benchmarks/...`-Pfade als historisch markieren. **erledigt 2026-06-10.**
+- [ ] **K7** `_doc/Webcontent & Value Proposition.md` — Links auf `website/templates/*` und `website/brands.json` entfernen, historisch markieren oder auf aktuelle `website-astro/`-Quellen mappen (F-12). **verschoben in Phase 7 Update Leading Documents** (T7.3); Statusblock seit 2026-06-10 vorhanden.
 
 ### Inhaltliche Konsolidierung (Hoch)
 
-- [ ] **H1** F01-F09-Dateien jeweils entscheiden: (a) fuehrend ueberarbeiten, (b) historisch markieren mit Pointer auf Master, (c) loeschen. Vorschlag pro ID siehe F-03 Tabelle.
-- [ ] **H2** Statusbloecke nach `documentation-policy.md` §3 in den in F-04 gelisteten Dateien ergaenzen.
-- [ ] **H3** Aktive Checkliste [`2026-06-09-doku-cleanup-todo-checkliste.md`](2026-06-09-doku-cleanup-todo-checkliste.md) um **Phase 7 — F01-F09-Ueberarbeitung** und **Phase 8 — Statusblock-Nachzug** ergaenzen, damit offene Arbeit dort sichtbar bleibt (F-07).
-- [ ] **H4** ADR und aktive Checkliste um Umsetzungsstand/Nacharbeiten nachziehen; keine Links auf geloeschte Arbeitsdateien als fuehrende Referenzen stehen lassen (F-13).
+- [ ] **H1** F01-F09-Dateien jeweils entscheiden: (a) fuehrend ueberarbeiten, (b) historisch markieren mit Pointer auf Master, (c) loeschen. Vorschlag pro ID siehe F-03 Tabelle. **verschoben in Phase 7 Update Leading Documents** (T7.1/T7.2).
+- [x] **H2** Statusbloecke nach `documentation-policy.md` §3 in den in F-04 gelisteten Dateien ergaenzen. **erledigt 2026-06-10** (T8.1; Nachpruefung in T8.2 nach Phase 7).
+- [x] **H3** Aktive Checkliste [`2026-06-09-doku-cleanup-todo-checkliste.md`](2026-06-09-doku-cleanup-todo-checkliste.md) um **Phase 7 — F01-F09-Ueberarbeitung** und **Phase 8 — Statusblock-Nachzug** ergaenzen. **erledigt 2026-06-10.**
+- [x] **H4** ADR und aktive Checkliste um Umsetzungsstand/Nacharbeiten nachziehen; keine Links auf geloeschte Arbeitsdateien als fuehrende Referenzen stehen lassen (F-13). **erledigt 2026-06-10.**
 
 ### Strukturklarheit (Mittel)
 
-- [ ] **M1** `_doc/documentation-policy.md` §2 um Eintrag `docs/ai/` ergaenzen und das Verhaeltnis `docs/` vs. `_doc/` in einem Satz festhalten (F-05).
+- [x] ~~**M1** `_doc/documentation-policy.md` §2 um Eintrag `docs/ai/` ergaenzen ...~~ **entfaellt:** User-Beschluss 2026-06-10 — `docs/` und `_doc/` sind aehnlich benannt, aber bewusst verschiedener Einsatz; bleibt unveraendert (F-05).
 - [ ] **M2** [`2026-06-10-loeschkandidaten-r12.md`](2026-06-10-loeschkandidaten-r12.md) Schluss-Tabelle bereinigen: F10-F16 entweder rekonstruieren oder Erwaehnung streichen (F-06).
 - [ ] **M3** Mini-`_debug/README.md` anlegen, Status- und Hygieneregel klaeren (F-10).
 - [ ] **M4** Einfachen Markdown-Linkcheck/Doku-Lint einfuehren oder zumindest als manuellen Pflichtschritt vor weiteren Loeschungen dokumentieren (F-14).
@@ -333,6 +348,10 @@ Sortiert nach Schweregrad, jeder Eintrag actionable und auf eine konkrete Datei 
 - [ ] **N2** In `docs/cross-model/cross-model-review-flow.md` oder Doku-Policy klarstellen: "Ordner enthaelt nur das Protokoll, solange kein Plan laeuft" (F-09).
 - [ ] **N3** Entscheiden, ob `_debug/`-Klartext-Mails durch Platzhalter ersetzt werden (F-11).
 
+### Naechster Arbeitsstrang
+
+- Phase 7 / **Update Leading Documents** in der Checkliste — Auftrag fuer F01-F09 und F12 (Webcontent). Eigene Konversation/eigener Thread.
+
 ## 5. Annahmen
 
 - (Annahme) Das Repo bleibt vorerst privat; F-11 ist deshalb nicht "Hoch".
@@ -341,7 +360,15 @@ Sortiert nach Schweregrad, jeder Eintrag actionable und auf eine konkrete Datei 
 
 ## 6. Offene Fragen an dich
 
-1. F-03 / H1 — Soll ich pro F-ID einen konkreten Vorschlag inklusive Patch erstellen, oder erst eine Reihenfolge/Pakete vorschlagen?
-2. F-05 / M1 — Bleibt die Trennung `docs/` (Agenten/Cross-Model) und `_doc/` (Projekt-Doku) dauerhaft, oder soll perspektivisch ein einziger Doku-Root entstehen?
-3. F-11 / N3 — Repo dauerhaft privat, oder soll der Klartext-Mail-Pfad jetzt bereinigt werden?
-4. F-14 / M4 — Soll der Linkcheck nur als manueller Review-Schritt dokumentiert werden, oder als kleines Script ins Repo?
+Beantwortet 2026-06-10:
+
+1. ~~F-03 / H1 — Soll ich pro F-ID einen konkreten Vorschlag inklusive Patch erstellen ...~~ **Beantwortet:** F-03 laeuft als eigener Thread "Update Leading Documents".
+2. ~~F-05 / M1 — Bleibt die Trennung ...~~ **Beantwortet:** bleibt unveraendert.
+
+Weiter offen:
+
+1. **F-06 / M2** — Soll die R12-Schluss-Tabelle die F10-F16 rekonstruieren (mit Pfad und Entscheidung) oder die Erwaehnung ersatzlos entfernt werden?
+2. **F-10 / M3** — `_debug/README.md` jetzt anlegen oder erst, wenn das naechste Debug-Skript hinzukommt?
+3. **F-11 / N3** — Repo dauerhaft privat, oder soll der Klartext-Mail-Pfad jetzt bereinigt werden?
+4. **F-14 / M4** — Soll der Linkcheck nur als manueller Review-Schritt dokumentiert werden, oder als kleines Script ins Repo?
+5. **F-08 / N1** — `CLAUDE.md` und `AGENTS.md` zusammenfuehren oder beide gleichberechtigt halten?

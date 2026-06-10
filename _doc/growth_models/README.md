@@ -16,8 +16,4 @@ Modellaenderungen werden direkt in 01/02/03 eingearbeitet. Es entstehen keine ne
 
 ## Historie
 
-Die frueheren Iterationsdokumente (`Erarbeitung 01`-`18`, `dynamik-mit-verguetung.md`, `Umsetzung Bericht`) wurden am 2026-06-09 entfernt, nachdem ihr Inhalt in die fuehrenden Dateien ueberfuehrt war.
-
-## Begleitmaterial
-
-- [Basic_model_descriptions.xlsx](Basic_model_descriptions.xlsx) - externe Beschreibungstabelle, unveraendert.
+Die frueheren Iterationsdokumente (`Erarbeitung 01`-`18`, `dynamik-mit-verguetung.md`, `Umsetzung Bericht`) wurden am 2026-06-09 entfernt, nachdem ihr Inhalt in die fuehrenden Dateien ueberfuehrt war. Die externe Beschreibungstabelle `Basic_model_descriptions.xlsx` wurde am 2026-06-10 mit entfernt; sie wird hier nicht mehr gepflegt.

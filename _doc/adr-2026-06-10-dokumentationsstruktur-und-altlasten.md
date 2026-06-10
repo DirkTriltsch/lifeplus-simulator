@@ -1,10 +1,10 @@
 # ADR 2026-06-10 - Dokumentationsstruktur und Altlasten-Loeschung
 
-**Status:** angenommen  
+**Status:** angenommen, Loeschwelle ausgefuehrt (siehe §12)
 **Datum:** 2026-06-10  
 **Entscheider:** Projekt-Owner  
-**Scope:** `_doc/`, `docs/cross-model/`, `website-legacy/`, alte Doku-/Review-/Planungsdateien  
-**Bezug:** [`documentation-policy.md`](documentation-policy.md), [`reviews/2026-06-09-doku-cleanup-todo-checkliste.md`](reviews/2026-06-09-doku-cleanup-todo-checkliste.md), [`cleanup-ist-analyse-2026-06-09.md`](cleanup-ist-analyse-2026-06-09.md)
+**Scope:** `_doc/`, `docs/cross-model/`, ehemals `website-legacy/`, alte Doku-/Review-/Planungsdateien
+**Bezug:** [`documentation-policy.md`](documentation-policy.md), [`reviews/2026-06-09-doku-cleanup-todo-checkliste.md`](reviews/2026-06-09-doku-cleanup-todo-checkliste.md). Frueherer Bezug `cleanup-ist-analyse-2026-06-09.md` wurde am 2026-06-10 entfernt; relevante Befunde sind in §1 und in der Checkliste enthalten.
 
 ## 1. Kontext
 
@@ -112,27 +112,13 @@ Eine Datei bleibt nur dann erhalten, wenn mindestens einer dieser Punkte zutriff
 
 ### `_doc/_old/`
 
-Status: zu loeschen nach Extraktion.
-
-Vorgehen:
-
-1. Dateien per `rg` gegen fuehrende Doku und aktuellen Code pruefen.
-2. Noch relevante Inhalte in passende fuehrende Dokumente ueberfuehren.
-3. Linkreferenzen entfernen oder aktualisieren.
-4. `_doc/_old/` vollstaendig loeschen.
+Status: am 2026-06-10 vollstaendig geloescht. Relevante Inhalte wurden vor der Loeschung in fuehrende Dokumente ueberfuehrt.
 
 Kein Zielzustand: `_doc/_old/` in `_doc/archive/` umbenennen.
 
 ### `website-legacy/`
 
-Status: obsolet, zu loeschen nach technischem Referenzcheck.
-
-Vorgehen:
-
-1. `README.md`, Build-Skripte, Deploy-Skripte und Dokumentation auf Referenzen pruefen.
-2. Falls keine aktive Abhaengigkeit besteht, Referenzen auf `website-astro/` umstellen.
-3. `website-legacy/` loeschen.
-4. README-Struktur aktualisieren.
+Status: am 2026-06-10 vollstaendig geloescht. `README.md`-Struktur-Block wurde nachgezogen; keine aktive Build-/Deploy-Abhaengigkeit bestand.
 
 Begruendung: Astro ist vollstaendig migriert und live; der Ursprung und Migrationsweg sind nicht mehr handlungsleitend.
 
@@ -178,14 +164,16 @@ Risikominderung:
 
 ## 9. Umsetzungsplan
 
-1. Dieses ADR als angenommenes Zielbild einchecken.
-2. [`documentation-policy.md`](documentation-policy.md) auf dieses ADR verweisen.
-3. R9/T5.3 in der aktiven Checkliste als entschieden markieren.
-4. `_doc/_old/` inventarisieren und relevante Inhalte extrahieren.
-5. `_doc/_old/` loeschen.
-6. `website-legacy/` referenzieren und technische Abhaengigkeiten pruefen.
-7. `website-legacy/` loeschen, wenn keine aktive Abhaengigkeit mehr existiert.
-8. README und betroffene Doku-Links aktualisieren.
+Schritte 1-8 sind am 2026-06-09/2026-06-10 ausgefuehrt. Aktueller Stand:
+
+1. Dieses ADR als angenommenes Zielbild einchecken. **erledigt**
+2. [`documentation-policy.md`](documentation-policy.md) auf dieses ADR verweisen. **erledigt**
+3. R9/T5.3 in der aktiven Checkliste als entschieden markieren. **erledigt**
+4. `_doc/_old/` inventarisieren und relevante Inhalte extrahieren. **erledigt**
+5. `_doc/_old/` loeschen. **erledigt**
+6. `website-legacy/` referenzieren und technische Abhaengigkeiten pruefen. **erledigt**
+7. `website-legacy/` loeschen, wenn keine aktive Abhaengigkeit mehr existiert. **erledigt**
+8. README und betroffene Doku-Links aktualisieren. **erledigt** am 2026-06-10.
 9. Danach Suchchecks ausfuehren:
    - `rg -n "_doc/_old|website-legacy|archive|Claude|Codex" _doc README.md package.json scripts website-astro`
    - gezielte Linkchecks fuer geaenderte Markdown-Dateien
@@ -206,3 +194,20 @@ Noch separat zu klaeren:
 1. Sollen verbleibende Root-Dokumente spaeter in Themenordner wie `_doc/product/` oder `_doc/architecture/` umziehen?
 2. Soll es fuer langfristig relevante rechtliche Nachweise einen separaten, klar benannten Evidence-Ort geben?
 3. Soll eine einfache Linkcheck- oder Doku-Lint-Regel in `npm test`/CI aufgenommen werden?
+
+## 12. Umsetzungsstand 2026-06-10
+
+Die in §7 und §9 beschriebene Loeschwelle ist ausgefuehrt:
+
+- `_doc/_old/` entfernt.
+- `website-legacy/` entfernt; `README.md`-Struktur-Block am 2026-06-10 nachgezogen.
+- `benchmarks/` (inkl. `b1-aggregate-path/` und `b2-shopper-aggregation/`) entfernt; growth_models-Doku verweist nur noch historisch darauf.
+- `_doc/paddle_checkout/Umsetzungsplan.md` entfernt; das Runbook ist jetzt allein fuehrend.
+- `_doc/cleanup-ist-analyse-2026-06-09.md` entfernt; Inhalte sind in dieses ADR bzw. die Checkliste eingeflossen.
+- Alte Codex/Claude-Paralleltexte, Mockups (`v1.html`, `v3.html`, `v4.html`, `v5.html`, `option_a_mockup.html`), Business-Plan-Reviews und Backup-/Diag-Dateien entfernt; vollstaendige Liste in [`reviews/2026-06-10-loeschkandidaten-r12.md`](reviews/2026-06-10-loeschkandidaten-r12.md).
+
+Offene Nacharbeit (nicht ADR-blockierend, aber Cleanup-Folge):
+
+- Inhaltliche Ueberarbeitung der in R12 als "behalten und fuehrend ueberarbeiten" markierten Dateien F01-F09 (eigener Arbeitsstrang "Update Leading Documents").
+- Statusbloecke gemaess `documentation-policy.md` §3 in alle bisher unvollstaendig markierten Dateien einziehen.
+- Linkreparatur in fuehrenden Dokumenten ist erfolgt (Stand 2026-06-10); ein automatisierter Linkcheck ist Folgefrage 3.

@@ -1,7 +1,8 @@
 # Go-Live Content/Legal Checkliste
 
-**Stand:** 2026-06-09  
-**Scope:** LifeFlow360/LifePlus als Go-Live-Fokus; FitFlow360 und EqoFlow360 bleiben Preview/Staging, bis eigene Domain-, API- und Paddle-Setups existieren.  
+**Stand:** 2026-06-10 (Datei-Mtime); inhaltlicher Stand 2026-06-09
+**Status:** fuehrende Go-Live-/Legal-/Content-Checkliste, aktiv vor LifeFlow360-Launch
+**Scope:** LifeFlow360/LifePlus als Go-Live-Fokus; FitFlow360 und EqoFlow360 bleiben Preview/Staging, bis eigene Domain-, API- und Paddle-Setups existieren.
 **Quellen:** aktueller Code, [`legal-review-2026-06-03.md`](legal-review-2026-06-03.md), [`../paddle_checkout/checkout-billing-runbook-b2b-v6-1.md`](../paddle_checkout/checkout-billing-runbook-b2b-v6-1.md).
 
 ## 1. Pflicht vor LifeFlow360-Live

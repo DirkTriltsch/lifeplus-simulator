@@ -1,18 +1,17 @@
 ---
-import type { Brand, PricingPage } from '@shared/content-schemas/config';
+import type { Brand } from '@shared/content-schemas/config';
 import B2BHeaderBanner from '@shared/components/checkout/B2BHeaderBanner.astro';
 
-type Tier = PricingPage['tiers'][number];
 type PlanKey = 'monthly' | 'halfyear' | 'yearly';
 
 interface Props {
   brand: Brand;
-  tier: Tier;
+  tierName: string;
   plan: PlanKey;
   priceId: string;
   source?: string;
 }
-const { brand, tier, plan, priceId, source } = Astro.props;
+const { brand, tierName, plan, priceId, source } = Astro.props;
 
 // Server-side Initial-Render. Die echten Werte kommen aus der serverseitig
 // erstellten Paddle-Transaktion (Step 2). Bis dahin zeigen wir die DE-
@@ -133,7 +132,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </div>
         <div class="product-info">
           <div class="product-name">{brand.siteName} Pro</div>
-          <div class="product-plan">{tier.name} · automatische Verlängerung</div>
+          <div class="product-plan">{tierName} · automatische Verlängerung</div>
           <div class="product-qty">Menge: 1</div>
         </div>
       </div>

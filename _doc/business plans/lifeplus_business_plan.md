@@ -1,5 +1,9 @@
 # LifePlus Verguetungsplan - Logik und Aufbau
 
+**Stand:** 2026-06-10 (Datei-Mtime)
+**Status:** fuehrende Spezifikation fuer LifePlus-Verguetungsplan; aktiv gepflegt
+**Scope:** Datenmodell, Wachstumsregeln, Provisionsberechnung und Rang-System fuer LifePlus; Vorlage fuer weitere Brands.
+
 Dieses Dokument beschreibt die vollstaendige Logik hinter der LifePlus-Simulation: Datenmodell, Wachstumsregeln, Provisionsberechnung und Rang-System. Es ist so geschrieben, dass jeder das Modell verstehen und in einer anderen Sprache oder fuer ein anderes Netzwerk neu aufsetzen kann. Strukturen, die fuer **jedes Netzwerk identisch** sind, sind klar getrennt von **LifePlus-spezifischen** Regeln, damit die Vorlage fuer andere Firmen nutzbar bleibt.
 
 ---

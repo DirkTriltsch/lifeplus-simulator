@@ -1,5 +1,9 @@
 # FitLine / PM-International Verguetungsplan - Logik und Aufbau
 
+**Stand:** 2026-06-10 (Datei-Mtime)
+**Status:** fachliche Vorlage / noch nicht in `product-fitline` produktiv umgesetzt. Aktiver Plan-Code teilt sich vorerst die LifePlus-Implementierung; echte FitLine-Logik folgt mit eigenem Adapter.
+**Scope:** Fachliches Verguetungsmodell FitLine/PM-International; Vorlage fuer den spaeteren `product-fitline`-Plan-Adapter.
+
 Dieses Dokument beschreibt die Logik hinter einer FitLine-/PM-International-Simulation: Datenmodell, Wachstumsregeln, Volumenlogik, Rang-System, Bonusarten und eine moegliche Umsetzung in Code. Es ist in mehreren Detailtiefen geschrieben: zuerst als einfache Erklaerung, dann als fachliches Modell und am Ende als technische Vorlage.
 
 Die Bedienlogik kann weitgehend wie bei LifePlus bleiben: `membersPerYear`, `shoppersPerYear`, `duplicationRate`, `attritionRate`, Monatsvolumen, Goals und Realistic-Growth-Strategien. Die Verguetungslogik darunter muss aber anders rechnen, weil FitLine/PM nicht mit LifePlus-Phasen arbeitet, sondern mit EV, KDP, TVB, EB, EAB, TB und MB.

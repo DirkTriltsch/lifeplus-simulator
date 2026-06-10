@@ -1,8 +1,9 @@
 # Konzept: Freemium-Modell
 
-**Stand:** 2026-05-25  
-**Status:** Produktstrategie / nicht aktueller Implementierungsplan  
-**Bezug:** [Konzept Paddle-Integration und App-Architektur](./Konzept%20Paddle-Integration%20und%20App-Architektur.md), [Konzepte und Umsetzung realistischer Wachstums-Modelle](./Konzepte%20und%20Umsetzung%20realistischer%20Wachstums-Modelle%20.md)
+**Stand:** 2026-06-09 (Datei-Mtime); inhaltlicher Schreibstand 2026-05-25
+**Status:** Produktstrategie / nicht aktueller Implementierungsplan — in Ueberarbeitung Phase 7 Update Leading Documents (F01)
+**Scope:** Produktentscheidungen fuer Free/Trial/Pro: Account-, Trial- und Conversion-Logik. Technischer Checkout-Stand siehe Runbook.
+**Bezug:** [Konzept Paddle-Integration und App-Architektur](./Konzept%20Paddle-Integration%20und%20App-Architektur.md), [growth_models/01-Zielarchitektur.md](./growth_models/01-Zielarchitektur.md) (fuehrender Stand fuer Wachstums-/Vergutungsmodell; loest das am 2026-06-10 entfernte `Konzepte und Umsetzung realistischer Wachstums-Modelle .md` ab)
 
 > **Hinweis 2026-06-09:** Dieses Dokument beschreibt die Produktstrategie fuer
 > Free/Trial/Pro. Der aktuelle technische Checkout-Stand ist B2B-v6.1

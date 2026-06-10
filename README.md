@@ -14,8 +14,6 @@ website-astro/          Astro-Microsites fuer LifePlus, FitLine und Eqology
   src/shared/            Gemeinsame Komponenten, Schemas, Styles und Scripts
   src/brands/<brand>/    Brand-Config, Content, Pages und statische Assets
 
-website-legacy/         Archiv der alten statischen Template-Website
-
 packages/
   simulator-core/        MLM-neutrale Netzwerk- und Simulationslogik
   product-lifeplus/      Aktive Plan-Implementierung

@@ -1,9 +1,9 @@
 # Checkout B2B-only — Setup & Status
 
-**Stand:** 2026-06-02 (v6 implementiert, sandbox-test offen)
-**Aktiver Mockup:** v6 ([`./lifeplus_checkout_paddle_b2b_v6.html`](./lifeplus_checkout_paddle_b2b_v6.html))
-**Scope:** Pro-Checkout als B2B-only mit voller Rechnungsadresse und
-serverseitig erstellter Paddle-Transaction.
+**Stand:** 2026-06-10 (Datei-Mtime); inhaltlicher Schreibstand 2026-06-02
+**Status:** historisch / Entscheidungsdoku fuer den B2B-Pivot bis v6. Aktueller produktiver Stand ist v6.1 Gast-Checkout, dokumentiert in [`./checkout-billing-runbook-b2b-v6-1.md`](./checkout-billing-runbook-b2b-v6-1.md).
+**Scope:** Iterationspfad und Entscheidungen v1-v6 fuer den Pro-Checkout als B2B-only mit voller Rechnungsadresse und serverseitig erstellter Paddle-Transaction.
+**Aktiver Mockup (historisch):** v6 ([`./lifeplus_checkout_paddle_b2b_v6.html`](./lifeplus_checkout_paddle_b2b_v6.html)); v6.1-Stand siehe Runbook und produktiver Code.
 
 ---
 

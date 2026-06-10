@@ -1,7 +1,7 @@
 # Konzept: Kundenlinks und Szenario-Freigabe
 
-**Stand:** 2026-05-26
-**Status:** konsolidiert / v3 — Merge aus Codex-Entwurf (Datei A, ausfuehrlicher Master) und Claude-Entwurf (Datei B, technisch-tiefer)
+**Stand:** 2026-05-26 (Datei-Mtime); Konsolidierungsstand v3
+**Status:** Konzept-Master / noch nicht gegen B2B-v6.1-Ist-Stand abgeglichen — in Ueberarbeitung Phase 7 Update Leading Documents (F03)
 **Scope:** MVP nur LifeFlow360. FitFlow360/EqoFlow360 spaeter (vgl. `project-brand-separation`).
 **Bezug:** [Freemium-Modell](./Freemium-Modell.md), [Freemium in der App](./Freemium-Modell_Applikation.md), [Konzept Paddle-Integration und App-Architektur](./Konzept%20Paddle-Integration%20und%20App-Architektur.md)
 

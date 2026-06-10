@@ -1,7 +1,8 @@
 # Dokumentationsregel
 
-**Stand:** 2026-06-09  
+**Stand:** 2026-06-10 (Datei-Mtime); inhaltlicher Stand 2026-06-09
 **Status:** fuehrend fuer Doku-Cleanup und kuenftige Ablageentscheidungen
+**Scope:** Pflegeregeln fuer Projekt-Doku unter `_doc/` und `docs/`; Statusbloecke, Loeschregeln und fuehrende Orte.
 **ADR:** [`adr-2026-06-10-dokumentationsstruktur-und-altlasten.md`](adr-2026-06-10-dokumentationsstruktur-und-altlasten.md)
 
 ## 1. Grundsatz

@@ -1,3 +1,11 @@
+# Webcontent & Value Proposition
+
+**Stand:** 2026-06-10 (Datei-Mtime; Body noch gegen alte `website/templates/*`-Strukturen formuliert)
+**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F09, F12). Body verweist auf das geloeschte Legacy-Template-System; aktueller Wording-Master ist `website-astro/src/brands/*/content/*.yaml` und `website-astro/src/shared/components/sections/*`.
+**Scope:** Value Proposition, Kernpositionierung und Wording-Master fuer die Marketing-Microsites.
+
+## User-Notizen (Pflege-Hinweis)
+
 Belasse alles unverändert, was hier nicht kommentiert ist.
 
 Klarstellung:

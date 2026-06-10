@@ -1,8 +1,9 @@
 # Checkout/Billing Runbook - B2B-v6.1 Gast-Checkout
 
-**Stand:** 2026-06-09  
-**Status:** fuehrendes Checkout-/Billing-Runbook fuer den aktuellen Code  
-**Ersetzt als Arbeitsstand:** [`Umsetzungsplan.md`](./Umsetzungsplan.md) und die alten Codex/Claude-Checkout-Dokumente.  
+**Stand:** 2026-06-09
+**Status:** fuehrendes Checkout-/Billing-Runbook fuer den aktuellen Code
+**Scope:** B2B-v6.1 Gast-Checkout fuer LifePlus/LifeFlow360; FitLine/Eqology analog, sobald eigene Paddle-/API-Werte gesetzt sind.
+**Ersetzt als Arbeitsstand:** `Umsetzungsplan.md` (am 2026-06-10 geloescht) und die alten Codex/Claude-Checkout-Dokumente.
 **Nicht ersetzt:** `lifeplus_checkout_paddle_b2b_v2.html` und
 `lifeplus_checkout_paddle_b2b_v6.html` bleiben als historische Referenzen
 erhalten.
@@ -116,7 +117,7 @@ Vor Live mindestens pruefen:
 
 Historisch, nicht mehr fuehrend:
 
-- [`Umsetzungsplan.md`](./Umsetzungsplan.md)
+- `Umsetzungsplan.md` — am 2026-06-10 vollstaendig geloescht. Inhalte sind in dieses Runbook eingeflossen.
 - [`lifeplus_checkout_paddle_b2b_v2.html`](./lifeplus_checkout_paddle_b2b_v2.html) bleibt als frueher Sketch-Stand erhalten.
 - [`lifeplus_checkout_paddle_b2b_v6.html`](./lifeplus_checkout_paddle_b2b_v6.html) bleibt als letzter v6-Mockup vor v6.1 Gast-Checkout erhalten.
 

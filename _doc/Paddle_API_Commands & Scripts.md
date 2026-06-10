@@ -1,5 +1,9 @@
 # Paddle API Commands & Scripts
 
+**Stand:** 2026-05-25 (Datei-Mtime)
+**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F08). Mittelfristig vermutlich Verschiebung nach `_doc/paddle_checkout/`.
+**Scope:** Wiederverwendbare Paddle-API-Scripts (Setup, Korrekturen, Wartung).
+
 Dieses Dokument sammelt kleine, wiederverwendbare Paddle-API-Scripts fuer Setup,
 Korrekturen und Wartung.
 

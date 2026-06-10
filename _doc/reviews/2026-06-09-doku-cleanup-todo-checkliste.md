@@ -1,14 +1,14 @@
 # Todo-/Checkliste: Doku-Cleanup und aktuelle offene Punkte
 
-**Stand:** 2026-06-10  
-**Basis:** aktueller Workspace und Ist-Analyse [`../cleanup-ist-analyse-2026-06-09.md`](../cleanup-ist-analyse-2026-06-09.md). Alte Review-Snapshots wurden am 2026-06-10 geloescht; neue Reviews lesen wieder den aktuellen Code.  
-**Arbeitsregel:** Erst fuehrende Inhalte aktualisieren, dann historische Dateien loeschen oder archivieren.  
-**Bearbeitungsstand:** Umsetzbare Punkte erledigt. Punkte mit Live-Zugriff, Loeschfreigabe oder fachlicher Entscheidung stehen unten unter "Rueckfragen / uebersprungen".
+**Stand:** 2026-06-10
+**Basis:** aktueller Workspace. Die frueher referenzierte Ist-Analyse `cleanup-ist-analyse-2026-06-09.md` wurde am 2026-06-10 geloescht; relevante Inhalte sind in das ADR [`../adr-2026-06-10-dokumentationsstruktur-und-altlasten.md`](../adr-2026-06-10-dokumentationsstruktur-und-altlasten.md) eingeflossen. Alte Review-Snapshots wurden ebenfalls am 2026-06-10 geloescht; neue Reviews lesen wieder den aktuellen Code.
+**Arbeitsregel:** Erst fuehrende Inhalte aktualisieren, dann historische Dateien loeschen oder archivieren.
+**Bearbeitungsstand:** Loesch-/Aufraeumphase ausgefuehrt. Offene Nacharbeiten siehe Phase 7 (F01-F09-Ueberarbeitung) und Phase 8 (Statusblock-Nachzug). Punkte mit Live-Zugriff oder Loeschfreigabe stehen unten unter "Rueckfragen / uebersprungen".
 
 ## Phase 0 - Review-Korrekturen einarbeiten
 
-- [x] T0.1 In `_doc/cleanup-ist-analyse-2026-06-09.md` `equal` und `lifecycle` trennen: `equal` ist API-Wert fuer gleichverteilten Default, `lifecycle` ist Platzhalter/Backlog fuer ein spaeteres Lifecycle-/Lebensphasen-Modell.
-- [x] T0.2 In `_doc/cleanup-ist-analyse-2026-06-09.md` Shopper-Modellierung als hybriden produktiven Zustand beschreiben, nicht als reine Fixture-/Legacy-Frage.
+- [x] T0.1 `equal` und `lifecycle` trennen: `equal` ist API-Wert fuer gleichverteilten Default, `lifecycle` ist Platzhalter/Backlog fuer ein spaeteres Lifecycle-/Lebensphasen-Modell. (Befund in der zwischenzeitlich geloeschten Ist-Analyse; finaler Stand in `_doc/growth_models/`.)
+- [x] T0.2 Shopper-Modellierung als hybriden produktiven Zustand beschreiben, nicht als reine Fixture-/Legacy-Frage. (Finaler Stand in `_doc/growth_models/02-Wachstums-und-Churn-Regeln.md` und `_doc/growth_models/03-Benchmark-Status-B1-B2.md`.)
 - [x] T0.3 `_doc/Astro Einfuehrung und Dateistruktur.md` zunaechst aus "direkt loeschbar" herausgenommen; durch R10 ueberholt und am 2026-06-10 geloescht, weil Astro produktiv abgeschlossen ist.
 - [x] T0.4 Agenten-Referenzen sind keine fuehrende Doku. Relevante Inhalte muessen als human-readable `_doc`-Text oder konkreter Checklistenpunkt vorliegen.
 - [x] T0.5 Zielbild um klare Grenze `_doc/` vs. `docs/cross-model/` ergaenzen.
@@ -19,7 +19,7 @@
 - [x] T1.2 B2B-v6.1/Gast-Checkout-Flow aus aktuellem Code dokumentiert: `/checkout/{plan}.html`, `checkout-intent`, Paddle Transaction, `post-checkout`, Auto-Login, Webhook.
 - [x] T1.3 Migrationen 0001-0009 lokal dokumentiert; Remote-/Sandbox-Status explizit als offen/nicht verifiziert markiert.
 - [x] T1.4 README Live-Deploy-/Checkout-Checkliste auf v6.1 abgeglichen.
-- [x] T1.5 `_doc/paddle_checkout/Umsetzungsplan.md` als historisch markiert und auf neues Runbook verwiesen.
+- [x] T1.5 `_doc/paddle_checkout/Umsetzungsplan.md` zwischenzeitlich als historisch markiert und auf neues Runbook verwiesen; am 2026-06-10 vollstaendig geloescht. Das Runbook ist seitdem allein fuehrend.
 - [x] T1.6 Alte Checkout-Mockups und Codex/Claude-Paralleltexte nach Runbook-Fertigstellung geloescht. Behalten: `lifeplus_checkout_paddle_b2b_v2.html` und `lifeplus_checkout_paddle_b2b_v6.html`.
 
 ## Phase 2 - Website-Wording und Legal-Go-Live-Liste
@@ -65,6 +65,21 @@
 - [x] T6.3 Nach Growth-Code-Aenderungen verifiziert: gezielte Vitest-Laeufe fuer Core/Visualisierungen/LifePlus-Shopper-Modell erfolgreich; `npm run build:lifeplus` erfolgreich. Hinweis: kompletter `npm test` scheitert weiterhin an `tests/api/checkout-api.spec.ts` wegen Playwright/Vitest-Runner-Konflikt, nicht an R2/R5.
 - [x] T6.4 Nach Checkout-Runbook-Aenderung geprueft, ob README, Runbook und Code dieselben Endpunkte/Migrationsnummern nennen.
 - [x] T6.5 Vor Datei-Loeschungen `git status --short` geprueft und Loeschumfang durch User konkret bestaetigt. Fuer weitere Loeschungen bleibt diese Regel bestehen.
+
+## Phase 7 - Update Leading Documents (F01-F09, F12)
+
+Eigener Arbeitsstrang. Auftrag: die in [`2026-06-10-loeschkandidaten-r12.md`](2026-06-10-loeschkandidaten-r12.md) als "behalten und fuehrend ueberarbeiten" markierten Dateien F01-F09 sowie `_doc/Webcontent & Value Proposition.md` (alte `website/templates/*`-Verweise) so umarbeiten, dass sie den aktuellen Code-/Produktstand fuehrend beschreiben und alte Konzepte klar als historisch markiert sind.
+
+- [ ] T7.1 Reihenfolge/Pakete fuer F01-F09 festlegen (Vorschlag aus [`2026-06-10-kritisches-doku-review.md`](2026-06-10-kritisches-doku-review.md) §F-03 als Diskussionsbasis).
+- [ ] T7.2 Pro Datei entscheiden: (a) fuehrend ueberarbeiten, (b) historisch markieren mit Pointer auf Master, (c) loeschen.
+- [ ] T7.3 F12 (Webcontent & Value Proposition) gegen `website-astro/src/brands/*/content/*.yaml` und `website-astro/src/shared/components/sections/*` neu schreiben oder als historisch markieren.
+
+## Phase 8 - Statusblock-Nachzug
+
+Auftrag: in allen `_doc/`-Dokumenten ohne vollstaendigen Statusblock (siehe [`2026-06-10-kritisches-doku-review.md`](2026-06-10-kritisches-doku-review.md) §F-04) das Pflichtformat aus [`../documentation-policy.md`](../documentation-policy.md) §3 einziehen. `Stand` ist das letzte Aenderungsdatum der Datei oder ein bewusst gesetztes neueres Datum bei gleichzeitiger Ueberarbeitung.
+
+- [x] T8.1 Statusbloecke in Pflicht-Dateien gemaess F-04-Liste eingezogen (2026-06-10).
+- [ ] T8.2 Nach Abschluss von Phase 7 die dort beruehrten Dateien erneut auf konsistenten Statusblock pruefen.
 
 ## Rueckfragen / uebersprungen
 

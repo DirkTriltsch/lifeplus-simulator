@@ -1,5 +1,9 @@
 # Konzept: Paddle-Integration und App-Architektur
 
+**Stand:** 2026-05-22 (Datei-Mtime; abweichende Umsetzungen siehe Banner unten)
+**Status:** Architektur-/Konzept-Master — in Ueberarbeitung Phase 7 Update Leading Documents (F04). Operativer Stand ist [`paddle_checkout/checkout-billing-runbook-b2b-v6-1.md`](./paddle_checkout/checkout-billing-runbook-b2b-v6-1.md).
+**Scope:** Begruendung fuer Brand-Trennung, App-Auth (Magic-Link + Devices), Webhook-Strategie, DSGVO, Hosting-Wahl und Phasen-Roadmap.
+
 > **Dokument-Typ:** Architektur-/Konzeptpapier — beantwortet das **Warum**
 > hinter Brand-Trennung, App-Auth (Magic-Link + Devices), Webhook-Strategie,
 > DSGVO, Hosting-Wahl und Phasen-Roadmap.
@@ -10,9 +14,7 @@
 >   Test-Karten) → [Setup Paddle Products, Prices, Discount-Codes.md](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md)
 > - **Infrastruktur-Setup** (Cloudflare-CLI, Resend, IONOS-DNS, Secrets,
 >   Custom Domain) → [Setup Infrastruktur Cloudflare, Resend und IONOS.md](./Setup%20Infrastruktur%20Cloudflare%2C%20Resend%20und%20IONOS.md)
-> - **Namens-/SKU-Konvention** → bleibt in eigenem Dokument:
->   [Produkt-Namenskonvention.md](./Produkt-Namenskonvention.md)
->   und in [Setup Paddle …](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md) §4.
+> - **Namens-/SKU-Konvention** → fuehrend in [Setup Paddle Products, Prices, Discount-Codes.md §4](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md#4-namens--und-sku-konvention). Das frueher separate `Produkt-Namenskonvention.md` ist nicht mehr Teil des Workspace.
 >
 > **Stand 2026-05-22 — was abweichend von urspruenglichen Konzept-Optionen
 > tatsaechlich umgesetzt ist:**
@@ -753,8 +755,7 @@ Schutzschicht.
 ### SKU-Routing — wie der Webhook den Audience-Typ erkennt
 
 Aus der Namenskonvention (siehe
-[Setup Paddle §4](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md#4-namens--und-sku-konvention)
-und [Produkt-Namenskonvention.md](./Produkt-Namenskonvention.md)) liest
+[Setup Paddle §4](./Setup%20Paddle%20Products%2C%20Prices%2C%20Discount-Codes.md#4-namens--und-sku-konvention)) liest
 der Webhook-Handler den `internal description`-Code des Preises
 (z.B. `LifeFlow-IND-PRO-MO`) und faechert die Entitlement-Logik
 entsprechend des Audience-Segments auf:

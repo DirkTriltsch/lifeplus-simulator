@@ -1,9 +1,12 @@
 # Marktstudie: Vergütungsplan-Simulator für Network-Marketing Business Partner
 
+**Stand:** 2026-05-22 (Datei-Mtime); inhaltlicher Erhebungsstand: Mai 2026
+**Status:** historische Marktanalyse / strategische Referenz; nicht laufend aktualisiert
+**Scope:** Marktgroesse, Wettbewerb, Pricing-Annahmen und regulatorische Positionierung des Simulator-SaaS in DACH und Europa.
+
 **Zielprodukt:** SaaS-Tool, das einzelnen Business Partnern bei Eqology (und später anderen MLM-Firmen wie LifePlus/FitLine) ermöglicht, ihr persönliches Einkommenspotenzial unter dem firmenspezifischen Vergütungsplan realistisch zu simulieren.
 
 **Geografischer Fokus:** Start DACH, Skalierung nach Europa und global.
-**Datumsstand:** Mai 2026
 
 ---
 

@@ -40,9 +40,9 @@ Diese Dateien sind keine reinen Loeschkandidaten mehr. Sie muessen in fuehrende 
 
 | ID | Pfad | Entscheidung | Auftrag |
 |---|---|---|---|
-| F01 | `_doc/Freemium-Modell.md` | behalten und fuehrend ueberarbeiten | Aktuelle Freemium-/Go-Live-/Produktlogik aus Code und fuehrender Doku beschreiben; alte Konzept- und Arbeitsnotizen sichtbar als historisch markieren. |
-| F02 | `_doc/Freemium-Modell_Applikation.md` | behalten und fuehrend ueberarbeiten | Aktuelle Auth-, Account-, Login-, Paywall- und App-Flows beschreiben; ueberholte Vorannahmen klar abgrenzen. |
-| F03 | `_doc/Konzept Kundenlinks und Szenario-Freigabe.md` | behalten und fuehrend ueberarbeiten | Aktuellen Stand zu Kundenlinks, Scenario-Sharing und Anti-Abuse aus Code/Doku ableiten; alte Varianten als Konzeptstand kennzeichnen. |
+| F01 | `_doc/Freemium-Modell.md` | konsolidiert in [`_offene Tasks und offene Ideen.md`](../_offene%20Tasks%20und%20offene%20Ideen.md) §1 (2026-06-10) | Original und `_updated.md` bleiben als historischer Kontext; weitere Drift-Arbeit nur noch im Ideenspeicher. |
+| F02 | `_doc/Freemium-Modell_Applikation.md` | konsolidiert in [`_offene Tasks und offene Ideen.md`](../_offene%20Tasks%20und%20offene%20Ideen.md) §2 (2026-06-10) | Originale bleiben; Capability-Backlog jetzt im Ideenspeicher. |
+| F03 | `_doc/Konzept Kundenlinks und Szenario-Freigabe.md` | konsolidiert in [`_offene Tasks und offene Ideen.md`](../_offene%20Tasks%20und%20offene%20Ideen.md) §3 (2026-06-10) | Original und `_updated.md` bleiben als v3-Detailspezifikation; Sharing-Konzept weiter im Ideenspeicher. |
 | F04 | `_doc/Konzept Paddle-Integration und App-Architektur.md` | behalten und fuehrend ueberarbeiten | Aktuelle Paddle-/Checkout-/Account-Architektur fuehrend beschreiben; Vorlauf zur B2B-v6.1-Umsetzung als historisch markieren. |
 | F05 | `_doc/Netzwerk-Modellierung.md` | behalten und fuehrend ueberarbeiten | Mit `_doc/growth_models/` und aktuellem Code synchronisieren; alte Modellvarianten deutlich vom umgesetzten Personenbaum-Modell trennen. |
 | F06 | `_doc/Referenznetzwerk-Tests.md` | behalten und fuehrend ueberarbeiten | Aktuelle Testlandschaft und Referenznetzwerke aus `packages/*/tests`, `tests/integration` und Growth-Doku beschreiben; alte Testplaene kennzeichnen. |
