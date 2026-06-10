@@ -50,7 +50,14 @@ interface PersistedAppState {
   attrition?: number;
   ipToEur?: number;
   maxDirectMembersPerMember?: number;
-  realityStrategy?: RealityStrategy | 'standard' | 'dirichlet' | 'momentum' | 'lifecycle';
+  realityStrategy?:
+    | RealityStrategy
+    | 'person-tree'
+    | 'standard'
+    | 'none'
+    | 'dirichlet'
+    | 'momentum'
+    | 'lifecycle';
   goals?: GoalUI[];
   monthlyProductCostEUR?: number;
   inputMode?: InputMode;
@@ -182,7 +189,7 @@ export default function App() {
     setAttrition(defaults.attritionRate * 100);
     setIpToEur(defaults.unitToCurrency ?? 1);
     setMaxDirectMembersPerMember(defaults.maxDirectMembersPerMember ?? 29);
-    setRealityStrategy('person-tree');
+    setRealityStrategy('person-tree-equal');
     setGoals(cloneGoals(DEFAULT_GOALS));
     setMonthlyProductCostEUR(defaults.monthlyProductCostEUR ?? 100);
   };
@@ -237,13 +244,6 @@ export default function App() {
     [realityStrategy],
   );
 
-  const fastResult = useMemo(
-    () =>
-      runSimulation(product, inputs, undefined, {
-        simulationMode: 'standard',
-      }),
-    [product, inputs],
-  );
   const [detailResult, setDetailResult] = useState<SimulationResult | undefined>(
     undefined,
   );
@@ -274,41 +274,40 @@ export default function App() {
     return () => window.clearTimeout(handle);
   }, [detailRequestKey, inputs, product, simulationMode, treeGrowthStrategy]);
 
-  const detailedResult =
+  const hasCurrentDetail =
     detailResult !== undefined &&
     detailStatus === 'ready' &&
-    detailResultKey === detailRequestKey
-      ? detailResult
-      : undefined;
-  const result = detailedResult ?? fastResult;
-  const resultIsDetailed = detailedResult !== undefined;
-  const visualizationResult = detailedResult ?? fastResult;
+    detailResultKey === detailRequestKey;
+  const result = detailResult;
+  const resultIsStale = result !== undefined && !hasCurrentDetail;
 
-  const statusValue = detailResult?.finalQuarter.rankName ?? 'wird berechnet';
+  const statusValue = result?.finalQuarter.rankName ?? 'wird berechnet';
 
   const statusHint =
-    !detailedResult
-      ? 'Neuberechnung laeuft — Hero zeigt letzten exakten Stand'
-      : 'Exakt aktualisiert';
+    result === undefined
+      ? 'Berechnung laeuft'
+      : resultIsStale
+        ? 'Neuberechnung laeuft - Ansicht zeigt letzten exakten Stand'
+        : 'Exakt aktualisiert';
 
-  const showDetailedTable = detailedResult !== undefined;
-  const tableYears = detailedResult?.yearSummaries ?? [];
+  const showDetailedTable = result !== undefined;
+  const tableYears = result?.yearSummaries ?? [];
 
   const detailCaption =
-    !detailedResult
-      ? 'Chart und Ziele folgen live. Hero/Netzwerk/Rang bleiben auf dem letzten exakten Stand, bis die Detail-Berechnung fertig ist.'
-      : 'Hero, Ziele, Chart, Status, Beine und Tabelle sind mit echten Detaildaten aktualisiert.';
+    result === undefined
+      ? 'Personenbaum, Ziele, Chart, Status, Beine und Tabelle werden berechnet.'
+      : resultIsStale
+        ? 'Alle Ansichten bleiben auf dem letzten exakten Personenbaum-Stand, bis die neue Berechnung fertig ist.'
+        : 'Hero, Ziele, Chart, Status, Beine und Tabelle sind mit echten Detaildaten aktualisiert.';
 
   const goalProgress = useMemo(
-    () => evaluateGoals(result, activeGoals(goals), inputs),
+    () => (result ? evaluateGoals(result, activeGoals(goals), inputs) : []),
     [result, goals, inputs],
   );
 
-  // Hero-Block (Provision, Netzwerk, Rang) zieht aus detailResult — bleibt
-  // auf dem letzten EXAKT berechneten Stand stehen, statt bei jeder
-  // Slider-Bewegung auf die Aggregat-Approximation umzuspringen. Chart und
-  // Tabelle laufen weiter wie bisher (result-basiert).
-  const heroQuarter = detailResult?.finalQuarter;
+  // Alle Ergebnisbereiche halten waehrend der Debounce-Phase den letzten exakt
+  // berechneten Personenbaum-Stand.
+  const heroQuarter = result?.finalQuarter;
   const heroNetworkSize = Math.round(heroQuarter?.networkSize ?? 0);
   const formattedHeroNetworkSize =
     heroQuarter === undefined
@@ -316,7 +315,7 @@ export default function App() {
       : heroNetworkSize >= 1000
       ? heroNetworkSize.toLocaleString('de-DE')
       : heroNetworkSize.toString();
-  const heroIsStale = detailResult !== undefined && !detailedResult;
+  const heroIsStale = resultIsStale;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -542,20 +541,25 @@ export default function App() {
             <div className="mt-4">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Provisionsverlauf - 10 Jahre</p>
               <div className="relative">
-                <ProvisionChart
-                  yearEnds={result.yearEnds}
-                  goalProgress={goalProgress}
-                  goals={goals}
-                  mode={resultIsDetailed ? 'detail' : 'aggregate'}
-                />
-                {!resultIsDetailed && <OrangeHourglassSpinner />}
+                {result ? (
+                  <>
+                    <ProvisionChart
+                      yearEnds={result.yearEnds}
+                      goalProgress={goalProgress}
+                      goals={goals}
+                    />
+                    {resultIsStale && <OrangeHourglassSpinner />}
+                  </>
+                ) : (
+                  <ExactDataPlaceholder />
+                )}
               </div>
             </div>
             {showDetailedTable ? (
               <YearlySummaryTable
                 years={tableYears}
-                personYearEnds={detailedResult?.personYearEnds}
-                treeCompensationYearEnds={detailedResult?.treeCompensationYearEnds}
+                personYearEnds={result?.personYearEnds}
+                treeCompensationYearEnds={result?.treeCompensationYearEnds}
               />
             ) : (
               <ExactDataPlaceholder />
@@ -563,26 +567,34 @@ export default function App() {
             </div>
           </>
         ) : page === 'network' ? (
-          <NetworkVisualizations
-            yearEnds={visualizationResult.yearEnds}
-            selectedView={networkView}
-            memberMonthlyVolume={inputs.memberMonthlyVolume}
-            shopperMonthlyVolume={inputs.shopperMonthlyVolume}
-            personYearEnds={visualizationResult.personYearEnds}
-            treeCompensationYearEnds={visualizationResult.treeCompensationYearEnds}
-            unitToCurrency={inputs.unitToCurrency ?? 1}
-          />
+          result ? (
+            <NetworkVisualizations
+              yearEnds={result.yearEnds}
+              selectedView={networkView}
+              memberMonthlyVolume={inputs.memberMonthlyVolume}
+              shopperMonthlyVolume={inputs.shopperMonthlyVolume}
+              personYearEnds={result.personYearEnds}
+              treeCompensationYearEnds={result.treeCompensationYearEnds}
+              unitToCurrency={inputs.unitToCurrency ?? 1}
+            />
+          ) : (
+            <ExactDataPlaceholder />
+          )
         ) : page === 'lineage' ? (
           <LineageView />
         ) : (
-          <PersonTreeVisualizations
-            personYearEnds={visualizationResult.personYearEnds ?? []}
-            treeCompensationYearEnds={visualizationResult.treeCompensationYearEnds}
-            memberMonthlyVolume={inputs.memberMonthlyVolume}
-            shopperMonthlyVolume={inputs.shopperMonthlyVolume}
-            unitToCurrency={inputs.unitToCurrency ?? 1}
-            selectedView={personTreeView}
-          />
+          result ? (
+            <PersonTreeVisualizations
+              personYearEnds={result.personYearEnds ?? []}
+              treeCompensationYearEnds={result.treeCompensationYearEnds}
+              memberMonthlyVolume={inputs.memberMonthlyVolume}
+              shopperMonthlyVolume={inputs.shopperMonthlyVolume}
+              unitToCurrency={inputs.unitToCurrency ?? 1}
+              selectedView={personTreeView}
+            />
+          ) : (
+            <ExactDataPlaceholder />
+          )
         )}
         <p className="text-xs text-gray-500 text-center mt-4 px-4">
           Berechnungen auf Basis des aktuell hinterlegten Verguetungsplans. Keine Garantie fuer tatsaechliche Provisionen.
@@ -711,8 +723,8 @@ function ExactDataPlaceholder() {
         </p>
       </div>
       <p className="mt-1 text-xs text-gray-500">
-        Die schnelle Umsatzkurve und Zielmarker sind bereits aktualisiert. Status,
-        Beine und Provisionen werden nachgeliefert, sobald die Eingabe kurz ruht.
+        Die exakte Personenbaum-Berechnung laeuft. Chart, Ziele, Status,
+        Beine und Provisionen werden angezeigt, sobald die Eingabe kurz ruht.
       </p>
     </div>
   );
@@ -792,21 +804,23 @@ function clearPersistedState(productId: ProductId): void {
   }
 }
 
-function normalizeRealityStrategy(
+export function normalizeRealityStrategy(
   strategy: PersistedAppState['realityStrategy'] | undefined,
 ): RealityStrategy {
   if (
-    strategy === 'person-tree' ||
+    strategy === 'person-tree-equal' ||
     strategy === 'person-tree-random' ||
     strategy === 'person-tree-momentum'
   ) {
     return strategy;
   }
-  if (strategy === 'standard') return 'person-tree';
+  if (strategy === 'person-tree') return 'person-tree-equal';
+  if (strategy === 'standard') return 'person-tree-equal';
+  if (strategy === 'none') return 'person-tree-equal';
   if (strategy === 'dirichlet') return 'person-tree-random';
   if (strategy === 'momentum') return 'person-tree-momentum';
-  if (strategy === 'lifecycle') return 'person-tree';
-  return 'person-tree';
+  if (strategy === 'lifecycle') return 'person-tree-equal';
+  return 'person-tree-equal';
 }
 
 function cloneGoals(goals: GoalUI[]): GoalUI[] {

@@ -18,7 +18,6 @@ interface ProvisionChartProps {
   yearEnds: QuarterResult[];
   goalProgress?: GoalProgress[];
   goals?: GoalUI[];
-  mode?: 'aggregate' | 'detail';
 }
 
 function formatEUR(n: number): string {
@@ -31,10 +30,9 @@ export function ProvisionChart({
   yearEnds,
   goalProgress,
   goals,
-  mode = 'detail',
 }: ProvisionChartProps) {
-  const strokeColor = mode === 'detail' ? '#0F7A5B' : '#9CA3AF';
-  const fillOpacity = mode === 'detail' ? 0.28 : 0.16;
+  const strokeColor = '#0F7A5B';
+  const fillOpacity = 0.28;
   const data = yearEnds.map((m) => ({
     year: `J${m.year}`,
     eur: Math.round(m.totalEUR),

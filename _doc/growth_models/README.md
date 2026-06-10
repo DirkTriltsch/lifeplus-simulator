@@ -1,22 +1,23 @@
-# Growth Models — Dokumentationsindex
+# Growth Models - Dokumentationsindex
 
-**Stand:** 2026-06-09
-**Geltungsbereich:** Wachstums-, Churn- und Vergütungsmodell des LifePlus-Simulators (gilt analog für FitLine/Eqology).
+**Stand:** 2026-06-10  
+**Geltungsbereich:** Wachstums-, Churn- und Verguetungsmodell des LifePlus-Simulators; gilt analog fuer FitLine/Eqology.
 
 ## Lese-Reihenfolge
 
-1. [01-Zielarchitektur.md](01-Zielarchitektur.md) — Was gilt: Single-Path Personenbaum mit Debounce-UX, Simulationsmodi, Hybridmodell (Exact/Compressed), Drift zwischen Code und Entscheidung.
-2. [02-Wachstums-und-Churn-Regeln.md](02-Wachstums-und-Churn-Regeln.md) — Wie es rechnet: Member-/Shopper-/Churn-/Provisionsregeln, Reality-Strategien, UI-Glossar.
-3. [03-Benchmark-Status-B1-B2.md](03-Benchmark-Status-B1-B2.md) — B1 architektonisch obsolet (Two-Path verworfen), B2 nicht implementiert, plus Folge-Backlog.
+1. [01-Zielarchitektur.md](01-Zielarchitektur.md) - Was gilt: Single-Path Personenbaum mit Debounce-UX, Simulationsmodi, Exact/Compressed, bekannte Drift-Risiken.
+2. [02-Wachstums-und-Churn-Regeln.md](02-Wachstums-und-Churn-Regeln.md) - Wie es rechnet: Member-/Shopper-/Churn-/Provisionsregeln, Reality-Strategien, UI-Glossar.
+3. [03-Benchmark-Status-B1-B2.md](03-Benchmark-Status-B1-B2.md) - B1 architektonisch obsolet und produktiv entfernt; B2 durch `shopperCount`-Konsolidierung erledigt.
+4. [04-Code-Cleanup-Plan.md](04-Code-Cleanup-Plan.md) - Folgeplan fuer verbleibende Cleanup-Fragen; `none`/`lifecycle` ist entschieden und dokumentiert.
 
 ## Pflege-Regel
 
-Modelländerungen werden **direkt** in 01/02/03 eingearbeitet. Es entstehen keine neuen `Erarbeitung XX`-Iterationsdokumente mehr. Wer eine größere Architekturänderung diskutieren will, nutzt einen PR/Branch auf diese Dateien und führt die Diskussion in der PR-Beschreibung oder in `docs/cross-model/` (vgl. CLAUDE.md).
+Modellaenderungen werden direkt in 01/02/03 eingearbeitet. Es entstehen keine neuen `Erarbeitung XX`-Iterationsdokumente mehr. Groessere Architekturfragen laufen ueber Branch/PR auf diese Dateien oder ueber `docs/cross-model/` nach dem dortigen Review-Flow.
 
 ## Historie
 
-Die früheren Iterationsdokumente (`Erarbeitung 01`–`18`, `dynamik-mit-verguetung.md`, `Umsetzung Bericht`) wurden am 2026-06-09 entfernt, nachdem ihr Inhalt in die obigen drei Dateien überführt war. Frühere Stände werden bei Bedarf neu erarbeitet, nicht aus dem Archiv geholt.
+Die frueheren Iterationsdokumente (`Erarbeitung 01`-`18`, `dynamik-mit-verguetung.md`, `Umsetzung Bericht`) wurden am 2026-06-09 entfernt, nachdem ihr Inhalt in die fuehrenden Dateien ueberfuehrt war.
 
 ## Begleitmaterial
 
-- [Basic_model_descriptions.xlsx](Basic_model_descriptions.xlsx) — externe Beschreibungstabelle, unverändert.
+- [Basic_model_descriptions.xlsx](Basic_model_descriptions.xlsx) - externe Beschreibungstabelle, unveraendert.

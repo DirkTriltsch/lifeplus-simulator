@@ -6,7 +6,6 @@ import {
   member,
   networkFixture,
   root,
-  shopper,
 } from './helpers/tree-fixture';
 
 describe('Referenznetzwerke fuer Rangberechnung', () => {
@@ -49,8 +48,7 @@ describe('Referenznetzwerke fuer Rangberechnung', () => {
       root: root('du', 50, [
         member('member-a', 50),
         member('member-b', 50),
-        shopper('shopper-a', 5000),
-      ]),
+      ], { shopperCount: 1, shopperMonthlyVolume: 5000 }),
     });
 
     const comp = calculateTreeCompensation(snapshot, {

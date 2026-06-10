@@ -1,7 +1,7 @@
 # 02 — Wachstums- und Churn-Regeln
 
 **Stand:** 2026-06-09
-**Konsolidiert aus:** Erarbeitung 14 (Shopper als Float), 15 (Churn-Schärfe), 16 (Reattachment, QGV/AV, Status-Sichtbarkeit), Umsetzung Bericht §3, 17/18 (Shopper-/Strategy-Legacy-Backlog). Ergänzt um Memory-Notizen `feedback_growth_year_offset`, `feedback_network_single_source`.
+**Konsolidiert aus:** Erarbeitung 14 (Shopper als Float), 15 (Churn-Schaerfe), 16 (Reattachment, QGV/AV, Status-Sichtbarkeit), Umsetzung Bericht §3, 17/18 (Shopper-/Strategy-Legacy-Backlog) und aktuellem Code.
 
 ---
 
@@ -35,7 +35,7 @@ So entstehen aus zwei aufeinanderfolgenden 0,5-Carry-Anteilen ein ganzer neuer M
 
 Neu rekrutierte Member werben **erst im Folgejahr** selbst Member an. Implementierung: `sourceMembers`-Snapshot **vor** den Direct-Adds des laufenden Jahres.
 
-(Memory: `feedback_growth_year_offset` — frühere Versionen ließen neue Member im selben Jahr werben, was zu unplausibel schnellem Hochlauf führte.)
+Fruehere Varianten liessen neue Member im selben Jahr werben; das wurde verworfen, weil es zu unplausibel schnellem Hochlauf fuehrte.
 
 ### 1.4 Direct-Cap
 
@@ -225,11 +225,11 @@ Zählt **alle aktiven Member in der Downline** nach Status — nicht nur direkte
 
 | Strategie | Modus-Suffix | Verhalten |
 |---|---|---|
-| Deterministisch | `person-tree` | gleichmäßige Verteilung auf Beine; reproduzierbar |
+| Gleichverteilt | `person-tree-equal` | gleichmaessige Verteilung auf Beine; reproduzierbar |
 | Random | `person-tree-random` | Dirichlet-basierte Verteilung; Seed-gesteuert |
 | Momentum | `person-tree-momentum` | erfolgreiche Beine wachsen schneller (lock-in-Effekt) |
 
-Im Benchmark-Kontext werden zusätzlich `standard`, `dirichlet`, `momentum` als Strategie-Namen ohne `person-tree-`-Präfix verwendet. Das ist bewusst getrennt — Runtime-Begriffe sind die `person-tree*`-Werte, Benchmark-Begriffe sind die kurzen.
+Im Low-Level-Paket werden zusaetzlich `equal`, `dirichlet`, `momentum`, `lifecycle` als Strategie-Namen ohne `person-tree-`-Praefix verwendet. Das ist bewusst getrennt: Runtime-/Persistenz-Begriffe sind die `person-tree*`-Werte, Paket-Begriffe sind die kurzen. `lifecycle` ist ein Platzhalter fuer ein spaeteres Lifecycle-/Lebensphasen-Modell und aktuell nicht auswählbar.
 
 ## 6. UI-Glossar
 
@@ -245,15 +245,17 @@ Im Benchmark-Kontext werden zusätzlich `standard`, `dirichlet`, `momentum` als 
 
 ## 7. Migrations-Backlog Shopper-/Strategy-Legacy
 
+**Statusupdate 2026-06-10:** Shopper-Personen wurden aus dem Simulationsmodell entfernt. Shopper werden produktiv ausschliesslich als `shopperCount` am Sponsor/Member gefuehrt; UI-`shopper-aggregate`-Knoten sind nur Darstellung dieses Counts, keine Simulationspersonen.
+
 Aus Erarbeitung 18 §P3, Z7, Z19:
 
 | ID | Datei(en) | Maßnahme |
 |---|---|---|
-| P3.1 | [packages/simulator-core/src/person-tree.ts](../../packages/simulator-core/src/person-tree.ts), [packages/simulator-core/src/tree-generator.ts](../../packages/simulator-core/src/tree-generator.ts), [packages/product-lifeplus/src/tree-compensation.ts](../../packages/product-lifeplus/src/tree-compensation.ts) | `shopper` aus `SimPersonKind` entfernen; alle `kind === 'shopper'`-Branches entfernen. Vorher Tests/Fixtures migrieren. |
-| P3.2 | [packages/simulator-core/src/person-tree.ts](../../packages/simulator-core/src/person-tree.ts), [packages/simulator-core/src/tree-generator.ts](../../packages/simulator-core/src/tree-generator.ts) | `shopperCarry` und `shopperAttritionCarry` prüfen und entfernen, falls nach Float-Shopper-Logik nicht mehr genutzt |
-| P3.3 | [packages/product-lifeplus/tests/helpers/tree-fixture.ts](../../packages/product-lifeplus/tests/helpers/tree-fixture.ts), [simulator-app/src/components/network/sunburst-node.test.ts](../../simulator-app/src/components/network/sunburst-node.test.ts), [simulator-app/src/components/person-tree/person-tree-node.test.ts](../../simulator-app/src/components/person-tree/person-tree-node.test.ts) | Fixtures auf `shopperCount` migrieren; alte Shopper-Personen-Assertions entfernen |
-| P3.4 | [simulator-app/src/components/person-tree/person-tree-node.ts](../../simulator-app/src/components/person-tree/person-tree-node.ts), [simulator-app/src/components/network/sunburst-node.ts](../../simulator-app/src/components/network/sunburst-node.ts) | Shopper nur noch als kompakter Wert am Member anzeigen, nicht als einzelne Person |
-| Z7 | [packages/simulator-realistic-growth/src/contracts.ts](../../packages/simulator-realistic-growth/src/contracts.ts), [packages/simulator-realistic-growth/src/index.ts](../../packages/simulator-realistic-growth/src/index.ts), [packages/simulator-realistic-growth/tests/dirichlet.test.ts](../../packages/simulator-realistic-growth/tests/dirichlet.test.ts) | `StrategyId`-Werte `'none'` und `'lifecycle'` plus zugehörige Switch-Cases und Tests entfernen — kein produktiver Aufrufer mehr |
+| P3.1 | [packages/simulator-core/src/person-tree.ts](../../packages/simulator-core/src/person-tree.ts), [packages/simulator-core/src/tree-generator.ts](../../packages/simulator-core/src/tree-generator.ts), [packages/product-lifeplus/src/tree-compensation.ts](../../packages/product-lifeplus/src/tree-compensation.ts) | **erledigt 2026-06-10:** `shopper` aus `SimPersonKind` entfernt; `kind === 'shopper'`-Branches entfernt. |
+| P3.2 | [packages/simulator-core/src/person-tree.ts](../../packages/simulator-core/src/person-tree.ts), [packages/simulator-core/src/tree-generator.ts](../../packages/simulator-core/src/tree-generator.ts) | **erledigt 2026-06-10:** `shopperCarry` und `shopperAttritionCarry` entfernt. |
+| P3.3 | [packages/product-lifeplus/tests/helpers/tree-fixture.ts](../../packages/product-lifeplus/tests/helpers/tree-fixture.ts), [simulator-app/src/components/network/sunburst-node.test.ts](../../simulator-app/src/components/network/sunburst-node.test.ts), [simulator-app/src/components/person-tree/person-tree-node.test.ts](../../simulator-app/src/components/person-tree/person-tree-node.test.ts) | **erledigt 2026-06-10:** Fixtures auf `shopperCount` migriert; alte Shopper-Personen-Assertions entfernt. |
+| P3.4 | [simulator-app/src/components/person-tree/person-tree-node.ts](../../simulator-app/src/components/person-tree/person-tree-node.ts), [simulator-app/src/components/network/sunburst-node.ts](../../simulator-app/src/components/network/sunburst-node.ts) | **erledigt 2026-06-10:** Shopper werden als kompakter Count/Shopper-Aggregat am Member angezeigt, nicht als einzelne Person. |
+| Z7 | [packages/simulator-realistic-growth/src/contracts.ts](../../packages/simulator-realistic-growth/src/contracts.ts), [packages/simulator-realistic-growth/src/index.ts](../../packages/simulator-realistic-growth/src/index.ts), [packages/simulator-realistic-growth/tests/dirichlet.test.ts](../../packages/simulator-realistic-growth/tests/dirichlet.test.ts), [simulator-app/src/App.test.ts](../../simulator-app/src/App.test.ts) | **erledigt 2026-06-10:** `none` durch `equal`/`person-tree-equal` ersetzt; `lifecycle` als nicht auswählbarer Platzhalter fuer spaeteres Lifecycle-/Lebensphasen-Modell behalten; Persistenz-Migration getestet. |
 | Z19 | [packages/simulator-core/src/contracts.ts](../../packages/simulator-core/src/contracts.ts) | `personalMonthlyVolume` im Contract-Kommentar als „UI bietet keinen Eingang, nur Tests / Backdoor" markieren, um spätere „Warum wirkt das nicht?"-Bugs zu vermeiden |
 
 ## 8. Modell-Invarianten (Test-Empfehlung)
@@ -265,7 +267,7 @@ Aus Erarbeitung 16 §„Empfohlene nächste Schritte" — diese Invarianten soll
 - `compensation.qgv == table.qgv`
 - Eigene Shopper zählen zu QGV, aber nicht zu GL
 - `directLegs` meint echte direkte Member-Beine, nicht virtuelle Shopper
-- Keine Doppelzählung bei Shopper-Floats vs. legacy `kind: 'shopper'`-Personen
+- Keine Doppelzählung von `shopperCount` in QGV, Visualisierung und Provision
 - Steigende Fluktuation darf das Netzwerk nicht vergrößern (außer durch klar erklärten Rang-/Kompressionsmechanismus)
 - Silver+-Kandidaten dürfen nicht churnen (§3.1)
 - 35/37/38/39/40/50 %-Churn-Szenarien als feste Regressionsbenchmarks einfrieren

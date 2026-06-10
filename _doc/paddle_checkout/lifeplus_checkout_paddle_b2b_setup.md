@@ -286,9 +286,9 @@ Siehe [`./lifeplus_checkout_legal_review_B2B_only.md`](./lifeplus_checkout_legal
 - v1–v5: abgeloest (siehe Iterations-Pfad)
 - **v6 (aktiv)**: [`./lifeplus_checkout_paddle_b2b_v6.html`](./lifeplus_checkout_paddle_b2b_v6.html)
 
-### Memory
-- [[project-b2b-only-shop]] — Architektur (auf v6 aktualisiert)
-- [[project-target-audience-b2b]] — Zielgruppen-Kontext
+### Fachliche Eckpunkte
+- B2B-only-Shop: Checkout bleibt explizit auf gewerbliche Nutzung ausgerichtet.
+- Zielgruppe: Berater, Coaches und Business-Nutzer; kein Consumer-Shop.
 
 ## 10. Was als naechstes ansteht
 

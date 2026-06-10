@@ -26,7 +26,7 @@ describe('person-tree-node', () => {
 
     const m1 = tree.children.find((c) => c.id === 'm-1') as PersonNode;
     expect(m1.kind).toBe('member');
-    // m-1 hat einen Member-Sub (m-2) und einen Shopper (s-1) -> ein shopper-aggregate
+    // m-1 hat einen Member-Sub (m-2) und einen Shopper-Count -> ein shopper-aggregate
     expect(m1.children.map((c) => c.id)).toEqual(['m-2', 'm-1::shoppers']);
 
     const aggregate = m1.children.find(
@@ -46,14 +46,14 @@ describe('person-tree-node', () => {
     });
     if (!tree) throw new Error('tree expected');
 
-    // root: 2 Member (m-1, m-2), 2 Shopper (s-1 unter m-1, s-2 unter root), QGV = 100+100 (Member) + 50+50 (Shopper)
+    // root: 2 Member (m-1, m-2), 2 Shopper als Counts, QGV = 100+100 (Member) + 50+50 (Shopper)
     expect(tree.subtreeMemberCount).toBe(2);
     expect(tree.subtreeShopperCount).toBe(2);
     expect(tree.subtreeQGV).toBe(300);
 
     const m1 = tree.children.find((c) => c.id === 'm-1') as PersonNode;
     expect(m1.subtreeMemberCount).toBe(2); // m-1 + m-2
-    expect(m1.subtreeShopperCount).toBe(1); // s-1
+    expect(m1.subtreeShopperCount).toBe(1);
     expect(m1.subtreeQGV).toBe(250); // 100 + 100 + 50
   });
 
@@ -227,7 +227,9 @@ function createSnapshot(): PersonTreeSnapshot {
         active: true,
         weight: 1,
         personalMonthlyVolume: 100,
-        childrenIds: ['m-1', 's-2'],
+        shopperCount: 1,
+        shopperMonthlyVolume: 50,
+        childrenIds: ['m-1'],
       },
       {
         id: 'm-1',
@@ -237,7 +239,9 @@ function createSnapshot(): PersonTreeSnapshot {
         active: true,
         weight: 1,
         personalMonthlyVolume: 100,
-        childrenIds: ['m-2', 's-1'],
+        shopperCount: 1,
+        shopperMonthlyVolume: 50,
+        childrenIds: ['m-2'],
       },
       {
         id: 'm-2',
@@ -247,26 +251,6 @@ function createSnapshot(): PersonTreeSnapshot {
         active: true,
         weight: 1,
         personalMonthlyVolume: 100,
-        childrenIds: [],
-      },
-      {
-        id: 's-1',
-        sponsorId: 'm-1',
-        kind: 'shopper',
-        joinedMonth: 12,
-        active: true,
-        weight: 1,
-        personalMonthlyVolume: 50,
-        childrenIds: [],
-      },
-      {
-        id: 's-2',
-        sponsorId: 'root',
-        kind: 'shopper',
-        joinedMonth: 6,
-        active: true,
-        weight: 1,
-        personalMonthlyVolume: 50,
         childrenIds: [],
       },
     ],

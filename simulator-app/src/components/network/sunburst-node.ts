@@ -313,9 +313,6 @@ function subtreeStats(
         qgv +=
           (p.shopperCount ?? 0) *
           (p.shopperMonthlyVolume ?? shopperVolume);
-      } else if (p.kind === 'shopper') {
-        shoppers += p.weight;
-        qgv += p.weight * shopperVolume;
       }
       if (depth > maxDepth) maxDepth = depth;
     }
@@ -722,9 +719,6 @@ function levelsByDepth(
           levels[depth + 1].total =
             levels[depth + 1].members + levels[depth + 1].shoppers;
         }
-      } else if (p.kind === 'shopper') {
-        levels[depth].shoppers += p.weight;
-        levels[depth].qgv += p.weight * shopperVolume;
       }
       levels[depth].provisionEUR =
         (levels[depth].provisionEUR ?? 0) + (payouts?.total ?? 0);

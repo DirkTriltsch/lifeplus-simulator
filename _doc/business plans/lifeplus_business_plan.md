@@ -391,10 +391,10 @@ Standardmaessig ist die Bein-Entwicklung deterministisch und folgt dem Geburtsja
 
 | Strategy | Verhalten |
 | --- | --- |
-| `none` | Default. Keine zusaetzliche Streuung; Backend liefert die echten Beine 1:1 durch. |
+| `equal` | Default. Gleichverteilte Source-Gewichte; Backend liefert die echten Beine ohne zusaetzliche Streuung durch. |
 | `dirichlet` | Pro Jahr werden Beine zufaellig gewichtet (zieltreu: Summe pro Ebene bleibt). |
 | `momentum` | Hot-Hand: Vorjahres-Erfolg wirkt nach. Ab Jahr 3 wirkt Reversion. |
-| `lifecycle` | (Spaeter): Bein-Persoenlichkeiten Driver/Steady/Passive mit Phasen Ramp/Growth/Plateau/Fade. |
+| `lifecycle` | (Spaeter, noch nicht auswählbar): Bein-Persoenlichkeiten Driver/Steady/Passive mit Phasen Ramp/Growth/Plateau/Fade. |
 
 Alle Strategien sind seedbar (`createGrowthModulator({ strategy, seed })`) und damit reproduzierbar.
 

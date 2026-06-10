@@ -119,7 +119,7 @@ compare:
       cells: ["Jahr 1-4", "check", "check", "check"]
     - feature: "Stufen-Prognose (Believer → 3* Diamond)"
       cells: ["begrenzt", "check", "check", "check"]
-    - feature: "Drei Simulationsmodelle (Standard / Zufall / Momentum)"
+    - feature: "Reality-Strategien (Personenbaum / Zufallsstreuung / Momentum)"
       cells: ["begrenzt", "check", "check", "check"]
     - feature: "Ziele-Leiter mit eigenen Zwischenzielen"
       cells: ["Demo-Ziele", "check", "check", "check"]

@@ -922,16 +922,16 @@ Die LifePlus-Strategien koennen weiterverwendet werden:
 
 | Strategy | Verhalten |
 | --- | --- |
-| `none` | Alle Beine wachsen symmetrisch. |
+| `equal` | Gleichverteilte Source-Gewichte; alle Beine wachsen symmetrisch. |
 | `dirichlet` | Beine werden pro Jahr zufaellig gewichtet, Summe bleibt zieltreu. |
 | `momentum` | Erfolgreiche Beine wachsen im Folgejahr staerker. |
-| `lifecycle` | Spaeter: Bein-Persoenlichkeiten mit Ramp/Growth/Plateau/Fade. |
+| `lifecycle` | Spaeter, noch nicht auswählbar: Bein-Persoenlichkeiten mit Ramp/Growth/Plateau/Fade. |
 
 Fuer FitLine/PM ist asymmetrisches Wachstum wichtiger als bei einfachen Plaenen, weil Rang-Beine und Management-Differenzen stark von Struktur abhaengen.
 
 Empfehlung:
 
-- V1: `none` und optional `dirichlet`
+- V1: `equal` und optional `dirichlet`
 - V2: `rankLegBalanceStrategy` ergaenzen, damit hoehere Ränge realistischer modelliert werden
 
 ---

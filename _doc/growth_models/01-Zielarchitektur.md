@@ -3,13 +3,15 @@
 **Stand:** 2026-06-09
 **Konsolidiert aus:** Erarbeitung 10 (überarbeitete Zielarchitektur, mittlerweile selbst überholt), 14 (Shopper als Float), 15 (Churn-Schärfe), 16 (Hybrid-Review), 17/18 (Bereinigungs-Befunde), Umsetzung Bericht.
 
+**Statusupdate 2026-06-10:** R2/R5/R6 sind umgesetzt. Der produktive `standard`-/Aggregatpfad und `fastResult` wurden entfernt; Shopper sind auf `shopperCount` konsolidiert; B2-Shopper-Aggregation ist verworfen und das geskippt gefuehrte Benchmark-/Testgeruest wurde entfernt. Verbleibende Legacy-Aussagen in diesem Dokument sind gegen [04-Code-Cleanup-Plan.md](04-Code-Cleanup-Plan.md) und [03-Benchmark-Status-B1-B2.md](03-Benchmark-Status-B1-B2.md) als historisch einzuordnen.
+
 ---
 
 ## 1. Kernentscheidung: Single-Path Personenbaum mit Debounce-UX
 
 Die zwischenzeitlich verfolgte **Two-Path-Architektur** (schneller Aggregat-Pfad für Slider/Chart neben Personenbaum-Pfad für Detail) ist **verworfen**. Aktuelles Zielmodell:
 
-- **Eine Berechnungsquelle**: der Personenbaum in einer der drei Reality-Strategien (`person-tree`, `person-tree-random`, `person-tree-momentum`).
+- **Eine Berechnungsquelle**: der Personenbaum in einer der drei Reality-Strategien (`person-tree-equal`, `person-tree-random`, `person-tree-momentum`).
 - **Slider-Latenz wird durch Debounce gelöst**, nicht durch parallelen Aggregat-Pfad. Eingaben fließen sofort in die Anzeige (Inputfelder), die abhängigen Berechnungs-Outputs (Hero, Chart, Tabelle, Visualisierungen, Ziele) bleiben sichtbar aber **abgeblendet** stehen, bis nach Debounce-Ruhephase ein neuer Personenbaum-Lauf gerechnet ist.
 - **Während der Neuberechnung** signalisieren `opacity`-Abblendung der Hero-/Stat-Karten plus eine orange drehende Eieruhr über dem Chart und ein Inline-Spinner auf dem Tabellen-Placeholder, dass eine Neurechnung läuft. Die Tabelle wird komplett ausgeblendet, bis Detaildaten zum aktuellen Input-Key vorliegen.
 - **Nach Berechnung** schalten alle Ausgaben atomar auf das neue Personenbaum-Resultat um; Spinner verschwindet, `opacity` zurück auf 100 %, Tabelle wieder sichtbar.
@@ -25,11 +27,11 @@ Die zwischenzeitlich verfolgte **Two-Path-Architektur** (schneller Aggregat-Pfad
 | Modus | Pfad | Reality-Strategie | Rolle |
 |---|---|---|---|
 | `standard` | Aggregat | – | **Legacy** — aus UI entfernt, im Code nur noch als `fastResult`-Bootstrap für den Chart genutzt; soll ersatzlos verschwinden (§7 P2.1) |
-| `person-tree` | Personenbaum | deterministisch | aktiv |
+| `person-tree-equal` | Personenbaum | deterministisch / gleichverteilt | aktiv |
 | `person-tree-random` | Personenbaum | Dirichlet-Verteilung | aktiv |
 | `person-tree-momentum` | Personenbaum | Momentum | aktiv |
 
-Die Combo-Box [AdvancedSettingsPanel.tsx](../../simulator-app/src/components/AdvancedSettingsPanel.tsx) bietet nur die drei `person-tree*`-Varianten. Persistenz-Migration in [App.tsx normalizeRealityStrategy](../../simulator-app/src/App.tsx#L795-L810) mappt Alt-Werte (`standard`, `dirichlet`, `momentum`, `lifecycle`, `none`) auf die neuen Varianten. Code-Pfade `'none'` und `'lifecycle'` in `simulator-realistic-growth` werden gemäß [02 §7 Z7](02-Wachstums-und-Churn-Regeln.md#7-migrations-backlog-shopper-strategy-legacy) ausgebaut.
+Die Combo-Box [AdvancedSettingsPanel.tsx](../../simulator-app/src/components/AdvancedSettingsPanel.tsx) bietet nur die drei `person-tree*`-Varianten. Persistenz-Migration in [App.tsx normalizeRealityStrategy](../../simulator-app/src/App.tsx#L800-L823) mappt Alt-Werte (`standard`, `person-tree`, `none`, `dirichlet`, `momentum`, `lifecycle`) auf die neuen Varianten. `lifecycle` bleibt im Low-Level-Paket als nicht auswählbarer Platzhalter fuer ein spaeteres Lifecycle-/Lebensphasen-Modell; `none` wurde durch `equal`/`person-tree-equal` ersetzt.
 
 ## 3. Hybridmodell innerhalb des Personenbaums
 
@@ -103,12 +105,12 @@ Diese Punkte sind **kein** „nice-to-have-Cleanup", sondern stehen im Widerspru
 | ID | Datei(en) | Maßnahme | Warum prioritär |
 |---|---|---|---|
 | **P2.1** | [simulator-app/src/App.tsx:240-285](../../simulator-app/src/App.tsx#L240-L285) | `fastResult`, `result = detailedResult ?? fastResult`, `visualizationResult = detailedResult ?? fastResult` entfernen. Während der Debounce-Phase letzten Detailstand halten (oder Skeleton beim allerersten Load). | Two-Path-Architektur ist verworfen — der Code rechnet aber weiterhin parallel beide Pfade. |
-| **P2.2** | [packages/simulator-core/src/simulation.ts:92](../../packages/simulator-core/src/simulation.ts#L92) | Default `options.simulationMode ?? 'standard'` auf `'person-tree'` umstellen oder `simulationMode` verpflichtend machen. | Kein produktiver Aufrufer braucht den Default mehr; alle aktiven Tests setzen `'person-tree'` explizit. |
-| **P2.3** | – | erledigt: alle aktiven Tests in `packages/product-*/tests/*.test.ts` setzen `simulationMode: 'person-tree'` explizit (Stand 2026-06-09 grep verifiziert). | – |
+| **P2.2** | [packages/simulator-core/src/simulation.ts](../../packages/simulator-core/src/simulation.ts) | Default ist Personenbaum-Gleichverteilung; Runtime-Wert ist `person-tree-equal`, Legacy-Alias `person-tree` bleibt fuer alte Tests/Caller akzeptiert. | Kein produktiver Aufrufer braucht den alten Aggregat-Default mehr. |
+| **P2.3** | – | erledigt: produktiver App-Default ist `person-tree-equal`; alte gespeicherte Werte werden migriert. | – |
 | **P2.4** | [simulator-app/src/components/NetworkVisualizations.tsx](../../simulator-app/src/components/NetworkVisualizations.tsx), [simulator-app/src/components/network/sunburst-node.ts](../../simulator-app/src/components/network/sunburst-node.ts) | Aggregat-Fallbacks (`buildSunburstTree`, `estimateAggregateRank`, `yearEnds`-Fallbacks) nach P2.1 entfernen. | Mit `fastResult`-Wegfall haben sie keinen sinnvollen Aufrufer mehr. |
 | **P2.5** | [packages/simulator-core/src/simulation.ts:78-82](../../packages/simulator-core/src/simulation.ts#L78-L82) | `'standard'` aus dem `SimulationMode`-Union entfernen, sobald P2.1/P2.2 durch sind. | Verhindert Wiedereinführung des Aggregat-Pfads über die Hintertür. |
 | **Z9** | [App.tsx](../../simulator-app/src/App.tsx) | `OrangeHourglassSpinner` und `InlineOrangeSpinner` bleiben (sind die „drehende Eieruhr" der Single-Path-UX). `ExactDataPlaceholder` als Tabellen-Skeleton ebenfalls. **Nur** der `mode='aggregate'`-Pfad in `ProvisionChart` und ein evtl. nicht mehr benötigter Helper entfallen. | Korrigiert die früher als „zusammen mit fastResult entfernen" verbuchten Komponenten. |
-| **Z14** | [simulator-app/src/auth/*](../../simulator-app/src/auth/), `LoginGate.tsx`, `Paywall.tsx`, `DeviceLimitGate.tsx`, `AuthGate.tsx` | Verifizieren, ob noch via `main.tsx` gerendert; sonst entfernen (App soll laut Memory keinen eigenen Account-Layer mehr enthalten). | Unabhängig von Single-Path-Cleanup, aber auf derselben Bereinigungs-Welle. |
+| **Z14** | [simulator-app/src/auth/*](../../simulator-app/src/auth/), `LoginGate.tsx`, `Paywall.tsx`, `DeviceLimitGate.tsx`, `AuthGate.tsx` | Account-/Auth-Layer nur gegen aktuellen Code und aktuelle Freemium-/Go-Live-Doku bewerten; keine externen Agenten-Notizen als Quelle verwenden. | Unabhaengig von Single-Path-Cleanup, aber auf derselben Bereinigungs-Welle. |
 
 ## 8. Offene Architekturentscheidungen
 
@@ -116,6 +118,6 @@ Aus Umsetzung Bericht §10–11 + Erarbeitung 16 — noch nicht entschieden:
 
 1. **Web Worker für Detailpfad** — Personenbaum bei großen Szenarien (z. B. 4,5 Member/Jahr + 5 Shopper/Jahr + 30 % Churn → ~3,6 Mio Netzwerk-Größe in Jahr 10) blockiert den Main Thread auch mit Debounce. Aktuelle Absicherung ist nur Debounce + Single-Path-Spinner.
 2. **Hard Detail-Cap** — ab welcher erwarteten Netzwerk-Größe wird die automatische Detailrechnung verweigert und nur per Button „Exakt berechnen" ausgelöst?
-3. **B2 Shopper-Aggregation** — implementieren oder endgültig verwerfen (siehe [03-Benchmark-Status-B1-B2.md](03-Benchmark-Status-B1-B2.md)).
+3. **B2 Shopper-Aggregation** — verworfen; durch `shopperCount`-Konsolidierung fachlich erledigt (siehe [03-Benchmark-Status-B1-B2.md](03-Benchmark-Status-B1-B2.md)).
 4. **Compressed-Mode-Sichtbarkeit** — UI-Badge nur Empfehlung; konkrete Stelle/Wording noch offen.
-5. **`runLifeplusTreeSimulation`** — Konvenienz-API behalten oder durch `runSimulation(..., { simulationMode: 'person-tree' })` ersetzen?
+5. **`runLifeplusTreeSimulation`** — Konvenienz-API behalten oder durch `runSimulation(..., { simulationMode: 'person-tree-equal' })` ersetzen?

@@ -1,2 +1,0 @@
-timestamp,gitCommit,gitBranch,nodeVersion,os,cpuModel,logicalCores,ramTotalGb,buildMode,testRunner
-2026-06-06T15:47:08.633Z,e2f13b84f95d2ec8795f2d8f0c8265c808d2d133,main,v24.14.0,win32 x64,11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz,8,15.7,test,vitest

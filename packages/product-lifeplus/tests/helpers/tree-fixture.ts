@@ -12,6 +12,8 @@ export interface FixturePerson {
   kind: SimPersonKind;
   volume: number;
   weight?: number;
+  shopperCount?: number;
+  shopperMonthlyVolume?: number;
   active?: boolean;
   children?: FixturePerson[];
 }
@@ -25,25 +27,23 @@ export function root(
   id: string,
   volume: number,
   children: FixturePerson[] = [],
+  options: { shopperCount?: number; shopperMonthlyVolume?: number; active?: boolean } = {},
 ): FixturePerson {
-  return { id, kind: 'root', volume, children };
+  return { id, kind: 'root', volume, children, ...options };
 }
 
 export function member(
   id: string,
   volume: number,
   children: FixturePerson[] = [],
-  options: { weight?: number; active?: boolean } = {},
+  options: {
+    weight?: number;
+    shopperCount?: number;
+    shopperMonthlyVolume?: number;
+    active?: boolean;
+  } = {},
 ): FixturePerson {
   return { id, kind: 'member', volume, children, ...options };
-}
-
-export function shopper(
-  id: string,
-  volume: number,
-  options: { weight?: number; active?: boolean } = {},
-): FixturePerson {
-  return { id, kind: 'shopper', volume, ...options };
 }
 
 export function networkFixture({
@@ -66,6 +66,8 @@ export function networkFixture({
       active,
       weight,
       personalMonthlyVolume: node.volume,
+      shopperCount: node.shopperCount ?? 0,
+      shopperMonthlyVolume: node.shopperMonthlyVolume,
       childrenIds: children.map((child) => child.id),
     });
 
@@ -73,10 +75,21 @@ export function networkFixture({
       id: `order-${node.id}`,
       personId: node.id,
       monthIndex,
-      kind: node.kind === 'shopper' ? 'shopper_order' : 'member_order',
+      kind: 'member_order',
       volume: node.volume,
       weight,
     });
+
+    if ((node.shopperCount ?? 0) > 0) {
+      orders.push({
+        id: `order-${node.id}-shoppers`,
+        personId: node.id,
+        monthIndex,
+        kind: 'shopper_order',
+        volume: node.shopperMonthlyVolume ?? node.volume,
+        weight: node.shopperCount ?? 0,
+      });
+    }
 
     for (const child of children) {
       visit(child, node.id);
@@ -112,10 +125,7 @@ export function treeToAscii(
 
   function lineFor(person: SimPerson): string {
     const rankState = rankByPersonId.get(person.id);
-    const rankName =
-      person.kind === 'shopper'
-        ? 'Shopper'
-        : rankState?.rank.name ?? 'unranked';
+    const rankName = rankState?.rank.name ?? 'unranked';
     const parts = [
       person.id.padEnd(18),
       rankName.padEnd(11),

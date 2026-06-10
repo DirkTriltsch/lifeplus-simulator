@@ -9,7 +9,10 @@ plus Pflicht-Bestaetigung im Checkout.
 
 Verwandt:
 - Setup-Stand: [`./lifeplus_checkout_paddle_b2b_setup.md`](./lifeplus_checkout_paddle_b2b_setup.md)
-- Mockup v3: [`./lifeplus_checkout_paddle_b2b_v3.html`](./lifeplus_checkout_paddle_b2b_v3.html)
+- Historischer Befund bezog sich auf Mockup v3. Die v3-Datei wurde nach
+  Runbook-Fertigstellung geloescht; erhaltene historische Referenzen sind
+  [`./lifeplus_checkout_paddle_b2b_v2.html`](./lifeplus_checkout_paddle_b2b_v2.html)
+  und [`./lifeplus_checkout_paddle_b2b_v6.html`](./lifeplus_checkout_paddle_b2b_v6.html).
 
 ---
 
@@ -210,8 +213,7 @@ Free-Plan ist unentgeltlich → kein "entgeltlicher Vertrag" im Sinne §312 BGB
 #### Was bleibt zu pruefen
 - Wenn Free → Pro automatisch wechseln wuerde (z.B. nach Trial), waere das
   ein neuer Vertragsabschluss → dann muss die B2B-Bestaetigung dort greifen.
-  Aktuell ist das nicht der Fall (siehe Memory
-  [[project-access-policy-after-purchase]] — Pro startet via expliziten Kauf).
+  Aktuell ist das nicht der Fall: Pro startet via expliziten Kauf.
 - Hidden-Cost-Patterns vermeiden: keine versteckte Free→Pro-Konversion
   ohne explizite Bestaetigung.
 

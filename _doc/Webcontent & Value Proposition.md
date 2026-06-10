@@ -515,7 +515,7 @@ Alle drei Brands (`lifeplus`, `fitline`, `eqology`) teilen sich:
 Pro Brand unterscheiden sich: `accentColor`, `siteName`, `siteDomain`, `productName`, `lockup.initial/wordNeutral/wordAccent/markFill/darkBg`.
 
 **Auswirkung:**
-Die Brands sind farblich differenziert, inhaltlich aber Klone. Das widerspricht dem Memory-Hinweis [project_brand_separation.md](C:\Users\dirk.tri\.claude\projects\c--Coding-LifePlus-Simulator-code\memory\project_brand_separation.md), nach dem die Brands als *getrennte Identitäten* geführt werden sollen.
+Die Brands sind farblich differenziert, inhaltlich aber Klone. Das widerspricht dem fachlichen Zielbild, nach dem die Brands als *getrennte Identitaeten* gefuehrt werden sollen.
 
 **Vorschlag:**
 Grundsatzentscheidung treffen (siehe [Offene Produktentscheidungen — Ergänzung](#offene-produktentscheidungen--erg%C3%A4nzung)): bleibt es bei identischer Tonalität (Effizienz, ein Template-Set), oder bekommen die Brands eigene Texte und damit eigene Persönlichkeiten?
@@ -709,7 +709,7 @@ Auszug der inhaltlichen Felder pro Brand:
 Die Brands sind **inhaltliche Klone mit Farbschicht**. Effizient für die Pflege (ein Template-Set), aber:
 
 - Keine Differenzierung in Tonalität, Zielgruppensprache, Bildwelt.
-- Memory-Hinweis [project_brand_separation.md](C:\Users\dirk.tri\.claude\projects\c--Coding-LifePlus-Simulator-code\memory\project_brand_separation.md): *„jede Brand mit eigener DB, eigener Rechnung, kein Cross-Brand-Bundle"* — die getrennten Identitäten betreffen aktuell vor allem Payment und Account, **nicht** Content.
+- Fachliches Zielbild: jede Brand mit eigener Datenhaltung, eigener Rechnung und keinem Cross-Brand-Bundle. Die getrennten Identitaeten betreffen aktuell vor allem Payment und Account, **nicht** Content.
 
 ### Optionen
 
@@ -745,7 +745,7 @@ Die Brands sind **inhaltliche Klone mit Farbschicht**. Effizient für die Pflege
 - Erfordert klare Trennung in der Template-Architektur: was ist Kern, was ist Brand?
 - Initiale Investition in Schema-Erweiterung von `brands.json`.
 
-**Empfehlung:** **Option C**, weil sie den Memory-Hinweis (getrennte Identitäten) erfüllt, ohne den Pflege-Aufwand zu verdreifachen. Bewusst akzeptierter Nachteil: einmalige Refactoring-Investition in `brands.json` und Templates. Wenn sich herausstellt, dass die Brand-Akzente zu schwach wirken, kann auf Option B nachgezogen werden.
+**Empfehlung:** **Option C**, weil sie das Zielbild getrennter Identitaeten erfuellt, ohne den Pflege-Aufwand zu verdreifachen. Bewusst akzeptierter Nachteil: einmalige Refactoring-Investition in `brands.json` und Templates. Wenn sich herausstellt, dass die Brand-Akzente zu schwach wirken, kann auf Option B nachgezogen werden.
 
 ## Stufen-Vokabular: hartkodiert vs. universell
 
@@ -844,11 +844,11 @@ In Reihenfolge umsetzen, jeweils mit den nötigen Vorab-Entscheidungen:
 - [_doc/Konzept Paddle-Integration und App-Architektur.md](_doc/Konzept%20Paddle-Integration%20und%20App-Architektur.md) — sofern Free-Logik Paddle-Touchpoints hat
 - [_doc/Setup Paddle Products, Prices, Discount-Codes.md](_doc/Setup%20Paddle%20Products,%20Prices,%20Discount-Codes.md) — relevant bei E-8 (Pricing-Strukturen)
 
-### Memory-Referenzen
+### In Doku ueberfuehrte Arbeitsnotizen
 
-- [project_brand_separation.md](C:\Users\dirk.tri\.claude\projects\c--Coding-LifePlus-Simulator-code\memory\project_brand_separation.md) — Brands als getrennte Identitäten
-- [project_brand_domains.md](C:\Users\dirk.tri\.claude\projects\c--Coding-LifePlus-Simulator-code\memory\project_brand_domains.md) — Hardcoded Staging-Domains vs. Ziel-`.de`-Domains
-- [project_deployment_topology.md](C:\Users\dirk.tri\.claude\projects\c--Coding-LifePlus-Simulator-code\memory\project_deployment_topology.md) — Hybrid-Deployment
+- Brands sollen als getrennte Identitaeten gefuehrt werden.
+- Staging-Domains und Ziel-`.de`-Domains muessen in aktueller Deploy-/Domain-Doku nachvollziehbar bleiben.
+- Hybrid-Deployment gehoert in die fuehrende Architektur- und Runbook-Doku, nicht in lokale Agentenpfade.
 
 ## Glossar (für die Vertiefung)
 

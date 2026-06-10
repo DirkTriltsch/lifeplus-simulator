@@ -145,9 +145,7 @@ function createInitialState(
     shopperCount: 0,
     childrenIds: [],
     memberCarry: 0,
-    shopperCarry: 0,
     memberAttritionCarry: 0,
-    shopperAttritionCarry: 0,
   };
   return { persons: [root], nextId: 1, maxDirect, inputs };
 }
@@ -317,9 +315,7 @@ function appendWholeMembers(
       shopperCount: 0,
       childrenIds: [],
       memberCarry: 0,
-      shopperCarry: 0,
       memberAttritionCarry: 0,
-      shopperAttritionCarry: 0,
     };
     sponsor.childrenIds.push(aggregated.id);
     state.persons.push(aggregated);
@@ -339,9 +335,7 @@ function appendWholeMembers(
       shopperCount: 0,
       childrenIds: [],
       memberCarry: 0,
-      shopperCarry: 0,
       memberAttritionCarry: 0,
-      shopperAttritionCarry: 0,
     };
     sponsor.childrenIds.push(member.id);
     state.persons.push(member);
@@ -546,20 +540,8 @@ function createMonthlyOrders(persons: SimPerson[], monthIndex: number): SimOrder
       });
     }
 
-    if (person.kind === 'shopper' && person.personalMonthlyVolume > 0) {
-      orders.push({
-        id: `o-${monthIndex}-${person.id}`,
-        personId: person.id,
-        monthIndex,
-        kind: 'shopper_order',
-        volume: person.personalMonthlyVolume,
-        weight: person.weight,
-      });
-    }
-
     const shopperCount = person.shopperCount ?? 0;
-    const shopperMonthlyVolume =
-      person.shopperMonthlyVolume ?? stateInputFallbackShopperVolume(person);
+    const shopperMonthlyVolume = person.shopperMonthlyVolume ?? 0;
     if (shopperCount > 0 && shopperMonthlyVolume > 0) {
       orders.push({
         id: `o-${monthIndex}-${person.id}-shoppers`,
@@ -573,10 +555,6 @@ function createMonthlyOrders(persons: SimPerson[], monthIndex: number): SimOrder
   }
 
   return orders;
-}
-
-function stateInputFallbackShopperVolume(person: SimPerson): number {
-  return person.kind === 'shopper' ? person.personalMonthlyVolume : 0;
 }
 
 function buildPersonIndex(persons: SimPerson[]): Map<string, SimPerson> {

@@ -105,7 +105,6 @@ interface PersonContext {
 
 interface AggregatedChildren {
   members: SimPerson[];
-  shoppers: SimPerson[];
 }
 
 function childPersons(
@@ -113,21 +112,12 @@ function childPersons(
   context: PersonContext,
 ): AggregatedChildren {
   const members: SimPerson[] = [];
-  const shoppers: SimPerson[] = [];
   for (const childId of person.childrenIds) {
     const child = context.personsById.get(childId);
     if (!child || (context.hideInactive && !child.active)) continue;
     if (child.kind === 'member') members.push(child);
-    else if (child.kind === 'shopper') shoppers.push(child);
   }
-  return { members, shoppers };
-}
-
-function shopperQGV(shopper: SimPerson, context: PersonContext): number {
-  if (!shopper.active) return 0;
-  const av = context.rankByPersonId.get(shopper.id)?.av;
-  const volume = av ?? context.shopperMonthlyVolume;
-  return shopper.weight * volume;
+  return { members };
 }
 
 function memberOwnIP(person: SimPerson, context: PersonContext): number {
@@ -140,7 +130,6 @@ function buildShopperAggregate(
   parentId: string,
   depth: number,
   parent: SimPerson,
-  shoppers: SimPerson[],
   context: PersonContext,
 ): ShopperAggregateNode | null {
   let shopperCount = parent.active ? parent.shopperCount ?? 0 : 0;
@@ -148,11 +137,6 @@ function buildShopperAggregate(
     shopperCount *
     (parent.shopperMonthlyVolume ??
       context.shopperMonthlyVolume);
-
-  for (const shopper of shoppers) {
-    shopperCount += shopper.weight;
-    totalQGV += shopperQGV(shopper, context);
-  }
 
   if (shopperCount <= 0) return null;
 
@@ -185,7 +169,7 @@ function buildMemberNode(
   depth: number,
   context: PersonContext,
 ): PersonNode {
-  const { members, shoppers } = childPersons(person, context);
+  const { members } = childPersons(person, context);
 
   const childNodes: PersonTreeNode[] = members.map((child) =>
     buildMemberNode(child, person.id, depth + 1, context),
@@ -195,7 +179,6 @@ function buildMemberNode(
     person.id,
     depth + 1,
     person,
-    shoppers,
     context,
   );
   if (shopperAggregate) childNodes.push(shopperAggregate);
@@ -247,8 +230,8 @@ function buildMemberNode(
  * Baut einen immutablen Personenbaum aus einem PersonTreeSnapshot.
  *
  * - Inaktive Personen bleiben sichtbar, koennen aber per hideInactive ausgeblendet werden.
- * - Direkte Shopper-Kinder eines Members werden zu einem 'shopper-aggregate'
- *   Sammelknoten zusammengefasst (Radius/Anzeige skaliert ueber Aufrufseite).
+ * - Shopper-Counts eines Members werden als 'shopper-aggregate'
+ *   Sammelknoten dargestellt (Radius/Anzeige skaliert ueber Aufrufseite).
  * - Subtree-Stats (Member/Shopper/QGV/Provision) sind in jedem Knoten praeaggregiert,
  *   damit Collapse-Visualisierungen ohne erneutes Traversieren auskommen.
  */

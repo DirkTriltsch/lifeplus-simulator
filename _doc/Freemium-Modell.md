@@ -1,8 +1,14 @@
 # Konzept: Freemium-Modell
 
 **Stand:** 2026-05-25  
-**Status:** Entwurf / zur Abstimmung  
+**Status:** Produktstrategie / nicht aktueller Implementierungsplan  
 **Bezug:** [Konzept Paddle-Integration und App-Architektur](./Konzept%20Paddle-Integration%20und%20App-Architektur.md), [Konzepte und Umsetzung realistischer Wachstums-Modelle](./Konzepte%20und%20Umsetzung%20realistischer%20Wachstums-Modelle%20.md)
+
+> **Hinweis 2026-06-09:** Dieses Dokument beschreibt die Produktstrategie fuer
+> Free/Trial/Pro. Der aktuelle technische Checkout-Stand ist B2B-v6.1
+> Gast-Checkout mit `post-checkout` Auto-Login; technische Umsetzungsdetails
+> stehen im Checkout-Runbook und in der App-Doku. Alte Funnel-Annahmen hier
+> sind daher nicht automatisch Arbeitsauftraege.
 
 ---
 

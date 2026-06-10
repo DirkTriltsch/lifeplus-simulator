@@ -1,6 +1,6 @@
 import type { TreeGrowthStrategy } from '@mlm/simulator-core';
 
-export type StrategyId = 'none' | 'dirichlet' | 'momentum' | 'lifecycle';
+export type StrategyId = 'equal' | 'dirichlet' | 'momentum' | 'lifecycle';
 
 export interface GrowthOptions {
   strategy: StrategyId;

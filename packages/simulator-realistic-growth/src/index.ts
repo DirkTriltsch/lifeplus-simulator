@@ -13,7 +13,7 @@ export function createTreeGrowthStrategy(
   options: GrowthOptions,
 ): TreeGrowthStrategy | undefined {
   switch (options.strategy) {
-    case 'none':
+    case 'equal':
     case 'lifecycle':
       return undefined;
     case 'dirichlet':

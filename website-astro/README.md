@@ -1,8 +1,8 @@
 # website-astro
 
-Astro-basierte Multi-Brand-Marketing-Sites (LifePlus, FitLine, Eqology).
+Astro-basierte Multi-Brand-Marketing-Sites (LifePlus, FitLine und Eqology).
 
-Konzept, Struktur und ToDos: siehe `_doc/Astro Einfuehrung und Dateistruktur.md`.
+Astro ist die produktive Build-Kette fuer die Marketing-Sites. Historische Einfuehrungs- und Migrationsplaene wurden nach Abschluss der Umstellung entfernt; massgeblich sind diese README und der aktuelle Code unter `src/`.
 
 ## Aufbau in Kurzform
 

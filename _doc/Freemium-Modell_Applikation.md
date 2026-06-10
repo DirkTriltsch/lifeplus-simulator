@@ -1,8 +1,14 @@
 # Freemium in der App: Implementierungs-Konzept
 
 **Stand:** 2026-05-25
-**Status:** reviewed / zur technischen Umsetzung
+**Status:** historischer Implementierungsplan / gegen aktuellen Code nur eingeschraenkt fuehrend
 **Bezug:** [Freemium-Modell](./Freemium-Modell.md) (Produktentscheidungen), [Konzept Paddle-Integration und App-Architektur](./Konzept%20Paddle-Integration%20und%20App-Architektur.md) (Auth/Entitlement-Flow)
+
+> **Hinweis 2026-06-09:** Die aktuelle App nutzt `LoginGate`, `AuthGate`,
+> `Paywall`, `DeviceLimitGate` und die Astro-Account-Seite
+> `AccountPageDefault.astro`. Aeltere Referenzen auf
+> `simulator-app/src/components/AccountPanel.tsx` sind veraltet; diese Datei
+> existiert im aktuellen Workspace nicht.
 
 ---
 
@@ -422,7 +428,7 @@ Empfehlung: **Capability-basiert bevorzugen** (`features.canManageTeam`), weil a
 | **Tabelle** | [src/components/YearlySummaryTable.tsx](../simulator-app/src/components/YearlySummaryTable.tsx) | Zeilen ab `maxVisibleYear+1` unscharf / maskiert |
 | **Network-Vis** | [src/components/NetworkVisualizations.tsx](../simulator-app/src/components/NetworkVisualizations.tsx) | Visualisierungen auf Jahr 1-4 begrenzen; Pro-Visualisierungen gegated |
 | **Settings-Drawer** | [src/components/SettingsDrawer.tsx](../simulator-app/src/components/SettingsDrawer.tsx) | "Szenario speichern" disabled bei `!canSaveScenarios` |
-| **Account-Panel** | [src/components/AccountPanel.tsx](../simulator-app/src/components/AccountPanel.tsx) | Free-Status sichtbar, "Upgrade auf Pro"-Button |
+| **Account-/Zugriffsoberflaeche** | `simulator-app/src/components/LoginGate.tsx`, `AuthGate.tsx`, `Paywall.tsx`, `DeviceLimitGate.tsx`; Website-Account: [`AccountPageDefault.astro`](../website-astro/src/shared/components/sections/AccountPageDefault.astro) | Free-Status/Upgrade-Fuehrung gegen aktuellen Gate- und Account-Code pruefen |
 | **Upgrade-Badge** | `src/components/UpgradeBadge.tsx` (neu) | Wiederverwendbare CTA-Komponente, conditional via `features.showUpgradeCta` |
 
 ### Korrektur: lokale Persistenz ist heute bereits vorhanden
@@ -523,7 +529,7 @@ Empfohlen, weil jede Stufe selbst testbar ist und nichts blockiert:
    - **Slider**: Live-Updates Year-Limited (intern weiterhin 10 Jahre Compute)
 
 4. **UX / Account**
-   - **AccountPanel**: Free-Status sichtbar machen, Upgrade-Button
+   - **Aktuelle Account-/Gate-Komponenten**: Free-Status sichtbar machen, Upgrade-Button
    - **SettingsDrawer**: gegate Aktionen disablen mit Tooltip "Pro-Feature"
 
 5. **Polish**

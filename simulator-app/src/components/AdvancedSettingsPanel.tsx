@@ -1,10 +1,10 @@
 export type RealityStrategy =
-  | 'person-tree'
+  | 'person-tree-equal'
   | 'person-tree-random'
   | 'person-tree-momentum';
 
 const STRATEGY_OPTIONS: { value: RealityStrategy; label: string }[] = [
-  { value: 'person-tree', label: 'Personenbaum' },
+  { value: 'person-tree-equal', label: 'Personenbaum (gleichverteilt)' },
   { value: 'person-tree-random', label: 'Personenbaum (Zufall)' },
   { value: 'person-tree-momentum', label: 'Personenbaum (Momentum)' },
 ];

@@ -75,25 +75,13 @@ danach den App-Build nach `dist/<brand>-website/app/`. Damit liegen Marketing-
 Site und Simulator gemeinsam unter `https://<domain>/` bzw.
 `https://<domain>/app/`.
 
-## Migration Notes
+## Website Build Notes
 
-Die Marketing-Sites werden seit der Astro-Migration aus `website-astro/`
-gebaut. `website/` ist als `website-legacy/` archiviert und nicht mehr Teil
-der Workspaces oder Build-Skripte.
+Die Marketing-Sites werden produktiv aus `website-astro/` gebaut. Die aktuellen
+Outputs sind `dist/<brand>-website/` fuer die Microsites und
+`dist/<brand>-app/` fuer die Simulator-App.
 
-Breaking Changes fuer externe Konsumenten:
-
-| Alt | Neu |
-|-----|-----|
-| `dist/site-<brand>/` | `dist/<brand>-website/` |
-| `dist/<brand>/` | `dist/<brand>-app/` |
-| `website/brands.json` | `website-astro/src/brands/<brand>/brand.yaml` |
-| `website/templates/*.html` | `website-astro/src/shared/components/` und `website-astro/src/brands/<brand>/pages/` |
-| `website/marks/*.svg` | `website-astro/src/brands/<brand>/public/favicon.svg` |
-
-CI-Jobs, SFTP-Profile, visuelle Vergleichsskripte und manuelle Upload-Notizen
-muessen die neuen `dist/<brand>-website/`- und `dist/<brand>-app/`-Pfade
-verwenden. Brand-Builds duerfen nicht parallel im selben `website-astro/`
+Brand-Builds duerfen nicht parallel im selben `website-astro/`
 Arbeitsverzeichnis laufen, weil Astro den `.astro`-Arbeitscache pro Build
 nutzt; die Root-Skripte bauen deshalb sequentiell.
 
@@ -102,8 +90,13 @@ nutzt; die Root-Skripte bauen deshalb sequentiell.
 - Free-Tier Click: E-Mail-Prompt, Magic-Link-Versand, Hinweis-Overlay und Login
   in Staging testen.
 - Pro-Tier Clicks fuer Monthly, Halfyear und Yearly mit Sandbox-Paddle testen:
-  Checkout-Intent, Paddle Overlay und Rueckkehr zur Magic-Link-Logik.
-- `mein-konto.html`: Magic-Link-Verify und Account-Status-Render pruefen.
+  direkter `/checkout/{plan}.html`-Flow, `checkout-intent`, Paddle Overlay,
+  `post-checkout`, App-Redirect und Webhook-Entitlement.
+- D1-Migrationsstatus fuer lokal, Preview/Sandbox und Production gegen
+  `0001` bis `0009` pruefen. Lokal existieren alle Migrationsdateien; Remote-
+  Status ist ohne `wrangler d1 migrations list` nicht verifiziert.
+- `mein-konto.html`: Magic-Link-Verify, Account-Status-Render,
+  Subscription-Details und Portal-/Cancel-Flows pruefen.
 - FitLine und Eqology vorerst nicht live bewerben: beide Brands enthalten noch
   Paddle-Platzhalter und keine eigene `apiBaseUrl`. Der Free-Magic-Link-Flow
   wuerde auf der Marketing-Domain gegen `/api/auth/request-link` laufen.
@@ -118,6 +111,9 @@ nutzt; die Root-Skripte bauen deshalb sequentiell.
   Build-Steps). Sie sind nicht im produktiven Output enthalten und nicht
   Runtime-exponiert. `npm audit fix` ohne `--force` patcht keine davon, ein
   `--force` waere ein breaking-change Update von `@astrojs/check`.
+
+Fuehrendes Checkout-/Billing-Runbook:
+`_doc/paddle_checkout/checkout-billing-runbook-b2b-v6-1.md`.
 
 ## Payment/API-Status
 

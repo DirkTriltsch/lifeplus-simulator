@@ -81,7 +81,7 @@
 1. **Domain-Umstellung**: aktuell `fitflow360.triltsch.com` (Staging) → produktive Domain (`.de` o. ä.)
 2. **HTTPS erzwingen**: `brand.yaml:3` `appUrl: "http://..."` → `https://...`
 3. **Paddle-Setup**: alle vier `REPLACE_WITH_*`-Platzhalter durch echte Credentials ersetzen
-4. **Eigener Paddle-Account / Produkt** (laut Memory: Brand-Trennung, eigene Rechnung)
+4. **Eigener Paddle-Account / Produkt**: Brand-Trennung und getrennte Rechnung als aktuelle Produkt-/Billing-Anforderung pruefen.
 5. **Brand-eigenes Impressum** falls anderer Anbieter — sonst lifeflow360-contact.ts genügt
 
 ---
@@ -132,18 +132,18 @@ Identisch zu FitFlow360 — selbe fünf Punkte vor Live:
 
 **Schritte:**
 1. Paddle-Vendor-Account in Production aktivieren (KYC abgeschlossen?)
-2. Pro Brand ein eigenes Produkt anlegen (LifeFlow360, FitFlow360, EqoFlow360 — laut Memory: getrennte Brands, getrennte Rechnungen)
+2. Pro Brand ein eigenes Produkt anlegen (LifeFlow360, FitFlow360, EqoFlow360) — getrennte Brands, getrennte Rechnungen.
 3. Pro Plan einen Price ID generieren: Monthly, HalfYear, Yearly
 4. `clientToken` (öffentlich) für Frontend kopieren
 5. In `brand.yaml` `env: "production"` setzen + Werte ersetzen
-6. **Paddle-Dashboard-Settings** laut Memory-Eintrag: Newsletter-Checkbox aus, Display-Name LifeFlow360, Zahlungsmethoden Karte+SEPA+PayPal
+6. **Paddle-Dashboard-Settings** pruefen: Newsletter-Checkbox aus, Display-Name LifeFlow360, Zahlungsmethoden Karte+SEPA+PayPal.
 
 ## 🌐 Hosting / DNS (nur für FitFlow + EqoFlow vor deren Live)
 
 **Anlass:** Domains und Zertifikate produktiv schalten.
 
 **Schritte:**
-1. Produktive Domains entscheiden (`.de` laut Memory-Stand der Diskussion)
+1. Produktive Domains entscheiden (`.de` war frueherer Diskussionsstand; aktuellen Domain-Stand vor Go-Live bestaetigen).
 2. IONOS / Cloudflare DNS einrichten
 3. SSL-Zertifikate (Let's Encrypt) für `https://`
 4. `brand.yaml` `siteDomain` + `appUrl` auf produktive HTTPS-URLs

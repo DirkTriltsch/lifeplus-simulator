@@ -55,8 +55,8 @@ describe('createTreeGrowthStrategy dirichlet', () => {
     expect(first?.sourceWeights(context)).toEqual(second?.sourceWeights(context));
   });
 
-  it('liefert fuer lifecycle/none keine Tree-Strategie', () => {
-    expect(createTreeGrowthStrategy({ strategy: 'none' })).toBeUndefined();
+  it('liefert fuer equal/lifecycle keine Tree-Strategie', () => {
+    expect(createTreeGrowthStrategy({ strategy: 'equal' })).toBeUndefined();
     expect(createTreeGrowthStrategy({ strategy: 'lifecycle' })).toBeUndefined();
   });
 });

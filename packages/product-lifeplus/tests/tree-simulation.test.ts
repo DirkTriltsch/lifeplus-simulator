@@ -27,7 +27,6 @@ describe('LifePlus Personenbaum-Simulation', () => {
     // F1a fuer Member: alle Member sind ganz (weight=1).
     // Shopper sind bewusst keine Personen mehr, sondern Float-Aggregate am Sponsor.
     expect(y2.persons.filter((person) => person.kind === 'member')).toHaveLength(8);
-    expect(y2.persons.filter((person) => person.kind === 'shopper')).toHaveLength(0);
     expect(
       y2.persons.reduce((total, person) => total + (person.shopperCount ?? 0), 0),
     ).toBe(12);
@@ -213,7 +212,7 @@ describe('LifePlus Personenbaum-Simulation', () => {
 
 function person(
   id: string,
-  kind: 'root' | 'member' | 'shopper',
+  kind: 'root' | 'member',
   sponsorId: string | undefined,
   personalMonthlyVolume: number,
   childrenIds: string[],
@@ -236,7 +235,7 @@ function order(id: string, personId: string, volume: number) {
 
 function weightedPerson(
   id: string,
-  kind: 'root' | 'member' | 'shopper',
+  kind: 'root' | 'member',
   sponsorId: string | undefined,
   personalMonthlyVolume: number,
   weight: number,

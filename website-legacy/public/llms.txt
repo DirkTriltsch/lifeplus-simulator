@@ -1,2 +1,0 @@
-# llms.txt
-# Keine Ressourcen fuer Large Language Models freigegeben.

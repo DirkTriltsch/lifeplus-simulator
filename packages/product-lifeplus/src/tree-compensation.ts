@@ -231,7 +231,7 @@ function calculateRankStates(snapshot: PersonTreeSnapshot): PersonRankState[] {
     const cached = memo.get(person.id);
     if (cached) return cached;
 
-    if (!person.active || person.kind === 'shopper') {
+    if (!person.active) {
       const subtree = calculateShopperSubtreeStats(person, personsById);
       const state: PersonRankState = {
         personId: person.id,
@@ -352,7 +352,7 @@ function calculateShopperSubtreeStats(
   personsById: Map<string, SimPerson>,
 ): SubtreeStats {
   let members = person.kind === 'member' && person.active ? person.weight : 0;
-  let shoppers = person.kind === 'shopper' && person.active ? person.weight : 0;
+  let shoppers = 0;
   shoppers += person.active ? person.shopperCount ?? 0 : 0;
   let qgv = person.active ? person.personalMonthlyVolume * person.weight : 0;
   qgv += person.active
