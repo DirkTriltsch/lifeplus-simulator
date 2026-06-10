@@ -1,10 +1,11 @@
 # Freemium in der App - Implementierungsstand und Drift
 
 **Stand:** 2026-06-10
-**Status:** historisch / Konzept-Snapshot 2026-05-25, kritisch korrigiert fuer Phase 7
+**Status:** Drift-Register fuer App-Capability (Free vs. Pro im UI); Konzept-Snapshot 2026-05-25 plus aktuelle Code-Korrekturen. Kein aktiver Implementierungsplan.
 **Scope:** React-App-Zugriff, Auth-Gates, Paywall, Device-Limit und offene Capability-/Free-vs-Pro-Drift.
 **Ersetzt durch (Ist-Code):** `simulator-app/src/auth/`, `simulator-app/src/components/AuthGate.tsx`, `LoginGate.tsx`, `Paywall.tsx`, `DeviceLimitGate.tsx`; Account-Seite unter `website-astro/src/shared/components/sections/AccountPageDefault.astro` plus `website-astro/src/shared/scripts/accountPage.ts`.
-**Bezug:** Fuehrende Produktstrategie in [`Freemium-Modell_updated.md`](./Freemium-Modell_updated.md); Checkout-/Billing-Details im Runbook [`paddle_checkout/checkout-billing-runbook-b2b-v6-1.md`](./paddle_checkout/checkout-billing-runbook-b2b-v6-1.md).
+**Bezug:** Fuehrende Produktstrategie in [`Freemium-Modell.md`](./Freemium-Modell.md); Checkout-/Billing-Details im Runbook [`paddle_checkout/checkout-billing-runbook-b2b-v6-1.md`](./paddle_checkout/checkout-billing-runbook-b2b-v6-1.md).
+**Backlog / Offene Ideen:** [`_offene Tasks und offene Ideen.md`](./_offene%20Tasks%20und%20offene%20Ideen.md) §2 — Capability-Schicht, Free-Renderer, Tests und offene Entscheidungen sind dort konsolidiert.
 
 ## 1. Kritisches Feedback auf die alte Fassung
 
@@ -100,6 +101,25 @@ interface AppCapabilities {
 }
 ```
 
+**Warum Capability-Pattern statt Streu-`if`s?** Ein zentrales Capability-Objekt isoliert die Tier-Unterschiede an einer Stelle. Komponenten fragen *was sie duerfen*, nicht *wer der User ist*. Dadurch:
+
+- Jahr-1-4-Limit, KPI-Jahr-4, Blur/Lock und Persistenzregeln sind an einer Stelle aenderbar.
+- Neue Tiers (`ent`, `ultra`) waeren spaeter als zusaetzliche Capability-Maps anbaubar, ohne Komponenten anzufassen.
+- Tests koennen Capabilities mocken, statt das gesamte Auth-System.
+
+Anti-Pattern:
+
+```tsx
+// Schlecht (skaliert nicht):
+const tier = useTier();
+if (tier === 'free') return <BlurredChart />;
+else return <FullChart />;
+
+// Besser (Capability-Pattern):
+const features = useFeatures();
+return <Chart maxVisibleYear={features.maxVisibleYear} />;
+```
+
 Empfohlene MVP-Capabilities:
 
 | Capability | Free | Pro / Trial |
@@ -152,7 +172,7 @@ Vor einer Free-Capability-Implementierung braucht es Tests fuer beide Seiten:
 
 ## 9. Historischer Kontext
 
-Die geloeschte Langfassung dieser Datei enthielt einen ausfuehrlichen Vorschlag fuer:
+Die alte Konzeptfassung in [`Freemium-Modell_Applikation.md`](./Freemium-Modell_Applikation.md) (vor 2026-06-10) und in [`_offene Tasks und offene Ideen.md`](./_offene%20Tasks%20und%20offene%20Ideen.md) §2.7 enthaelt einen ausfuehrlichen Vorschlag fuer:
 
 - `Tier = free | pro | ent | ultra`,
 - `featureFlags.ts`,

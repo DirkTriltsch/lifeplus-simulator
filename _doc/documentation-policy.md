@@ -3,7 +3,7 @@
 **Stand:** 2026-06-10 (Datei-Mtime); inhaltlicher Stand 2026-06-09
 **Status:** fuehrend fuer Doku-Cleanup und kuenftige Ablageentscheidungen
 **Scope:** Pflegeregeln fuer Projekt-Doku unter `_doc/` und `docs/`; Statusbloecke, Loeschregeln und fuehrende Orte.
-**ADR:** [`adr-2026-06-10-dokumentationsstruktur-und-altlasten.md`](adr-2026-06-10-dokumentationsstruktur-und-altlasten.md)
+**ADR-Historie:** Die strukturelle Cleanup-Entscheidung (ADR 2026-06-10) wurde am 2026-06-10 in diese Policy konsolidiert; ADR-Datei wurde entfernt. Historischer Stand: Git-Historie.
 
 ## 1. Grundsatz
 
@@ -47,10 +47,9 @@ Vor dem Verschieben oder Loeschen:
 
 Mockups, alte Codex/Claude-Paralleltexte, Vor-Migrationsplaene und bereits als
 alt markierte Ordner sind Loeschkandidaten, sobald aktuelle Runbooks oder
-Architekturtexte die noch relevanten Inhalte tragen. Fuer die strukturelle
-Entscheidung gilt
-[`adr-2026-06-10-dokumentationsstruktur-und-altlasten.md`](adr-2026-06-10-dokumentationsstruktur-und-altlasten.md):
-keine dauerhafte `_old`-/Legacy-Ablage als Ersatz fuer fuehrende Doku.
+Architekturtexte die noch relevanten Inhalte tragen. Strukturelle Cleanup-Regel
+(aus dem 2026-06-10-ADR, hier konsolidiert): keine dauerhafte `_old`-/Legacy-Ablage
+als Ersatz fuer fuehrende Doku. Historie liegt in Git.
 
 ## 5. Remote- und Dashboard-Zustand
 

@@ -1,495 +1,169 @@
 # Netzwerk-Modellierung
 
-**Stand:** 2026-05-28 (Datei-Mtime; vor der Personenbaum-Konsolidierung in `_doc/growth_models/`)
-**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F05). Aktueller Master fuer das Wachstumsmodell ist [`growth_models/01-Zielarchitektur.md`](./growth_models/01-Zielarchitektur.md).
-**Scope:** Hintergrund zur Modellwahl Aggregat vs. Personenbaum; aktuelle Umsetzung liegt im growth_models-Master.
+**Stand:** 2026-06-10  
+**Status:** historischer Konzept-Snapshot mit Pointer auf aktuellen Master `growth_models/`.  
+**Scope:** Dokumentiert, warum die alte Aggregat-/Beispielreihen-Architektur abgeloest wurde, und verweist auf die aktuellen Single-Source-Dateien fuer Personenbaum, Shopper, Churn, Reality-Strategien und Verguetung.  
+**Vorgaenger:** Konzeptstand 2026-05-27/-28 wurde am 2026-06-10 in diese Datei konsolidiert; Volltext (Phase-1- bis Phase-3-Beschreibungen) in der Git-Historie.
 
-Dieses Dokument beschreibt die Modellierungsentscheidung fuer konkrete LifePlus-Beispielrechnungen und die spaetere Option, das gesamte Netzwerkmodell auf echte Personenbaeume umzustellen.
+## 0. Kritisches Review dieses Updates
 
-## Ausgangslage
+Die vorherige `_updated`-Fassung hatte die richtige Richtung, war aber zu knapp:
 
-Die Anwendung hat zwei unterschiedliche Aufgaben:
+1. **"Abgeloest durch growth_models" war zu pauschal.** `growth_models/` ist fachlich wichtig, aber einzelne Abschnitte in `01-Zielarchitektur.md` enthalten noch historisch ueberholte Drift-Notizen. Fuer den aktuellen Code sind die Core-/Product-/UI-Dateien und Tests genauso wichtig.
+2. **Single-Path wurde nicht konkret genug beschrieben.** `runSimulation()` nutzt heute immer den Personenbaum; `standard` ist kein `SimulationMode` mehr. `person-tree` bleibt nur Legacy-Alias fuer `person-tree-equal`.
+3. **Hybriditaet fehlte.** Der Personenbaum ist fachlich Single Source, aber intern nicht immer "eine sichtbare Person = eine reale Person": ab `MAX_EXPLICIT_MEMBER_PERSONS = 5_000` entstehen gewichtete Member-Aggregate; Shopper sind Float-Counts am Sponsor.
+4. **Shopper-Modell war unterdokumentiert.** Shopper sind keine `SimPerson` mehr, werden aber in der UI als `shopper-aggregate`-Knoten dargestellt. Das muss klar getrennt werden.
+5. **Loeschkandidat zu hart formuliert.** Die Originaldatei darf erst geloescht werden, wenn die historischen Begruendungen wirklich in `growth_models/`, Tests oder diesem Review-Master erhalten sind.
 
-1. **Wachstum simulieren**
-   Die App erzeugt ueber 10 Jahre ein statistisches Netzwerk auf Basis weniger Eingaben: neue Member pro Jahr, neue Shopper pro Jahr, Duplikation, Fluktuation und IP pro Monat.
+## 1. Aktueller Stand
 
-2. **Verguetungsplan erklaeren**
-   Fuer Schulung, Tests und Visualisierung sollen konkrete Reihen von Personen mit Status aufgebaut werden koennen, z. B.:
+Das alte Konzept "Aggregatpfad fuer Wachstum plus konkrete Personenreihen fuer Beispielrechnungen" ist abgeloest. Der produktive Stand ist:
 
-   ```text
-   Kunde -> A -> B -> C -> Gold -> Bronze -> Bronze -> Diamond
-   ```
+- **Eine Berechnungsquelle:** Personenbaum im `simulator-core`.
+- **Runtime-Modi:** `person-tree-equal`, `person-tree-random`, `person-tree-momentum`.
+- **Legacy-Alias:** `person-tree` wird weiter als Alias fuer Gleichverteilung akzeptiert.
+- **Nicht mehr produktiv:** `standard` / alter Aggregatpfad.
+- **Shopper-Modell:** Shopper sind keine Personen im Core; sie laufen als `shopperCount` am Sponsor/Member.
+- **UI-Darstellung:** Shopper koennen als `shopper-aggregate`-Knoten angezeigt werden, bleiben aber keine Simulationspersonen.
+- **Provision/Rank:** LifePlus-Verguetung wird auf dem Personenbaum berechnet; Phasen 2/3 sind strukturell nicht sinnvoll als reiner Aggregatpfad modellierbar.
 
-   Daraus soll sichtbar werden, welche Phase-1-, Phase-2- und Phase-3-Stuecke an wen gehen.
+Die aktuelle Doku-Lesereihenfolge ist absichtlich nicht 01-02-03-04. Wer den heutigen Stand verstehen will, beginnt mit 02/03 (aktuelle Regeln und Status) und liest 01 erst danach, weil 01 noch historisch ueberholte Drift-Abschnitte enthaelt. 04 ist Cleanup-Hygiene.
 
-Diese beiden Aufgaben sehen aehnlich aus, sind aber fachlich verschieden. Die Wachstumssimulation arbeitet aggregiert; Beispielrechnungen brauchen konkrete Upline-Reihen.
+| Reihenfolge | Dokument | Rolle |
+|---|---|---|
+| 1. Einstieg | [`growth_models/README.md`](./growth_models/README.md) | Einstieg und Reihenfolge. |
+| 2. Aktuelle Regeln | [`growth_models/02-Wachstums-und-Churn-Regeln.md`](./growth_models/02-Wachstums-und-Churn-Regeln.md) | Fuehrend fuer Member-, Shopper-, Churn-, AV-/QGV-Regeln. |
+| 3. Aktueller Status | [`growth_models/03-Benchmark-Status-B1-B2.md`](./growth_models/03-Benchmark-Status-B1-B2.md) | Fuehrend fuer den Status von Aggregatpfad und Shopper-Aggregation. |
+| 4. Architektur und Geschichte | [`growth_models/01-Zielarchitektur.md`](./growth_models/01-Zielarchitektur.md) | Zielarchitektur und Begruendung; einzelne alte Drift-Abschnitte nur mit Statusupdate 2026-06-10 lesen. |
+| 5. Cleanup | [`growth_models/04-Code-Cleanup-Plan.md`](./growth_models/04-Code-Cleanup-Plan.md) | Restcleanup und offene Hygiene. |
 
-## Verguetungslogik Als Grundlage
+## 2. Code-Anker
 
-### Phase 1
+### Simulationskern
 
-Phase 1 ist ein Unilevel-Pool ueber Ebene 1 bis 3 mit insgesamt 40 %.
+| Datei | Aktuelle Verantwortung |
+|---|---|
+| [`packages/simulator-core/src/simulation.ts`](../packages/simulator-core/src/simulation.ts) | `runSimulation()`, `SimulationMode`, Jahres-/Quartalsresultate. Nutzt Personenbaum als Quelle; kein produktiver `standard`-Modus. |
+| [`packages/simulator-core/src/person-tree.ts`](../packages/simulator-core/src/person-tree.ts) | `SimPerson`, `PersonTreeSnapshot`, `personTreeToNetworkSnapshot()`, Upline-Pfade. |
+| [`packages/simulator-core/src/tree-generator.ts`](../packages/simulator-core/src/tree-generator.ts) | Jahreswachstum, Carry, Churn, Reattachment, Shopper-Counts, gewichtete Member-Aggregate ab 5.000 expliziten Personen. |
+| [`packages/simulator-core/src/network-snapshot.ts`](../packages/simulator-core/src/network-snapshot.ts) | Aggregierte Sicht aus dem Personenbaum fuer Level/Legs/Totalwerte. |
+| [`packages/simulator-core/src/contracts.ts`](../packages/simulator-core/src/contracts.ts) | Gemeinsame Simulationstypen. |
 
-```text
-Shopper:
-Ebene 1: 25 %
-Ebene 2: 10 %
-Ebene 3:  5 %
+### LifePlus-Plan und Reality-Strategien
 
-Member, erste 150 IP:
-Ebene 1:  5 %
-Ebene 2: 25 %
-Ebene 3: 10 %
+| Datei | Aktuelle Verantwortung |
+|---|---|
+| [`packages/product-lifeplus/src/tree-compensation.ts`](../packages/product-lifeplus/src/tree-compensation.ts) | LifePlus-Verguetung und Rank-State direkt auf `PersonTreeSnapshot`. |
+| [`packages/product-lifeplus/src/ranks.ts`](../packages/product-lifeplus/src/ranks.ts) | AV/QGV/QL/Bronze-/Diamond-Beine und Rangbestimmung. |
+| [`packages/simulator-realistic-growth/src/index.ts`](../packages/simulator-realistic-growth/src/index.ts) | Mapping `equal`/`dirichlet`/`momentum`/`lifecycle` auf Tree-Growth-Strategien. `equal` und `lifecycle` liefern aktuell keine Zusatzstrategie. |
 
-Member, ab 151 IP:
-Ebene 1: 10 %
-Ebene 2:  5 %
-Ebene 3:  5 %
-```
+### UI und Visualisierung
 
-Wenn eine Person in Phase 1 nicht qualifiziert ist, wird ihr Stueck an die naechste qualifizierte Upline komprimiert.
+| Datei | Aktuelle Verantwortung |
+|---|---|
+| [`simulator-app/src/App.tsx`](../simulator-app/src/App.tsx) | Reality-Strategie-Auswahl, Persistenzmigration alter Werte, Debounce fuer Detailrechnung. |
+| [`simulator-app/src/components/AdvancedSettingsPanel.tsx`](../simulator-app/src/components/AdvancedSettingsPanel.tsx) | Bietet nur `person-tree-equal`, `person-tree-random`, `person-tree-momentum` an. |
+| [`simulator-app/src/components/person-tree/person-tree-node.ts`](../simulator-app/src/components/person-tree/person-tree-node.ts) | Baut UI-Hierarchie aus `PersonTreeSnapshot`; Shopper erscheinen als `shopper-aggregate`. |
+| [`simulator-app/src/components/person-tree/PersonTreeVisualizations.tsx`](../simulator-app/src/components/person-tree/PersonTreeVisualizations.tsx) | Radial Tree, horizontales Dendrogramm, Hyperbolic-Ansicht. |
+| [`simulator-app/src/components/NetworkVisualizations.tsx`](../simulator-app/src/components/NetworkVisualizations.tsx) | Aggregierte Netzwerkansichten auf Basis der aktuellen Simulationsergebnisse. |
 
-### Phase 2
+### Tests
 
-Phase 2 ist ein Tiefenbonus ab Ebene 4 mit insgesamt 12 %. Der Pool besteht aus vier Stuecken:
+| Datei | Absicherung |
+|---|---|
+| [`tests/integration/person-tree-reality.test.ts`](../tests/integration/person-tree-reality.test.ts) | Random/Momentum laufen auf dem Personenbaum als Single Source. |
+| [`packages/simulator-core/tests/person-tree-equivalence.test.ts`](../packages/simulator-core/tests/person-tree-equivalence.test.ts) | Personenbaum liefert Aggregat-Snapshots; Churn vor Wachstum. |
+| [`packages/product-lifeplus/tests/tree-simulation.test.ts`](../packages/product-lifeplus/tests/tree-simulation.test.ts) | LifePlus-Baumverguetung. |
+| [`packages/product-lifeplus/tests/reference-rank.test.ts`](../packages/product-lifeplus/tests/reference-rank.test.ts) | Referenznetzwerke fuer Ranglogik. |
+| [`simulator-app/src/components/person-tree/person-tree-node.test.ts`](../simulator-app/src/components/person-tree/person-tree-node.test.ts) | UI-Hierarchie, Shopper-Aggregate, inaktive Personen. |
 
-```text
-Bronze-Stueck:  3 %
-Silber-Stueck:  3 %
-Gold-Stueck:    3 %
-Diamant-Stueck: 3 %
-```
+## 2a. Didaktisches Beispiel: konkrete Upline-Reihe
 
-Ein Status nimmt chronologisch alle freien Stuecke, fuer die er qualifiziert ist:
-
-```text
-Bronze  nimmt Bronze
-Silber  nimmt Bronze + Silber
-Gold    nimmt Bronze + Silber + Gold
-Diamant nimmt Bronze + Silber + Gold + Diamant
-```
-
-Beispiel:
-
-```text
-Gold > Bronze > Bronze
-```
-
-Der Gold nimmt Bronze-, Silber- und Gold-Stueck, also 9 %. Die beiden Bronze darunter gehen leer aus, weil das Bronze-Stueck bereits vergeben ist. Ein spaeterer Diamant weiter oben kann noch das freie Diamant-Stueck nehmen.
-
-### Phase 3
-
-Phase 3 ist ein Generationenbonus mit insgesamt 8 %. Der Pool besteht aus drei Stuecken:
-
-```text
-1*Diamant-Stueck: 3 %
-2*Diamant-Stueck: 3 %
-3*Diamant-Stueck: 2 %
-```
-
-Phase 3 wird ebenfalls chronologisch entlang der Upline vergeben. Ein qualifizierter Diamond nimmt aber nur ein passendes freies Stueck.
-
-Wichtig fuer die aktuelle Implementierung: Eine Person kann fuer dieselbe Order nicht gleichzeitig aus Phase 2 und Phase 3 bezahlt werden. Wenn eine Person bereits ein Phase-2-Stueck erhalten hat, wird sie bei Phase 3 uebersprungen. Das Phase-3-Stueck wird dadurch nicht verbraucht, sondern steht der naechsten qualifizierten Upline zur Verfuegung.
-
-Beispiel:
+Aus dem Original-Konzept (didaktisch wertvoll als Schaubild fuer die Verguetungs-Phasen):
 
 ```text
-Order bei Anna
-Bernd -> Cornelia -> Daniela -> Eva -> Frank -> Georg -> Heidi
+Kunde  -->  A  -->  B  -->  C  -->  Gold  -->  Bronze  -->  Bronze  -->  Diamond
+   |        |       |       |        |          |            |           |
+Shopper   Member  Member  Member   Status     Status       Status     Status
 ```
 
-Bei passender Rangfolge kann Georg das Diamant-Stueck aus Phase 2 erhalten. Georg bekommt dann nicht zusaetzlich das 1*Diamant-Stueck aus Phase 3. Das 1*Diamant-Stueck geht an Heidi, sofern Heidi dafuer qualifiziert ist.
-
-Beispiel:
-
-```text
-3*Diamant > 1*Diamant
-```
-
-Wenn der 3*Diamant zuerst kommt, nimmt er das 1*Diamant-Stueck. Der spaetere 1*Diamant geht leer aus, obwohl noch 2*Diamant- und 3*Diamant-Stuecke frei sind, weil er dafuer nicht qualifiziert ist.
-
-## Vorschlag A: Lineage-Engine Neben Der Simulation
-
-Vorschlag A ist jetzt umgesetzt.
-
-Die Idee: Fuer konkrete Beispielrechnungen gibt es eine eigene API, die eine Reihe von Personen vom Kunden aus nach oben verarbeitet. Diese API nutzt dieselbe Slot-Logik wie die Simulation, bleibt aber unabhaengig von der statistischen Wachstumssimulation.
-
-### Code-Struktur
-
-```text
-packages/product-lifeplus/src/payout-slots.ts
-packages/product-lifeplus/src/example-line.ts
-packages/product-lifeplus/tests/example-line.test.ts
-simulator-app/src/components/lineage/LineageView.tsx
-simulator-app/src/components/lineage/LineageChain.tsx
-simulator-app/src/components/lineage/LineagePersonCard.tsx
-simulator-app/src/components/lineage/PersonActionSheet.tsx
-simulator-app/src/components/lineage/OrderSheet.tsx
-simulator-app/src/components/lineage/StatusPickerSheet.tsx
-simulator-app/src/components/lineage/defaultTeam.ts
-simulator-app/src/components/lineage/rankStats.ts
-```
-
-`payout-slots.ts` enthaelt die wiederverwendbare Kernlogik:
-
-```text
-allocatePhase2Slots()
-allocatePhase3Slots()
-allocatePhase2SlotRates()
-allocatePhase3SlotRates()
-normalizeRankName()
-phase2SlotCount()
-phase3SlotCount()
-```
-
-`example-line.ts` enthaelt die konkrete Beispielrechnungs-API:
-
-```text
-calculateExampleLine()
-```
-
-Die Eingabe ist eine Reihe von Personen, naechste Upline zuerst:
-
-```ts
-calculateExampleLine({
-  order: { kind: 'member_order', ip: 1000 },
-  peopleFromCustomerUp: [
-    { id: 'a', name: 'A', rank: 'Member' },
-    { id: 'b', name: 'B', rank: 'Member' },
-    { id: 'c', name: 'C', rank: 'Member' },
-    { id: 'gold', name: 'Gold', rank: 'Gold' },
-    { id: 'bronze', name: 'Bronze', rank: 'Bronze' },
-    { id: 'diamond', name: 'Diamond', rank: 'Diamond' },
-  ],
-});
-```
-
-Die Ausgabe ist eine Liste von Payout-Zeilen:
-
-```text
-Phase
-Person
-Rang
-Ebene zum Kunden
-Kuchenstueck
-Rate
-Basis-IP
-Betrag-IP
-Notiz
-```
-
-Diese Ausgabe ist bewusst visualisierbar. Eine UI kann daraus Tabellen, Linien, Kuchenstuecke oder Tooltips bauen.
-
-### Aktueller UI-Stand: Verguetungsplan-Ansicht
-
-Die App hat neben `Chart` und `Network` eine dritte Sektion:
-
-```text
-Verguetungsplan
-```
-
-Diese Ansicht ist aktuell Mode B: Der Status jeder Person wird manuell gesetzt und als qualifiziert angenommen. Die Ansicht dient damit nicht der Wachstumssimulation, sondern der erklaerenden Beispielrechnung.
+Lesart: Eine Reihe konkret benannter Personen mit Status laesst sich verwenden, um die LifePlus-Phasen-Auszahlung (Phase 1 Unilevel ueber Ebene 1-3, Phase 2 Tiefenbonus ab Ebene 4 mit Bronze-/Silber-/Gold-/Diamant-Stuecken, Phase 3 dynamische Tiefenstaffel) manuell durchzuspielen. Im aktuellen Code lebt diese Logik in `packages/product-lifeplus/src/tree-compensation.ts` und wird ueber Referenznetzwerk-Tests (`packages/product-lifeplus/tests/example-line.test.ts`, `reference-rank.test.ts`) abgesichert.
 
-Der Default-Aufbau stammt aus der Skizze:
-
-```text
-Anna      Member
-Bernd     Believer
-Cornelia  Builder
-Daniela   Bronze
-Eva       Silber
-Frank     Gold
-Georg     Diamant
-Heidi     1* Diamant
-Ingo      2* Diamant
-Katrin    3* Diamant
-Ludwig    4* Diamant
-Maria     7* Diamant
-Du        Wurzel / Betrachter
-```
+Diese Skizze ist als Lehrmaterial nuetzlich, aber kein zweiter Berechnungspfad. Aggregat-Pfad und konkrete Beispielreihen-Pfad wurden im Cleanup R2/R5/R6 verworfen — Single Source ist der Personenbaum.
 
-In der UI wird eine Order nicht als abstrakter Kunde unterhalb der Linie eingegeben, sondern an einer konkreten Person platziert. Beispiel: Wird die Order bei Anna gesetzt, dann ist Bernd Ebene 1, Cornelia Ebene 2, Daniela Ebene 3 usw. Intern wird dafuer `people.slice(customerIndex + 1)` an `calculateExampleLine()` uebergeben.
+## 3. Was aus dem alten Konzept weiter gilt
 
-Aktuelle Bedienung:
+- **Phasen 1 bis 3 bleiben fachlich relevant.** Sie sind aber nicht mehr als separater Aggregatpfad fuehrend, sondern in `packages/product-lifeplus/src/tree-compensation.ts` umgesetzt.
+- **Kompression auf qualifizierte Upline** bleibt Teil der Phase-1-Auszahlung.
+- **Rangtreppe** lebt im Product-Pack, nicht mehr in diesem Dokument.
+- **Beispielreihen** sind nur noch historischer Begruendungsspeicher oder Testfixture-Material. Sie sind kein zweiter Berechnungspfad.
+- **Aggregierte Level- und Beinwerte** existieren weiterhin, aber als Ableitung aus `personTreeToNetworkSnapshot()`, nicht als eigene Source of Truth.
 
-```text
-Person antippen:
-  - Status setzen
-  - Order setzen / Order aendern
-  - + Person darueber
-  - - Person loeschen
-  - Order loeschen, falls diese Person die Order traegt
+## 4. Was nicht mehr gilt
 
-Oben in der Ansicht:
-  - Order loeschen, sobald eine Order gesetzt ist
+| Alte Aussage / Richtung | Aktueller Stand |
+|---|---|
+| Aggregatpfad als produktiver Wachstumsweg | Entfernt/obsolet; Personenbaum ist Quelle. |
+| `standard` als Runtime-Modus | Nicht mehr im `SimulationMode`-Union. Alte Persistenzwerte werden in der App auf `person-tree-equal` migriert. |
+| Shopper als eigene Personen | Entfernt aus `SimPersonKind`; Shopper sind `shopperCount` am Sponsor/Member. |
+| Separate Beispielrechnungen neben Simulation | Falls noch wertvoll, als Tests/Fixtures pflegen. |
+| Doku als fachlicher Master fuer Rang-Badges | Rang-/Badge-Logik liegt in Code und Tests; siehe `Rank-Badges.md`. |
 
-Unter der Personenliste:
-  - KPIs einblenden (GV, AV, QL, SH)
-```
+## 5. Kritische Modellgrenzen
 
-Die KPI-Zeile ist bewusst optional. Im MVP ist der Rang die Single Source of Truth; `rankStats.ts` liefert nur erklaerende Pseudo-Stats fuer die Anzeige.
+Diese Grenzen muessen in Folge-Doku und UI-Wording sichtbar bleiben:
 
-Die rechte Spalte zeigt nur noch die Phasen-Summen:
+1. **Weighted Member Aggregates:** Bei sehr grossen Baeumen erzeugt `tree-generator.ts` gewichtete Member-Knoten (`weight > 1`), sobald mehr als 5.000 explizite Personen entstehen wuerden. Das ist kein Rueckfall zum alten Aggregatpfad, aber eine Performance-Kompression innerhalb des Personenbaums.
+2. **Shopper als Float:** Shopper koennen Dezimalwerte haben. UI-Knoten vom Typ `shopper-aggregate` sind Darstellung, keine Strukturpersonen.
+3. **Direct-Cap-Semantik:** `maxDirectMembersPerMember` begrenzt Neu-Rekrutierung. Durch Reattachment nach Churn kann die direkte Beinanzahl trotzdem steigen.
+4. **Churn-Reihenfolge:** Member-Churn passiert vor neuem Wachstum; neue Members des laufenden Jahres werben erst im Folgejahr.
+5. **Reality-Strategien veraendern Struktur, nicht nur Optik:** Momentum kann durch fruehere ganze Members in starken Beinen andere Endwerte erzeugen als Gleichverteilung.
+6. **`lifecycle` ist Platzhalter:** Im Low-Level-Strategiepaket vorhanden, aber in der UI nicht auswaehlbar und aktuell ohne eigene Growth-Strategie.
 
-```text
-Phase 1
-Phase 2
-Phase 3
-Gesamt
-Gesamtanteil
-```
+## 6. Offene Punkte fuer Doku-/Code-Hygiene
 
-Die konkrete Slot-Erklaerung steht direkt an der jeweiligen Person. Beispiele:
+| Punkt | Empfehlung |
+|---|---|
+| `growth_models/01-Zielarchitektur.md` enthaelt noch historisch ueberholte Drift-Abschnitte. | Nicht blind als aktuellen Master zitieren; bei naechstem Cleanup Statusupdate in den betroffenen Abschnitten nachziehen. |
+| Original `Netzwerk-Modellierung.md` ist lang und historisch. | Erst nach Stichproben loeschen oder kuerzen, wenn keine einzigartigen Begruendungen fehlen. |
+| UI-Hinweis fuer Compressed Mode fehlt wahrscheinlich noch. | Als Produkt-/UX-Entscheidung fuehren, sobald grosse Szenarien relevant werden. |
+| Tooltip fuer Direct-Cap/Reattachment bleibt wichtig. | In Growth-Doku oder UI-Copy konkretisieren. |
+| Tests koennen staerker als Doku-Master dienen. | Referenznetzwerke und Invarianten in `Referenznetzwerk-Tests`/Tests halten, nicht in Fliesstext verdoppeln. |
 
-```text
-3% B, 3% S, 3% G
-3% D
-3% 1*-Dia
-3% 2*-Dia
-2% 3*-Dia
-```
+## 7. Empfehlung
 
-Damit ist die Ansicht auf Touch-Bedienung optimiert: keine Hover-Abhaengigkeit, kein Drag-and-drop, keine kleinen Tabellen als primaerer Interaktionspunkt.
+Dieses Dokument sollte nicht als neuer fachlicher Master ausgebaut werden. Besser:
 
-### Aktuelle Testabdeckung
+- Originaldatei auf historischen Snapshot reduzieren oder loeschen,
+- diese aktualisierte Fassung als kurze Review-/Uebergangsfassung nutzen,
+- aktuelle Regeln in `growth_models/02` und `03` halten,
+- exakte Fachlogik in Code und Tests verankern.
 
-Die Beispielrechnungen sind in `packages/product-lifeplus/tests/example-line.test.ts` abgesichert. Neben Normalisierung von `n*Diamant` und Phase-1-Kompression gibt es einen expliziten Test fuer die Ein-Phase-Regel:
+Loeschung der Originaldatei ist erst sinnvoll, wenn ein Review konkret bestaetigt:
 
-```text
-Eine Person erhaelt fuer dieselbe Order nicht gleichzeitig Phase 2 und Phase 3.
-```
+- [ ] **V1 Aggregat-vs-Personenbaum-Begruendung** ist in `growth_models/03-Benchmark-Status-B1-B2.md` §1-2 erhalten (B1-Q Driftbefund, B2 Shopper-Konsolidierung).
+- [ ] **V2 Beispielreihen** sind entweder unwichtig (z. B. nur als Doku-Schaubild) oder als Testfixtures in `packages/product-lifeplus/tests/example-line.test.ts` oder `reference-rank.test.ts` uebernommen.
+- [ ] **V3 Historische Prozent-/Ranghinweise** (Phase 1: 25/10/5, 5/25/10, 10/5/5; Phase 2: Bronze/Silber/Gold/Diamant je 3 %) sind durch Product-Pack-Code in `packages/product-lifeplus/src/tree-compensation.ts` und `constants.ts` plus Tests abgedeckt.
+- [ ] **V4 Kompressionsregel** (nicht qualifizierte Upline wird uebersprungen) ist in `tree-compensation.ts` implementiert und durch `example-line.test.ts` getestet.
+- [ ] **V5 Status-Treppe** (Bronze nimmt Bronze; Silber nimmt Bronze+Silber; Gold nimmt Bronze+Silber+Gold; Diamant nimmt alle vier) ist in `ranks.ts`/`constants.ts` und Tests verankert.
 
-Der konkrete Referenzfall:
+Erst wenn alle fuenf Checkboxen sicher als erledigt markiert sind, ist die Loeschung der Originaldatei verantwortbar. Bis dahin bleibt sie als Begruendungsspeicher.
 
-```text
-Order bei Anna
-Bernd -> Cornelia -> Daniela -> Eva -> Frank -> Georg -> Heidi
+## Anhang: Historischer Kontext
 
-Georg:
-  bekommt 3% Diamant-Stueck aus Phase 2
-  bekommt kein 1*Diamant-Stueck aus Phase 3
+Original-Datei: [`Netzwerk-Modellierung.md`](./Netzwerk-Modellierung.md), Stand 2026-05-27/-28.
 
-Heidi:
-  bekommt 3% 1*Diamant-Stueck aus Phase 3
-```
+Historischer Inhalt:
 
-### Sinn Und Zweck
+- Phase-1- bis Phase-3-Beschreibung der LifePlus-Verguetungslogik.
+- Beispiel-Upline-Reihen wie `Kunde -> A -> B -> C -> Gold -> Bronze -> Bronze -> Diamond`.
+- Modell-Vorschlag: Aggregatpfad fuer Wachstum, konkrete Personenreihen fuer Beispielrechnungen.
+- Vorstufe der spaeteren Personenbaum-Migration.
 
-Vorschlag A loest drei direkte Probleme:
+Bei Abweichungen zwischen Originaldatei und aktuellem Code/Dokumentationsstand gilt:
 
-1. **Musterrechnungen zeigen**
-   Jede Beispielrechnung aus Excel oder Schulungsunterlagen kann als konkrete Linie modelliert werden.
-
-2. **Logik testen**
-   Dieselbe Linie kann in einem Unit-Test stehen. Wenn sich die Verguetungslogik aendert, schlagen die Tests sofort an.
-
-3. **Simulation entlasten**
-   Die bestehende Wachstumssimulation muss nicht sofort zu einem echten Personenbaum umgebaut werden.
-
-### Vorteile
-
-- Kleiner, risikoarmer Umbau.
-- Sehr gut testbar.
-- Sehr gut fuer Visualisierungen geeignet.
-- Wiederverwendung der echten Slot-Logik.
-- Excel-Musterrechnungen koennen schrittweise als Tests uebernommen werden.
-- Keine grosse Migration der bestehenden UI- und Simulationsdaten noetig.
-
-### Nachteile
-
-- Die Wachstumssimulation bleibt weiterhin aggregiert.
-- Ohne explizite Beispiel-Linie kann die Simulation Personenstatus in der Tiefe nur schaetzen.
-- Beispielrechnungen und Simulation verwenden dieselbe Verguetungslogik, aber nicht dasselbe Netzwerkdatenmodell.
-- Komplexe echte Teamstrukturen muessen als Linien oder mehrere Linien abgebildet werden, nicht als vollstaendiger Baum.
-
-### Grenzen
-
-Vorschlag A ist ideal fuer:
-
-- einzelne Umsatzlinien,
-- Schulungsbeispiele,
-- Testfaelle,
-- erklaerende Visualisierungen,
-- Nachbau der Tabs `Musterrechnungen` und `echtes Team Beispiel`.
-
-Vorschlag A ist weniger ideal fuer:
-
-- echte Teamverwaltung,
-- vollstaendige Downline-Analyse,
-- mehrere parallele Bestellungen in vielen Aesten,
-- exakte Berechnung eines gesamten realen Baums.
-
-## Vorschlag B: Einheitliches Personenbaum-Modell
-
-### Umsetzungsstand
-
-Der Personenbaum ist fuer die Hauptsimulation inzwischen die primaere Quelle.
-`runSimulation()` erzeugt zuerst einen `PersonTreeSnapshot` und leitet daraus die
-bisherigen Aggregat-Strukturen (`membersByLevel`, `shoppersByLevel`, `legs`) ab.
-Damit bleiben bestehende Charts und Tabellen nutzbar, aber die fachliche Wahrheit
-liegt im Personenbaum.
-
-Relevante Dateien:
-
-```text
-packages/simulator-core/src/person-tree.ts
-packages/simulator-core/src/tree-generator.ts
-packages/simulator-core/src/simulation.ts
-packages/simulator-core/tests/person-tree-equivalence.test.ts
-tests/integration/person-tree-reality.test.ts
-packages/product-lifeplus/src/tree-compensation.ts
-packages/product-lifeplus/src/tree-simulation.ts
-packages/product-lifeplus/tests/tree-simulation.test.ts
-simulator-app/src/App.tsx
-simulator-app/src/components/NetworkVisualizations.tsx
-```
-
-Der Pfad kann aus Szenario-Parametern echte, gewichtete Personen-Knoten erzeugen,
-diese wieder in die bestehenden `MonthResult`-/Chart-Strukturen adaptieren und
-LifePlus-Bestellungen entlang echter Uplines berechnen.
-
-Aktueller Stand:
-
-```text
-1. Standard-Simulation: Personenbaum ist Single Source of Truth.
-2. Reality-Strategien dirichlet/momentum: laufen als Tree-Strategien pro werbender Person.
-3. App-Hauptpfad: nutzt `result.personYearEnds` statt einer zweiten Tree-Simulation.
-4. Projektionen: bestehende Charts, Tabellen und Netzwerkansichten lesen weiterhin die abgeleiteten Aggregatwerte.
-5. Legacy-Aggregatpfad: `simulateNetwork()` und `GrowthModulator` existieren noch fuer bestehende Tests und als Rueckfall-/Vergleichsebene.
-```
-
-Noch offen:
-
-```text
-1. Per-Person-Provision in allen Visualisierungen aus `tree-compensation`.
-2. Vollstaendig klickbare Personen-/Cluster-Visualisierung im Sunburst.
-3. Performance-Optimierung fuer sehr grosse Personenbaeume.
-4. Aufraeumen des alten Aggregatpfads, sobald alle Views und Tests stabil auf dem Baum laufen.
-```
-
-Die wichtigste technische Regel ist damit: Aggregatdaten sind nur noch Projektion,
-nicht mehr Ursprung der Simulation.
-
-Vorschlag B ist die langfristig fachlich staerkere Variante. Dabei wuerde die gesamte Simulation nicht mehr primaer mit aggregierten Ebenen arbeiten, sondern mit echten Personen-/Knotenstrukturen.
-
-### Moegliches Datenmodell
-
-```ts
-interface NetworkPerson {
-  id: string;
-  sponsorId?: string;
-  name?: string;
-  rank: string;
-  avIP?: number;
-  qgvIP?: number;
-  qualifiedLegs?: number;
-  orders: NetworkOrder[];
-  children: NetworkPerson[];
-}
-
-interface NetworkOrder {
-  id: string;
-  personId: string;
-  kind: 'shopper' | 'member_order';
-  ip: number;
-}
-```
-
-Dann koennte jede Bestellung entlang ihrer echten Upline berechnet werden:
-
-```text
-Bestellung -> Sponsor -> Sponsor -> Sponsor -> ...
-```
-
-Phase 1, Phase 2 und Phase 3 wuerden fuer jede Bestellung aus derselben Upline-Struktur berechnet.
-
-### Sinn Und Zweck
-
-Vorschlag B waere sinnvoll, wenn die App spaeter nicht nur Szenarien simuliert, sondern echte oder detailliert modellierte Teams abbildet:
-
-- echte Downline importieren,
-- einzelne Personen anklicken,
-- konkrete Bestellungen simulieren,
-- Verguetung je Person und je Linie erklaeren,
-- Teamstruktur und Rangentwicklung exakt nachrechnen.
-
-### Vorteile
-
-- Fachlich am saubersten.
-- Jede Zahlung ist vollstaendig nachvollziehbar.
-- Phase-1-Kompression kann exakt entlang der echten Upline laufen.
-- Phase-2- und Phase-3-Stuecke koennen exakt pro Bestellung vergeben werden.
-- Bessere Grundlage fuer echte Team-Visualisierung.
-- Weniger Schaetzung in tiefen Ebenen.
-
-### Nachteile
-
-- Deutlich groesserer Umbau.
-- Wachstumssimulation muss kuenstliche Personen erzeugen statt nur Level-Zahlen.
-- Mehr Datenvolumen.
-- Mehr Performance-Fragen bei grossen Netzwerken.
-- UI-Komponenten, Charts und Zusammenfassungen muessen angepasst werden.
-- Rangberechnung wird komplexer, weil jeder Knoten seinen eigenen Subtree braucht.
-
-### Technische Risiken
-
-- Grosse simulierte Netzwerke koennen sehr viele Knoten erzeugen.
-- Fluktuation und Compression muessen auf Personenebene definiert werden.
-- Zufalls-/Realistic-Growth-Strategien muessen Personen statt Levelwerte modulieren.
-- Bestehende Tests fuer aggregierte Level muessen umgebaut oder parallel gehalten werden.
-
-### Migrationspfad Zu Vorschlag B
-
-Vorschlag A ist bewusst so gebaut, dass er spaeter in Vorschlag B aufgehen kann.
-
-Der urspruengliche Pfad war:
-
-1. **Slot-Engine stabilisieren**
-   `payout-slots.ts` bleibt die zentrale Regel fuer Phase 2 und Phase 3.
-
-2. **Beispielrechnungen aus Excel als Tests erfassen**
-   Die bekannten Muster werden zuerst als konkrete Linien abgesichert.
-
-3. **Lineage-API erweitern**
-   `calculateExampleLine()` kann spaeter mehr Qualifikationsdaten aufnehmen: AV, QGV, QL, echte Phase-1-Qualifikation.
-
-4. **Personenbaum als neues Modell einfuehren**
-   Zunaechst parallel zum alten `NetworkSnapshot`.
-
-5. **Adapter bauen**
-   Aus einem Personenbaum koennen weiterhin `membersByLevel`, `shoppersByLevel` und `legs` fuer bestehende UI-Komponenten erzeugt werden.
-
-6. **Simulation optional auf Personenbaum umstellen**
-   Erst wenn Tests und UI stabil sind, wird die Wachstumssimulation selbst umgebaut.
-
-Aktuell erledigt:
-
-```text
-- Schritt 4 ist umgesetzt.
-- Schritt 5 ist umgesetzt.
-- Schritt 6 ist fuer den Hauptpfad umgesetzt: `runSimulation()` nutzt den Personenbaum.
-- Standard, Zufallsverteilung und Momentum erzeugen alle einen Personenbaum.
-```
-
-Die naechsten sinnvollen Schritte:
-
-```text
-1. `calculateTreeCompensation` an die Hauptsimulation anbinden, damit Provisionen pro Person sichtbar werden.
-2. Sunburst/Bein-Spalten konsequent aus Personen-/Cluster-Knoten rendern.
-3. Alte Aggregat-Reality-Strategien nur noch als Vergleichstests halten oder entfernen.
-4. Bei grossen Netzwerken Clustering und sichtbare Ebenen einfuehren.
-```
-
-## Empfehlung
-
-Vorschlag A bleibt fuer Beispielrechnungen und den Verguetungsplan-Editor sinnvoll.
-Fuer die Simulation selbst ist Vorschlag B jetzt die fuehrende Architektur:
-ein Personenbaum, daraus Projektionen fuer Charts und Visualisierungen.
-
-Die wichtigste Architekturregel bleibt:
-
-```text
-Verguetungslogik gehoert in wiederverwendbare Domain-Funktionen.
-UI, Simulation und Beispielrechnungen duerfen diese Logik nutzen,
-aber nicht jeweils eigene Provisionsregeln nachbauen.
-```
+1. Code und Tests,
+2. `growth_models/02-Wachstums-und-Churn-Regeln.md`,
+3. `growth_models/03-Benchmark-Status-B1-B2.md`,
+4. dieses Review-Dokument,
+5. historische Originaldatei.

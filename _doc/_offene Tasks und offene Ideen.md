@@ -2,8 +2,8 @@
 
 **Stand:** 2026-06-10
 **Status:** Ideenspeicher / Backlog. Keine fuehrende Produkt-/Architekturdoku, sondern Sammelort fuer Konzepte, die noch nicht im Code stehen, plus offene Drift gegen den Ist-Code.
-**Scope:** Konsolidiert die Inhalte der frueheren Phase-7-Eintraege **F01** (Freemium-Modell), **F02** (Freemium in der App / Capability-Schicht) und **F03** (Kundenlinks und Szenario-Freigabe). Diese drei sind hier fuehrend; ihre Originaldateien und `_updated.md` bleiben als historischer Kontext erhalten.
-**Quellen:** [`Freemium-Modell.md`](./Freemium-Modell.md), [`Freemium-Modell_updated.md`](./Freemium-Modell_updated.md), [`Freemium-Modell_Applikation.md`](./Freemium-Modell_Applikation.md), [`Konzept Kundenlinks und Szenario-Freigabe.md`](./Konzept%20Kundenlinks%20und%20Szenario-Freigabe.md), [`Konzept Kundenlinks und Szenario-Freigabe_updated.md`](./Konzept%20Kundenlinks%20und%20Szenario-Freigabe_updated.md).
+**Scope:** Konsolidiert die Inhalte der frueheren Phase-7-Eintraege **F01** (Freemium-Modell), **F02** (Freemium in der App / Capability-Schicht) und **F03** (Kundenlinks und Szenario-Freigabe). Diese drei sind hier fuehrend; ihre Originaldateien und `.md` bleiben als historischer Kontext erhalten.
+**Quellen:** [`Freemium-Modell.md`](./Freemium-Modell.md), [`Freemium-Modell.md`](./Freemium-Modell.md), [`Freemium-Modell_Applikation.md`](./Freemium-Modell_Applikation.md), [`Konzept Kundenlinks und Szenario-Freigabe.md`](./Konzept%20Kundenlinks%20und%20Szenario-Freigabe.md), [`Konzept Kundenlinks und Szenario-Freigabe.md`](./Konzept%20Kundenlinks%20und%20Szenario-Freigabe.md).
 **Pflegeregel:** Eine Idee ist hier korrekt, wenn (a) sie noch nicht produktiv im Code ist und (b) sie nicht in einem fuehrenden Architektur-/Runbook-Dokument bereits anders entschieden wurde. Bei Konflikt gilt der Code; dann wird der Eintrag hier als *abgeschlossen* oder *abgeloest durch <Master>* markiert.
 
 ## 0. Inhalt
@@ -745,7 +745,7 @@ Eine statisch gerenderte Astro-Seite ohne API-Resolve ist fuer dieses Feature un
 
 ## 4. Bug-Tickets (aus Phase-7-Updated-Reviews)
 
-Diese Bugs wurden waehrend Phase 7 in den `*_updated.md`-Dokumenten als reale Code-Drift identifiziert. Sie sind hier zentral gesammelt, damit sie nicht in den Updated-Dokumenten versanden.
+Diese Bugs wurden waehrend Phase 7 in den `*.md`-Dokumenten als reale Code-Drift identifiziert. Sie sind hier zentral gesammelt, damit sie nicht in den Updated-Dokumenten versanden.
 
 | ID | Quelle | Schweregrad | Datei / Code | Befund | Vorschlag |
 |---|---|---|---|---|---|
@@ -766,9 +766,9 @@ Diese Bugs wurden waehrend Phase 7 in den `*_updated.md`-Dokumenten als reale Co
 
 ## 5. Verwandte Dokumente
 
-- [`Konzept Paddle-Integration und App-Architektur_updated.md`](./Konzept%20Paddle-Integration%20und%20App-Architektur_updated.md) — Architektur-Master fuer Auth, Webhook, Entitlements.
+- [`Konzept Paddle-Integration und App-Architektur.md`](./Konzept%20Paddle-Integration%20und%20App-Architektur.md) — Architektur-Master fuer Auth, Webhook, Entitlements.
 - [`paddle_checkout/checkout-billing-runbook-b2b-v6-1.md`](./paddle_checkout/checkout-billing-runbook-b2b-v6-1.md) — operatives Checkout-/Billing-Runbook.
 - [`paddle_checkout/lifeplus_checkout_legal_review_B2B_only.md`](./paddle_checkout/lifeplus_checkout_legal_review_B2B_only.md) — rechtlicher Pivot B2B-only.
 - [`go-live/go-live-content-legal-checklist.md`](./go-live/go-live-content-legal-checklist.md) — Go-Live-Pflichtcheckliste.
-- [`Webcontent & Value Proposition_updated.md`](./Webcontent%20%26%20Value%20Proposition_updated.md) — Marketing-Wording-Master.
-- [`reviews/2026-06-10-phase-7-review.md`](./reviews/2026-06-10-phase-7-review.md) — Phase-7-Abschluss-Review (Mapping je F-ID).
+- [`Webcontent & Value Proposition.md`](./Webcontent%20%26%20Value%20Proposition.md) — Marketing-Wording-Master.
+- Phase-7-Konsolidierungs-History (Mapping je F-ID, Bug-Befunde, Review-Trail): konsolidiert in §4 dieses Dokuments; Volltext-Reviews liegen in der Git-Historie unter `_doc/reviews/2026-06-10-*`.

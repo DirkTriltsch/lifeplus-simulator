@@ -1,164 +1,227 @@
-# Referenznetzwerk-Tests fuer Verguetungsplaene
+# Referenznetzwerk-Tests
 
-**Stand:** 2026-05-28 (Datei-Mtime; Inhalt seitdem nicht mit `packages/*/tests` und `tests/integration` abgeglichen)
-**Status:** in Ueberarbeitung — Phase 7 Update Leading Documents (F06)
-**Scope:** Test-Konvention fuer Verguetungsplaene aller Brands (LifePlus, FitLine, Eqology).
+**Stand:** 2026-06-10  
+**Status:** fuehrend (Test-Konvention und aktuelle Test-Matrix).  
+**Scope:** Konvention und aktuelle Test-Matrix fuer Verguetungslogik, Personenbaum, Reality-Strategien, UI-Baumdarstellung und Checkout-Smokes.  
+**Vorgaenger:** Konzeptstand 2026-05-28 wurde am 2026-06-10 in diese Datei konsolidiert; Volltext in der Git-Historie.
 
-Dieses Dokument schreibt vor, wie Verguetungsplaene jedes Brands getestet werden. Es ist verbindlich fuer neue Produkte (z. B. `product-fitline`, `product-eqology`), nicht nur fuer LifePlus.
+## 0. Kritisches Review dieses Updates
 
-## Warum Referenznetzwerke
+Die bisherige Fassung war in der Grundidee richtig, hatte aber mehrere fachliche Unschaerfen:
 
-Simulationstests (Slider → erwartete Provision in 10 Jahren) beantworten die Frage:
+1. **`person-tree-equivalence.test.ts` war falsch beschrieben.** Der Test prueft Personenbaum-Snapshots und Churn-Reihenfolge, nicht die Equivalenz verschiedener Reality-Strategien.
+2. **Checkout-API-Tests gehoeren nicht in dieselbe Kategorie wie Referenznetzwerke.** Sie sind Playwright/API-Smokes mit externen Laufbedingungen und separatem Script `npm run test:checkout-api`, nicht Vitest-Referenztests.
+3. **"Ein Test prueft entweder Rang oder Auszahlung" war zu absolut.** Als Regel fuer lesbare Referenztests ist das gut; Integrations-/Regressionstests duerfen bewusst Struktur, Rang und Auszahlung zusammen pruefen.
+4. **FitLine/Eqology waren zu optimistisch eingeordnet.** Aktuell haben sie Product-Pack-Smokes mit shared placeholder plan, aber keine eigenen fachlichen Referenznetzwerke.
+5. **Der Fixture-Helper wurde nur indirekt bestaetigt.** `packages/product-lifeplus/tests/helpers/tree-fixture.ts` existiert und ist die aktuelle DSL fuer handgebaute LifePlus-Netzwerke.
 
-> "Waechst das Modell plausibel?"
+## 1. Testklassen und Zweck
 
-Sie beantworten **nicht** die Frage:
+Verguetungs- und Simulationslogik wird heute in mehreren Testklassen abgesichert:
 
-> "Berechnet die Engine fuer ein bekanntes Netzwerk exakt das Richtige?"
+| Testklasse | Zweck | Typische Dateien |
+|---|---|---|
+| Referenznetzwerk | Handgebautes Netzwerk -> exakter Rang, QGV, Legs oder Auszahlung. | `reference-rank.test.ts`, Teile von `tree-simulation.test.ts`. |
+| Simulationsregression | Slider-/Input-Szenario -> plausibles Personenbaum-/Netzwerkergebnis. | `engine.test.ts`, `tree-simulation.test.ts`, `person-tree-equivalence.test.ts`. |
+| Reality-Strategie | Random/Momentum/equal laufen auf Personenbaum und bleiben deterministisch/strukturwirksam. | `person-tree-reality.test.ts`, `dirichlet.test.ts`, `momentum.test.ts`, `rng.test.ts`. |
+| Product-Pack-Contract | Product-Pack erfuellt gemeinsame Simulator-Schnittstelle. | `tests/contracts/product-pack.test.ts`, `packages/product-*/tests/product.test.ts`. |
+| UI-Struktur | Personenbaum-/Sunburst-Knoten, Shopper-Aggregate, inaktive Personen. | `simulator-app/src/components/**/*.test.ts`. |
+| API-Smoke | Deployed/local API gegen Checkout-/Paddle-Flow pruefen. | `tests/api/checkout-api.spec.ts` via Playwright. |
+| Benchmark | Performance-Profiling, standardmaessig nicht im normalen Testlauf. | `profile-sim.test.ts` mit `describe.skip`. |
 
-Diese zweite Frage ist die wichtige. Verguetungs-Bugs treten typischerweise dort auf, wo Slider-Tests keine Sensitivitaet haben:
+Leitprinzip: Fachliche Plan-Eigenschaften brauchen mindestens einen lesbaren Test, der das relevante Netzwerk direkt erkennen laesst. Lange Doku-Tabellen sind kein Ersatz fuer Fixtures.
 
-- Raenge knapp an der Schwelle (z. B. n*Diamond-Staffel)
-- Bronze-/Diamond-Bein-Zaehlung bei gewichteten Knoten
-- Auto-AV-Bestimmung in tiefen Linien
-- Phase-2/3-Slot-Verteilung bei gemischter Upline
-- Shopper-Beine, die irrtuemlich als qualifiziert zaehlen
+### Hierarchie der Testklassen
 
-Genau dafuer sind Referenznetzwerke da: ein **handgebautes, lesbares Netzwerk**, dessen erwartetes Ergebnis ein Mensch verifizieren kann.
+```text
+              API-Smoke (Playwright, langsam, deployed/local)
+              ┌─────────────────────────────────────────────┐
+              │  tests/api/checkout-api.spec.ts             │
+              └─────────────────────────────────────────────┘
+                                  ▲
+                                  │
+         Integration (Vitest, mittel, repo-uebergreifend)
+         ┌────────────────────────────────────────────────┐
+         │  tests/integration/person-tree-reality.test.ts │
+         │  tests/contracts/product-pack.test.ts          │
+         └────────────────────────────────────────────────┘
+                                  ▲
+                                  │
+    Unit / Referenznetzwerk (Vitest, schnell, paketlokal)
+    ┌──────────────────────────────────────────────────────┐
+    │  packages/product-lifeplus/tests/reference-rank.ts   │
+    │  packages/product-lifeplus/tests/example-line.ts     │
+    │  packages/product-lifeplus/tests/tree-simulation.ts  │
+    │  packages/simulator-core/tests/*                     │
+    │  packages/simulator-realistic-growth/tests/*         │
+    │  simulator-app/src/**/*.test.ts                      │
+    └──────────────────────────────────────────────────────┘
+```
 
-## Verantwortlichkeit pro Test
+Pyramide: viele Unit/Referenztests, weniger Integration, sehr wenige API-Smokes. Referenznetzwerk-Tests sind Unit-Tests mit fachlicher Lesbarkeit; sie ersetzen keinen Integrationstest, machen aber die Plan-Logik durchsuchbar.
 
-Ein Test darf nur **eine** fachliche Eigenschaft pruefen. Konkret heisst das: trenne Rang-Tests von Auszahlungs-Tests.
+## 2. Aktuelle Test-Matrix
 
-| Datei                       | Prueft                                | Bricht, wenn                          |
-|-----------------------------|---------------------------------------|----------------------------------------|
-| `reference-rank.test.ts`    | Rangbestimmung, QGV, qualifizierte/Bronze/Diamond-Beine, Auto-AV | Rang-Logik kaputt                   |
-| `reference-payout.test.ts`  | Phase-1/2/3-Auszahlung (EUR pro Bestellung, pro Empfaenger) | Slot-Allokator oder Raten verschoben |
+### Repo-uebergreifend
 
-**Nicht** beides im selben Test mischen. Sonst bricht der Rang-Test bei jeder Rate-Aenderung in `constants.ts`, und niemand weiss, ob die Engine kaputt ist oder nur die erwarteten Betraege veraltet.
+| Datei | Verantwortung | Einordnung |
+|---|---|---|
+| [`tests/integration/person-tree-reality.test.ts`](../tests/integration/person-tree-reality.test.ts) | Random/Momentum auf dem Personenbaum; Single-Source-Truth; Momentum-Asymmetrie. | Integration / Reality. |
+| [`tests/contracts/product-pack.test.ts`](../tests/contracts/product-pack.test.ts) | Alle registrierten Product-Packs koennen `runSimulation()` ausfuehren und haben eindeutige IDs/Domains. | Contract-Smoke, keine fachliche Referenz. |
+| [`tests/api/checkout-api.spec.ts`](../tests/api/checkout-api.spec.ts) | B2B-v6.1 Checkout-API gegen deployed/local API; read-only und optional write sandbox. | Playwright/API, nicht Vitest-Referenznetzwerk. |
+| [`tests/api/README.md`](../tests/api/README.md) | Laufanleitung fuer Checkout-Smokes. | Operative Testdoku. |
 
-## Quelle der Wahrheit: das Fixture
+### `packages/simulator-core`
 
-Ein Referenznetzwerk wird als geschachteltes JS-Objekt aufgebaut, mit sprechenden IDs und einer kleinen Helper-DSL. Beispiel:
+| Datei | Verantwortung | Einordnung |
+|---|---|---|
+| [`packages/simulator-core/tests/person-tree-equivalence.test.ts`](../packages/simulator-core/tests/person-tree-equivalence.test.ts) | Personenbaum liefert Aggregat-Snapshots; Member-Fluktuation passiert vor neuem Wachstum. | Core-Regression. |
+
+### `packages/product-lifeplus`
+
+| Datei | Verantwortung | Einordnung |
+|---|---|---|
+| [`packages/product-lifeplus/tests/reference-rank.test.ts`](../packages/product-lifeplus/tests/reference-rank.test.ts) | Lesbare Referenznetzwerke fuer Rangberechnung: 4*Diamond, Shopper-QGV ohne QL, gewichtete Knoten, n*Diamond-Schwellen, Diamond-vs-Bronze-Beine. | Referenznetzwerk-Master fuer Rang. |
+| [`packages/product-lifeplus/tests/helpers/tree-fixture.ts`](../packages/product-lifeplus/tests/helpers/tree-fixture.ts) | DSL: `root`, `member`, `networkFixture`, `treeToAscii`, `expectRankState`. | Fixture-Quelle. |
+| [`packages/product-lifeplus/tests/tree-simulation.test.ts`](../packages/product-lifeplus/tests/tree-simulation.test.ts) | Personenbaum-Simulation, Phase 1, Auto-AV, tiefe Diamond-Beine, gewichtete Downline, Shopper-only, Cap/Reattachment, Legs und Carry. | Breite fachliche Regression; teils Referenznetzwerk. |
+| [`packages/product-lifeplus/tests/example-line.test.ts`](../packages/product-lifeplus/tests/example-line.test.ts) | Konkrete Upline-Beispielreihen fuer Phase 1/2/3, Slotverteilung, Kompression und n*Diamond-Normalisierung. | Beispielreihen-Referenz. |
+| [`packages/product-lifeplus/tests/engine.test.ts`](../packages/product-lifeplus/tests/engine.test.ts) | Legacy-/Aggregat-nahe Planfunktionen, Netzwerk-Wachstum, Rangbestimmung und vollstaendige Simulation. | Regression; nicht alleiniger Master. |
+| [`packages/product-lifeplus/tests/profile-sim.test.ts`](../packages/product-lifeplus/tests/profile-sim.test.ts) | Performance-Benchmark fuer Knoten/Weight/Orders; `describe.skip`. | Manuell, nicht normaler CI-Test. |
+
+### Reality-Growth
+
+| Datei | Verantwortung |
+|---|---|
+| [`packages/simulator-realistic-growth/tests/dirichlet.test.ts`](../packages/simulator-realistic-growth/tests/dirichlet.test.ts) | Dirichlet-Gewichte fuer Random-Strategie. |
+| [`packages/simulator-realistic-growth/tests/momentum.test.ts`](../packages/simulator-realistic-growth/tests/momentum.test.ts) | Momentum-Verteilung und Asymmetrie. |
+| [`packages/simulator-realistic-growth/tests/rng.test.ts`](../packages/simulator-realistic-growth/tests/rng.test.ts) | Seedbarer RNG bleibt deterministisch. |
+
+### UI-Komponenten
+
+| Datei | Verantwortung |
+|---|---|
+| [`simulator-app/src/App.test.ts`](../simulator-app/src/App.test.ts) | Migration alter Reality-Strategie-Werte auf aktuelle Runtime-Werte. |
+| [`simulator-app/src/components/person-tree/person-tree-node.test.ts`](../simulator-app/src/components/person-tree/person-tree-node.test.ts) | UI-Hierarchie, Shopper-Aggregate, inaktive Personen, Rank-/QGV-/Provision-Daten. |
+| [`simulator-app/src/components/network/sunburst-node.test.ts`](../simulator-app/src/components/network/sunburst-node.test.ts) | Sunburst-Struktur und visuelle Netzwerkaggregation. |
+
+### FitLine und Eqology
+
+| Datei | Aktueller Status |
+|---|---|
+| [`packages/product-fitline/tests/product.test.ts`](../packages/product-fitline/tests/product.test.ts) | Branding/defaults plus shared placeholder plan laufen durch `runSimulation()`. |
+| [`packages/product-eqology/tests/product.test.ts`](../packages/product-eqology/tests/product.test.ts) | Branding/defaults plus shared placeholder plan laufen durch `runSimulation()`. |
+
+Wichtig: Diese Tests sind noch keine fachlichen Referenznetzwerke fuer FitLine/Eqology-Plaene.
+
+## 3. Konvention fuer neue Referenznetzwerk-Tests
+
+1. **Fixture im Test lesbar halten.** Nutze eine DSL wie `root(...)`, `member(...)`, `networkFixture(...)`; keine grossen JSON-Fixtures als fuehrende Wahrheit.
+2. **Ein Referenztest hat einen primaeren Zweck.** Rang, QGV/Legs, Phase-1-Kompression oder Slotverteilung sollten im Testnamen klar sein. Integrationsregressionen duerfen mehrere Effekte koppeln, muessen dann aber als solche benannt sein.
+3. **Fehlerausgabe muss das Netzwerk zeigen.** `expectRankState()` haengt via `treeToAscii()` den Baum an den Fehler, das ist gut und sollte erhalten bleiben.
+4. **Gewichtete Knoten explizit testen.** Jede Logik, die Legs, QGV oder Rang zaehlt, muss auch `weight > 1` abdecken.
+5. **Shopper getrennt testen.** Shopper zaehlen zu QGV und Umsatz, aber nicht als qualifiziertes Bein und nicht als `SimPerson`.
+6. **Schwellenwerte testen.** Ranggrenzen wie 29.999 vs. 30.000 QGV fuer 4*Diamond sind wertvoller als nur "grosses Netzwerk ergibt hohen Rang".
+7. **Reality-Strategien mit Seed testen.** Random/Momentum-Tests duerfen keine nichtdeterministische Erwartung haben.
+
+### Beispiel: lesbare Fixture aus `reference-rank.test.ts`
+
+So sieht ein Referenztest in der Praxis aus — die DSL macht das Netzwerk direkt lesbar:
 
 ```ts
-const NET_4_STAR_DIAMOND = networkFixture({
-  monthIndex: 11,
-  root: member('du', { vol: 150 }, [
-    member('anna',     { vol: 150 }, [
-      member('anna-a', { vol: 1250 }),
-      member('anna-b', { vol: 1250 }),
-      member('anna-c', { vol: 1250 }),
-    ]),
-    member('bernd',    { vol: 150 }, [/* analog */]),
-    member('cornelia', { vol: 150 }, [/* analog */]),
-    member('daniel',   { vol: 150 }, [/* analog */]),
+import { networkFixture, root, member, expectRankState } from './helpers/tree-fixture';
 
-    member('eva',      { vol: 150 }),
-    member('frank',    { vol: 150 }),
-    member('georg',    { vol: 150 }),
-    member('heidi',    { vol: 150 }),
-    member('ivan',     { vol: 150 }),
-    member('julia',    { vol: 150 }),
-    member('karl',     { vol: 150 }),
-    member('ludwig',   { vol: 150 }),
-  ]),
+it('berechnet ein festes 4*Diamond-Netzwerk aus echten Personen', () => {
+  const snapshot = networkFixture({
+    root: root('du', 50, [
+      ...Array.from({ length: 4 }, (_, i) => diamondLeg(`diamond-leg-${i + 1}`)),
+      ...Array.from({ length: 8 }, (_, i) => member(`member-leg-${i + 1}`, 150)),
+    ]),
+  });
+
+  const comp = calculateTreeCompensation(snapshot, {
+    rootPersonalMonthlyVolume: 50,
+  });
+
+  expectRankState(snapshot, comp.rankStates, 'du', {
+    rank: { name: '4*Diamond' },
+    av: 150,
+  });
 });
 ```
 
-### Konventionen
+`expectRankState` haengt im Fehlerfall einen ASCII-Baum an die Assertion (`treeToAscii()`), damit man im Test-Output sofort sieht, welche Netzwerkstruktur falsch berechnet wurde.
 
-- **Sprechende IDs.** Vornamen fuer Personen auf gleicher Ebene (`anna`, `bernd`), Suffix `-a/-b/-c` fuer deren Direkte. Keine technischen IDs wie `m-1`, `m-2`.
-- **Keine ASCII-Bauminskommentar.** Der Baum wird beim Test-Fehlschlag ueber `treeToAscii(snapshot, rankStates)` ausgegeben — eine Quelle, keine Drift. Siehe Abschnitt _Pretty-Printer_.
-- **`monthIndex` explizit.** Damit `joinedMonth < monthIndex` klar ist und kein Knoten als "frisch im aktuellen Monat" gilt.
-- **Flach halten.** Mehr als ~25 Personen pro Netzwerk macht den Test unueberpruefbar. Lieber mehrere kleine Netze.
-- **Keine Zufallselemente.** Kein Seed, keine Wachstumsstrategie, kein `simulatePersonTree`. Ausschliesslich `calculateTreeCompensation(snapshot, ...)` aufrufen.
+## 4. Bekannte Luecken und Risiken
 
-## Welche Netze ein neuer Brand mindestens braucht
+| Luecke / Risiko | Bedeutung | Empfehlung |
+|---|---|---|
+| FitLine/Eqology haben keine eigenen Plan-Referenznetzwerke. | Aktuell okay, solange sie shared placeholder plan nutzen; riskant bei eigenen Verguetungsplaenen. | Bei eigenem Plan sofort `reference-rank.test.ts`-Aequivalent und Fixture-DSL anlegen. |
+| `engine.test.ts` enthaelt noch aggregat-nahe Hilfslogik. | Kann historisch wirken und mit Single-Path-Doku verwechselt werden. | Bei naechstem Cleanup pruefen, welche Tests als Legacy bleiben und welche in Baumtests ueberfuehrt werden. |
+| `profile-sim.test.ts` ist `describe.skip`. | Kein CI-Schutz fuer Performance. | Als manuelles Benchmark-Dokument behandeln; Performance-Gates separat definieren. |
+| Checkout-API-Tests laufen ueber Playwright und externe API-Ziele. | `npm test`/Vitest ist dafuer nicht der richtige Runner. | Weiter ueber `npm run test:checkout-api`; README aktuell halten. |
+| Kein zentrales Referenznetzwerk-Register. | Kann bei wachsender Brand-Anzahl unuebersichtlich werden. | Vorerst Fixtures als Quelle; Register erst einfuehren, wenn mehrere Brand-Plaene echte Referenzen haben. |
 
-Pro Produkt sind diese sechs Referenznetzwerke Pflicht:
+## 5. Laufempfehlung
 
-| Netz                          | Fokus                                            |
-|-------------------------------|--------------------------------------------------|
-| **PHASE_1_LINIE**             | 1 Wurzel + 3-Ebenen-Linie, ueberprueft Ebene-1/2/3-Auszahlung |
-| **PHASE_2_TIEFE_LINIE**       | gestaffelte Upline (z. B. Bronze → Silver → Gold → Diamond), prueft Slot-Verteilung |
-| **N_DIAMOND_SCHWELLE_UNTEN**  | exakt 1 IP unter dem n*Diamond-QGV-Schwellwert → Rang faellt zurueck |
-| **N_DIAMOND_SCHWELLE_OBEN**   | exakt auf dem Schwellwert → Rang wird vergeben |
-| **GEWICHTETE_AEQUIVALENZ**    | Knoten mit `weight=N` ergibt denselben Rang wie N Knoten mit `weight=1` |
-| **SHOPPER_NICHT_QUALIFIZIERT**| 12 Shopper unter Wurzel → kein Phase-2-Diamond, weil Shopper keine qualifizierten Beine sind |
+Normale fachliche Tests:
 
-Brand-spezifische Zusatznetze (z. B. besondere Bonusstufen eines Plans) kommen dazu, ersetzen aber keines dieser sechs.
+```powershell
+npm test
+```
 
-## Pflicht-Assertions pro Netz
+Gezielte Checkout-Smokes:
 
-Ein Referenznetzwerk-Test prueft fuer alle relevanten Personen — nicht nur die Wurzel — diese Felder:
+```powershell
+npm run test:checkout-api
+```
+
+Profil-Benchmark:
+
+```powershell
+# Vorher in profile-sim.test.ts describe.skip gezielt auf describe umstellen.
+npm test -- --run packages/product-lifeplus/tests/profile-sim.test.ts
+```
+
+Hinweis: Falls `npm test` durch `tests/api/checkout-api.spec.ts` in den Vitest-Run geraet, ist das ein Tooling-Problem. Playwright-API-Specs gehoeren ueber das separate Script ausgefuehrt oder aus dem Vitest-Include ausgeschlossen.
+
+Konkrete Loesungsoption (in `vitest.config.ts`):
 
 ```ts
-expect(state(comp, 'du').rank.name).toBe('4*Diamond');
-expect(state(comp, 'du').qualifiedLegs).toBe(12);
-expect(state(comp, 'du').diamondLegs).toBe(4);
-expect(state(comp, 'du').bronzeLegs).toBe(4);
-expect(state(comp, 'du').av).toBe(150);
-expect(comp.qgv).toBe(30000);
+import { defineConfig } from 'vitest/config';
 
-expect(state(comp, 'anna').rank.name).toBe('Diamond');
-expect(state(comp, 'eva').rank.name).toBe('Member');
+export default defineConfig({
+  test: {
+    include: ['**/*.test.ts'],
+    exclude: [
+      '**/node_modules/**',
+      'tests/api/**',          // Playwright-API-Specs nicht ueber Vitest laufen lassen.
+      'website-astro/**',
+      'dist/**',
+    ],
+  },
+});
 ```
 
-Die Auszahlungsbetraege gehoeren in `reference-payout.test.ts`, nicht hier.
+Damit gehen Playwright-Specs ausschliesslich ueber `npm run test:checkout-api`, und `npm test` deckt die fachliche Vitest-Pyramide ab.
 
-## Pretty-Printer fuer Fail-Output
+## 6. Verwandte Dokumente
 
-Statt eines ASCII-Kommentars **ueber** dem Fixture muss ein Helper `treeToAscii(snapshot, rankStates)` existieren, der bei rotem Test den vollstaendigen Baum mit Rang-Zustaenden druckt:
+- [`growth_models/02-Wachstums-und-Churn-Regeln.md`](./growth_models/02-Wachstums-und-Churn-Regeln.md) - fachliche Regeln, gegen die Tests laufen.
+- [`growth_models/03-Benchmark-Status-B1-B2.md`](./growth_models/03-Benchmark-Status-B1-B2.md) - Status von Aggregatpfad und Shopper-Aggregation.
+- [`Netzwerk-Modellierung.md`](./Netzwerk-Modellierung.md) - historischer Snapshot und aktuelle Single-Path-Einordnung.
+- [`Rank-Badges.md`](./Rank-Badges.md) - Rank-/Badge-Code bleibt Single Source fuer UI.
+- [`business plans/lifeplus_business_plan.md`](./business%20plans/lifeplus_business_plan.md) - fachlicher LifePlus-Plan.
+- [`tests/api/README.md`](../tests/api/README.md) - Checkout-API-Smoke-Laufanleitung.
 
-```
-du                       4*Diamond  qgv=30.000  qLegs=12  dLegs=4  av=150
-├─ anna                  Diamond    qgv=15.000  qLegs=12  dLegs=0  av=150
-│  ├─ anna-a             Member     qgv=     0  qLegs= 0  dLegs=0  av=1250
-│  ├─ anna-b             Member     qgv=     0  qLegs= 0  dLegs=0  av=1250
-│  └─ anna-c             Member     qgv=     0  qLegs= 0  dLegs=0  av=1250
-├─ bernd                 Diamond    qgv=15.000  qLegs=12  dLegs=0  av=150
-...
-└─ ludwig                Member     qgv=     0  qLegs= 0  dLegs=0  av=150
-```
+## Anhang: Historischer Kontext
 
-So liest man im CI-Output sofort, _welche_ Person falsche Werte hat, ohne den Code zu oeffnen.
+Original-Datei: [`Referenznetzwerk-Tests.md`](./Referenznetzwerk-Tests.md), Stand 2026-05-28.
 
-## Datei- und Ordnerstruktur pro Brand
+Historischer Inhalt:
 
-```
-packages/product-<brand>/tests/
-├─ reference-rank.test.ts        ← die 6 Pflichtnetze, Rang/QGV/Beine
-├─ reference-payout.test.ts      ← kleines Netz + Cent-genaue Phase 1/2/3
-└─ helpers/
-   ├─ tree-fixture.ts            ← member(), shopper(), networkFixture()
-   └─ tree-ascii.ts              ← treeToAscii() fuer Failure-Output
-```
+- Warum Referenznetzwerke noetig sind.
+- Unterschied zwischen Simulationstests und handgebauten Netzwerken.
+- Fruehe Regel "lesbares Netzwerk, ein Test = eine Eigenschaft".
+- Bug-Muster, gegen die Referenznetzwerke schuetzen: Rangschwellen, Bronze-/Diamond-Beine, Auto-AV, Phase-2/3-Slots, Shopper-Beine.
 
-Die Helper duerfen **nicht** zwischen Brands geteilt werden, solange jeder Brand sein eigenes `SimPerson`/`SimOrder`-Schema haben kann. Erst wenn drei Brands denselben Helper kopiert haben, lohnt sich `@mlm/test-fixtures`.
-
-## Was NICHT in Referenznetzwerk-Tests gehoert
-
-- **Wachstumsdynamik** (`simulatePersonTree`) → eigene Tests in `tree-simulation.test.ts`.
-- **Realistic-Growth-Strategien** (Dirichlet, Momentum) → `tests/integration/person-tree-reality.test.ts`.
-- **UI-Verhalten** → Komponententests in `simulator-app/`.
-- **Auszahlungsbetraege im Rang-Test** → gehoert in `reference-payout.test.ts`.
-
-## Workflow beim Hinzufuegen eines neuen Brands
-
-1. Verguetungsplan in `packages/product-<brand>/src/constants.ts` definieren.
-2. Die sechs Pflichtnetze aus dieser Tabelle uebernehmen, IDs umbenennen, Volumina an den neuen Plan anpassen.
-3. Erwartete Raenge per Hand am Plan **ausrechnen**, nicht aus der Engine ablesen. Ein Test, dessen Erwartung von der getesteten Engine kommt, prueft nichts.
-4. Engine-Ergebnis dagegenhalten. Abweichungen sind entweder Plan-Spezifika (dann Erwartung anpassen) oder Bug (dann Engine anpassen).
-5. Pretty-Printer-Output von einem zweiten Augenpaar gegenpruefen lassen.
-
-## Verhaeltnis zu Simulations- und Reality-Tests
-
-| Testart                         | Was sie schuetzt                                       |
-|---------------------------------|---------------------------------------------------------|
-| Referenznetzwerk-Tests          | Verguetungsplan-Logik (Rang, Auto-AV, Slots, QGV)        |
-| `tree-simulation.test.ts`       | Wachstumsmechanik (Duplikation, Fluktuation, Membergrowth)|
-| `person-tree-reality.test.ts`   | Realistic-Growth-Strategien (Dirichlet, Momentum)        |
-| App-Slider-Tests                | UI-Verdrahtung und Rendering                             |
-
-Wenn ein Bug in Produktion landet, soll man am Test-Bruch sofort sehen koennen, in welche Schicht er gehoert. Referenznetzwerk-Tests sind die unterste Schicht — wenn die brechen, ist die Verguetung selbst kaputt.
+Die Grundidee bleibt gueltig. Der aktuelle Test-Master ist aber der Code plus diese Test-Matrix, nicht die alte Konzeptdatei.
