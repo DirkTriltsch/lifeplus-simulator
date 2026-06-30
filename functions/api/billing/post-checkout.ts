@@ -1,12 +1,10 @@
 import type { Env } from '../../env';
 import { parseCookies, SESSION_COOKIE, sessionCookieHeader } from '../../_lib/cookies';
-import { randomId, randomToken, sha256Hex } from '../../_lib/crypto';
 import {
   getCheckoutIntentById,
   setCheckoutIntentUserId,
   upsertUserByEmail,
 } from '../../_lib/db';
-import { sendMagicLink } from '../../_lib/mailer';
 import {
   PaddleApiError,
   paddleGetTransaction,
@@ -17,7 +15,7 @@ import {
   createSessionForNewDevice,
   loadSessionFromToken,
 } from '../../_lib/session';
-import { minutesFromNow, nowMs } from '../../_lib/time';
+import { nowMs } from '../../_lib/time';
 
 // v6.1 Post-Checkout — Auto-Login nach Paddle-Zahlung (Gast-Checkout-Flow).
 //
@@ -27,8 +25,7 @@ import { minutesFromNow, nowMs } from '../../_lib/time';
 //   3. User per E-Mail finden oder neu anlegen.
 //   4. Intent.user_id setzen (idempotent, falls noch NULL).
 //   5. Session anlegen + Cookie setzen → User ist eingeloggt.
-//   6. Magic-Link per Mail senden (Best-Effort, fuer Cross-Device).
-//   7. Response: { ok, mailSent, redirectUrl }.
+//   6. Response: { ok, mailSent:false, redirectUrl }.
 //
 // Entitlement-Grant macht der Webhook (subscription.created /
 // transaction.paid). Nach diesem Endpoint hat der User eine Session, aber
@@ -129,12 +126,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   // 7. Wenn schon Session da ist UND korrekt fuer diesen User, dann
   //    KEINE neue Session anlegen — einfach durchwinken.
   if (sameUser) {
-    void maybeSendCrossDeviceMagicLink(env, request, checkoutEmail).catch((err) => {
-      console.warn('post_checkout_mail_failed', err);
-    });
     return json({
       ok:           true,
-      mailSent:     true,
+      mailSent:     false,
       redirectUrl:  appRedirectUrl(env),
       message:      `Bezahlung erfolgreich. Du wirst gleich in die App weitergeleitet.`,
     });
@@ -153,88 +147,16 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     Math.max(60, Math.floor((session.expiresAt - nowMs()) / 1000)),
   );
 
-  // 9. Cross-Device-Magic-Link parallel senden (Best-Effort). Wenn das
-  //    schiefgeht, ist das nicht-fatal — der User ist hier ja schon
-  //    eingeloggt im aktuellen Browser.
-  const mailResult = await maybeSendCrossDeviceMagicLink(env, request, checkoutEmail).catch(
-    (err) => {
-      console.warn('post_checkout_mail_failed', err);
-      return { mailSent: false, devLink: null as string | null };
-    },
-  );
-
   return json(
     {
       ok:          true,
-      mailSent:    mailResult.mailSent,
+      mailSent:    false,
       redirectUrl: appRedirectUrl(env),
-      message:     mailResult.mailSent
-        ? `Bezahlung erfolgreich. Wir haben dir auch einen Login-Link an ${checkoutEmail} gesendet, damit du dich auf anderen Geraeten anmelden kannst.`
-        : `Bezahlung erfolgreich. Du wirst gleich in die App weitergeleitet.`,
-      ...(mailResult.devLink ? { dev_link: mailResult.devLink } : {}),
+      message:     `Bezahlung erfolgreich. Du wirst gleich in die App weitergeleitet.`,
     },
     { headers: { 'set-cookie': cookie } },
   );
 };
-
-async function maybeSendCrossDeviceMagicLink(
-  env: Env,
-  request: Request,
-  email: string,
-): Promise<{ mailSent: boolean; devLink: string | null }> {
-  const ttlMinutes = Number(env.MAGIC_LINK_TTL_MINUTES || '15');
-  const linkToken = randomToken(32);
-  const linkTokenHash = await sha256Hex(linkToken);
-  const tokenId = randomId();
-  const now = nowMs();
-  const expires = minutesFromNow(ttlMinutes);
-  const ip = clientIp(request);
-
-  await env.DB.prepare(
-    `INSERT INTO magic_login_tokens
-       (id, email_lower, token_hash, expires_at, created_at,
-        request_ip, request_user_agent,
-        access_intent, consent_payload_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(
-      tokenId,
-      email,
-      linkTokenHash,
-      expires,
-      now,
-      ip,
-      request.headers.get('user-agent')?.slice(0, 500) ?? null,
-      null,
-      null,
-    )
-    .run();
-
-  const link = `${trimSlash(env.APP_URL)}/?token=${encodeURIComponent(linkToken)}`;
-  const isDevDebug =
-    env.DEV_MAGIC_LINK_DEBUG === '1' && env.INSECURE_COOKIES === '1';
-
-  try {
-    await sendMagicLink(env, {
-      to:                email,
-      link,
-      brandName:         env.MAIL_FROM_NAME || env.BRAND_ID,
-      expiresInMinutes:  ttlMinutes,
-    });
-    return { mailSent: true, devLink: null };
-  } catch (err) {
-    if (isDevDebug) {
-      console.log('[DEV] post-checkout mailer not configured. Magic-Link for', email, ':', linkToken);
-      console.log('[DEV] full link:', link);
-      return { mailSent: false, devLink: link };
-    }
-    await env.DB.prepare('DELETE FROM magic_login_tokens WHERE id = ?')
-      .bind(tokenId)
-      .run()
-      .catch(() => {});
-    throw err;
-  }
-}
 
 function trimSlash(value: string): string {
   return value.endsWith('/') ? value.slice(0, -1) : value;

@@ -22,7 +22,7 @@
 - [ ] B2B-Header-Banner auf Pricing und Checkout sichtbar pruefen.
 - [ ] Netto-/USt-/Reverse-Charge-Hinweise auf Pricing und Checkout konsistent pruefen.
 - [ ] AGB/Widerruf: Pro-B2B-only und Free-Fuer-alle konsistent pruefen.
-- [ ] Datenschutz: Magic-Link, Session, Paddle, Resend, Cloudflare, IONOS und Newsletter final pruefen.
+- [ ] Datenschutz: Login-Code, Fehlversuchsschutz, Session, Paddle, Resend, Cloudflare, IONOS und Newsletter final pruefen.
 - [ ] Impressum: Anbieter-, USt- und Verantwortlichkeitsdaten final pruefen.
 - [x] Free-Login-UX ist im aktuellen Astro/Auth-Flow vorhanden; vor Go-Live nur noch Smoke-Test noetig.
 
@@ -49,8 +49,8 @@ Aktueller Code-Stand:
 
 | Bereich | Endpunkt(e) | Ist-Stand | Go-Live-Anforderung |
 |---|---|---|---|
-| Magic-Link anfordern | `POST /api/auth/request-link` | IP-Limit `5/10min`, E-Mail-Limit `3/30min` vorhanden | Beibehalten und Smoke-Test fuer Rate-Limit-Fehler durchfuehren |
-| Magic-Link verifizieren | `/api/auth/verify-link` | IP-Limit `10/10min` vorhanden | Beibehalten und Smoke-Test fuer ungueltige/abgelaufene Tokens |
+| Login-Code anfordern | `POST /api/auth/request-code` | IP-Limit `5/10min`, E-Mail-Limit `3/30min` vorhanden | Beibehalten und Smoke-Test fuer Rate-Limit-Fehler durchfuehren |
+| Login-Code verifizieren | `POST /api/auth/verify-code` | IP-Limit `10/10min`, E-Mail-Limit `10/10min`, 5 Fehlversuche pro Code | Smoke-Test fuer ungueltige, gesperrte und abgelaufene Codes |
 | Paddle-Preisvorschau | `POST /api/billing/preview-pricing` | IP-Limit `30/5min` vorhanden | Limit bestaetigen oder niedriger setzen; Rabatt-/VAT-Bruteforce pruefen |
 | Checkout abschliessen | `POST /api/billing/post-checkout` | IP-Limit `10/10min` vorhanden | Beibehalten; Fehlerfaelle ohne Entitlement pruefen |
 | Checkout-Intent / Paddle-Transaction | `POST /api/billing/checkout-intent` | Noch kein dokumentiertes Rate-Limit gefunden | Pflicht: IP- und E-Mail-/Plan-Limit einfuehren, damit nicht massenhaft Paddle-Transactions erzeugt werden koennen |

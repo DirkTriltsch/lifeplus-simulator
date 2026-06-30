@@ -136,6 +136,7 @@ export function setupAccountPage(cfg: AccountPageConfig): void {
   const API_BASE = (cfg.apiBase || '').replace(/\/$/, '');
   const APP_URL = cfg.appUrl;
   const CONTACT_EMAIL = cfg.contactEmail;
+  let pendingLoginEmail = '';
 
   const states = ['state-loading', 'state-anonymous', 'state-sent', 'state-verifying', 'state-account'];
   function show(id: string) {
@@ -362,20 +363,17 @@ export function setupAccountPage(cfg: AccountPageConfig): void {
     renderPayments(payments);
   }
 
-  // ─── Magic-Link Login-Flow ────────────────────────────────────
+  // Login-Code-Flow
 
-  async function verifyMagicLink(token: string) {
+  async function verifyLoginCode(email: string, code: string) {
     show('state-verifying');
     try {
-      const res = await apiFetch('/api/auth/verify-link', {
+      const res = await apiFetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ email, code }),
       });
       if (!res.ok) throw new Error('verify_failed');
-      const url = new URL(window.location.href);
-      url.searchParams.delete('token');
-      window.history.replaceState({}, '', url.toString());
       const me = await loadMe();
       if (me.authenticated) {
         renderAccount(me);
@@ -385,18 +383,13 @@ export function setupAccountPage(cfg: AccountPageConfig): void {
         show('state-anonymous');
       }
     } catch {
-      show('state-anonymous');
-      setMsg('login-msg', 'Login-Link ungültig oder abgelaufen. Bitte neuen Link anfordern.', 'error');
+      show('state-sent');
+      setMsg('login-code-msg', 'Code ungueltig oder abgelaufen. Bitte pruefe die Eingabe oder fordere einen neuen Code an.', 'error');
     }
   }
 
   async function init() {
     const url = new URL(window.location.href);
-    const token = url.searchParams.get('token');
-    if (token) {
-      await verifyMagicLink(token);
-      return;
-    }
     const me = await loadMe();
     if (me.authenticated) {
       renderAccount(me);
@@ -423,23 +416,49 @@ export function setupAccountPage(cfg: AccountPageConfig): void {
     const email = (emailInput.value || '').trim();
     if (!email) return;
     btn.disabled = true;
-    btn.textContent = 'Sende Link…';
+    btn.textContent = 'Sende Code...';
     try {
-      const res = await apiFetch('/api/auth/request-link', {
+      const res = await apiFetch('/api/auth/request-code', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email }),
       });
       if (!res.ok) throw new Error('request_failed');
+      pendingLoginEmail = email.toLowerCase();
       show('state-sent');
+      const codeInput = document.getElementById('login-code') as HTMLInputElement | null;
+      if (codeInput) {
+        codeInput.value = '';
+        codeInput.focus();
+      }
     } catch {
-      setMsg('login-msg', 'Konnte den Link nicht senden. Bitte später erneut versuchen.', 'error');
+      setMsg('login-msg', 'Konnte den Code nicht senden. Bitte spaeter erneut versuchen.', 'error');
       btn.disabled = false;
-      btn.textContent = 'Login-Link senden';
+      btn.textContent = 'Code senden';
     }
   });
 
   // ─── Paddle-Portal-Deep-Links (Karte ändern, Alle Rechnungen) ─
+
+  document.getElementById('login-code')?.addEventListener('input', function (this: HTMLInputElement) {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    hideMsg('login-code-msg');
+  });
+
+  document.getElementById('login-code-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const codeInput = document.getElementById('login-code') as HTMLInputElement | null;
+    const btn = document.getElementById('login-code-btn') as HTMLButtonElement | null;
+    if (!codeInput || !btn) return;
+    const code = codeInput.value.replace(/\D/g, '').slice(0, 6);
+    if (!pendingLoginEmail || code.length !== 6) return;
+    hideMsg('login-code-msg');
+    btn.disabled = true;
+    btn.textContent = 'Pruefe...';
+    await verifyLoginCode(pendingLoginEmail, code);
+    btn.disabled = false;
+    btn.textContent = 'Einloggen';
+  });
 
   async function openPortalSession(
     btn: HTMLButtonElement,

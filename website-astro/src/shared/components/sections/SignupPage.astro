@@ -111,7 +111,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
             placeholder="name@beispiel.de"
           />
           <p class="email-hint" id="emailHint">
-            Wir senden dir einen Login-Link an diese Adresse. Änderbar — der
+            Wir senden dir einen 6-stelligen Code an diese Adresse. Änderbar — der
             Free-Zugang wird für die hier eingetragene Adresse aktiviert.
           </p>
         </div>
@@ -155,7 +155,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         <p class="check-footnote"><span class="req">*</span> Pflichtfeld</p>
 
         <button class="cta" id="signupBtn" disabled>
-          <span class="cta-label">Free-Zugang aktivieren</span>
+          <span class="cta-label">Code senden</span>
           <span class="spinner"></span>
         </button>
         <p class="err-msg" id="errMsg">Bitte E-Mail, AGB und Datenschutz bestätigen.</p>
@@ -174,11 +174,27 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
             <path d="M4 6l8 7 8-7M4 6v12h16V6M4 6h16"/>
           </svg>
         </div>
-        <h2>Schau in dein Postfach</h2>
-        <p>Wir haben dir einen Login-Link an
+        <h2>Code eingeben</h2>
+        <p>Wir haben dir einen 6-stelligen Code an
           <span class="target" id="sentEmail">name@beispiel.de</span> gesendet.</p>
-        <p>Klicke auf den Link in der Mail, um dein Konto zu aktivieren.
-           Der Link ist 15 Minuten gültig.</p>
+        <div class="code-block">
+          <label for="signupCode">Bestaetigungscode</label>
+          <input
+            id="signupCode"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            placeholder="123456"
+          />
+        </div>
+        <button class="cta" id="verifySignupBtn" disabled>
+          <span class="cta-label">Zugang aktivieren</span>
+          <span class="spinner"></span>
+        </button>
+        <p class="err-msg" id="codeErrMsg">Der Code ist ungueltig oder abgelaufen.</p>
+        <p>Der Code ist 15 Minuten gueltig.</p>
         <p class="sent-hint">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>
 
         <button class="resend-btn" id="resendBtn">Erneut senden</button>
@@ -308,7 +324,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   }
 
   .email-block { margin-bottom: 18px; }
-  .email-block label {
+  .email-block label, .code-block label {
     display: block;
     font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
     font-size: 10.5px; color: #4A5C53;
@@ -316,7 +332,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     font-weight: 500;
     margin-bottom: 6px;
   }
-  .email-block input {
+  .email-block input, .code-block input {
     width: 100%;
     padding: 11px 13px;
     font-family: inherit;
@@ -336,6 +352,13 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   .email-block input.invalid {
     border-color: #C2364B;
     background: #FDF3F4;
+  }
+  .code-block { margin: 14px 0; text-align: left; }
+  .code-block input {
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    font-weight: 700;
   }
   .email-hint {
     margin: 6px 0 0;

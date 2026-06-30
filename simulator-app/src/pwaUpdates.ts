@@ -1,6 +1,5 @@
 import { registerSW } from 'virtual:pwa-register';
 
-const CRITICAL_FLOW_GRACE_MS = 90_000;
 const DEFERRED_RELOAD_RETRY_MS = 5_000;
 const UPDATE_CHECK_INTERVAL_MS = 15 * 60_000;
 
@@ -60,15 +59,5 @@ export function initializePwaUpdates(): void {
 }
 
 function isCriticalReturnFlowActive(): boolean {
-  const url = new URL(window.location.href);
-  const hasMagicLinkToken = url.searchParams.has('token');
-
-  if (!hasMagicLinkToken) return false;
-
-  const storageKey = 'pwa-critical-flow:first-seen';
-  const now = Date.now();
-  const firstSeen = Number(window.sessionStorage.getItem(storageKey) ?? now);
-  window.sessionStorage.setItem(storageKey, String(firstSeen));
-
-  return now - firstSeen < CRITICAL_FLOW_GRACE_MS;
+  return false;
 }

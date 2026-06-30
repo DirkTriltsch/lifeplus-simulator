@@ -10,10 +10,10 @@ import { createSessionForNewDevice } from '../../_lib/session';
 import { nowMs } from '../../_lib/time';
 
 // LOCAL-DEV-ONLY Login-Helper. Erstellt einen User per Email, vergibt Trial
-// (14 Tage Pro) und setzt direkt das Session-Cookie. Erspart den Magic-Link-
-// Umweg fuer Browser-Tests.
+// (14 Tage Pro) und setzt direkt das Session-Cookie. Erspart den Login-Code-
+// Umweg fuer lokale Browser-Tests.
 //
-// Aktiv NUR wenn DEV_MAGIC_LINK_DEBUG=1 UND INSECURE_COOKIES=1 — beide nur in
+// Aktiv NUR wenn DEV_OTP_DEBUG=1 UND INSECURE_COOKIES=1 — beide nur in
 // .dev.vars gesetzt. Production = 404.
 //
 // Aufruf per Browser-URL:
@@ -38,7 +38,7 @@ const NEXT_URL_RX = /^\/(?:checkout\/(?:monthly|halfyear|yearly)\.html|signup\.h
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   // Hard guard — beide Dev-Flags muessen gesetzt sein.
-  if (env.DEV_MAGIC_LINK_DEBUG !== '1' || env.INSECURE_COOKIES !== '1') {
+  if (env.DEV_OTP_DEBUG !== '1' || env.INSECURE_COOKIES !== '1') {
     return new Response('not found', { status: 404 });
   }
 
@@ -100,7 +100,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     {
       ok:    true,
       email: user.email,
-      note:  'Dev-only login. Verify-link wird umgangen, host-only localhost Cookie ist gesetzt.',
+      note:  'Dev-only login. Login-Code wird umgangen, host-only localhost Cookie ist gesetzt.',
     },
     {
       headers: {

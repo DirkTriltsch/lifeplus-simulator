@@ -34,7 +34,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     <div id="loginFormView" hidden>
       <p class="eyebrow">Anmelden</p>
       <h1>Willkommen zurück</h1>
-      <p class="lead">Gib deine E-Mail-Adresse ein. Wir schicken dir einen einmaligen Login-Link.</p>
+      <p class="lead">Gib deine E-Mail-Adresse ein. Wir schicken dir einen einmaligen Code.</p>
 
       <div class="email-block">
         <label for="loginEmail">E-Mail-Adresse</label>
@@ -47,14 +47,14 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           required
           placeholder="name@beispiel.de"
         />
-        <p class="email-hint" id="loginEmailHint">Wir senden dir einen einmaligen Login-Link.</p>
+        <p class="email-hint" id="loginEmailHint">Wir senden dir einen 6-stelligen Login-Code.</p>
       </div>
 
       <button class="cta" id="loginBtn" disabled>
-        <span class="cta-label">Login-Link senden</span>
+        <span class="cta-label">Code senden</span>
         <span class="spinner"></span>
       </button>
-      <p class="err-msg" id="loginErrMsg">Der Login-Link konnte gerade nicht gesendet werden.</p>
+      <p class="err-msg" id="loginErrMsg">Der Code konnte gerade nicht gesendet werden.</p>
     </div>
 
     <div class="sent" id="loginSentView" hidden>
@@ -63,9 +63,26 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           <path d="M4 6l8 7 8-7M4 6v12h16V6M4 6h16"/>
         </svg>
       </div>
-      <h2>Schau in dein Postfach</h2>
-      <p>Falls ein Konto zu <span class="target" id="loginSentEmail">name@beispiel.de</span> existiert, haben wir dir einen Login-Link gesendet.</p>
-      <p>Klicke auf den Link in der Mail, um dich anzumelden. Der Link ist 15 Minuten gültig.</p>
+      <h2>Code eingeben</h2>
+      <p>Falls ein Konto zu <span class="target" id="loginSentEmail">name@beispiel.de</span> existiert, haben wir dir einen 6-stelligen Code gesendet.</p>
+      <div class="code-block">
+        <label for="loginCode">Bestaetigungscode</label>
+        <input
+          id="loginCode"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          pattern="[0-9]{6}"
+          placeholder="123456"
+        />
+      </div>
+      <button class="cta" id="loginVerifyBtn" disabled>
+        <span class="cta-label">Einloggen</span>
+        <span class="spinner"></span>
+      </button>
+      <p class="err-msg" id="loginCodeErrMsg">Der Code ist ungueltig oder abgelaufen.</p>
+      <p>Der Code ist 15 Minuten gueltig.</p>
       <p class="sent-hint">Keine Mail erhalten? Schau auch im Spam-Ordner nach.</p>
       <button class="resend-btn" id="loginResendBtn">Erneut senden</button>
       <p class="resend-status" id="loginResendStatus" aria-live="polite"></p>
@@ -166,7 +183,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   }
 
   .email-block { margin-bottom: 18px; }
-  .email-block label {
+  .email-block label, .code-block label {
     display: block;
     margin-bottom: 6px;
     font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
@@ -176,7 +193,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     text-transform: uppercase;
     font-weight: 500;
   }
-  .email-block input {
+  .email-block input, .code-block input {
     width: 100%;
     padding: 12px 13px;
     font-family: inherit;
@@ -195,6 +212,13 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   .email-block input.invalid {
     border-color: #C2364B;
     background: #FDF3F4;
+  }
+  .code-block { margin: 14px 0 14px; text-align: left; }
+  .code-block input {
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    font-weight: 700;
   }
   .email-hint {
     margin: 6px 0 0;

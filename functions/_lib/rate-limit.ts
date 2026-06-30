@@ -7,7 +7,7 @@ export interface RateLimitResult {
 }
 
 // Token-bucket-light: fixed window in KV.
-// key e.g. "rl:auth:request-link:ip:1.2.3.4"
+// key e.g. "rl:auth:request-code:ip:1.2.3.4"
 export async function consumeRateLimit(
   env: Env,
   key: string,

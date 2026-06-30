@@ -12,6 +12,12 @@ export function randomId(): string {
   return crypto.randomUUID();
 }
 
+export function generateOtpCode(): string {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return (buf[0] % 1_000_000).toString().padStart(6, '0');
+}
+
 export async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', encoder.encode(value));
   return bytesToHex(new Uint8Array(digest));

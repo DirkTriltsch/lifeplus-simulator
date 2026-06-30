@@ -27,7 +27,7 @@ PADDLE_ENV = "sandbox"
 # there avoids the "binding name already in use" deploy error.
 # For local dev (`wrangler pages dev`) re-add them temporarily if needed.
 SESSION_TTL_DAYS = "30"
-MAGIC_LINK_TTL_MINUTES = "15"
+OTP_TTL_MINUTES = "15"
 DEVICE_LIMIT = "3"
 MAIL_FROM = "no-reply@lifeflow360.app"
 MAIL_FROM_NAME = "LifeFlow360"
@@ -45,5 +45,5 @@ id = "c8ed9bb46a544855ab0cb2ba5c565263"
 #   PADDLE_API_KEY            from Paddle Developer Tools -> API Keys
 #   PADDLE_WEBHOOK_SECRET     from Paddle Notifications endpoint
 #   APP_SESSION_SECRET        openssl rand -hex 32
-#   MAGIC_LINK_SECRET         openssl rand -hex 32
+#   OTP_HASH_SECRET           optional, defaults to APP_SESSION_SECRET
 #   RESEND_API_KEY            from Resend Dashboard

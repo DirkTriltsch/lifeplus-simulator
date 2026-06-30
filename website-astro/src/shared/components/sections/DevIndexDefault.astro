@@ -20,7 +20,7 @@ const reviewTargets = [
   { href: 'index.html?debug=1', label: 'Header im Seitenkontext', file: 'shared/components/layout/Header.astro', source: `brands/${brand.id}/brand.yaml` },
   { href: 'index.html?debug=1', label: 'Footer im Seitenkontext', file: 'shared/components/layout/Footer.astro', source: 'shared/lib/contact.ts' },
   { href: 'pricing.html?debug=1', label: 'Pricing mit Paddle-Flow', file: 'shared/components/sections/PricingPageDefault.astro', source: `brands/${brand.id}/pages/pricing.astro` },
-  { href: 'mein-konto.html?debug=1', label: 'Account / Magic-Link', file: 'shared/components/sections/AccountPageDefault.astro', source: `brands/${brand.id}/brand.yaml` },
+  { href: 'mein-konto.html?debug=1', label: 'Account / Login-Code', file: 'shared/components/sections/AccountPageDefault.astro', source: `brands/${brand.id}/brand.yaml` },
 ];
 
 const otherBrands: BrandId[] = BRAND_IDS.filter((b) => b !== brand.id);

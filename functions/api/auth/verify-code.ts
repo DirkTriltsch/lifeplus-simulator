@@ -1,31 +1,21 @@
 import type { Env } from '../../env';
 import { sessionCookieHeader } from '../../_lib/cookies';
-import { randomId, sha256Hex } from '../../_lib/crypto';
+import { randomId } from '../../_lib/crypto';
 import {
   getActiveDevices,
   grantTrialEntitlementIfMissing,
   insertConsentLog,
   upsertUserByEmail,
 } from '../../_lib/db';
+import { consumeOtpToken } from '../../_lib/otpTokens';
 import { clientIp, consumeRateLimit } from '../../_lib/rate-limit';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
 import { createSessionForNewDevice } from '../../_lib/session';
 import { nowMs } from '../../_lib/time';
 
 interface Body {
-  token?: string;
-  access?: string;
-}
-
-interface TokenRow {
-  id: string;
-  email_lower: string;
-  token_hash: string;
-  expires_at: number;
-  used_at: number | null;
-  access_intent: string | null;
-  consent_payload_json: string | null;
-  next_url: string | null;
+  email?: string;
+  code?: string;
 }
 
 interface ConsentSnapshot {
@@ -36,6 +26,8 @@ interface ConsentSnapshot {
   client_timestamp?: string | null;
 }
 
+const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const CODE_RX = /^[0-9]{6}$/;
 const TRIAL_DAYS = 14;
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
@@ -48,61 +40,31 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return error(400, 'bad_json');
   }
 
-  const token = (body.token ?? '').trim();
-  if (!token || token.length < 16 || token.length > 200) {
-    return error(400, 'invalid_token');
+  const email = (body.email ?? '').trim().toLowerCase();
+  const code = (body.code ?? '').trim();
+  if (!email || !EMAIL_RX.test(email) || email.length > 254) {
+    return error(400, 'invalid_email');
   }
-  const requestedFreeAccess = body.access === 'free';
+  if (!CODE_RX.test(code)) return error(400, 'invalid_code');
 
   const ip = clientIp(request);
-  const limit = await consumeRateLimit(env, `rl:auth:verify-link:ip:${ip}`, 10, 600);
-  if (!limit.allowed) return error(429, 'rate_limited');
+  const ipLimit = await consumeRateLimit(env, `rl:auth:verify-code:ip:${ip}`, 10, 600);
+  if (!ipLimit.allowed) return error(429, 'rate_limited');
 
-  const tokenHash = await sha256Hex(token);
-  const row = await env.DB.prepare(
-    `SELECT id, email_lower, token_hash, expires_at, used_at,
-            access_intent, consent_payload_json, next_url
-       FROM magic_login_tokens WHERE token_hash = ? LIMIT 1`,
-  )
-    .bind(tokenHash)
-    .first<TokenRow>();
+  const emailLimit = await consumeRateLimit(env, `rl:auth:verify-code:email:${email}`, 10, 600);
+  if (!emailLimit.allowed) return error(429, 'rate_limited');
 
-  if (!row) return error(400, 'invalid_token');
-  if (row.used_at !== null) return error(400, 'token_used');
-  if (row.expires_at < nowMs()) return error(400, 'token_expired');
-  if (requestedFreeAccess && row.access_intent !== 'free') {
-    return error(409, 'free_signup_token_missing_intent');
-  }
-
-  // Token early-marken: schuetzt vor Replay durch konkurrente Requests. Falls
-  // einer der nachfolgenden Schritte (User-Upsert, Trial, Consent, Session)
-  // scheitert, geben wir den Token im catch-Block wieder frei (used_at=NULL),
-  // damit der User es ohne neuen Magic-Link erneut versuchen kann.
-  const markResult = await env.DB.prepare(
-    'UPDATE magic_login_tokens SET used_at = ? WHERE id = ? AND used_at IS NULL',
-  )
-    .bind(nowMs(), row.id)
-    .run();
-
-  const markedRows = markResult.meta?.changes ?? 0;
-  if (markedRows === 0) return error(400, 'token_used');
+  const result = await consumeOtpToken(env, email, code, nowMs());
+  if (result.status === 'locked') return error(400, 'code_locked');
+  if (result.status !== 'ok') return error(400, 'code_invalid');
 
   try {
     const now = nowMs();
-
-    // Free-Signup-Flow (access_intent='free'): Consent ist Pflicht. Ohne
-    // gueltigen Payload brechen wir ab — User bekommt KEINEN Trial ohne
-    // dokumentierte Zustimmung. Der Token wird im catch-Block wieder
-    // freigegeben, der User kann den Link nochmal klicken (was bei
-    // strukturellem Fehler nicht helfen wird → er muss /signup erneut
-    // durchlaufen). Audit-relevant.
     let freeSignupConsent: ConsentSnapshot | null = null;
-    if (row.access_intent === 'free') {
-      if (!row.consent_payload_json) {
-        throw new Error('consent_required_for_free_signup');
-      }
+    if (result.purpose === 'free_signup') {
+      if (!result.consent_payload_json) throw new Error('consent_required_for_free_signup');
       try {
-        freeSignupConsent = JSON.parse(row.consent_payload_json) as ConsentSnapshot;
+        freeSignupConsent = JSON.parse(result.consent_payload_json) as ConsentSnapshot;
       } catch (parseErr) {
         console.warn('consent_payload_parse_failed', parseErr);
         throw new Error('consent_payload_corrupt');
@@ -116,13 +78,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       }
     }
 
-    const user = await upsertUserByEmail(env, row.email_lower, now, randomId);
+    const user = await upsertUserByEmail(env, result.email_lower, now, randomId);
 
-    // Side-Effect-Idempotenz: prueft, ob fuer DIESEN Token bereits
-    // consent_log/trial geschrieben wurden (z.B. nach kompensiertem Fehler
-    // und Retry). insertConsentLog ist NICHT inherent idempotent, grantTrial
-    // schon (via getEntitlementForBrand).
-    if (row.access_intent === 'free' && freeSignupConsent) {
+    if (result.purpose === 'free_signup' && freeSignupConsent) {
       await grantTrialEntitlementIfMissing(env, user.id, env.BRAND_ID, now, TRIAL_DAYS, randomId);
 
       const consentAlreadyLogged = await env.DB.prepare(
@@ -175,25 +133,12 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         ok:          true,
         sessionKind: session.kind,
         email:       user.email,
-        nextUrl:     row.next_url,
+        nextUrl:     result.next_url,
       },
       { headers: { 'set-cookie': cookie } },
     );
   } catch (err) {
-    // Kompensation: Token wieder freigeben, damit der User es ohne neuen
-    // Magic-Link erneut versuchen kann. Rate-Limit-Counter sind bereits
-    // konsumiert — bei wiederholten Server-Fehlern blockt das Rate-Limiting
-    // weiteren Spam.
-    try {
-      await env.DB.prepare(
-        'UPDATE magic_login_tokens SET used_at = NULL WHERE id = ?',
-      )
-        .bind(row.id)
-        .run();
-    } catch (cleanupErr) {
-      console.warn('verify_link_token_release_failed', cleanupErr);
-    }
-    console.error('verify_link_post_mark_failed', err);
+    console.error('verify_code_post_consume_failed', err);
     return error(500, 'verify_failed');
   }
 };

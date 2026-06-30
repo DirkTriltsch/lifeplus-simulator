@@ -11,7 +11,7 @@ const brand = await getBrand('lifeplus');
 <BrandLayout
   brand={brand}
   title={`Anmelden · ${brand.siteName}`}
-  description={`Bei ${brand.siteName} anmelden und Login-Link per E-Mail erhalten.`}
+  description={`Bei ${brand.siteName} anmelden und Login-Code per E-Mail erhalten.`}
 >
   <Header brand={brand} />
   <LoginPage brand={brand} source="brands/lifeplus/pages/login.astro" />

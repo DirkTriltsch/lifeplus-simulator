@@ -1,12 +1,12 @@
 // Free-Signup / Consent client script (Phase 3.1 + 3.5 erweitert).
 //
 // Email-Quellen-Priorität: URL ?email > /api/me Session > leer.
-// next-Param: URL ?next=/checkout/{plan}[.html] wird an request-link
-// weitergereicht und am Magic-Link-Token persistiert; nach Verify-Link
-// redirected die App dorthin (siehe verify-link Response).
+// next-Param: URL ?next=/checkout/{plan}[.html] wird an request-code
+// weitergereicht und am OTP-Token persistiert; nach Verify-Code redirected
+// die App dorthin (siehe verify-code Response).
 //
-// Submit: POST /api/auth/request-link mit { email, access:'free', consent, next }.
-// Erfolg: Success-View "Schau in dein Postfach" + Resend-Button (Cooldown
+// Submit: POST /api/auth/request-code mit { email, access:'free', consent, next }.
+// Erfolg: Code-View + Resend-Button (Cooldown
 // 30 Sekunden, damit User nicht spammed).
 
 interface MeResponse {
@@ -26,6 +26,7 @@ export function setupSignupInline(): void {
 
   // ── Config aus data-attrs ────────────────────────────────────
   const apiBase        = (root.dataset.apiBase ?? '').replace(/\/$/, '');
+  const appUrl         = root.dataset.appUrl ?? '/app/';
   const brandId        = root.dataset.brandId ?? '';
   const consentVersion = root.dataset.consentVersion ?? '';
 
@@ -40,13 +41,16 @@ export function setupSignupInline(): void {
   const formView     = document.getElementById('formView');
   const sentView     = document.getElementById('sentView');
   const sentEmail    = document.getElementById('sentEmail');
+  const codeInput    = document.getElementById('signupCode') as HTMLInputElement | null;
+  const verifyBtn    = document.getElementById('verifySignupBtn') as HTMLButtonElement | null;
+  const codeErrMsg   = document.getElementById('codeErrMsg');
   const resendBtn    = document.getElementById('resendBtn') as HTMLButtonElement | null;
   const resendStatus = document.getElementById('resendStatus');
   const nextHint     = document.getElementById('nextHint');
 
   if (
     !emailInput || !btn || !chkAgb || !chkDse || !chkNl || !errMsg ||
-    !formView || !sentView
+    !formView || !sentView || !codeInput || !verifyBtn || !codeErrMsg
   ) {
     console.warn('[signup] missing DOM nodes — abort');
     return;
@@ -82,7 +86,7 @@ export function setupSignupInline(): void {
       emailHint.classList.add('error');
     } else {
       emailHint.textContent =
-        'Wir senden dir einen Login-Link an diese Adresse.';
+        'Wir senden dir einen 6-stelligen Code an diese Adresse.';
       emailHint.classList.remove('error');
     }
   }
@@ -126,7 +130,7 @@ export function setupSignupInline(): void {
         },
       };
       if (nextUrl) body.next = nextUrl;
-      const res = await fetch(apiUrl('/api/auth/request-link'), {
+      const res = await fetch(apiUrl('/api/auth/request-code'), {
         method:      'POST',
         credentials: 'include',
         headers:     { 'content-type': 'application/json' },
@@ -134,8 +138,42 @@ export function setupSignupInline(): void {
       });
       return { ok: res.ok, status: res.status };
     } catch (err) {
-      console.warn('[signup] request-link unreachable:', err);
+      console.warn('[signup] request-code unreachable:', err);
       return { ok: false };
+    }
+  }
+
+  async function verifySignupCode(email: string, code: string): Promise<{
+    ok: boolean;
+    status?: 'invalid' | 'locked' | 'error';
+    nextUrl?: string | null;
+  }> {
+    try {
+      const res = await fetch(apiUrl('/api/auth/verify-code'), {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'content-type': 'application/json' },
+        body:        JSON.stringify({ email, code }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { nextUrl?: string | null };
+        return { ok: true, nextUrl: data.nextUrl ?? null };
+      }
+      let errCode = '';
+      try {
+        const data = (await res.json()) as { error?: { code?: string } };
+        errCode = data.error?.code ?? '';
+      } catch {
+        // keep generic error below
+      }
+      if (errCode === 'code_locked') return { ok: false, status: 'locked' };
+      if (errCode === 'code_invalid' || errCode === 'invalid_code') {
+        return { ok: false, status: 'invalid' };
+      }
+      return { ok: false, status: 'error' };
+    } catch (err) {
+      console.warn('[signup] verify-code unreachable:', err);
+      return { ok: false, status: 'error' };
     }
   }
 
@@ -143,6 +181,21 @@ export function setupSignupInline(): void {
     if (sentEmail) sentEmail.textContent = email;
     formView!.hidden = true;
     sentView!.hidden = false;
+    codeInput!.value = '';
+    verifyBtn!.disabled = true;
+    codeErrMsg!.classList.remove('show');
+    codeInput!.focus();
+  }
+
+  function currentCode(): string {
+    return codeInput!.value.replace(/\D/g, '').slice(0, 6);
+  }
+
+  function refreshCodeUI(): void {
+    const code = currentCode();
+    if (codeInput!.value !== code) codeInput!.value = code;
+    verifyBtn!.disabled = code.length !== 6 || !lastSubmittedEmail;
+    codeErrMsg!.classList.remove('show');
   }
 
   // ── Resend mit Cooldown ─────────────────────────────────────
@@ -168,7 +221,7 @@ export function setupSignupInline(): void {
     if (resendStatus) resendStatus.textContent = '';
     const result = await submitSignup(lastSubmittedEmail);
     if (result.ok) {
-      if (resendStatus) resendStatus.textContent = `Login-Link wurde erneut an ${lastSubmittedEmail} gesendet.`;
+      if (resendStatus) resendStatus.textContent = `Code wurde erneut an ${lastSubmittedEmail} gesendet.`;
       startResendCooldown();
     } else {
       if (resendStatus) resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte später erneut versuchen.';
@@ -183,6 +236,32 @@ export function setupSignupInline(): void {
   [chkAgb, chkDse, chkNl].forEach((cb) =>
     cb!.addEventListener('change', refreshGating),
   );
+  codeInput.addEventListener('input', refreshCodeUI);
+  codeInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') void handleVerify();
+  });
+
+  async function handleVerify(): Promise<void> {
+    const code = currentCode();
+    if (!lastSubmittedEmail || code.length !== 6) {
+      codeInput!.focus();
+      return;
+    }
+    verifyBtn!.classList.add('loading');
+    verifyBtn!.disabled = true;
+    codeErrMsg!.classList.remove('show');
+    const result = await verifySignupCode(lastSubmittedEmail, code);
+    verifyBtn!.classList.remove('loading');
+    if (result.ok) {
+      window.location.replace(result.nextUrl || appUrl);
+      return;
+    }
+    verifyBtn!.disabled = false;
+    codeErrMsg!.textContent = result.status === 'locked'
+      ? 'Zu viele falsche Versuche. Bitte fordere einen neuen Code an.'
+      : 'Der Code ist ungueltig oder abgelaufen.';
+    codeErrMsg!.classList.add('show');
+  }
 
   btn.addEventListener('click', async () => {
     const email = currentEmail();
@@ -208,10 +287,12 @@ export function setupSignupInline(): void {
     } else {
       btn.disabled = false;
       errMsg.textContent =
-        'Der Login-Link konnte gerade nicht gesendet werden. Bitte versuche es gleich noch einmal.';
+        'Der Code konnte gerade nicht gesendet werden. Bitte versuche es gleich noch einmal.';
       errMsg.classList.add('show');
     }
   });
+
+  verifyBtn.addEventListener('click', () => void handleVerify());
 
   if (resendBtn) {
     resendBtn.addEventListener('click', () => void handleResend());

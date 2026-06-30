@@ -31,7 +31,7 @@ const accountConfig = {
       <div id="state-anonymous" class="hidden">
         <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Anmelden</h2>
         <p style="font-size:14px; color:#4A5C53; margin:0 0 20px;">
-          Gib die E-Mail-Adresse ein, mit der du gekauft hast. Wir senden dir einen einmaligen Login-Link.
+          Gib die E-Mail-Adresse ein, mit der du gekauft hast. Wir senden dir einen einmaligen Login-Code.
         </p>
         <form id="login-form" class="account-actions">
           <input
@@ -44,11 +44,11 @@ const accountConfig = {
             class="account-input"
           />
           <button type="submit" class="account-btn-primary" id="login-btn">
-            Login-Link senden
+            Code senden
           </button>
         </form>
         <p class="account-privacy-note">
-          Mit Klick auf "Login-Link senden" verarbeiten wir deine E-Mail-Adresse zur Authentifizierung
+          Mit Klick auf "Code senden" verarbeiten wir deine E-Mail-Adresse zur Authentifizierung
           und Vertragsdurchführung (Art. 6 Abs. 1 lit. b DSGVO). Details siehe
           <a href="/datenschutz.html">Datenschutzerklärung</a>.
         </p>
@@ -57,11 +57,27 @@ const accountConfig = {
 
       <!-- Sent -->
       <div id="state-sent" class="hidden">
-        <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Link gesendet</h2>
+        <h2 style="font-family: var(--serif, 'Fraunces', Georgia, serif); font-weight:400; font-size:22px; margin:0 0 6px;">Code gesendet</h2>
         <p style="font-size:14px; color:#4A5C53;">
-          Falls die E-Mail-Adresse bei uns bekannt ist, hast du in den nächsten Minuten einen Login-Link im Postfach.
-          Du kannst dieses Fenster offen lassen und auf den Link in der Mail klicken.
+          Falls die E-Mail-Adresse bei uns bekannt ist, hast du in den naechsten Minuten einen 6-stelligen Code im Postfach.
         </p>
+        <form id="login-code-form" class="account-actions">
+          <input
+            id="login-code"
+            type="text"
+            required
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            placeholder="123456"
+            class="account-input account-code-input"
+          />
+          <button type="submit" class="account-btn-primary" id="login-code-btn">
+            Einloggen
+          </button>
+        </form>
+        <p id="login-code-msg" class="account-msg hidden"></p>
       </div>
 
       <!-- Verifying -->
@@ -244,6 +260,12 @@ const accountConfig = {
     box-sizing: border-box;
   }
   .account-input:focus { outline: none; border-color: var(--brand); }
+  .account-code-input {
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+  }
   .account-msg { font-size: 13px; color: #4A5C53; margin-top: 8px; }
   .account-msg.error { color: #B91C1C; }
   .account-msg.success { color: #047857; }

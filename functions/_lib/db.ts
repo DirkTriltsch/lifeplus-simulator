@@ -156,7 +156,7 @@ export async function grantFreeEntitlementIfMissing(
 }
 
 // DEPRECATED ab Phase 2.2 — Beta-Grace wird nicht mehr automatisch beim
-// Magic-Link-Verify vergeben. Wer Pro-Zugang braucht: entweder Trial via
+// Login-Code-Verify vergeben. Wer Pro-Zugang braucht: entweder Trial via
 // /signup oder echter Kauf via /checkout. Bestandsuser mit source='beta_grace'
 // behalten ihre Entitlements, neue werden nicht mehr erzeugt.
 //
@@ -431,7 +431,7 @@ export async function grantTrialEntitlementIfMissing(
 }
 
 // Phase 2.2 — Append-only Insert ins Consent-Audit-Log.
-// Wird sowohl vom Magic-Link-Verify (free_signup) als auch vom Paddle-Webhook
+// Wird sowohl vom Login-Code-Verify (free_signup) als auch vom Paddle-Webhook
 // (pro_checkout) aufgerufen. Boolean-Felder werden als 0/1 in INTEGER abgelegt.
 export interface ConsentLogParams {
   checkoutUserId: string;

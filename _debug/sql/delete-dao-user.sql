@@ -49,6 +49,12 @@ DELETE FROM consent_log
 DELETE FROM magic_login_tokens
  WHERE email_lower = '__EMAIL_TO_DELETE__';
 
+DELETE FROM email_otp_active
+ WHERE email_lower = '__EMAIL_TO_DELETE__';
+
+DELETE FROM email_otp_tokens
+ WHERE email_lower = '__EMAIL_TO_DELETE__';
+
 -- Webhook payloads can contain checkout/customer email snapshots. For this
 -- explicit test-user wipe we remove payload rows that still contain the email.
 DELETE FROM webhook_events

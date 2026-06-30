@@ -390,7 +390,7 @@ export function setupCheckoutInline(): void {
   // ── checkout.completed → post-checkout → Auto-Redirect zur App ───
   // v6.1: post-checkout validiert die Zahlung server-seitig bei Paddle,
   // legt User + Session an und gibt eine redirectUrl zurueck. Wir leiten
-  // den Browser direkt dorthin um — kein Magic-Link-Klick noetig.
+  // den Browser direkt dorthin um.
   async function handleCheckoutCompleted(): Promise<void> {
     const email = activeIntentEmail || currentEmail();
     let redirectUrl: string | null = null;
@@ -417,7 +417,7 @@ export function setupCheckoutInline(): void {
         const data = (await res.json().catch(() => null)) as ApiErrorResponse | null;
         failureMessage = apiErrorMessage(
           data,
-          'Die Zahlung wurde abgeschlossen, aber der Login konnte nicht automatisch eingerichtet werden. Bitte versuche es erneut oder nutze den Login-Link.',
+          'Die Zahlung wurde abgeschlossen, aber der Login konnte nicht automatisch eingerichtet werden. Bitte versuche es erneut oder melde dich mit dem Login-Code an.',
         );
       }
     } catch (err) {
@@ -427,7 +427,7 @@ export function setupCheckoutInline(): void {
     }
 
     // Erfolg: direkt zur App weiterleiten. Fallback: Success-View, damit der
-    // User wenigstens den Status sieht und auf Login-Link warten kann.
+    // User sieht wenigstens den Status und kann sich mit dem Login-Code anmelden.
     if (redirectUrl) {
       window.location.href = redirectUrl;
       return;

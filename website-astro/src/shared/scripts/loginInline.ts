@@ -19,6 +19,9 @@ export function setupLoginInline(): void {
   const btn = document.getElementById('loginBtn') as HTMLButtonElement | null;
   const errMsg = document.getElementById('loginErrMsg');
   const sentEmail = document.getElementById('loginSentEmail');
+  const codeInput = document.getElementById('loginCode') as HTMLInputElement | null;
+  const verifyBtn = document.getElementById('loginVerifyBtn') as HTMLButtonElement | null;
+  const codeErrMsg = document.getElementById('loginCodeErrMsg');
   const resendBtn = document.getElementById('loginResendBtn') as HTMLButtonElement | null;
   const resendStatus = document.getElementById('loginResendStatus');
   const tryAgainBtn = document.getElementById('loginTryAgainBtn') as HTMLButtonElement | null;
@@ -26,7 +29,10 @@ export function setupLoginInline(): void {
     document.querySelectorAll<HTMLAnchorElement>('.sent-plan-link, .cta-link'),
   );
 
-  if (!formView || !sentView || !notFoundView || !emailInput || !btn || !errMsg) {
+  if (
+    !formView || !sentView || !notFoundView || !emailInput || !btn || !errMsg ||
+    !codeInput || !verifyBtn || !codeErrMsg
+  ) {
     console.warn('[login] missing DOM nodes - abort');
     return;
   }
@@ -56,7 +62,7 @@ export function setupLoginInline(): void {
       emailHint.textContent = 'Bitte eine gültige E-Mail-Adresse eingeben.';
       emailHint.classList.add('error');
     } else {
-      emailHint.textContent = 'Wir senden dir einen einmaligen Login-Link.';
+      emailHint.textContent = 'Wir senden dir einen 6-stelligen Login-Code.';
       emailHint.classList.remove('error');
     }
   }
@@ -74,13 +80,18 @@ export function setupLoginInline(): void {
     });
   }
 
-  interface LoginLinkResult {
+  interface LoginCodeResult {
     status: 'ok' | 'error';
   }
 
-  async function requestLoginLink(email: string): Promise<LoginLinkResult> {
+  interface VerifyCodeResult {
+    status: 'ok' | 'invalid' | 'locked' | 'error';
+    nextUrl?: string | null;
+  }
+
+  async function requestLoginCode(email: string): Promise<LoginCodeResult> {
     try {
-      const res = await fetch(apiUrl('/api/auth/request-link'), {
+      const res = await fetch(apiUrl('/api/auth/request-code'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -96,10 +107,37 @@ export function setupLoginInline(): void {
       } catch {
         // keep generic error below
       }
-      if (code === 'account_not_found') return { status: 'ok' };
       return { status: 'error' };
     } catch (err) {
-      console.warn('[login] request-link unreachable:', err);
+      console.warn('[login] request-code unreachable:', err);
+      return { status: 'error' };
+    }
+  }
+
+  async function verifyLoginCode(email: string, code: string): Promise<VerifyCodeResult> {
+    try {
+      const res = await fetch(apiUrl('/api/auth/verify-code'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { nextUrl?: string | null };
+        return { status: 'ok', nextUrl: data.nextUrl ?? null };
+      }
+      let errCode = '';
+      try {
+        const data = (await res.json()) as { error?: { code?: string } };
+        errCode = data.error?.code ?? '';
+      } catch {
+        // keep generic error below
+      }
+      if (errCode === 'code_locked') return { status: 'locked' };
+      if (errCode === 'code_invalid' || errCode === 'invalid_code') return { status: 'invalid' };
+      return { status: 'error' };
+    } catch (err) {
+      console.warn('[login] verify-code unreachable:', err);
       return { status: 'error' };
     }
   }
@@ -137,6 +175,21 @@ export function setupLoginInline(): void {
     if (checkingView) checkingView.hidden = true;
     sentView!.hidden = false;
     notFoundView!.hidden = true;
+    codeInput!.value = '';
+    verifyBtn!.disabled = true;
+    codeErrMsg!.classList.remove('show');
+    codeInput!.focus();
+  }
+
+  function currentCode(): string {
+    return codeInput!.value.replace(/\D/g, '').slice(0, 6);
+  }
+
+  function refreshCodeUI(): void {
+    const code = currentCode();
+    if (codeInput!.value !== code) codeInput!.value = code;
+    verifyBtn!.disabled = code.length !== 6 || !lastSubmittedEmail;
+    codeErrMsg!.classList.remove('show');
   }
 
   function startResendCooldown(): void {
@@ -167,7 +220,7 @@ export function setupLoginInline(): void {
     btn!.classList.add('loading');
     btn!.disabled = true;
     errMsg!.classList.remove('show');
-    const result = await requestLoginLink(email);
+    const result = await requestLoginCode(email);
     btn!.classList.remove('loading');
 
     if (result.status === 'ok') {
@@ -179,16 +232,41 @@ export function setupLoginInline(): void {
     }
 
     btn!.disabled = false;
-    errMsg!.textContent = 'Der Login-Link konnte gerade nicht gesendet werden. Bitte versuche es gleich noch einmal.';
+    errMsg!.textContent = 'Der Code konnte gerade nicht gesendet werden. Bitte versuche es gleich noch einmal.';
     errMsg!.classList.add('show');
+  }
+
+  async function verify(): Promise<void> {
+    const code = currentCode();
+    if (!lastSubmittedEmail || code.length !== 6) {
+      codeInput!.focus();
+      return;
+    }
+
+    verifyBtn!.classList.add('loading');
+    verifyBtn!.disabled = true;
+    codeErrMsg!.classList.remove('show');
+    const result = await verifyLoginCode(lastSubmittedEmail, code);
+    verifyBtn!.classList.remove('loading');
+
+    if (result.status === 'ok') {
+      window.location.replace(result.nextUrl || appUrl);
+      return;
+    }
+
+    verifyBtn!.disabled = false;
+    codeErrMsg!.textContent = result.status === 'locked'
+      ? 'Zu viele falsche Versuche. Bitte fordere einen neuen Code an.'
+      : 'Der Code ist ungueltig oder abgelaufen.';
+    codeErrMsg!.classList.add('show');
   }
 
   async function resend(): Promise<void> {
     if (!lastSubmittedEmail) return;
     if (resendStatus) resendStatus.textContent = '';
-    const result = await requestLoginLink(lastSubmittedEmail);
+    const result = await requestLoginCode(lastSubmittedEmail);
     if (result.status === 'ok') {
-      if (resendStatus) resendStatus.textContent = 'Falls ein Konto existiert, wurde erneut ein Login-Link gesendet.';
+      if (resendStatus) resendStatus.textContent = 'Falls ein Konto existiert, wurde erneut ein Code gesendet.';
       startResendCooldown();
     } else if (resendStatus) {
       resendStatus.textContent = 'Senden hat nicht funktioniert. Bitte später erneut versuchen.';
@@ -196,7 +274,12 @@ export function setupLoginInline(): void {
   }
 
   emailInput.addEventListener('input', refreshEmailUI);
+  codeInput.addEventListener('input', refreshCodeUI);
+  codeInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') void verify();
+  });
   btn.addEventListener('click', () => void submit());
+  verifyBtn.addEventListener('click', () => void verify());
   resendBtn?.addEventListener('click', () => void resend());
   tryAgainBtn?.addEventListener('click', showForm);
 

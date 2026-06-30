@@ -94,40 +94,24 @@ export function fetchMe(): Promise<MeResponse> {
   }).then(asJson<MeResponse>);
 }
 
-export function requestMagicLink(email: string): Promise<{ ok: boolean }> {
-  return fetch(apiUrl('/api/auth/request-link'), {
+export function requestOtpCode(email: string): Promise<{ ok: boolean }> {
+  return fetch(apiUrl('/api/auth/request-code'), {
     method: 'POST',
     headers,
     credentials: 'include',
     body: JSON.stringify({ email }),
-  }).then(async (res) => {
-    if (res.ok) return (await res.json()) as { ok: boolean };
-
-    let code = '';
-    try {
-      const data = (await res.clone().json()) as { error?: { code?: string } };
-      code = data.error?.code ?? '';
-    } catch {
-      // fall through to the regular error path below
-    }
-
-    // Older API deployments returned 404 for unknown login emails. Treat it
-    // neutrally so the app does not leak account existence.
-    if (code === 'account_not_found') return { ok: true };
-
-    return asJson<{ ok: boolean }>(res);
-  });
+  }).then(asJson<{ ok: boolean }>);
 }
 
-export function verifyMagicLink(
-  token: string,
-  access?: 'free',
+export function verifyOtpCode(
+  email: string,
+  code: string,
 ): Promise<{ ok: boolean; sessionKind: string; nextUrl?: string | null }> {
-  return fetch(apiUrl('/api/auth/verify-link'), {
+  return fetch(apiUrl('/api/auth/verify-code'), {
     method: 'POST',
     headers,
     credentials: 'include',
-    body: JSON.stringify(access ? { token, access } : { token }),
+    body: JSON.stringify({ email, code }),
   }).then(asJson<{ ok: boolean; sessionKind: string; nextUrl?: string | null }>);
 }
 

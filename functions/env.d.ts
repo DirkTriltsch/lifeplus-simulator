@@ -14,7 +14,8 @@ export interface Env {
   PADDLE_PRICE_YEARLY: string;
   COOKIE_DOMAIN: string;
   SESSION_TTL_DAYS: string;
-  MAGIC_LINK_TTL_MINUTES: string;
+  OTP_TTL_MINUTES: string;
+  CONSENT_DOCUMENT_VERSION?: string;
   DEVICE_LIMIT: string;
   MAIL_FROM: string;
   MAIL_FROM_NAME: string;
@@ -22,18 +23,16 @@ export interface Env {
   PADDLE_API_KEY: string;
   PADDLE_WEBHOOK_SECRET: string;
   APP_SESSION_SECRET: string;
-  MAGIC_LINK_SECRET: string;
+  OTP_HASH_SECRET?: string;
   RESEND_API_KEY: string;
   DIAGNOSTIC_TOKEN?: string;
+  PUBLIC_PRODUCTION?: string;
 
   // Local-dev override (.dev.vars): wenn '1' werden Session-Cookies ohne
   // Secure-Flag gesetzt, damit sie ueber http://localhost akzeptiert werden.
   // Production immer leer/unset.
   INSECURE_COOKIES?: string;
 
-  // Local-dev Magic-Link-Helper. Wenn '1' UND INSECURE_COOKIES='1' wird der
-  // Klartext-Token bei Mailer-Fehler in der Response zurueckgegeben. Beide
-  // Flags muessen explizit gesetzt sein — verhindert versehentliche
-  // Aktivierung in Production, falls jemand RESEND_API_KEY rotiert/loescht.
-  DEV_MAGIC_LINK_DEBUG?: string;
+  // Local-dev OTP helper. Production immer leer/unset.
+  DEV_OTP_DEBUG?: string;
 }

@@ -573,6 +573,59 @@ export async function paddleGetSubscriptionDetails(
   };
 }
 
+export interface PaddleSubscriberRecord {
+  customerId: string;
+  subscriptionId: string;
+  status: string;
+  priceId: string;
+  currentPeriodEndsAt: number | null;
+  canceledAt: number | null;
+}
+
+interface PaddleSubscriberSubscriptionRaw {
+  id: string;
+  customer_id: string | null;
+  status: string;
+  items?: Array<{ price?: { id?: string } }>;
+  current_billing_period?: { ends_at?: string } | null;
+  canceled_at?: string | null;
+}
+
+export async function paddleFindSubscriberByEmail(
+  env: Env,
+  email: string,
+): Promise<PaddleSubscriberRecord | null> {
+  const customer = await paddleFindCustomerByEmail(env, email);
+  if (!customer) return null;
+
+  const subscriptions = await paddleRequest<PaddleSubscriberSubscriptionRaw[]>(
+    env,
+    'GET',
+    `/subscriptions?customer_id=${encodeURIComponent(customer.id)}&per_page=200`,
+  );
+  if (!Array.isArray(subscriptions)) return null;
+
+  const allowedPrices = [env.PADDLE_PRICE_MONTHLY, env.PADDLE_PRICE_HALFYEAR, env.PADDLE_PRICE_YEARLY]
+    .filter(Boolean);
+  const usableStatuses = new Set(['active', 'trialing', 'past_due']);
+  const sub = subscriptions.find((candidate) => {
+    const priceId = candidate.items?.[0]?.price?.id ?? '';
+    return usableStatuses.has(candidate.status) && allowedPrices.includes(priceId);
+  });
+  if (!sub) return null;
+
+  return {
+    customerId: customer.id,
+    subscriptionId: sub.id,
+    status: sub.status,
+    priceId: sub.items?.[0]?.price?.id ?? 'unknown',
+    currentPeriodEndsAt: sub.current_billing_period?.ends_at
+      ? Date.parse(sub.current_billing_period.ends_at)
+      : null,
+    canceledAt: sub.canceled_at ? Date.parse(sub.canceled_at) : null,
+  };
+}
+
 export interface PaddleTransactionListItem {
   id: string;
   status: string;

@@ -17,6 +17,14 @@ SELECT 'target_email_counts', 'magic_login_tokens', COUNT(*)
   FROM magic_login_tokens
  WHERE email_lower = 'dao@triltsch-online.de'
 UNION ALL
+SELECT 'target_email_counts', 'email_otp_active', COUNT(*)
+  FROM email_otp_active
+ WHERE email_lower = 'dao@triltsch-online.de'
+UNION ALL
+SELECT 'target_email_counts', 'email_otp_tokens', COUNT(*)
+  FROM email_otp_tokens
+ WHERE email_lower = 'dao@triltsch-online.de'
+UNION ALL
 SELECT 'target_email_counts', 'webhook_events_payload', COUNT(*)
   FROM webhook_events
  WHERE lower(payload_json) LIKE '%dao@triltsch-online.de%';

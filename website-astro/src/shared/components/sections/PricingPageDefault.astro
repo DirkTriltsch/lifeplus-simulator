@@ -264,7 +264,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
     });
   });
 
-  // Pro-CTAs gehen direkt auf /checkout/{plan}.html — kein Magic-Link-Detour
+  // Pro-CTAs gehen direkt auf /checkout/{plan}.html.
   // mehr fuer zahlende Kunden (v6.1 Gast-Checkout). Pflicht-Email +
   // Rechnungsdaten werden im Checkout selbst eingegeben; Account-Anlage
   // erfolgt im post-checkout nach Paddle-Verifikation.

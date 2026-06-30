@@ -27,5 +27,5 @@
     }
   },
   "include": ["website", "simulator-app", "packages", "tests"],
-  "exclude": ["**/vite.config.ts", "vitest.config.ts"]
+  "exclude": ["**/vite.config.ts", "vitest.config.ts", "tests/backend"]
 }

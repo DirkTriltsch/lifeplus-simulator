@@ -85,19 +85,19 @@ nutzt; die Root-Skripte bauen deshalb sequentiell.
 
 ## Live-Deploy Checkliste
 
-- Free-Tier Click: E-Mail-Prompt, Magic-Link-Versand, Hinweis-Overlay und Login
+- Free-Tier Click: E-Mail-Prompt, Login-Code-Versand, Code-Eingabe, Hinweis-Overlay und Login
   in Staging testen.
 - Pro-Tier Clicks fuer Monthly, Halfyear und Yearly mit Sandbox-Paddle testen:
   direkter `/checkout/{plan}.html`-Flow, `checkout-intent`, Paddle Overlay,
   `post-checkout`, App-Redirect und Webhook-Entitlement.
 - D1-Migrationsstatus fuer lokal, Preview/Sandbox und Production gegen
-  `0001` bis `0009` pruefen. Lokal existieren alle Migrationsdateien; Remote-
+  `0001` bis `0010` pruefen. Lokal existieren alle Migrationsdateien; Remote-
   Status ist ohne `wrangler d1 migrations list` nicht verifiziert.
-- `mein-konto.html`: Magic-Link-Verify, Account-Status-Render,
+- `mein-konto.html`: Login-Code-Verify, Account-Status-Render,
   Subscription-Details und Portal-/Cancel-Flows pruefen.
 - FitLine und Eqology vorerst nicht live bewerben: beide Brands enthalten noch
-  Paddle-Platzhalter und keine eigene `apiBaseUrl`. Der Free-Magic-Link-Flow
-  wuerde auf der Marketing-Domain gegen `/api/auth/request-link` laufen.
+  Paddle-Platzhalter und keine eigene `apiBaseUrl`. Der Free-Login-Code-Flow
+  wuerde auf der Marketing-Domain gegen `/api/auth/request-code` laufen.
 - Visuellen Screenshot-Vergleich gegen den letzten akzeptierten Build machen,
   besonders Pricing Cards, Compare-Tabelle, Hero und Footer.
 - `debug.html` nicht aus der Navigation verlinken; die Seite ist nur lokal/fuer Reviews gedacht und per `robots.txt` ausgeschlossen.
@@ -124,7 +124,7 @@ FitLine und Eqology haben eigene Product Packs, Astro-Microsites und App-Builds,
 aber noch keine echten Paddle-IDs, API-Subdomains oder Pages-Projekte. Ihre
 `paddle.*`-Werte bleiben Platzhalter, bis die Brand-Setups separat angelegt
 werden. Diese beiden Brands sind deshalb als Staging-/Preview-Setups zu
-behandeln; produktiver Magic-Link- und Checkout-Betrieb ist aktuell nur fuer
+behandeln; produktiver Login-Code- und Checkout-Betrieb ist aktuell nur fuer
 LifePlus konfiguriert.
 
 ## Microsite Anpassen

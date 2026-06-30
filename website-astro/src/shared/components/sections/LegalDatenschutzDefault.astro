@@ -145,10 +145,12 @@ const { brand, contact, source } = Astro.props;
   </p>
   <ul>
     <li>
-      <strong>Authentifizierung (Magic Link):</strong> Beim Login speichern wir kurzzeitig einen
-      Session-Token (Local Storage / Cookie) auf Ihrem Gerät. Zweck: Anmeldung und Vertragsdurchführung,
-      Rechtsgrundlage Art. 6 Abs. 1 lit. b DSGVO. Speicherdauer: bis zur Abmeldung oder bis zum
-      Ablauf des Tokens.
+      <strong>Authentifizierung (Login-Code):</strong> Beim Login verarbeiten wir kurzzeitig
+      E-Mail-Adresse, Einmal-Code, Fehlversuchszähler sowie IP-Adresse und User-Agent zum
+      Schutz vor Missbrauch. Nach erfolgreicher Anmeldung speichern wir einen Session-Token
+      (Cookie) auf Ihrem Gerät. Zweck: Anmeldung, Vertragsdurchführung und Brute-Force-Schutz;
+      Rechtsgrundlage Art. 6 Abs. 1 lit. b und f DSGVO. Speicherdauer: Code-Daten bis zum
+      Ablauf bzw. Verbrauch des Codes, Session bis zur Abmeldung oder bis zum Ablauf des Tokens.
     </li>
     <li>
       <strong>Zahlungsabwicklung Paddle:</strong> Beim Aufruf der Checkout-Seite werden
@@ -160,7 +162,7 @@ const { brand, contact, source } = Astro.props;
       <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener">paddle.com/legal/privacy</a>.
     </li>
     <li>
-      <strong>E-Mail-Versand (Resend):</strong> Magic-Link-, Login- und Transaktions-E-Mails
+      <strong>E-Mail-Versand (Resend):</strong> Login-Code- und Transaktions-E-Mails
       werden über die Resend, Inc. (2261 Market Street, San Francisco, CA 94114, USA) versendet.
       Verarbeitet wird die angegebene E-Mail-Adresse zum Zweck der Authentifizierung und
       Vertragsdurchführung. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Drittland-Übermittlung
