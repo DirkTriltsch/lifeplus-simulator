@@ -13,10 +13,6 @@ SELECT 'target_email_counts', 'consent_log', COUNT(*)
  WHERE lower(checkout_email) = 'dao@triltsch-online.de'
     OR lower(COALESCE(session_email, '')) = 'dao@triltsch-online.de'
 UNION ALL
-SELECT 'target_email_counts', 'magic_login_tokens', COUNT(*)
-  FROM magic_login_tokens
- WHERE email_lower = 'dao@triltsch-online.de'
-UNION ALL
 SELECT 'target_email_counts', 'email_otp_active', COUNT(*)
   FROM email_otp_active
  WHERE email_lower = 'dao@triltsch-online.de'

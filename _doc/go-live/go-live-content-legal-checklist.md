@@ -10,7 +10,7 @@
 - [ ] Anwaltliche Freigabe fuer AGB, Widerruf, Datenschutz und Impressum.
 - [ ] Steuer-/USt-Status klaeren und `contact.vatId` beziehungsweise Kleinunternehmer-Hinweise korrekt setzen.
 - [ ] Paddle Production/KYC abschliessen und echte `clientToken`/`priceId*` in `website-astro/src/brands/lifeplus/brand.yaml` eintragen.
-- [ ] D1-Migrationsstatus fuer lokal, Preview/Sandbox und Production gegen `0001` bis `0009` verifizieren.
+- [ ] D1-Migrationsstatus fuer lokal, Preview/Sandbox und Production gegen `0001` bis `0010` verifizieren; `0011_drop_magic_login_tokens.sql` erst nach Production-Verifikation anwenden und danach erneut pruefen.
 - [ ] Sandbox-Smoke fuer B2B-v6.1 Gast-Checkout dokumentiert ausfuehren.
 - [ ] App-Redirect nach `post-checkout` und anschliessendes Webhook-Entitlement testen.
 - [ ] Account-/Abo-Verwaltung testen: Paddle-Portal-Links, direkte Abo-Kuendigung, Kuendigungs-Ruecknahme und Webhook-Synchronisierung.

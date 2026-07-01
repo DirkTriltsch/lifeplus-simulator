@@ -46,9 +46,6 @@ DELETE FROM consent_log
     OR lower(checkout_email) = '__EMAIL_TO_DELETE__'
     OR lower(COALESCE(session_email, '')) = '__EMAIL_TO_DELETE__';
 
-DELETE FROM magic_login_tokens
- WHERE email_lower = '__EMAIL_TO_DELETE__';
-
 DELETE FROM email_otp_active
  WHERE email_lower = '__EMAIL_TO_DELETE__';
 

@@ -19,9 +19,6 @@ DELETE FROM entitlements
 DELETE FROM subscriptions
  WHERE user_id IN (SELECT id FROM users WHERE email_lower IN ('budweiser.belinda@gmail.com', 'dao@triltsch-online.de'));
 
-DELETE FROM magic_login_tokens
- WHERE email_lower IN ('budweiser.belinda@gmail.com', 'dao@triltsch-online.de');
-
 DELETE FROM email_otp_active
  WHERE email_lower IN ('budweiser.belinda@gmail.com', 'dao@triltsch-online.de');
 

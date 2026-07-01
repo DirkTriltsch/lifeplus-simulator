@@ -91,8 +91,10 @@ nutzt; die Root-Skripte bauen deshalb sequentiell.
   direkter `/checkout/{plan}.html`-Flow, `checkout-intent`, Paddle Overlay,
   `post-checkout`, App-Redirect und Webhook-Entitlement.
 - D1-Migrationsstatus fuer lokal, Preview/Sandbox und Production gegen
-  `0001` bis `0010` pruefen. Lokal existieren alle Migrationsdateien; Remote-
-  Status ist ohne `wrangler d1 migrations list` nicht verifiziert.
+  `0001` bis `0010` pruefen; `0011_drop_magic_login_tokens.sql` erst nach
+  Production-Verifikation anwenden und danach erneut pruefen. Lokal existieren
+  alle Migrationsdateien; Remote-Status ist ohne `wrangler d1 migrations list`
+  nicht verifiziert.
 - `mein-konto.html`: Login-Code-Verify, Account-Status-Render,
   Subscription-Details und Portal-/Cancel-Flows pruefen.
 - FitLine und Eqology vorerst nicht live bewerben: beide Brands enthalten noch
