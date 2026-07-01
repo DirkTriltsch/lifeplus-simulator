@@ -162,3 +162,125 @@ eine aktive Plan-Implementierung: `product-lifeplus`. Die Product Packs fuer
 FitLine und Eqology besitzen eigene Domains, Markenwerte, Terminologie,
 Defaults und Tests, importieren aber bewusst denselben Planadapter. Erst mit
 den echten Fachunterlagen werden die Plaene getrennt.
+
+## Debug- und Ops-Befehle
+
+Sammelstelle fuer wiederkehrende Diagnose- und Wartungsbefehle. Production-D1
+heisst `lifeflow360-prod`, Pages-Projekt heisst `lifeflow360-api`. `--remote`
+zielt auf Production, `--local` auf die Wrangler-Dev-DB. Fuer Windows/
+PowerShell gelten die `npx`-Aufrufe unveraendert.
+
+### Wrangler Login / Session
+
+```bash
+npx wrangler whoami            # aktuellen Login und Account-ID pruefen
+npx wrangler login             # Browser-OAuth-Login
+npx wrangler logout            # Session verwerfen (bei 403 zuerst logout+login)
+```
+
+### D1: SELECT vs. Batch — wichtiger Unterschied
+
+- **`--command "SQL"`** benutzt den D1-Query-Pfad und **druckt die Result-Rows**
+  als Tabelle. Fuer alle Reads/Selects diese Variante nehmen.
+- **`--file datei.sql`** laeuft auf `--remote` als **Batch-Import** und gibt
+  nur Summary-Stats (`Rows read`, `Rows written`) aus, **keine Tabelle**.
+  Deshalb NICHT fuer SELECTs verwenden — nur fuer Migrations/DDL/DML-Batches.
+
+Windows PowerShell + `npx wrangler` (das ueber den `cmd.exe`-Shim `npx.cmd`
+laeuft) kann mehrzeilige Argumente nicht sauber weiterreichen. `cmd.exe`
+splittet den String an Newlines in separate Argumente, und SQL-Kommentare
+mit `-- ` werden von yargs als "Optionen-Ende" interpretiert. Deshalb:
+**SQL vor dem Aufruf zu einer Zeile kollabieren und Kommentare strippen.**
+
+### D1: User und Status auflisten
+
+```powershell
+# PowerShell: SQL laden, Kommentare/Newlines rausstrippen, als --command uebergeben
+$sql = (Get-Content _debug/sql/list-users-status.sql -Raw) -replace '(?m)--.*$','' -replace '\s+',' '
+npx wrangler d1 execute lifeflow360-prod --remote --command $sql
+
+# Einzelnen User inkl. Sessions/Devices/Consent (Adresse zuerst einsetzen)
+$sql = (Get-Content _debug/sql/inspect-user.sql -Raw) `
+       -replace '__EMAIL__','test@example.com' `
+       -replace '(?m)--.*$','' -replace '\s+',' '
+npx wrangler d1 execute lifeflow360-prod --remote --command $sql
+```
+
+Bash-Aequivalent (Newlines und Kommentare stoeren dort nicht):
+
+```bash
+npx wrangler d1 execute lifeflow360-prod --remote --command "$(cat _debug/sql/list-users-status.sql)"
+```
+
+Einzeilige Adhoc-Queries funktionieren ueberall direkt:
+
+```bash
+# Nur Emails + Anlagedatum + Status
+npx wrangler d1 execute lifeflow360-prod --remote --command "SELECT email_lower, datetime(created_at/1000,'unixepoch') AS created, deleted_at FROM users ORDER BY created_at DESC LIMIT 50;"
+
+# Anzahl aktiver Entitlements pro Access-Level
+npx wrangler d1 execute lifeflow360-prod --remote --command "SELECT access_level, COUNT(*) FROM entitlements GROUP BY access_level;"
+```
+
+### D1: OTP-Tokens inspizieren
+
+```powershell
+# Offene / gueltige OTP-Tokens einer Adresse
+$sql = (Get-Content _debug/sql/list-otp-tokens.sql -Raw) `
+       -replace '__EMAIL__','test@example.com' `
+       -replace '(?m)--.*$','' -replace '\s+',' '
+npx wrangler d1 execute lifeflow360-prod --remote --command $sql
+```
+
+```bash
+# Globale Anzahl offener Tokens (einzeilig, shell-agnostisch)
+npx wrangler d1 execute lifeflow360-prod --remote --command "SELECT COUNT(*) AS open_tokens FROM email_otp_tokens WHERE used_at IS NULL AND expires_at > unixepoch()*1000;"
+```
+
+### Test-User loeschen
+
+Fuer wiederholtes E-Mail-Testing existiert ein PowerShell-Wrapper, der alle
+verknuepften Tabellen (users, sessions, devices, entitlements, subscriptions,
+checkout_intents, consent_log, email_otp_*) abraeumt:
+
+```powershell
+# EmailToDelete in _debug\delete-dao-user.ps1 anpassen, dann direkt aus
+# einer PowerShell-Session (Windows PowerShell 5.1 oder pwsh 7+):
+.\_debug\delete-dao-user.ps1 -Database lifeflow360-prod            # Production
+.\_debug\delete-dao-user.ps1 -Database lifeflow360-prod -Local     # nur lokale Dev-DB
+```
+
+### Resend / OTP-Mail diagnostizieren
+
+```bash
+# Direkter Resend-Test-Endpoint (liefert Status + Resend-Body + Key-Fingerprint)
+curl -X POST https://api.lifeflow360.app/api/diagnostics/resend-test \
+  -H "content-type: application/json" \
+  -d '{"to":"deine@adresse.de"}'
+
+# Pages Functions Real-time Logs (zeigt resend_send_failed + Payload-Info)
+npx wrangler pages deployment tail --project-name lifeflow360-api
+```
+
+Silent-Fail-Pfade in `POST /api/auth/request-code`, die bewusst `{ok:true}`
+liefern ohne Mail zu senden:
+1. Login-Purpose + Adresse nicht in `users` und Paddle-Bootstrap ohne Treffer.
+2. Email-Rate-Limit (3 Anfragen / 30 Min pro Adresse) erreicht.
+3. `DEV_OTP_DEBUG=1` in `.dev.vars` -> Code steht nur in der Console.
+
+### KV: Rate-Limit-Keys pruefen / loeschen
+
+```bash
+# Alle Rate-Limit-Keys einer Adresse listen
+npx wrangler kv key list --binding RATE_LIMIT --remote --prefix "rl:auth:request-code:email:test@example.com"
+
+# Einzelnen Key loeschen (unblockt weitere OTP-Anfragen sofort)
+npx wrangler kv key delete --binding RATE_LIMIT --remote "rl:auth:request-code:email:test@example.com"
+```
+
+### D1-Migrationsstatus
+
+```bash
+npx wrangler d1 migrations list   lifeflow360-prod --remote
+npx wrangler d1 migrations apply  lifeflow360-prod --remote     # nach Verifikation
+```
