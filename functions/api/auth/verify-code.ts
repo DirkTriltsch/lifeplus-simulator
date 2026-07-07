@@ -48,10 +48,15 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (!CODE_RX.test(code)) return error(400, 'invalid_code');
 
   const ip = clientIp(request);
-  const ipLimit = await consumeRateLimit(env, `rl:auth:verify-code:ip:${ip}`, 10, 600);
+  if (!ip) return error(429, 'rate_limited');
+  const ipLimit = await consumeRateLimit(env, `rl:auth:verify-code:ip:${ip}`, 10, 600, {
+    failMode: 'closed',
+  });
   if (!ipLimit.allowed) return error(429, 'rate_limited');
 
-  const emailLimit = await consumeRateLimit(env, `rl:auth:verify-code:email:${email}`, 10, 600);
+  const emailLimit = await consumeRateLimit(env, `rl:auth:verify-code:email:${email}`, 10, 600, {
+    failMode: 'closed',
+  });
   if (!emailLimit.allowed) return error(429, 'rate_limited');
 
   const result = await consumeOtpToken(env, email, code, nowMs());

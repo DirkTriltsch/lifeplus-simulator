@@ -1,8 +1,7 @@
 import type { Env } from '../../env';
-import { parseCookies, SESSION_COOKIE } from '../../_lib/cookies';
+import { requireSession } from '../../_lib/auth';
 import { paddleGetSubscriptionDetails, PaddleApiError } from '../../_lib/paddle';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
-import { loadSessionFromToken } from '../../_lib/session';
 
 // Liefert Detail-Daten zur aktuellen Subscription des Users, die wir auf
 // "Mein Konto" direkt anzeigen (Hybrid-Variante 2 — Daten on-domain,
@@ -15,12 +14,8 @@ import { loadSessionFromToken } from '../../_lib/session';
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'GET') return methodNotAllowed(['GET']);
 
-  const cookies = parseCookies(request.headers.get('cookie'));
-  const token = cookies[SESSION_COOKIE];
-  if (!token) return error(401, 'unauthenticated');
-
-  const ctx = await loadSessionFromToken(env, token);
-  if (!ctx) return error(401, 'unauthenticated');
+  const ctx = await requireSession(request, env);
+  if (ctx instanceof Response) return ctx;
 
   if (!env.PADDLE_API_KEY) return error(500, 'paddle_api_key_missing');
 

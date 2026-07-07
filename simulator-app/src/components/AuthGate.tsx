@@ -21,7 +21,7 @@ export function AuthGate({ pricingUrl, loginUrl, children }: AuthGateProps): JSX
         </div>
       );
     case 'anonymous':
-      return hasMagicToken() ? (
+      return shouldShowLoginGate() ? (
         <LoginGate pricingUrl={pricingUrl} />
       ) : (
         <RedirectToLogin loginUrl={loginUrl} />
@@ -37,9 +37,14 @@ export function AuthGate({ pricingUrl, loginUrl, children }: AuthGateProps): JSX
   }
 }
 
-function hasMagicToken(): boolean {
+function shouldShowLoginGate(): boolean {
   if (typeof window === 'undefined') return false;
-  return new URL(window.location.href).searchParams.has('token');
+  return shouldShowLoginGateForUrl(window.location.href);
+}
+
+export function shouldShowLoginGateForUrl(urlValue: string): boolean {
+  const params = new URL(urlValue).searchParams;
+  return params.has('token') || params.get('checkout') === 'success';
 }
 
 function RedirectToLogin({ loginUrl }: { loginUrl: string }): JSX.Element {

@@ -1,4 +1,4 @@
-import type { ExampleLinePerson } from '@mlm/product-lifeplus';
+import type { ExampleLinePerson } from '@mlm/simulator-core';
 
 export const DEFAULT_LINEAGE_TEAM: ExampleLinePerson[] = [
   { id: 'anna', name: 'Anna', rank: 'Member' },

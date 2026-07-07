@@ -11,6 +11,7 @@ import {
   PaddleApiError,
   paddleCreateB2BTransaction,
 } from '../../_lib/paddle';
+import { clientIp, consumeRateLimit } from '../../_lib/rate-limit';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
 import { loadSessionFromToken } from '../../_lib/session';
 import { nowMs } from '../../_lib/time';
@@ -72,10 +73,6 @@ function priceIdForPlan(env: Env, plan: PlanKey): string | undefined {
   if (plan === 'halfyear') return env.PADDLE_PRICE_HALFYEAR;
   if (plan === 'yearly')   return env.PADDLE_PRICE_YEARLY;
   return undefined;
-}
-
-function clientIp(request: Request): string | null {
-  return request.headers.get('cf-connecting-ip') ?? null;
 }
 
 // Mappt Paddle-API-Fehler auf benutzerfreundliche Field-Errors fuer das UI.
@@ -173,6 +170,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return error(400, 'missing_required_consent');
   }
 
+  const ip = clientIp(request);
+  if (!ip) return error(429, 'rate_limited');
+  const ipLimit = await consumeRateLimit(env, `rl:billing:checkout-intent:ip:${ip}`, 10, 600, {
+    failMode: 'closed',
+  });
+  if (!ipLimit.allowed) return error(429, 'rate_limited');
+
   // 6. Session optional (v6.1 Gast-Checkout). Wenn Session da ist, nutzen
   //    wir die userId fuer Vor-Verknuepfung und pruefen aktive Abos. Wenn
   //    nicht, laeuft der Intent als Gast → userId bleibt NULL und der
@@ -231,7 +235,6 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   //    fuer customData (Webhook-Verifizierung).
   const intentId = randomId();
   const now = nowMs();
-  const ipAddress = clientIp(request);
   const userAgent = request.headers.get('user-agent');
   await createCheckoutIntent(env, {
     id:                       intentId,
@@ -249,7 +252,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     vatId,
     b2bConfirmationVersion:   confirmationVersion,
     displayedHintsHash,
-    ipAddress,
+    ipAddress: ip,
     userAgent,
     now,
     ttlMs:                    INTENT_TTL_MS,

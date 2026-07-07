@@ -61,7 +61,10 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 
   // 2. Rate-Limit pro IP — verhindert Brute-Force auf gueltige Intent/TX-Paare
   const ip = clientIp(request);
-  const ipLimit = await consumeRateLimit(env, `rl:billing:post-checkout:ip:${ip}`, 10, 600);
+  if (!ip) return error(429, 'rate_limited');
+  const ipLimit = await consumeRateLimit(env, `rl:billing:post-checkout:ip:${ip}`, 10, 600, {
+    failMode: 'closed',
+  });
   if (!ipLimit.allowed) return error(429, 'rate_limited');
 
   // 3. Intent laden + Brand-Match + checkoutEmail-Match + Transaction-Match

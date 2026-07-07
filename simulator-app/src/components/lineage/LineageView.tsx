@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
+import { getProduct } from '@mlm/product-registry';
 import {
-  calculateExampleLine,
   type ExampleLineCalculation,
   type ExampleLinePerson,
   type ExampleOrder,
-} from '@mlm/product-lifeplus';
+  type ProductId,
+} from '@mlm/simulator-core';
 import { cloneDefaultTeam, DEFAULT_LINEAGE_TEAM } from './defaultTeam';
 import { LineageChain } from './LineageChain';
 import { OrderSheet } from './OrderSheet';
@@ -21,6 +22,9 @@ interface PlacedOrder {
 }
 
 export function LineageView() {
+  const productId = (import.meta.env.VITE_PRODUCT ?? 'lifeplus') as ProductId;
+  const product = getProduct(productId);
+  const calculateExampleLine = product.simulator.plan.calculateExampleLine;
   const [people, setPeople] = useState<ExampleLinePerson[]>(() =>
     cloneDefaultTeam(),
   );
@@ -41,12 +45,13 @@ export function LineageView() {
   }, [people]);
 
   const calculation: ExampleLineCalculation | null = useMemo(() => {
+    if (!calculateExampleLine) return null;
     if (!placedOrder || customerIndex == null || customerIndex < 0) return null;
     return calculateExampleLine({
       peopleFromCustomerUp: people.slice(customerIndex + 1),
       order: placedOrder.order,
     });
-  }, [placedOrder, people, customerIndex]);
+  }, [calculateExampleLine, placedOrder, people, customerIndex]);
 
   const activePerson =
     activePersonId == null
@@ -131,6 +136,17 @@ export function LineageView() {
   const orderSummary = placedOrder
     ? formatOrderSummary(placedOrder.order)
     : undefined;
+
+  if (!calculateExampleLine) {
+    return (
+      <section className="rounded-lg border border-gray-200 bg-white p-6">
+        <h1 className="text-xl font-semibold text-gray-950">Lineage</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          Diese Beispielrechnung ist fuer dieses Produkt noch nicht verfuegbar.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-4">

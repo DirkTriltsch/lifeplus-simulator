@@ -9,6 +9,14 @@ const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'POST') return methodNotAllowed(['POST']);
+  if (!env.DIAGNOSTIC_TOKEN) return error(404, 'not_found');
+
+  const url = new URL(request.url);
+  const token =
+    request.headers.get('x-diagnostic-token') ??
+    url.searchParams.get('token') ??
+    '';
+  if (token !== env.DIAGNOSTIC_TOKEN) return error(403, 'forbidden');
 
   let body: Body;
   try {
@@ -39,7 +47,6 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   });
 
   const responseText = await res.text();
-  const keyFingerprint = await sha256Hex(env.RESEND_API_KEY);
 
   return json(
     {
@@ -52,21 +59,10 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         toDomain: to.split('@')[1] ?? 'unknown',
         subject: payload.subject,
       },
-      keyDiagnostics: {
-        length: env.RESEND_API_KEY.length,
-        prefix: env.RESEND_API_KEY.slice(0, 6),
-        sha256First12: keyFingerprint.slice(0, 12),
-      },
     },
     { status: res.ok ? 200 : 502 },
   );
 };
-
-async function sha256Hex(value: string): Promise<string> {
-  const bytes = new TextEncoder().encode(value);
-  const hash = await crypto.subtle.digest('SHA-256', bytes);
-  return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
 
 function safeJson(value: string): unknown {
   if (!value) return '';

@@ -2,6 +2,11 @@
 // .vscode/sftp.json in das Build-Output-Verzeichnis dist/<brand>-<kind>/
 // damit die SFTP-Extension das Profil beim Upload aus dem Ordner findet.
 //
+// WICHTIG: Das Passwort wird bewusst NICHT in das Profil geschrieben
+// (password: true -> die Extension fragt beim Upload danach). Der dist-
+// Ordner wird hochgeladen; ein eingebettetes Passwort waere sonst ueber
+// jedes andere Upload-Tool im Webroot exponierbar.
+//
 // Aufruf: node scripts/write-dist-sftp.mjs <lifeplus|fitline|eqology> <app|website>
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -49,7 +54,7 @@ await writeFile(
       protocol: 'sftp',
       port: profile.port ?? 22,
       username: profile.username,
-      password: profile.password,
+      password: true,
       remotePath: profile.remotePath,
       context: '.',
       uploadOnSave: false,

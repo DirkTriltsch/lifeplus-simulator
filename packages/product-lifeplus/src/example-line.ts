@@ -1,57 +1,25 @@
 import { PHASE1, REFERRAL_THRESHOLD_IP } from './constants';
+import type {
+  ExampleLineCalculation,
+  ExampleLineInput,
+  ExampleLinePerson,
+  ExampleOrder,
+  ExamplePayout,
+} from '@mlm/simulator-core';
 import {
   allocatePhase2Slots,
   allocatePhase3Slots,
   normalizeRankName,
-  type PayoutPhase,
 } from './payout-slots';
 
-export type ExampleOrderKind =
-  | 'shopper'
-  | 'member_first_150'
-  | 'member_above_150'
-  | 'member_order';
-
-export interface ExampleLinePerson {
-  id: string;
-  name?: string;
-  rank: string;
-  /** Optional: false erzwingt Phase-1-Kompression zur naechsten Upline. */
-  qualifiedForPhase1?: boolean;
-}
-
-export interface ExampleOrder {
-  kind: ExampleOrderKind;
-  ip: number;
-}
-
-export interface ExampleLineInput {
-  /** Naechste Upline zuerst: Ebene 1, Ebene 2, Ebene 3, Ebene 4, ... */
-  peopleFromCustomerUp: ExampleLinePerson[];
-  order: ExampleOrder;
-}
-
-export interface ExamplePayout {
-  personId: string;
-  name?: string;
-  rank: string;
-  phase: 1 | PayoutPhase;
-  levelFromCustomer: number;
-  slot?: string;
-  rate: number;
-  baseIP: number;
-  amountIP: number;
-  note: string;
-}
-
-export interface ExampleLineCalculation {
-  payouts: ExamplePayout[];
-  phase1IP: number;
-  phase2IP: number;
-  phase3IP: number;
-  totalIP: number;
-  totalRateOnOrder: number;
-}
+export type {
+  ExampleLineCalculation,
+  ExampleLineInput,
+  ExampleLinePerson,
+  ExampleOrder,
+  ExampleOrderKind,
+  ExamplePayout,
+} from '@mlm/simulator-core';
 
 interface Phase1Slice {
   label: string;

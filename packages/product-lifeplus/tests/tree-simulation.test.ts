@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   personTreeToNetworkSnapshot,
+  runSimulation,
   simulatePersonTree,
 } from '@mlm/simulator-core';
 import {
   calculateTreeCompensation,
-  runLifeplusTreeSimulation,
+  lifeplusProduct,
 } from '../src';
 
 describe('LifePlus Personenbaum-Simulation', () => {
@@ -190,7 +191,8 @@ describe('LifePlus Personenbaum-Simulation', () => {
   });
 
   it('liefert ein SimulationResult-kompatibles Ergebnis aus dem Personenbaum', () => {
-    const result = runLifeplusTreeSimulation(
+    const result = runSimulation(
+      lifeplusProduct,
       {
         membersPerYear: 2,
         shoppersPerYear: 3,

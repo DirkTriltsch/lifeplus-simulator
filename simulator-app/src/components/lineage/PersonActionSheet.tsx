@@ -1,4 +1,4 @@
-import type { ExampleLinePerson } from '@mlm/product-lifeplus';
+import type { ExampleLinePerson } from '@mlm/simulator-core';
 
 interface PersonActionSheetProps {
   person: ExampleLinePerson;

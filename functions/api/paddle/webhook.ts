@@ -12,6 +12,7 @@ import {
 import { verifyPaddleSignature } from '../../_lib/paddle-sig';
 import { error, json, methodNotAllowed, text } from '../../_lib/responses';
 import { nowMs } from '../../_lib/time';
+import { resolveIntentBackedIdentity } from '../../_lib/webhook/identity';
 
 const GRACE_DAYS_PAST_DUE = 7;
 
@@ -487,9 +488,31 @@ async function resolveSubscriberIdentity(
 }> {
   const intentId = customDataIntentId(data.custom_data);
   if (intentId) {
-    const intent = await getCheckoutIntentById(env, intentId);
+    const intent = (await getCheckoutIntentById(env, intentId))!;
     if (intent && intent.brand_id === env.BRAND_ID) {
       const transactionId = eventTransactionId(data);
+      const intentCustomDataEmail = customDataCheckoutEmail(data.custom_data);
+      const decision = resolveIntentBackedIdentity({
+        intent,
+        eventTransactionId: transactionId,
+        customDataEmail: intentCustomDataEmail,
+        requireTransactionMatch: options.requireTransactionMatch,
+      });
+      if (decision.decision === 'rejected') {
+        console.warn(`webhook_intent_${decision.reason}`, {
+          intentId,
+          intentTransactionId: intent.paddle_transaction_id,
+          eventTransactionId: transactionId,
+          intentEmail: intent.checkout_email,
+          customDataEmail: intentCustomDataEmail,
+        });
+        return { email: null, userId: null, intent: null };
+      }
+      return {
+        email: decision.email,
+        userId: decision.userId,
+        intent: decision.intent,
+      };
       if (intent.paddle_transaction_id) {
         if (transactionId && transactionId !== intent.paddle_transaction_id) {
           console.warn('webhook_intent_transaction_mismatch', {

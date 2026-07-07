@@ -1,11 +1,10 @@
 import type { Env } from '../../env';
+import { requireSession } from '../../_lib/auth';
 import {
   clearedSessionCookieHeader,
-  parseCookies,
-  SESSION_COOKIE,
 } from '../../_lib/cookies';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
-import { loadSessionFromToken, revokeDevice } from '../../_lib/session';
+import { revokeDevice } from '../../_lib/session';
 import { getActiveDevices } from '../../_lib/db';
 import { nowMs } from '../../_lib/time';
 
@@ -16,12 +15,8 @@ interface Body {
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'POST') return methodNotAllowed(['POST']);
 
-  const cookies = parseCookies(request.headers.get('cookie'));
-  const token = cookies[SESSION_COOKIE];
-  if (!token) return error(401, 'unauthenticated');
-
-  const ctx = await loadSessionFromToken(env, token);
-  if (!ctx) return error(401, 'unauthenticated');
+  const ctx = await requireSession(request, env);
+  if (ctx instanceof Response) return ctx;
 
   let body: Body;
   try {

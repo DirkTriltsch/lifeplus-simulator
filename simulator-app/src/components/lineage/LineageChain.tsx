@@ -1,4 +1,4 @@
-import type { ExampleLinePerson, ExamplePayout } from '@mlm/product-lifeplus';
+import type { ExampleLinePerson, ExamplePayout } from '@mlm/simulator-core';
 import { LineagePersonCard } from './LineagePersonCard';
 
 interface LineageChainProps {

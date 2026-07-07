@@ -104,20 +104,15 @@ export function runSimulation(
       : undefined,
   });
   const snapshots = personYearEnds.map(personTreeToNetworkSnapshot);
-  const calculateTreeMonth = product.simulator.plan.calculateTreeMonth;
-  const treeCompensationYearEnds = calculateTreeMonth
-    ? personYearEnds.map((personYearEnd) =>
-        calculateTreeMonth(personYearEnd, inputs),
-      )
-    : undefined;
+  const treeCompensationYearEnds = personYearEnds.map((personYearEnd) =>
+    product.simulator.plan.calculateTreeMonth(personYearEnd, inputs),
+  );
 
   const annualQuarters: QuarterResult[] = snapshots.map((snapshot, yearIndex) =>
     buildQuarterResult({
       snapshot,
       yearIndex,
-      comp:
-        treeCompensationYearEnds?.[yearIndex] ??
-        product.simulator.plan.calculateMonth(snapshot, inputs),
+      comp: treeCompensationYearEnds[yearIndex],
       unitToCurrency,
     }),
   );

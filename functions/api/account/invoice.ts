@@ -1,12 +1,11 @@
 import type { Env } from '../../env';
-import { parseCookies, SESSION_COOKIE } from '../../_lib/cookies';
+import { requireSession } from '../../_lib/auth';
 import {
   paddleGetTransactionInvoiceUrl,
   paddleGetTransactionRaw,
   PaddleApiError,
 } from '../../_lib/paddle';
 import { error, methodNotAllowed } from '../../_lib/responses';
-import { loadSessionFromToken } from '../../_lib/session';
 
 // Loest die signierte Paddle-Invoice-PDF-URL fuer eine Transaction auf
 // und redirected den Browser dorthin. Wir holen sie nicht beim
@@ -19,12 +18,8 @@ import { loadSessionFromToken } from '../../_lib/session';
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'GET') return methodNotAllowed(['GET']);
 
-  const cookies = parseCookies(request.headers.get('cookie'));
-  const token = cookies[SESSION_COOKIE];
-  if (!token) return error(401, 'unauthenticated');
-
-  const ctx = await loadSessionFromToken(env, token);
-  if (!ctx) return error(401, 'unauthenticated');
+  const ctx = await requireSession(request, env);
+  if (ctx instanceof Response) return ctx;
 
   if (!env.PADDLE_API_KEY) return error(500, 'paddle_api_key_missing');
 

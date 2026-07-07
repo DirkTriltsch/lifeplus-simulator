@@ -1,12 +1,11 @@
 import type { Env } from '../../env';
-import { parseCookies, SESSION_COOKIE } from '../../_lib/cookies';
+import { requireSession } from '../../_lib/auth';
 import {
   paddleCancelSubscription,
   paddleResumeSubscription,
   PaddleApiError,
 } from '../../_lib/paddle';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
-import { loadSessionFromToken } from '../../_lib/session';
 
 // Plant Kuendigung der aktuellen Subscription zum Ende der bezahlten
 // Laufzeit (B2B-Standard, kein Refund). Mit { undo: true } im Body wird
@@ -18,12 +17,8 @@ import { loadSessionFromToken } from '../../_lib/session';
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'POST') return methodNotAllowed(['POST']);
 
-  const cookies = parseCookies(request.headers.get('cookie'));
-  const token = cookies[SESSION_COOKIE];
-  if (!token) return error(401, 'unauthenticated');
-
-  const ctx = await loadSessionFromToken(env, token);
-  if (!ctx) return error(401, 'unauthenticated');
+  const ctx = await requireSession(request, env);
+  if (ctx instanceof Response) return ctx;
 
   if (!env.PADDLE_API_KEY) return error(500, 'paddle_api_key_missing');
 

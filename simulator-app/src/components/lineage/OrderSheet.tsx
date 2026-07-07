@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type {
   ExampleLinePerson,
   ExampleOrder,
-} from '@mlm/product-lifeplus';
+} from '@mlm/simulator-core';
 
 interface OrderSheetProps {
   person: ExampleLinePerson;

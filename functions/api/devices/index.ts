@@ -1,18 +1,13 @@
 import type { Env } from '../../env';
-import { parseCookies, SESSION_COOKIE } from '../../_lib/cookies';
+import { requireSession } from '../../_lib/auth';
 import { getActiveDevices } from '../../_lib/db';
-import { error, json, methodNotAllowed } from '../../_lib/responses';
-import { loadSessionFromToken } from '../../_lib/session';
+import { json, methodNotAllowed } from '../../_lib/responses';
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'GET') return methodNotAllowed(['GET']);
 
-  const cookies = parseCookies(request.headers.get('cookie'));
-  const token = cookies[SESSION_COOKIE];
-  if (!token) return error(401, 'unauthenticated');
-
-  const ctx = await loadSessionFromToken(env, token);
-  if (!ctx) return error(401, 'unauthenticated');
+  const ctx = await requireSession(request, env);
+  if (ctx instanceof Response) return ctx;
 
   const devices = await getActiveDevices(env, ctx.user.id);
 

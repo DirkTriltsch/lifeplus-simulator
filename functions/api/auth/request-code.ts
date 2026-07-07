@@ -103,7 +103,10 @@ export const onRequest: PagesFunction<Env> = async ({ request, env, waitUntil })
 
   const now = nowMs();
   const ip = clientIp(request);
-  const ipLimit = await consumeRateLimit(env, `rl:auth:request-code:ip:${ip}`, 5, 600);
+  if (!ip) return error(429, 'rate_limited');
+  const ipLimit = await consumeRateLimit(env, `rl:auth:request-code:ip:${ip}`, 5, 600, {
+    failMode: 'open',
+  });
   if (!ipLimit.allowed) return error(429, 'rate_limited');
 
   if (purpose === 'login') {
@@ -116,7 +119,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env, waitUntil })
     }
   }
 
-  const emailLimit = await consumeRateLimit(env, `rl:auth:request-code:email:${email}`, 3, 1800);
+  const emailLimit = await consumeRateLimit(env, `rl:auth:request-code:email:${email}`, 3, 1800, {
+    failMode: 'open',
+  });
   if (!emailLimit.allowed) {
     await performNeutralOtpWork(env, now, request);
     return json({ ok: true });

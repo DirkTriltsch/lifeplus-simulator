@@ -46,7 +46,9 @@ await writeFile(
       protocol: 'sftp',
       port: 22,
       username: websiteSftp.username,
-      password: websiteSftp.password,
+      // Passwort bewusst nicht einbetten (im Webroot exponierbar):
+      // password: true -> die SFTP-Extension fragt beim Upload danach.
+      password: true,
       remotePath: '/',
       context: '.',
       uploadOnSave: false,

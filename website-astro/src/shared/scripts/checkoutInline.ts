@@ -18,6 +18,8 @@
 // naechsten "Weiter zur Zahlung" wird ein neuer Intent + neue Paddle-
 // Transaktion erstellt.
 
+import { escapeHtml, renewalLabelFromSource } from './checkoutLogic';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Paddle: any;
@@ -58,6 +60,8 @@ interface PaddleTotals {
   tax?: string;
   total?: string;
   currency_code?: string;
+  next_billed_at?: string | null;
+  nextBilledAt?: string | null;
 }
 
 interface ApiErrorResponse {
@@ -100,6 +104,7 @@ export function setupCheckoutInline(): void {
   const paddleToken              = root.dataset.paddleToken ?? '';
   const paddleEnv                = (root.dataset.paddleEnv ?? 'sandbox') as 'sandbox' | 'live';
   const plan                     = root.dataset.plan ?? '';
+  const periodMonths             = Number(root.dataset.periodMonths ?? '1');
   const consentVersion           = root.dataset.consentVersion ?? '';
   const b2bConfirmationVersion   = root.dataset.b2bConfirmationVersion ?? '';
   const displayedHintsHash       = root.dataset.displayedHintsHash ?? '';
@@ -166,6 +171,7 @@ export function setupCheckoutInline(): void {
   const lineTaxValue     = document.getElementById('lineTaxValue');
   const totalToday       = document.getElementById('totalToday');
   const totalFuture      = document.getElementById('totalFuture');
+  const renewalDateLabel = document.getElementById('renewalDateLabel');
   const previewHint      = document.getElementById('previewHint');
 
   if (
@@ -207,10 +213,6 @@ export function setupCheckoutInline(): void {
   }
   function isEmailValid(v: string): boolean {
     return EMAIL_RX.test(v) && v.length <= 254;
-  }
-  function escapeHtml(v: string): string {
-    return v.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
   function apiUrl(path: string): string {
     return apiBase ? apiBase + path : path;
@@ -283,6 +285,9 @@ export function setupCheckoutInline(): void {
     }
     if (totalToday && total !== null) totalToday.textContent = eur(total);
     if (totalFuture && total !== null) totalFuture.textContent = eur(total);
+    if (renewalDateLabel) {
+      renewalDateLabel.textContent = renewalLabelFromSource(totals, periodMonths);
+    }
     if (heroAmount && netAfterDiscount !== null) heroAmount.textContent = eur(netAfterDiscount);
     if (periodRecurring && netAfterDiscount !== null) periodRecurring.textContent = eur(netAfterDiscount);
     if (heroTaxLabel) heroTaxLabel.textContent = tax === 0 ? 'netto' : 'zzgl. USt.';
@@ -870,6 +875,9 @@ export function setupCheckoutInline(): void {
   }
 
   void errMsg; // reserviert fuer spaetere Iframe-Fehler
+  if (renewalDateLabel) {
+    renewalDateLabel.textContent = renewalLabelFromSource(null, periodMonths);
+  }
 
   (async () => {
     const urlEmail = new URL(window.location.href).searchParams.get('email')?.trim().toLowerCase();

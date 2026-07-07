@@ -1,4 +1,5 @@
 import type { Env } from './env';
+import { error } from './_lib/responses';
 
 // Hybrid topology: API runs on api.lifeflow360.app (Cloudflare Pages),
 // the marketing site + app run on www.lifeflow360.app (IONOS).
@@ -57,7 +58,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env, next }) => {
     });
   }
 
-  const response = await next();
+  let response: Response;
+  try {
+    response = await next();
+  } catch (err) {
+    console.error('api_uncaught_exception', err);
+    response = error(500, 'internal_error');
+  }
   if (Object.keys(cors).length > 0) {
     const merged = new Headers(response.headers);
     for (const [k, v] of Object.entries(cors)) merged.set(k, v);

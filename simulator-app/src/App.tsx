@@ -247,6 +247,7 @@ export default function App() {
   const [detailResult, setDetailResult] = useState<SimulationResult | undefined>(
     undefined,
   );
+  const isFirstDetailCalculation = useRef(true);
   const [detailResultKey, setDetailResultKey] = useState('');
   const [detailStatus, setDetailStatus] = useState<DetailStatus>('loading');
   const detailRequestKey = useMemo(
@@ -261,6 +262,10 @@ export default function App() {
 
   useEffect(() => {
     setDetailStatus('loading');
+    const delay = isFirstDetailCalculation.current
+      ? 0
+      : DETAIL_CALCULATION_DEBOUNCE_MS;
+    isFirstDetailCalculation.current = false;
     const handle = window.setTimeout(() => {
       const nextDetail = runSimulation(product, inputs, undefined, {
         simulationMode,
@@ -269,7 +274,7 @@ export default function App() {
       setDetailResult(nextDetail);
       setDetailResultKey(detailRequestKey);
       setDetailStatus('ready');
-    }, DETAIL_CALCULATION_DEBOUNCE_MS);
+    }, delay);
 
     return () => window.clearTimeout(handle);
   }, [detailRequestKey, inputs, product, simulationMode, treeGrowthStrategy]);

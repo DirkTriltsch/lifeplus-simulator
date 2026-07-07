@@ -69,7 +69,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   // Endpoints, weil Live-Preview natuerlich oft feuert (z.B. Land-Wechsel
   // ueber das Dropdown).
   const ip = clientIp(request);
-  const ipLimit = await consumeRateLimit(env, `rl:billing:preview:ip:${ip}`, 30, 300);
+  const ipLimit = await consumeRateLimit(
+    env,
+    ip ? `rl:billing:preview:ip:${ip}` : 'rl:billing:preview:ip:missing-cf-ip',
+    30,
+    300,
+    { failMode: 'open' },
+  );
   if (!ipLimit.allowed) return error(429, 'rate_limited');
 
   // Discount aufloesen (falls Code da). Bei Discount-Nicht-bekannt geben wir

@@ -1,4 +1,3 @@
-import type { NetworkSnapshot } from './network-snapshot';
 import type { PersonTreeSnapshot } from './person-tree';
 
 export type ProductId = 'lifeplus' | 'fitline' | 'eqology';
@@ -96,15 +95,59 @@ export interface TreeCompensationResult extends CompensationResult {
   rankStates: PersonRankState[];
 }
 
+export type ExampleOrderKind =
+  | 'shopper'
+  | 'member_first_150'
+  | 'member_above_150'
+  | 'member_order';
+
+export interface ExampleLinePerson {
+  id: string;
+  name?: string;
+  rank: string;
+  qualifiedForPhase1?: boolean;
+}
+
+export interface ExampleOrder {
+  kind: ExampleOrderKind;
+  ip: number;
+}
+
+export interface ExampleLineInput {
+  peopleFromCustomerUp: ExampleLinePerson[];
+  order: ExampleOrder;
+}
+
+export interface ExamplePayout {
+  personId: string;
+  name?: string;
+  rank: string;
+  phase: 1 | 2 | 3;
+  levelFromCustomer: number;
+  slot?: string;
+  rate: number;
+  baseIP: number;
+  amountIP: number;
+  note: string;
+}
+
+export interface ExampleLineCalculation {
+  payouts: ExamplePayout[];
+  phase1IP: number;
+  phase2IP: number;
+  phase3IP: number;
+  totalIP: number;
+  totalRateOnOrder: number;
+}
+
 export interface CompensationPlan {
-  calculateMonth(
-    snapshot: NetworkSnapshot,
-    inputs: SimulatorInputs,
-  ): CompensationResult;
-  calculateTreeMonth?(
+  calculateTreeMonth(
     snapshot: PersonTreeSnapshot,
     inputs: SimulatorInputs,
   ): TreeCompensationResult;
+  calculateExampleLine?(
+    input: ExampleLineInput,
+  ): ExampleLineCalculation;
   selectTreeMemberChurnCandidates?(
     snapshot: PersonTreeSnapshot,
     inputs: SimulatorInputs,

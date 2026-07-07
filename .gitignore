@@ -4,6 +4,7 @@ dist
 .wrangler
 .env
 .dev.vars
+.vscode/sftp.json
 .DS_Store
 *.log
 *.tsbuildinfo

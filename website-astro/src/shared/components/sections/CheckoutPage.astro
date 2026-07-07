@@ -28,12 +28,6 @@ const gross = net + vat;
 const periodLabel  = planPricing[plan].periodLabel;
 const periodMonths = planPricing[plan].periodMonths;
 
-const renewalDate = new Date();
-renewalDate.setMonth(renewalDate.getMonth() + periodMonths);
-const renewalLabel = renewalDate.toLocaleDateString('de-DE', {
-  day: '2-digit', month: '2-digit', year: 'numeric',
-});
-
 function eur(value: number): string {
   return value.toFixed(2).replace('.', ',') + ' EUR';
 }
@@ -64,6 +58,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   data-plan={plan}
   data-net-period={net.toFixed(2)}
   data-vat-rate={VAT_RATE.toString()}
+  data-period-months={periodMonths.toString()}
   data-consent-version={consentVersion}
   data-b2b-confirmation-version={b2bConfirmationVersion}
   data-displayed-hints-hash={displayedHintsHash}
@@ -163,7 +158,7 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           <span class="value" id="totalToday">{eur(gross)}</span>
         </div>
         <div class="future">
-          <span>Fällig am {renewalLabel}</span>
+          <span>Fällig am <span id="renewalDateLabel"></span></span>
           <span id="totalFuture">{eur(gross)}</span>
         </div>
       </div>
