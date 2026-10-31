@@ -1,0 +1,26 @@
+---
+// Checkout (Schritt 1 Rechnungsdaten, Schritt 2 Paddle). URL: /checkout/<plan>.html
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import CheckoutPage from '@shared/components/sections/CheckoutPage.astro';
+import { billingTexts } from '@shared/content/billingTexts';
+import { PLAN_CATALOG, PLAN_IDS, type PlanId } from '@shared/lib/plans';
+import { getBrand } from '@shared/lib/brand';
+
+export function getStaticPaths() {
+  return PLAN_IDS.map((plan) => ({ params: { plan } }));
+}
+
+const plan = Astro.params.plan as PlanId;
+const brand = await getBrand('eqology');
+const texts = billingTexts(brand);
+const priceId = { monthly: brand.paddle?.priceIdMonthly, halfyear: brand.paddle?.priceIdHalfYear, yearly: brand.paddle?.priceIdYearly }[plan];
+if (!priceId) return Astro.redirect('/pricing.html');
+const name = PLAN_CATALOG[plan].name;
+---
+<BrandLayout brand={brand} title={texts.checkout.seoTitle(name)} description={texts.checkout.seoDescription(name)} noindex paddle>
+  <Header brand={brand} active="pricing" />
+  <CheckoutPage brand={brand} plan={plan} priceId={priceId} source={`brands/eqology/pages/checkout/[plan].astro?plan=${plan}`} />
+  <Footer brand={brand} />
+</BrandLayout>

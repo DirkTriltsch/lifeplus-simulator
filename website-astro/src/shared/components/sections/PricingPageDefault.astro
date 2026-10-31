@@ -8,7 +8,8 @@
 // /signup?next=/checkout/{plan}.html um — spart einen Roundtrip.
 import type { Brand } from '@shared/content-schemas/config';
 import type { PricingPage } from '@shared/content-schemas/pricing';
-import B2BHeaderBanner from '@shared/components/checkout/B2BHeaderBanner.astro';
+import { billingTexts } from '@shared/content/billingTexts';
+import { amountsFor, formatEur, PLAN_CATALOG, PLAN_RANK } from '@shared/lib/plans';
 
 interface Props {
   brand: Brand;
@@ -23,9 +24,8 @@ const envApiBase = import.meta.env.PUBLIC_API_BASE_URL;
 const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   ? envApiBase
   : (brand.apiBaseUrl ?? '');
+const texts = billingTexts(brand).pricing;
 ---
-
-<B2BHeaderBanner siteName={brand.siteName} />
 
 <!-- ===== Page hero ===== -->
 <section
@@ -73,15 +73,31 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
           {tier.badge && <div class="pc-badge">{tier.badge}</div>}
           <div class="price-name">{tier.name}</div>
           <div class="price-desc" set:html={tier.descHtml} />
-          <div class="price-amount">
-            <span class="price-cur">{tier.currency}</span>
-            <span class="price-val">{tier.value}</span>
-            <span class="price-unit">
-              {tier.unit}
-              {tier.unitNote && <em>{tier.unitNote}</em>}
-            </span>
-          </div>
-          <div class="price-billed">{tier.billed}</div>
+          {tier.cta.kind === 'paddle' ? (() => {
+            const entry = PLAN_CATALOG[tier.cta.plan];
+            const a = amountsFor(tier.cta.plan);
+            return (
+              <>
+                <div class="price-amount">
+                  <span class="price-val">{formatEur(a.grossCents)}</span>
+                  <span class="price-unit">{entry.cycle}<em>inkl. USt.</em></span>
+                </div>
+                <div class="price-billed">{formatEur(a.netCents)} netto {entry.interval}</div>
+              </>
+            );
+          })() : (
+            <>
+              <div class="price-amount">
+                <span class="price-cur">{tier.currency}</span>
+                <span class="price-val">{tier.value}</span>
+                <span class="price-unit">
+                  {tier.unit}
+                  {tier.unitNote && <em>{tier.unitNote}</em>}
+                </span>
+              </div>
+              <div class="price-billed">{tier.billed}</div>
+            </>
+          )}
           <ul class="price-feats">
             {tier.features.map((f) => (
               <li>
@@ -147,6 +163,10 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
         </span>
       </div>
     ))}
+  <div class="price-foot">
+      {texts.footnoteHtml.map((t) => <p set:html={t} />)}
+      <p set:html={texts.legalLinksHtml} />
+    </div>
   </div>
 </section>
 
@@ -252,6 +272,27 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
   </div>
 </section>
 
+<script define:vars={{ rank: PLAN_RANK }}>
+  // Planabgleich: eingeloggte Nutzer mit aktivem Abo sehen ihren Plan, Downgrades sind gesperrt.
+  (async () => {
+    try {
+      const base = (document.querySelector('[data-api-base]')?.dataset.apiBase ?? '').replace(/\/$/, '');
+      const res = await fetch(base + '/api/me', { credentials: 'include' });
+      if (!res.ok) return;
+      const me = await res.json();
+      const e = (me.entitlements ?? [])[0];
+      if (!e || !e.active || e.plan === 'free' || !(e.source === 'subscription' || e.source === 'one_shot_purchase')) return;
+      const cur = { 1: 'monthly', 6: 'halfyear', 12: 'yearly' }[e.billingCycle === 'monthly' ? 1 : e.billingCycle === 'halfyear' ? 6 : e.billingCycle === 'yearly' ? 12 : 0];
+      if (!cur) return;
+      document.querySelectorAll('a.price-cta[data-plan]').forEach((a) => {
+        const plan = a.dataset.plan;
+        if (plan === cur) { a.textContent = 'Dein aktueller Plan'; a.setAttribute('aria-disabled', 'true'); a.removeAttribute('href'); }
+        else if (rank[plan] < rank[cur]) { a.setAttribute('aria-disabled', 'true'); a.removeAttribute('href'); a.title = 'Downgrade nicht möglich'; }
+      });
+    } catch { /* anonym: nichts zu tun */ }
+  })();
+</script>
+
 <script>
   // FAQ-Akkordeon (aus pricing.html uebernommen).
   document.querySelectorAll<HTMLButtonElement>('.faq-q').forEach((btn) => {
@@ -293,6 +334,9 @@ const apiBaseUrl = (typeof envApiBase === 'string' && envApiBase.trim() !== '')
 </script>
 
 <style>
+  .price-foot { margin-top: 28px; font-size: 13px; color: var(--ink-3, #667); line-height: 1.6; max-width: 820px; }
+  .price-foot p { margin: 0 0 6px; }
+  a.price-cta[aria-disabled='true'] { opacity: .55; pointer-events: none; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
   @media (max-width: 720px) { .wrap { padding: 0 20px; } }
 

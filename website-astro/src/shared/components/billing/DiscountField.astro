@@ -1,0 +1,16 @@
+---
+// Rabattcode-Feld der Bestelluebersicht. Die Logik (Pruefung ueber
+// /api/billing/preview-pricing) steckt in scripts/checkoutPage.ts.
+---
+<div class="ck-inline" data-discount-field>
+  <div class="ck-inline-head">
+    <span>Rabattcode <span class="ck-opt">optional</span></span>
+    <span class="ck-pill">Code gespeichert</span>
+  </div>
+  <div class="ck-inline-row">
+    <input data-discount-input type="text" placeholder="z. B. DAO20" autocomplete="off" spellcheck="false" maxlength="40" aria-label="Rabattcode" />
+    <button class="ck-inline-btn" type="button" data-discount-apply>Anwenden</button>
+  </div>
+  <p class="ck-hint">Hast du einen Aktionscode? Er wird direkt bei Paddle geprüft.</p>
+  <p class="ck-inline-feedback" data-discount-feedback aria-live="polite"></p>
+</div>

@@ -1,0 +1,45 @@
+---
+import type { BillingTexts } from '@shared/content/billingTexts';
+
+interface Props {
+  texts: BillingTexts['checkout'];
+}
+const { texts } = Astro.props;
+---
+<div class="ck-consent-block">
+  <div class="ck-section-h">Zustimmungen</div>
+  <div class="ck-consents">
+    <label class="ck-check">
+      <input type="checkbox" name="agb" required />
+      <span class="ck-cbox" aria-hidden="true"></span>
+      <span>Ich akzeptiere die <a href="/agb.html" target="_blank" rel="noopener">AGB</a><span class="ck-req">*</span></span>
+    </label>
+    <label class="ck-check">
+      <input type="checkbox" name="privacy" required />
+      <span class="ck-cbox" aria-hidden="true"></span>
+      <span>Ich habe die <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen<span class="ck-req">*</span></span>
+    </label>
+
+    <label class="ck-check" data-buyer-only="business" hidden>
+      <input type="checkbox" name="b2bConfirmation" />
+      <span class="ck-cbox" aria-hidden="true"></span>
+      <span>{texts.b2bConfirmationLabel}<span class="ck-req">*</span></span>
+    </label>
+
+    <label class="ck-check" data-buyer-only="consumer">
+      <input type="checkbox" name="withdrawalWaiver" />
+      <span class="ck-cbox" aria-hidden="true"></span>
+      <span>
+        {texts.withdrawalLabel}<span class="ck-opt">(optional)</span>
+        <span class="ck-sub" set:html={texts.withdrawalHintHtml} />
+      </span>
+    </label>
+
+    <label class="ck-check">
+      <input type="checkbox" name="newsletter" />
+      <span class="ck-cbox" aria-hidden="true"></span>
+      <span>Ich möchte Neuigkeiten und Tipps per E-Mail erhalten<span class="ck-opt">(optional)</span></span>
+    </label>
+  </div>
+  <p class="ck-footnote"><span class="ck-req">*</span> Pflichtfeld</p>
+</div>

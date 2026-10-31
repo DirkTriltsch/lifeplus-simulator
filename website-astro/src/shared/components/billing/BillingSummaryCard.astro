@@ -1,0 +1,65 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import { amountsFor, formatEur, PLAN_CATALOG, type PlanId } from '@shared/lib/plans';
+import DiscountField from './DiscountField.astro';
+
+interface Props {
+  brand: Brand;
+  plan: PlanId;
+}
+
+const { brand, plan } = Astro.props;
+const entry = PLAN_CATALOG[plan];
+const amounts = amountsFor(plan);
+const gross = formatEur(amounts.grossCents);
+const net = formatEur(amounts.netCents);
+const vat = formatEur(amounts.vatCents);
+const taxLabel = 'inkl. 19 % USt. (Lieferland Deutschland)';
+---
+<aside class="ck-summary-col" data-summary-plan={plan}>
+  <div class="ck-sum">
+    <div class="ck-locked" data-summary-locked hidden>
+      <span><strong>Daten gesperrt.</strong> Änderungen über „Daten ändern“ rechts.</span>
+    </div>
+    <h2 class="ck-sum-h">Bestellübersicht</h2>
+
+    <DiscountField />
+
+    <div class="ck-hero-price">
+      <div class="ck-amount-row">
+        <span class="ck-amount" data-hero-amount>{gross}</span>
+        <span class="ck-tax-label" data-hero-tax-label>{taxLabel}</span>
+      </div>
+      <div class="ck-recurring">dann <span data-hero-recurring>{gross}</span> {entry.interval}</div>
+      <div class="ck-gross-hint" data-hero-hint>{net} netto + {vat} USt.</div>
+    </div>
+
+    <div class="ck-product">
+      <div class="ck-product-icon" aria-hidden="true" style={`background:${brand.lockup.markFill}`}>{brand.lockup.initial.toUpperCase()}</div>
+      <div>
+        <div class="ck-product-name">{brand.siteName} Pro</div>
+        <div class="ck-product-plan">{entry.name} · automatische Verlängerung</div>
+        <div class="ck-product-qty">Menge: 1</div>
+      </div>
+      <a href="/pricing.html" class="ck-product-change">↩ ändern</a>
+    </div>
+
+    <div class="ck-lines">
+      <div class="ck-line"><span>Zwischensumme (netto)</span><span data-line-net>{net}</span></div>
+      <div class="ck-line ck-discount" data-line-discount hidden>
+        <span>Rabatt <span class="ck-soft" data-line-discount-label></span></span>
+        <span data-line-discount-value></span>
+      </div>
+      <div class="ck-line">
+        <span>USt. <span class="ck-soft" data-line-tax-label>(19 %)</span></span>
+        <span data-line-tax>{vat}</span>
+      </div>
+    </div>
+
+    <div class="ck-divider"></div>
+    <div class="ck-total"><span>Heute fällig</span><span data-total-today>{gross}</span></div>
+    <div class="ck-future"><span>Nächste Fälligkeit <span data-renewal></span></span><span data-total-future>{gross}</span></div>
+    <p class="ck-preview-hint" data-preview-hint>Vorläufige Berechnung für Deutschland. Die endgültige Steuer richtet sich nach Land und USt-IdNr. und wird von Paddle berechnet.</p>
+    <div class="ck-trust">Zahlung und Rechnung über Paddle als Merchant of Record</div>
+  </div>
+</aside>

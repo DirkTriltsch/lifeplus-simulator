@@ -3,6 +3,7 @@ import '@shared/styles/tokens.css';
 import '@shared/styles/globals.css';
 import '@shared/styles/site.css';
 import '@shared/styles/debug.css';
+import '@shared/styles/billing.css';
 
 // Lokale Schriftarten via @fontsource — kein Drittanbieter-Request
 // an Google Fonts (DSGVO/TTDSG). Datenschutzerklaerung Abschnitt 6
@@ -30,8 +31,10 @@ interface Props {
   description?: string;
   /** Mit true wird das Paddle.js-Skript fuer diese Seite geladen (nur pricing). */
   paddle?: boolean;
+  /** Seite von Suchmaschinen ausschliessen (Checkout). */
+  noindex?: boolean;
 }
-const { brand, title, description, paddle = false } = Astro.props;
+const { brand, title, description, paddle = false, noindex = false } = Astro.props;
 const fullTitle = title
   ? (title.includes(brand.siteName) ? title : `${title} – ${brand.siteName}`)
   : brand.siteName;
@@ -44,6 +47,7 @@ const debugRoot = process.cwd().replace(/\\/g, '/');
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
     {description && <meta name="description" content={description} />}
 
     <script is:inline define:vars={{ apiBase, debugRoot }}>

@@ -1,0 +1,32 @@
+---
+import type { Brand } from '@shared/content-schemas/config';
+import { billingTexts } from '@shared/content/billingTexts';
+
+interface Props { brand: Brand }
+const { brand } = Astro.props;
+const t = billingTexts(brand).success;
+const envApiBase = import.meta.env.PUBLIC_API_BASE_URL;
+const apiBaseUrl = typeof envApiBase === 'string' && envApiBase.trim() !== '' ? envApiBase : (brand.apiBaseUrl ?? '');
+---
+<section class="ck-hero"><h1>{t.readyTitle}</h1></section>
+<div class="ck-success" data-checkout-success data-api-base={apiBaseUrl}>
+  <div class="ck-card" data-view="pending">
+    <h2>{t.pendingTitle}</h2>
+    <p>{t.pendingText}</p>
+    <p class="ck-hint">E-Mail: <span data-email></span></p>
+  </div>
+  <div class="ck-card" data-view="ready" hidden>
+    <h2>{t.readyTitle}</h2>
+    <p>{t.readyText}</p>
+    <a class="ck-btn" href={brand.appUrl}>{t.readyCta}</a>
+  </div>
+  <div class="ck-card" data-view="error" hidden>
+    <h2>{t.errorTitle}</h2>
+    <p set:html={t.errorTextHtml} />
+    <button type="button" class="ck-btn" data-retry>Erneut prüfen</button>
+  </div>
+</div>
+<script>
+  import { setupCheckoutSuccess } from '@shared/scripts/checkoutSuccess';
+  setupCheckoutSuccess();
+</script>

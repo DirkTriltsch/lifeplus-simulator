@@ -1,0 +1,15 @@
+---
+import BrandLayout from '@shared/components/layout/BrandLayout.astro';
+import Header from '@shared/components/layout/Header.astro';
+import Footer from '@shared/components/layout/Footer.astro';
+import CheckoutSuccess from '@shared/components/sections/CheckoutSuccess.astro';
+import { billingTexts } from '@shared/content/billingTexts';
+import { getBrand } from '@shared/lib/brand';
+
+const brand = await getBrand('eqology');
+---
+<BrandLayout brand={brand} title={billingTexts(brand).success.seoTitle} description={billingTexts(brand).success.pendingText} noindex>
+  <Header brand={brand} active="pricing" />
+  <CheckoutSuccess brand={brand} />
+  <Footer brand={brand} />
+</BrandLayout>
