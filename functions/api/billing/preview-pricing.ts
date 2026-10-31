@@ -1,3 +1,4 @@
+import { ALLOWED_COUNTRIES } from '../../_lib/checkout-validation';
 import type { Env } from '../../env';
 import {
   PaddleApiError,
@@ -26,11 +27,6 @@ interface Body {
 
 const ALLOWED_PLANS = ['monthly', 'halfyear', 'yearly'] as const;
 type PlanKey = (typeof ALLOWED_PLANS)[number];
-const ALLOWED_COUNTRIES = new Set([
-  'DE','AT','CH',
-  'BE','BG','HR','CY','CZ','DK','EE','ES','FI','FR','GR','HU','IE','IT',
-  'LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK',
-]);
 const DISCOUNT_MAX = 40;
 
 function priceIdForPlan(env: Env, plan: PlanKey): string | undefined {

@@ -26,6 +26,8 @@ const intent: CheckoutIntentRow = {
   ip_address: null,
   user_agent: null,
   paddle_transaction_id: 'txn_123',
+  buyer_type: null,
+  billing_name: null,
 };
 
 describe('resolveIntentBackedIdentity', () => {

@@ -216,6 +216,9 @@ export interface CheckoutIntentRow {
   ip_address: string | null;
   user_agent: string | null;
   paddle_transaction_id: string | null;
+  // 0012: 'consumer' | 'business'. NULL = Bestandsrow (B2B-only-Zeit) = business.
+  buyer_type: string | null;
+  billing_name: string | null;
 }
 
 export async function createCheckoutIntent(
@@ -227,15 +230,17 @@ export async function createCheckoutIntent(
     plan: string;
     priceId: string;
     checkoutEmail: string;
-    companyName: string;
+    buyerType: 'consumer' | 'business';
+    companyName: string | null;                        // nur business
+    billingName: string | null;                        // nur consumer
     street: string;
     postalCode: string;
     city: string;
     countryCode: string;
     discountCode: string | null;
     vatId: string | null;
-    b2bConfirmationVersion: string;
-    displayedHintsHash: string;
+    b2bConfirmationVersion: string | null;             // nur business
+    displayedHintsHash: string | null;                 // nur business
     ipAddress: string | null;
     userAgent: string | null;
     now: number;
@@ -249,8 +254,8 @@ export async function createCheckoutIntent(
         company_name, street, postal_code, city, country_code,
         discount_code, vat_id,
         b2b_confirmation_version, displayed_hints_hash,
-        ip_address, user_agent)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ip_address, user_agent, buyer_type, billing_name)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       params.id,
@@ -272,6 +277,8 @@ export async function createCheckoutIntent(
       params.displayedHintsHash,
       params.ipAddress,
       params.userAgent,
+      params.buyerType,
+      params.billingName,
     )
     .run();
 }
@@ -455,6 +462,8 @@ export interface ConsentLogParams {
   b2bConfirmation?: boolean;
   b2bConfirmationVersion?: string | null;
   displayedHintsHash?: string | null;
+  // 0012: 'consumer' | 'business' (NULL bei free_signup und Bestandsdaten).
+  buyerType?: 'consumer' | 'business' | null;
 }
 
 export async function insertConsentLog(
@@ -472,8 +481,9 @@ export async function insertConsentLog(
        paddle_transaction_id, paddle_subscription_id,
        request_ip, user_agent,
        b2b_confirmation, b2b_confirmation_version, displayed_hints_hash,
+       buyer_type,
        created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       id(),
@@ -496,6 +506,7 @@ export async function insertConsentLog(
       params.b2bConfirmation ? 1 : 0,
       params.b2bConfirmationVersion ?? null,
       params.displayedHintsHash ?? null,
+      params.buyerType ?? null,
       now,
     )
     .run();

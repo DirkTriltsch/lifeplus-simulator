@@ -62,6 +62,7 @@ interface CheckoutConsent {
   withdrawal_waiver?: boolean;
   version?: string;
   timestamp?: string;
+  buyer_type?: string;
   b2b_confirmation?: boolean;
   b2b_confirmation_version?: string;
   displayed_hints_hash?: string;
@@ -591,13 +592,17 @@ interface MaybeInsertParams {
   intent: CheckoutIntentRow | null;
 }
 
-// Liest B2B-Confirmation, IP und User-Agent bevorzugt aus dem Server-Intent
-// (dort serverseitig erzwungen) und faellt nur auf customData zurueck, wenn
-// kein Intent vorhanden ist (Legacy-Bestandsdaten).
+// Liest Kaeufertyp, B2B-Confirmation, IP und User-Agent bevorzugt aus dem
+// Server-Intent (dort serverseitig erzwungen) und faellt nur auf customData
+// zurueck, wenn kein Intent vorhanden ist (Legacy-Bestandsdaten).
+// Intents ohne buyer_type stammen aus der B2B-only-Zeit und gelten als business.
+type BuyerType = 'consumer' | 'business';
+
 function resolveConsentAuditFields(
   intent: CheckoutIntentRow | null,
   consent: CheckoutConsent,
 ): {
+  buyerType: BuyerType;
   b2bConfirmation: boolean;
   b2bConfirmationVersion: string | null;
   displayedHintsHash: string | null;
@@ -605,17 +610,21 @@ function resolveConsentAuditFields(
   userAgent: string | null;
 } {
   if (intent) {
+    const buyerType: BuyerType = intent.buyer_type === 'consumer' ? 'consumer' : 'business';
     return {
-      // Wenn ein Intent vorliegt, hat der Server beim Anlegen sichergestellt,
-      // dass b2b_confirmation == true gewesen sein muss.
-      b2bConfirmation:        true,
+      buyerType,
+      // Wenn ein business-Intent vorliegt, hat der Server beim Anlegen
+      // sichergestellt, dass b2b_confirmation == true gewesen sein muss.
+      b2bConfirmation:        buyerType === 'business',
       b2bConfirmationVersion: intent.b2b_confirmation_version,
       displayedHintsHash:     intent.displayed_hints_hash,
       requestIp:              intent.ip_address,
       userAgent:              intent.user_agent,
     };
   }
+  const buyerType: BuyerType = consent.buyer_type === 'consumer' ? 'consumer' : 'business';
   return {
+    buyerType,
     b2bConfirmation:        consent.b2b_confirmation === true,
     b2bConfirmationVersion: consent.b2b_confirmation_version ?? null,
     displayedHintsHash:     consent.displayed_hints_hash ?? null,
@@ -638,7 +647,7 @@ async function maybeInsertConsentLogForSubscription(
     return;
   }
   const audit = resolveConsentAuditFields(params.intent, consent);
-  if (!audit.b2bConfirmation) {
+  if (audit.buyerType === 'business' && !audit.b2bConfirmation) {
     console.warn('webhook_b2b_confirmation_missing', {
       subscriptionId: params.subscriptionId,
       hasIntent:      params.intent !== null,
@@ -665,6 +674,7 @@ async function maybeInsertConsentLogForSubscription(
     b2bConfirmation:          audit.b2bConfirmation,
     b2bConfirmationVersion:   audit.b2bConfirmationVersion,
     displayedHintsHash:       audit.displayedHintsHash,
+    buyerType:                audit.buyerType,
   });
 }
 
@@ -682,7 +692,7 @@ async function maybeInsertConsentLogForTransaction(
     return;
   }
   const audit = resolveConsentAuditFields(params.intent, consent);
-  if (!audit.b2bConfirmation) {
+  if (audit.buyerType === 'business' && !audit.b2bConfirmation) {
     console.warn('webhook_b2b_confirmation_missing_oneshot', {
       transactionId: params.transactionId,
       hasIntent:     params.intent !== null,
@@ -709,6 +719,7 @@ async function maybeInsertConsentLogForTransaction(
     b2bConfirmation:          audit.b2bConfirmation,
     b2bConfirmationVersion:   audit.b2bConfirmationVersion,
     displayedHintsHash:       audit.displayedHintsHash,
+    buyerType:                audit.buyerType,
   });
 }
 

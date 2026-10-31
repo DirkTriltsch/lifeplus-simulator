@@ -11,61 +11,29 @@ import {
   PaddleApiError,
   paddleCreateB2BTransaction,
 } from '../../_lib/paddle';
+import {
+  parsePlan,
+  validateCheckoutIntentBody,
+  type CheckoutIntentBody,
+  type PlanKey,
+} from '../../_lib/checkout-validation';
 import { clientIp, consumeRateLimit } from '../../_lib/rate-limit';
 import { error, json, methodNotAllowed } from '../../_lib/responses';
 import { loadSessionFromToken } from '../../_lib/session';
 import { nowMs } from '../../_lib/time';
 
 // Phase 2.3 — Pre-Checkout-Intent + Server-side Intent-Persistierung.
-// Mit B2B-Pivot v6: validiert vollstaendige Rechnungsdaten, erstellt eine
-// Paddle Transaction serverseitig (Paddle Billing API) und gibt die
-// transactionId an den Client zurueck. Der Client oeffnet das Inline-Iframe
-// via Paddle.Checkout.open({ transactionId }).
+// Validiert die Rechnungsdaten (Verbraucher oder Unternehmer, siehe
+// _lib/checkout-validation.ts), erstellt eine Paddle Transaction serverseitig
+// (Paddle Billing API) und gibt die transactionId an den Client zurueck. Der
+// Client oeffnet das Inline-Iframe via Paddle.Checkout.open({ transactionId }).
 //
 // Architektur siehe _doc/paddle_checkout/lifeplus_checkout_paddle_b2b_setup.md.
 // Pflicht-Logging (Legal-Review Finding 7) wird im Intent persistiert; der
 // Webhook reicht es spaeter ins consent_log durch.
 
-interface Body {
-  plan?: string;
-  checkoutEmail?: string;
-  companyName?: string;
-  street?: string;
-  postalCode?: string;
-  city?: string;
-  countryCode?: string;
-  discountCode?: string | null;
-  vatId?: string | null;
-  b2bConfirmation?: {
-    checked?: boolean;
-    version?: string;
-    displayedHintsHash?: string;
-  };
-  consent?: {
-    agb?: boolean;
-    privacy?: boolean;
-    newsletter?: boolean;
-    withdrawal_waiver?: boolean;
-    version?: string;
-    timestamp?: string;
-  };
-}
+type Body = CheckoutIntentBody;
 
-const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-const VAT_RX = /^[A-Z]{2}[A-Z0-9]{8,12}$/;
-const ALLOWED_PLANS = ['monthly', 'halfyear', 'yearly'] as const;
-type PlanKey = (typeof ALLOWED_PLANS)[number];
-const ALLOWED_COUNTRIES = new Set([
-  'DE','AT','CH',
-  'BE','BG','HR','CY','CZ','DK','EE','ES','FI','FR','GR','HU','IE','IT',
-  'LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK',
-]);
-const COMPANY_MIN = 2;
-const COMPANY_MAX = 200;
-const STREET_MIN = 3;
-const POSTAL_MIN = 3;
-const CITY_MIN = 2;
-const DISCOUNT_MAX = 40;
 const INTENT_TTL_MS = 30 * 60_000;
 
 function priceIdForPlan(env: Env, plan: PlanKey): string | undefined {
@@ -119,56 +87,21 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   // 1. Plan + priceId
-  const planRaw = (body.plan ?? '').trim();
-  if (!(ALLOWED_PLANS as readonly string[]).includes(planRaw)) {
+  const plan = parsePlan(body.plan);
+  if (!plan) {
     return json({ action: 'invalid_plan', brandId: env.BRAND_ID });
   }
-  const plan = planRaw as PlanKey;
   const priceId = priceIdForPlan(env, plan);
   if (!priceId) {
     console.warn('checkout_intent_missing_price_id', { plan });
     return json({ action: 'invalid_plan', brandId: env.BRAND_ID });
   }
 
-  // 2. E-Mail
-  const checkoutEmail = (body.checkoutEmail ?? '').trim().toLowerCase();
-  if (!checkoutEmail || !EMAIL_RX.test(checkoutEmail) || checkoutEmail.length > 254) {
-    return error(400, 'invalid_email');
-  }
-
-  // 3. Rechnungsempfaenger (v6-Pflichtfelder)
-  const companyName = (body.companyName ?? '').trim();
-  if (companyName.length < COMPANY_MIN || companyName.length > COMPANY_MAX) {
-    return error(400, 'invalid_company_name');
-  }
-  const street = (body.street ?? '').trim();
-  if (street.length < STREET_MIN) return error(400, 'invalid_street');
-  const postalCode = (body.postalCode ?? '').trim();
-  if (postalCode.length < POSTAL_MIN) return error(400, 'invalid_postal_code');
-  const city = (body.city ?? '').trim();
-  if (city.length < CITY_MIN) return error(400, 'invalid_city');
-  const countryCode = (body.countryCode ?? '').trim().toUpperCase();
-  if (!ALLOWED_COUNTRIES.has(countryCode)) return error(400, 'invalid_country');
-
-  // 4. Optionale Rabatt/VAT
-  const discountRaw = (body.discountCode ?? '').trim().toUpperCase();
-  if (discountRaw.length > DISCOUNT_MAX) return error(400, 'invalid_discount_code');
-  const discountCode = discountRaw.length > 0 ? discountRaw : null;
-
-  const vatRaw = (body.vatId ?? '').replace(/\s/g, '').toUpperCase();
-  if (vatRaw.length > 0 && !VAT_RX.test(vatRaw)) return error(400, 'invalid_vat_id');
-  const vatId = vatRaw.length > 0 ? vatRaw : null;
-
-  // 5. B2B-Bestaetigung Pflicht (Beweislast — Legal-Review Finding 7)
-  const confirmationChecked = body.b2bConfirmation?.checked === true;
-  const confirmationVersion = (body.b2bConfirmation?.version ?? '').trim();
-  const displayedHintsHash  = (body.b2bConfirmation?.displayedHintsHash ?? '').trim();
-  if (!confirmationChecked || !confirmationVersion || !displayedHintsHash) {
-    return error(400, 'missing_b2b_confirmation');
-  }
-  if (body.consent?.agb !== true || body.consent?.privacy !== true) {
-    return error(400, 'missing_required_consent');
-  }
+  // 2. E-Mail, Rechnungsempfaenger, Rabatt/USt-IdNr, Consents
+  const validated = validateCheckoutIntentBody(body);
+  if (!validated.ok) return error(400, validated.error);
+  const v = validated.value;
+  const checkoutEmail = v.checkoutEmail;
 
   const ip = clientIp(request);
   if (!ip) return error(429, 'rate_limited');
@@ -243,15 +176,17 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     plan,
     priceId,
     checkoutEmail,
-    companyName,
-    street,
-    postalCode,
-    city,
-    countryCode,
-    discountCode,
-    vatId,
-    b2bConfirmationVersion:   confirmationVersion,
-    displayedHintsHash,
+    buyerType:                v.buyerType,
+    companyName:              v.companyName,
+    billingName:              v.billingName,
+    street:                   v.street,
+    postalCode:               v.postalCode,
+    city:                     v.city,
+    countryCode:              v.countryCode,
+    discountCode:             v.discountCode,
+    vatId:                    v.vatId,
+    b2bConfirmationVersion:   v.b2bConfirmationVersion,
+    displayedHintsHash:       v.displayedHintsHash,
     ipAddress: ip,
     userAgent,
     now,
@@ -264,15 +199,15 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const result = await paddleCreateB2BTransaction(env, {
       email:        checkoutEmail,
-      companyName,
+      companyName:  v.displayName,
       address: {
-        countryCode,
-        postalCode,
-        firstLine: street,
-        city,
+        countryCode: v.countryCode,
+        postalCode:  v.postalCode,
+        firstLine:   v.street,
+        city:        v.city,
       },
-      vatId,
-      discountCode,
+      vatId:        v.vatId,
+      discountCode: v.discountCode,
       priceId,
       customData: {
         brand_id:       env.BRAND_ID,
@@ -282,13 +217,14 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         consent: {
           agb:                       true,
           privacy:                   true,
-          newsletter:                body.consent?.newsletter === true,
-          withdrawal_waiver:         false,
-          version:                   body.consent?.version ?? 'unknown',
-          timestamp:                 body.consent?.timestamp ?? new Date(now).toISOString(),
-          b2b_confirmation:          true,
-          b2b_confirmation_version:  confirmationVersion,
-          displayed_hints_hash:      displayedHintsHash,
+          newsletter:                v.newsletter,
+          withdrawal_waiver:         v.withdrawalWaiver,
+          version:                   v.consentVersion ?? 'unknown',
+          timestamp:                 v.consentTimestamp ?? new Date(now).toISOString(),
+          buyer_type:                v.buyerType,
+          b2b_confirmation:          v.buyerType === 'business',
+          b2b_confirmation_version:  v.b2bConfirmationVersion,
+          displayed_hints_hash:      v.displayedHintsHash,
         },
       },
     });
@@ -335,7 +271,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     action:        'start_checkout',
     transactionId,
     totals: paddleTotals,
-    discountCode,
+    discountCode:  v.discountCode,
     intentId,
     priceId,
     checkoutEmail,
